@@ -1,0 +1,118 @@
+
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { 
+  Edit, 
+  FileText, 
+  Folder, 
+  BookText, 
+  Users,
+  Menu, 
+  X 
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+
+interface SidebarProps {
+  isOpen: boolean;
+  toggleSidebar: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
+  const location = useLocation();
+
+  const menuItems = [
+    {
+      label: 'Compor',
+      icon: <Edit size={20} />,
+      path: '/composer',
+    },
+    {
+      label: 'Modelos de DA',
+      icon: <FileText size={20} />,
+      path: '/templates',
+    },
+    {
+      label: 'Pastas',
+      icon: <Folder size={20} />,
+      path: '/folders',
+    },
+    {
+      label: 'Rascunhos',
+      icon: <BookText size={20} />,
+      path: '/drafts',
+    },
+    {
+      label: 'Parcerias',
+      icon: <Users size={20} />,
+      path: '/partnerships',
+    },
+  ];
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed top-4 left-4 z-50 md:hidden"
+        onClick={toggleSidebar}
+      >
+        <Menu size={24} />
+      </Button>
+
+      <div
+        className={cn(
+          "fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-200",
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={toggleSidebar}
+      />
+
+      <aside
+        className={cn(
+          "fixed left-0 top-0 bottom-0 w-64 bg-sidebar z-50 p-4 flex flex-col border-r border-sidebar-border transition-transform duration-300 md:translate-x-0",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-xl font-bold text-sidebar-foreground">SongScribe</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden text-sidebar-foreground"
+            onClick={toggleSidebar}
+          >
+            <X size={20} />
+          </Button>
+        </div>
+
+        <nav className="space-y-1 flex-1">
+          {menuItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={cn(
+                "nav-link",
+                location.pathname === item.path && "active"
+              )}
+              onClick={() => {
+                if (window.innerWidth < 768) {
+                  toggleSidebar();
+                }
+              }}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+
+        <div className="pt-4 mt-auto border-t border-sidebar-border">
+          <p className="text-xs text-sidebar-foreground/70 text-center">
+            SongScribe Canvas v1.0
+          </p>
+        </div>
+      </aside>
+    </>
+  );
+};
