@@ -21,6 +21,13 @@ import {
   DialogTitle 
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Template {
   id: string;
@@ -28,6 +35,13 @@ interface Template {
   location: string;
   city: string;
   notes: string;
+  genre?: string;
+  version?: string;
+  collaborators?: string;
+  instrumentation?: string;
+  duration?: string;
+  createdAt: string;
+  createdTime: string;
 }
 
 const INITIAL_TEMPLATES: Template[] = [
@@ -37,6 +51,11 @@ const INITIAL_TEMPLATES: Template[] = [
     location: 'Estúdio',
     city: 'São Paulo',
     notes: 'Template padrão para documentação de anterioridade.',
+    createdAt: new Date().toLocaleDateString('pt-BR'),
+    createdTime: new Date().toLocaleTimeString('pt-BR', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    }),
   }
 ];
 
@@ -49,6 +68,11 @@ const Templates: React.FC = () => {
   const [location, setLocation] = useState('');
   const [city, setCity] = useState('');
   const [notes, setNotes] = useState('');
+  const [genre, setGenre] = useState('');
+  const [version, setVersion] = useState('');
+  const [collaborators, setCollaborators] = useState('');
+  const [instrumentation, setInstrumentation] = useState('');
+  const [duration, setDuration] = useState('');
   
   const { toast } = useToast();
   
@@ -57,6 +81,11 @@ const Templates: React.FC = () => {
     setLocation('');
     setCity('');
     setNotes('');
+    setGenre('');
+    setVersion('');
+    setCollaborators('');
+    setInstrumentation('');
+    setDuration('');
     setEditingTemplate(null);
     setIsNewTemplateOpen(true);
   };
@@ -65,7 +94,12 @@ const Templates: React.FC = () => {
     setName(template.name);
     setLocation(template.location);
     setCity(template.city);
-    setNotes(template.notes);
+    setNotes(template.notes || '');
+    setGenre(template.genre || '');
+    setVersion(template.version || '');
+    setCollaborators(template.collaborators || '');
+    setInstrumentation(template.instrumentation || '');
+    setDuration(template.duration || '');
     setEditingTemplate(template);
     setIsNewTemplateOpen(true);
   };
@@ -80,11 +114,29 @@ const Templates: React.FC = () => {
       return;
     }
     
+    const currentDate = new Date();
+    const createdAt = currentDate.toLocaleDateString('pt-BR');
+    const createdTime = currentDate.toLocaleTimeString('pt-BR', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+    
     if (editingTemplate) {
       // Update existing template
       setTemplates(templates.map(t => 
         t.id === editingTemplate.id 
-          ? { ...t, name, location, city, notes } 
+          ? { 
+              ...t, 
+              name, 
+              location, 
+              city, 
+              notes, 
+              genre, 
+              version, 
+              collaborators, 
+              instrumentation, 
+              duration 
+            } 
           : t
       ));
       
@@ -100,6 +152,13 @@ const Templates: React.FC = () => {
         location,
         city,
         notes,
+        genre,
+        version,
+        collaborators,
+        instrumentation,
+        duration,
+        createdAt,
+        createdTime
       };
       
       setTemplates([...templates, newTemplate]);
@@ -172,6 +231,18 @@ const Templates: React.FC = () => {
                   <span className="font-medium min-w-[80px]">Cidade:</span>
                   <span>{template.city}</span>
                 </div>
+                {template.genre && (
+                  <div className="flex items-start">
+                    <span className="font-medium min-w-[80px]">Gênero:</span>
+                    <span>{template.genre}</span>
+                  </div>
+                )}
+                {template.version && (
+                  <div className="flex items-start">
+                    <span className="font-medium min-w-[80px]">Versão:</span>
+                    <span>{template.version}</span>
+                  </div>
+                )}
                 {template.notes && (
                   <div className="flex items-start">
                     <span className="font-medium min-w-[80px]">Notas:</span>
@@ -191,7 +262,7 @@ const Templates: React.FC = () => {
       
       {/* New/Edit Template Dialog */}
       <Dialog open={isNewTemplateOpen} onOpenChange={setIsNewTemplateOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
               {editingTemplate ? 'Editar Modelo' : 'Novo Modelo de DA'}
@@ -203,7 +274,7 @@ const Templates: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-1">
             <div className="grid gap-2">
               <Label htmlFor="name">Nome do Modelo</Label>
               <Input
@@ -235,6 +306,70 @@ const Templates: React.FC = () => {
             </div>
             
             <div className="grid gap-2">
+              <Label htmlFor="genre">Gênero Musical</Label>
+              <Select value={genre} onValueChange={setGenre}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um gênero" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pop">Pop</SelectItem>
+                  <SelectItem value="Sertanejo">Sertanejo</SelectItem>
+                  <SelectItem value="Rap">Rap</SelectItem>
+                  <SelectItem value="Gospel">Gospel</SelectItem>
+                  <SelectItem value="MPB">MPB</SelectItem>
+                  <SelectItem value="Rock">Rock</SelectItem>
+                  <SelectItem value="Outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="version">Versão da Letra</Label>
+              <Select value={version} onValueChange={setVersion}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma versão" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="V1">V1</SelectItem>
+                  <SelectItem value="V2">V2</SelectItem>
+                  <SelectItem value="Demo">Demo</SelectItem>
+                  <SelectItem value="Final">Final</SelectItem>
+                  <SelectItem value="Ao Vivo">Ao Vivo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="collaborators">Colaboradores (opcional)</Label>
+              <Input
+                id="collaborators"
+                value={collaborators}
+                onChange={(e) => setCollaborators(e.target.value)}
+                placeholder="Ex: João Silva, Maria Souza"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="instrumentation">Instrumentação Prevista (opcional)</Label>
+              <Input
+                id="instrumentation"
+                value={instrumentation}
+                onChange={(e) => setInstrumentation(e.target.value)}
+                placeholder="Ex: Piano e Voz"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="duration">Duração Estimada da Música (opcional)</Label>
+              <Input
+                id="duration"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder="Ex: 3:30min"
+              />
+            </div>
+            
+            <div className="grid gap-2">
               <Label htmlFor="notes">Observações (opcional)</Label>
               <Input
                 id="notes"
@@ -242,6 +377,25 @@ const Templates: React.FC = () => {
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Observações adicionais..."
               />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <div className="grid gap-2">
+                <Label>Data</Label>
+                <Input value={new Date().toLocaleDateString('pt-BR')} readOnly className="bg-muted" />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label>Hora</Label>
+                <Input 
+                  value={new Date().toLocaleTimeString('pt-BR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })} 
+                  readOnly 
+                  className="bg-muted" 
+                />
+              </div>
             </div>
           </div>
           
