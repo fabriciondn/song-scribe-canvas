@@ -30,10 +30,13 @@ const Templates: React.FC = () => {
     setInstrumentation,
     duration,
     setDuration,
+    selectedFields,
+    setSelectedFields,
     openNewTemplateDialog,
     openEditTemplateDialog,
     handleSaveTemplate,
-    handleDeleteTemplate
+    handleDeleteTemplate,
+    setActiveTemplate
   } = useTemplates();
 
   return (
@@ -53,6 +56,7 @@ const Templates: React.FC = () => {
             template={template}
             onEdit={openEditTemplateDialog}
             onDelete={handleDeleteTemplate}
+            onUse={setActiveTemplate}
           />
         ))}
       </div>
@@ -79,6 +83,8 @@ const Templates: React.FC = () => {
         setInstrumentation={setInstrumentation}
         duration={duration}
         setDuration={setDuration}
+        selectedFields={selectedFields}
+        setSelectedFields={setSelectedFields}
         onSave={handleSaveTemplate}
       />
     </div>

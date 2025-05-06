@@ -12,4 +12,23 @@ export interface Template {
   duration?: string;
   createdAt: string;
   createdTime: string;
+  isActive?: boolean;
+  selectedFields?: TemplateField[];
 }
+
+export type TemplateField = 
+  | "name"
+  | "location"
+  | "city"
+  | "notes"
+  | "genre"
+  | "version"
+  | "collaborators"
+  | "instrumentation"
+  | "duration";
+
+export const DEFAULT_TEMPLATE_FIELDS: TemplateField[] = [
+  "name",
+  "location",
+  "city"
+];
