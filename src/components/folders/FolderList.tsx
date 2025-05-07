@@ -133,12 +133,17 @@ export const FolderList: React.FC = () => {
                 <p>Pasta vazia</p>
               ) : (
                 <ul className="space-y-2">
-                  {getFolderSongs(folder.id).map((song: string, idx: number) => (
+                  {getFolderSongs(folder.id).slice(0, 3).map((song: string, idx: number) => (
                     <li key={idx} className="flex items-center">
                       <File className="h-4 w-4 mr-2 flex-shrink-0" />
                       <span className="truncate">{song}</span>
                     </li>
                   ))}
+                  {getFolderSongs(folder.id).length > 3 && (
+                    <li className="text-xs text-muted-foreground">
+                      +{getFolderSongs(folder.id).length - 3} mais...
+                    </li>
+                  )}
                 </ul>
               )}
             </div>

@@ -42,7 +42,13 @@ export const FolderPage: React.FC = () => {
       // Load songs for this folder
       const savedSongs = localStorage.getItem(`folder_${folderId}`);
       if (savedSongs) {
-        setSongs(JSON.parse(savedSongs));
+        const parsedSongs = JSON.parse(savedSongs);
+        setSongs(parsedSongs);
+        
+        // If there are songs, select the first one by default
+        if (parsedSongs.length > 0) {
+          setSelectedSong(parsedSongs[0]);
+        }
       }
     } else {
       toast({
