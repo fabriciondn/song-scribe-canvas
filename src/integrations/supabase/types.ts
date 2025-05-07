@@ -9,7 +9,122 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      folders: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      songs: {
+        Row: {
+          content: string
+          created_at: string | null
+          folder_id: string | null
+          id: string
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          folder_id?: string | null
+          id?: string
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          folder_id?: string | null
+          id?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "songs_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      templates: {
+        Row: {
+          city: string | null
+          collaborators: string | null
+          created_at: string | null
+          duration: string | null
+          genre: string | null
+          id: string
+          instrumentation: string | null
+          is_active: boolean | null
+          location: string | null
+          name: string
+          notes: string | null
+          selected_fields: Json | null
+          updated_at: string | null
+          user_id: string | null
+          version: string | null
+        }
+        Insert: {
+          city?: string | null
+          collaborators?: string | null
+          created_at?: string | null
+          duration?: string | null
+          genre?: string | null
+          id?: string
+          instrumentation?: string | null
+          is_active?: boolean | null
+          location?: string | null
+          name: string
+          notes?: string | null
+          selected_fields?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+          version?: string | null
+        }
+        Update: {
+          city?: string | null
+          collaborators?: string | null
+          created_at?: string | null
+          duration?: string | null
+          genre?: string | null
+          id?: string
+          instrumentation?: string | null
+          is_active?: boolean | null
+          location?: string | null
+          name?: string
+          notes?: string | null
+          selected_fields?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+          version?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
