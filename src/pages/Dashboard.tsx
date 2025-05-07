@@ -1,54 +1,52 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { Header } from '../components/layout/Header';
-import { Sidebar } from '../components/layout/Sidebar';
-import { Outlet } from 'react-router-dom';
+import { Header } from '@/components/layout/Header';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { Outlet, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/components/ui/use-toast';
 
 const Dashboard: React.FC = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(
-    localStorage.getItem('songscribe-dark-mode') === 'true'
-  );
-
+  const { toast } = useToast();
+  
   useEffect(() => {
-    if (!isAuthenticated && !isLoading) {
-      navigate('/');
+    if (!isLoading && !isAuthenticated) {
+      navigate('/', { replace: true });
+      toast({
+        title: 'Acesso restrito',
+        description: 'Você precisa estar logado para acessar esta área.',
+        variant: 'destructive',
+      });
     }
-  }, [isAuthenticated, isLoading, navigate]);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
-    localStorage.setItem('songscribe-dark-mode', darkMode.toString());
-  }, [darkMode]);
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
+  }, [isAuthenticated, isLoading, navigate, toast]);
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+    setIsSidebarOpen(prev => !prev);
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-primary font-semibold">
-          Carregando...
-        </div>
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
 
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-      <div className="flex flex-1">
-        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-        <main className="flex-1 p-6 md:pl-72 pt-16 md:pt-6">
+    <div className="min-h-screen bg-background flex flex-col">
+      <Header toggleSidebar={toggleSidebar} />
+      
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar isOpen={isSidebarOpen} />
+        
+        <main className={`flex-1 p-6 transition-all duration-200 overflow-y-auto ${isSidebarOpen ? 'lg:pl-64' : ''}`}>
           <Outlet />
         </main>
       </div>

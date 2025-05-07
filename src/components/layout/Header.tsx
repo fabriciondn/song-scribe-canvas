@@ -1,7 +1,4 @@
 
-// This fixes the error about user.name
-// Just update the line related to displaying the user's email instead of name
-
 import React, { useState } from 'react';
 import { 
   DropdownMenu,

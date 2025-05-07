@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { ensureAudioBucketExists } from '@/services/draftService';
 
 interface AudioRecorderProps {
   onSaveRecording: (audioUrl: string, audioBlob: Blob) => void;
@@ -23,6 +24,13 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onSaveRecording, i
       setAudioURL(initialAudioUrl);
     }
   }, [initialAudioUrl]);
+
+  // Ensure the audio bucket exists when component mounts
+  useEffect(() => {
+    ensureAudioBucketExists().catch(error => {
+      console.error("Failed to ensure audio bucket exists:", error);
+    });
+  }, []);
   
   const startRecording = async () => {
     try {

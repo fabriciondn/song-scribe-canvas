@@ -1,6 +1,4 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { createSystemBackup } from './backupService';
 
 export interface Draft {
   id: string;
@@ -17,6 +15,26 @@ export interface DraftInput {
   content: string;
   audioUrl?: string;
 }
+
+// Ensure required buckets exist
+export const ensureAudioBucketExists = async (): Promise<void> => {
+  try {
+    // Check if the bucket exists
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const exists = buckets?.some(bucket => bucket.name === 'audio');
+
+    // If the bucket doesn't exist, create it
+    if (!exists) {
+      const { error } = await supabase.storage.createBucket('audio', {
+        public: true, // Make audio files accessible
+      });
+      if (error) throw error;
+    }
+  } catch (error) {
+    console.error('Error ensuring audio bucket exists:', error);
+    // Continue even if this fails
+  }
+};
 
 export const getDrafts = async (): Promise<Draft[]> => {
   try {
@@ -88,6 +106,9 @@ export const createDraft = async (draft: DraftInput): Promise<Draft> => {
     if (!userId) {
       throw new Error('User not authenticated');
     }
+
+    // Ensure the audio bucket exists before trying to use it
+    await ensureAudioBucketExists();
     
     // Use RPC function
     const { data, error } = await supabase
@@ -223,29 +244,24 @@ export const uploadAudio = async (audioBlob: Blob, filename: string): Promise<st
       throw new Error('User not authenticated');
     }
     
+    // Ensure the audio bucket exists
+    await ensureAudioBucketExists();
+    
     const filePath = `${userId}/${filename}`;
     
-    // Create bucket if it doesn't exist
-    await supabase.storage.createBucket('audio', {
-      public: true,
-    }).catch(err => {
-      // Bucket might already exist, continue
-      console.log('Bucket creation skipped:', err);
-    });
-    
     // Upload the audio file
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError, data } = await supabase.storage
       .from('audio')
       .upload(filePath, audioBlob);
     
     if (uploadError) throw uploadError;
     
     // Get the public URL of the uploaded file
-    const { data } = supabase.storage
+    const { data: urlData } = supabase.storage
       .from('audio')
       .getPublicUrl(filePath);
     
-    return data.publicUrl;
+    return urlData.publicUrl;
   } catch (error) {
     console.error('Error uploading audio:', error);
     throw error;

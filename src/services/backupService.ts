@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Backup {
@@ -8,6 +7,7 @@ export interface Backup {
   file_url?: string;
   created_at: string;
   user_id?: string;
+  is_system?: boolean;
 }
 
 // Initialize the backup bucket if it doesn't exist yet
