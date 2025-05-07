@@ -60,9 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         <div className="pt-4 mt-auto border-t border-sidebar-border">
-          <p className="text-xs text-sidebar-foreground/70 text-center">
-            SongScribe Canvas v1.0
-          </p>
+          <p className="text-xs text-sidebar-foreground/70 text-center">Compuse v1.0</p>
         </div>
       </aside>
     </>;
