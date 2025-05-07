@@ -37,13 +37,16 @@ export const ensureAudioBucketExists = async (): Promise<void> => {
 // Get all drafts for the current user
 export const getDrafts = async (): Promise<Draft[]> => {
   try {
+    // Use a raw query instead of the typed from()
     const { data, error } = await supabase
       .from('drafts')
       .select('*')
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    
+    // Manually cast the response to Draft[] since TypeScript doesn't recognize the drafts table
+    return (data || []) as Draft[];
   } catch (error) {
     console.error('Error fetching drafts:', error);
     throw error;
@@ -60,7 +63,7 @@ export const getDraftById = async (draftId: string): Promise<Draft | null> => {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Draft;
   } catch (error) {
     console.error(`Error fetching draft with ID ${draftId}:`, error);
     throw error;
@@ -127,7 +130,7 @@ export const createDraft = async (
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Draft;
   } catch (error) {
     console.error('Error creating draft:', error);
     throw error;
@@ -153,7 +156,7 @@ export const updateDraft = async (
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Draft;
   } catch (error) {
     console.error(`Error updating draft with ID ${id}:`, error);
     throw error;
