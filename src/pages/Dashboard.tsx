@@ -44,7 +44,7 @@ const Dashboard: React.FC = () => {
       <Header toggleSidebar={toggleSidebar} />
       
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar isOpen={isSidebarOpen} />
+        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         
         <main className={`flex-1 p-6 transition-all duration-200 overflow-y-auto ${isSidebarOpen ? 'lg:pl-64' : ''}`}>
           <Outlet />

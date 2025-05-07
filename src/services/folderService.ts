@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { nanoid } from 'nanoid';
 
@@ -19,6 +20,34 @@ export interface Song {
   created_at: string;
   updated_at?: string;
 }
+
+// Ensure default Backup folder exists
+export const ensureBackupFolderExists = async (): Promise<void> => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      throw new Error('No authenticated user');
+      
+    }
+    
+    const { data, error } = await supabase
+      .from('folders')
+      .select('*')
+      .eq('name', 'Backup')
+      .eq('is_system', true)
+      .eq('user_id', session.user.id);
+    
+    if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      await createDefaultBackupFolder();
+    }
+  } catch (error) {
+    console.error('Error ensuring backup folder exists:', error);
+    // Continue even if this fails
+  }
+};
 
 // Get all folders for the current user
 export const getFolders = async (): Promise<Folder[]> => {
@@ -198,7 +227,7 @@ export const getSongById = async (songId: string): Promise<Song | null> => {
 };
 
 // Create a new song in a folder
-export const createSong = async (title: string, content: string, folderId: string): Promise<Song> => {
+export const createSong = async (song: { title: string; content: string; folder_id: string }): Promise<Song> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -207,9 +236,9 @@ export const createSong = async (title: string, content: string, folderId: strin
     }
     
     const songData = {
-      title,
-      content,
-      folder_id: folderId,
+      title: song.title,
+      content: song.content,
+      folder_id: song.folder_id,
       user_id: session.user.id
     };
     
