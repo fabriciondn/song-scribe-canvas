@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { Send } from 'lucide-react';
+import { Printer, Send } from 'lucide-react';
 import { useTemplates } from '@/hooks/useTemplates';
 
 interface DAModalProps {
@@ -75,6 +75,125 @@ export const DAModal: React.FC<DAModalProps> = ({
       });
       onClose();
     }, 2000);
+  };
+
+  const handlePrint = () => {
+    // Create a printable version of the document
+    const printContent = document.createElement('div');
+    printContent.innerHTML = `
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+        <h1 style="text-align: center; font-size: 24px; margin-bottom: 30px;">Documento de Anterioridade</h1>
+        
+        <div style="margin-bottom: 20px;">
+          <h2 style="font-size: 18px; margin-bottom: 5px;">Título da Obra</h2>
+          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${songTitle || "Sem título"}</p>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <h2 style="font-size: 18px; margin-bottom: 5px;">Nome do Autor</h2>
+          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${author || "Nome não informado"}</p>
+        </div>
+        
+        ${location ? `
+        <div style="margin-bottom: 20px;">
+          <h2 style="font-size: 18px; margin-bottom: 5px;">Local</h2>
+          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${location}</p>
+        </div>
+        ` : ''}
+        
+        ${city ? `
+        <div style="margin-bottom: 20px;">
+          <h2 style="font-size: 18px; margin-bottom: 5px;">Cidade</h2>
+          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${city}</p>
+        </div>
+        ` : ''}
+        
+        ${genre ? `
+        <div style="margin-bottom: 20px;">
+          <h2 style="font-size: 18px; margin-bottom: 5px;">Gênero Musical</h2>
+          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${genre}</p>
+        </div>
+        ` : ''}
+        
+        ${version ? `
+        <div style="margin-bottom: 20px;">
+          <h2 style="font-size: 18px; margin-bottom: 5px;">Versão da Letra</h2>
+          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${version}</p>
+        </div>
+        ` : ''}
+        
+        ${collaborators ? `
+        <div style="margin-bottom: 20px;">
+          <h2 style="font-size: 18px; margin-bottom: 5px;">Colaboradores</h2>
+          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${collaborators}</p>
+        </div>
+        ` : ''}
+        
+        ${instrumentation ? `
+        <div style="margin-bottom: 20px;">
+          <h2 style="font-size: 18px; margin-bottom: 5px;">Instrumentação</h2>
+          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${instrumentation}</p>
+        </div>
+        ` : ''}
+        
+        ${duration ? `
+        <div style="margin-bottom: 20px;">
+          <h2 style="font-size: 18px; margin-bottom: 5px;">Duração Estimada</h2>
+          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${duration}</p>
+        </div>
+        ` : ''}
+        
+        ${notes ? `
+        <div style="margin-bottom: 20px;">
+          <h2 style="font-size: 18px; margin-bottom: 5px;">Observações</h2>
+          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${notes}</p>
+        </div>
+        ` : ''}
+        
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+          <div>
+            <h2 style="font-size: 18px; margin-bottom: 5px;">Data</h2>
+            <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${today}</p>
+          </div>
+          <div>
+            <h2 style="font-size: 18px; margin-bottom: 5px;">Hora</h2>
+            <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${time}</p>
+          </div>
+        </div>
+        
+        <div style="margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px;">
+          <h2 style="font-size: 18px; margin-bottom: 15px;">Letra da Composição</h2>
+          <pre style="white-space: pre-wrap; font-family: monospace;">${songContent}</pre>
+        </div>
+        
+        <div style="margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px; text-align: center; font-style: italic;">
+          <p>Este documento registra a anterioridade da obra musical acima descrita, cujo conteúdo está em posse do autor.</p>
+          <p>Documento gerado em ${today} às ${time}</p>
+        </div>
+      </div>
+    `;
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    printWindow?.document.write(`
+      <html>
+        <head>
+          <title>Documento de Anterioridade - ${songTitle}</title>
+        </head>
+        <body>
+          ${printContent.innerHTML}
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }, 500);
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow?.document.close();
   };
   
   const today = new Date().toLocaleDateString('pt-BR');
@@ -255,10 +374,7 @@ export const DAModal: React.FC<DAModalProps> = ({
           </div>
         </div>
         
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancelar
-          </Button>
+        <DialogFooter className="flex flex-col sm:flex-row gap-2">
           <Button onClick={handleGenerateDA} disabled={isSending}>
             {isSending ? 'Processando...' : (
               <>
@@ -266,6 +382,13 @@ export const DAModal: React.FC<DAModalProps> = ({
                 Gerar e Enviar DA
               </>
             )}
+          </Button>
+          <Button variant="secondary" onClick={handlePrint}>
+            <Printer className="w-4 h-4 mr-2" />
+            Imprimir
+          </Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
           </Button>
         </DialogFooter>
       </DialogContent>
