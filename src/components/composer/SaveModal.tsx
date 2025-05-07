@@ -18,6 +18,7 @@ interface SaveModalProps {
   onClose: () => void;
   songTitle: string;
   songContent: string;
+  onSaveComplete: () => void;  // New prop for callback after saving
 }
 
 // Mock folder data - in a real app this would come from a database or context
@@ -31,7 +32,8 @@ export const SaveModal: React.FC<SaveModalProps> = ({
   isOpen,
   onClose,
   songTitle,
-  songContent
+  songContent,
+  onSaveComplete
 }) => {
   const [selectedFolder, setSelectedFolder] = useState<string>('');
   const { toast } = useToast();
@@ -75,6 +77,8 @@ export const SaveModal: React.FC<SaveModalProps> = ({
       description: `"${songTitle || 'Sem título'}" foi guardada na pasta selecionada.`,
     });
 
+    // Call onSaveComplete to clear the form
+    onSaveComplete();
     onClose();
   };
 

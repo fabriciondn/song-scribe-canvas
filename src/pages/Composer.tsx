@@ -7,3 +7,4 @@ const Composer: React.FC = () => {
 };
 
 export default Composer;
+

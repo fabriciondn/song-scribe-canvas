@@ -64,6 +64,15 @@ export const Editor: React.FC = () => {
     setIsSaveModalOpen(false);
   };
 
+  const handleSaveComplete = () => {
+    // Clear the form fields after saving
+    setTitle('');
+    setContent('');
+    // Also clear localStorage for current song
+    localStorage.removeItem('songscribe_current_title');
+    localStorage.removeItem('songscribe_current_content');
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -107,7 +116,13 @@ export const Editor: React.FC = () => {
       </div>
       
       <DAModal isOpen={isDAModalOpen} onClose={closeDAModal} songContent={content} songTitle={title} />
-      <SaveModal isOpen={isSaveModalOpen} onClose={closeSaveModal} songContent={content} songTitle={title} />
+      <SaveModal 
+        isOpen={isSaveModalOpen} 
+        onClose={closeSaveModal} 
+        songContent={content} 
+        songTitle={title}
+        onSaveComplete={handleSaveComplete}
+      />
     </div>
   );
 };

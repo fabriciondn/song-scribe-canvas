@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 // Initial folder data
 const INITIAL_FOLDERS = [
@@ -22,11 +23,11 @@ const INITIAL_FOLDERS = [
 
 export const FolderList: React.FC = () => {
   const [folders, setFolders] = useState(INITIAL_FOLDERS);
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
   const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
   
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Load folders from localStorage on initial render
   useEffect(() => {
@@ -87,6 +88,10 @@ export const FolderList: React.FC = () => {
     const folder = folders.find(f => f.id === folderId);
     return folder?.songs || [];
   };
+  
+  const handleFolderClick = (folderId: string) => {
+    navigate(`/folders/${folderId}`);
+  };
 
   return (
     <div>
@@ -103,7 +108,7 @@ export const FolderList: React.FC = () => {
           <div 
             key={folder.id} 
             className="folder-card p-4 border rounded-lg hover:border-primary cursor-pointer transition-all"
-            onClick={() => setSelectedFolder(folder.id)}
+            onClick={() => handleFolderClick(folder.id)}
           >
             <div className="flex justify-between items-start">
               <div className="flex items-center">
