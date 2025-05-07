@@ -22,8 +22,10 @@ export const getDrafts = async (): Promise<Draft[]> => {
   try {
     // Use RPC function
     const { data, error } = await supabase
-      .rpc('get_drafts')
-      .returns<Draft[]>();
+      .rpc('get_drafts') as {
+        data: Draft[] | null;
+        error: any;
+      };
     
     if (error) {
       // Fallback to direct query
@@ -36,7 +38,7 @@ export const getDrafts = async (): Promise<Draft[]> => {
         };
       
       if (directError) throw directError;
-      return directData as Draft[] || [];
+      return directData || [];
     }
     
     return data || [];
@@ -50,8 +52,10 @@ export const getDraftById = async (draftId: string): Promise<Draft | null> => {
   try {
     // Use RPC function
     const { data, error } = await supabase
-      .rpc('get_draft_by_id', { draft_id: draftId })
-      .returns<Draft>();
+      .rpc('get_draft_by_id', { draft_id: draftId }) as {
+        data: Draft | null;
+        error: any;
+      };
     
     if (error) {
       // Fallback to direct query
@@ -92,8 +96,10 @@ export const createDraft = async (draft: DraftInput): Promise<Draft> => {
         draft_content: draft.content,
         draft_audio_url: draft.audioUrl || null,
         draft_user_id: userId
-      })
-      .returns<Draft>();
+      }) as {
+        data: Draft | null;
+        error: any;
+      };
     
     if (error) {
       // Fallback to direct insert
@@ -115,7 +121,7 @@ export const createDraft = async (draft: DraftInput): Promise<Draft> => {
       return directData as Draft;
     }
     
-    return data;
+    return data as Draft;
   } catch (error) {
     console.error('Error creating draft:', error);
     throw error;
@@ -143,8 +149,10 @@ export const updateDraft = async (
       .rpc('update_draft', { 
         draft_id: draftId,
         draft_updates: jsonUpdates
-      })
-      .returns<Draft>();
+      }) as {
+        data: Draft | null;
+        error: any;
+      };
     
     if (error) {
       // Fallback to direct update
@@ -167,7 +175,7 @@ export const updateDraft = async (
       return directData as Draft;
     }
     
-    return data;
+    return data as Draft;
   } catch (error) {
     console.error(`Error updating draft with ID ${draftId}:`, error);
     throw error;

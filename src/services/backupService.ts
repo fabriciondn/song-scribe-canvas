@@ -35,8 +35,10 @@ export const getBackups = async (): Promise<Backup[]> => {
   try {
     // Use a stored procedure to get backups
     const { data, error } = await supabase
-      .rpc('get_system_backups')
-      .returns<Backup[]>();
+      .rpc('get_system_backups') as {
+        data: Backup[] | null;
+        error: any;
+      };
     
     if (error) {
       // Fallback to direct query with casting to handle type issues
@@ -51,7 +53,7 @@ export const getBackups = async (): Promise<Backup[]> => {
       if (directError) throw directError;
       
       // Add file URLs
-      const backups = directData as Backup[] || [];
+      const backups = directData || [];
       for (const backup of backups) {
         if (backup.file_path) {
           const { data: url } = supabase.storage
@@ -98,7 +100,7 @@ export const getBackupById = async (backupId: string): Promise<Backup | null> =>
     if (error) throw error;
     
     // Add file URL
-    const backup = data as Backup;
+    const backup = data;
     if (backup && backup.file_path) {
       const { data: url } = supabase.storage
         .from('backups')
@@ -163,10 +165,12 @@ export const createSystemBackup = async (title: string, content: string): Promis
       .getPublicUrl(filePath);
     
     // Add URL to the result
-    const backup = data as Backup;
-    backup.file_url = publicURL.publicUrl;
+    const backup = data;
+    if (backup) {
+      backup.file_url = publicURL.publicUrl;
+    }
     
-    return backup;
+    return backup as Backup;
   } catch (error) {
     console.error('Error creating system backup:', error);
     throw error;

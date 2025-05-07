@@ -1,135 +1,150 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, File, FileText, Download } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
 import { Backup, getBackups } from '@/services/backupService';
-import { format } from 'date-fns';
+import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, FileText, Download } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const BackupFolderPage: React.FC = () => {
   const [backups, setBackups] = useState<Backup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedBackup, setSelectedBackup] = useState<Backup | null>(null);
+  
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
-    const loadBackups = async () => {
-      try {
-        const fetchedBackups = await getBackups();
-        setBackups(fetchedBackups);
-      } catch (error) {
-        console.error('Error fetching backups:', error);
-        toast({
-          title: 'Erro ao carregar backups',
-          description: 'Não foi possível carregar os backups.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (!authLoading && !isAuthenticated) {
+      navigate('/');
+      toast({
+        title: 'Acesso negado',
+        description: 'Você precisa estar logado para acessar esta página.',
+        variant: 'destructive',
+      });
+    } else if (isAuthenticated && !authLoading) {
+      loadBackups();
+    }
+  }, [isAuthenticated, authLoading, navigate, toast]);
 
-    loadBackups();
-  }, [toast]);
+  const loadBackups = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getBackups();
+      setBackups(data);
+    } catch (error) {
+      console.error('Error loading backups:', error);
+      toast({
+        title: 'Erro ao carregar backups',
+        description: 'Não foi possível carregar seus backups.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const openBackup = async (backup: Backup) => {
-    setSelectedBackup(backup);
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return 'Data inválida';
+    }
   };
 
   const downloadBackup = (backup: Backup) => {
-    if (!backup.file_url) return;
-    
-    // Create an anchor element and trigger download
-    const a = document.createElement('a');
-    a.href = backup.file_url;
-    a.download = `${backup.title.replace(/\s+/g, '_')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    if (backup.file_url) {
+      window.open(backup.file_url, '_blank');
+    } else {
+      toast({
+        title: 'Erro ao baixar',
+        description: 'URL do arquivo não disponível.',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div>
+        <div className="flex items-center mb-6">
+          <Skeleton className="h-10 w-24 mr-4" />
+          <Skeleton className="h-8 w-48" />
+        </div>
+        
+        <div className="grid gap-4">
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} className="h-32 w-full" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Pasta de Backup do Sistema</h2>
-        <div className="text-sm text-muted-foreground">
-          Esta pasta contém backups automáticos de suas composições.
-          Estes arquivos não podem ser excluídos.
-        </div>
+    <div>
+      <div className="flex items-center mb-6">
+        <Button variant="ghost" onClick={() => navigate('/folders')} className="mr-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar
+        </Button>
+        <h1 className="text-2xl font-bold">Pasta de Backup</h1>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {backups.length === 0 ? (
-          <div className="col-span-full text-center p-8 border rounded-lg bg-muted/10">
-            <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-medium">Nenhum backup encontrado</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Os backups das suas composições serão salvos aqui automaticamente.
-            </p>
-          </div>
-        ) : (
-          backups.map(backup => (
-            <Card 
-              key={backup.id} 
-              className="hover:border-primary transition-colors cursor-pointer"
-              onClick={() => openBackup(backup)}
-            >
+      
+      <p className="text-muted-foreground mb-6">
+        Esta é uma pasta do sistema que armazena backups automáticos das suas composições.
+        Os arquivos nesta pasta não podem ser excluídos para garantir que você não perca seu trabalho.
+      </p>
+      
+      {backups.length === 0 ? (
+        <div className="text-center p-12 border rounded-lg">
+          <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+          <h3 className="text-lg font-medium">Nenhum backup encontrado</h3>
+          <p className="text-sm text-muted-foreground mt-2">
+            Os backups aparecerão aqui quando você criar composições e exportar documentos.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {backups.map(backup => (
+            <Card key={backup.id} className="group hover:border-primary transition-colors">
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
-                  <div className="flex items-center">
-                    <File className="h-5 w-5 text-primary mr-2" />
-                    <CardTitle className="text-base">{backup.title}</CardTitle>
+                  <div>
+                    <CardTitle>{backup.title}</CardTitle>
+                    <CardDescription>
+                      Criado em {formatDate(backup.created_at)}
+                    </CardDescription>
                   </div>
+                  
                   <Button 
                     variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      downloadBackup(backup);
-                    }}
+                    size="icon"
+                    onClick={() => downloadBackup(backup)}
+                    title="Baixar backup"
                   >
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>
-                {backup.created_at && (
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(backup.created_at), 'dd/MM/yyyy HH:mm')}
-                  </p>
-                )}
               </CardHeader>
+              <CardContent>
+                <div className="flex items-center text-sm">
+                  <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-muted-foreground">Arquivo de texto (.txt)</span>
+                </div>
+              </CardContent>
             </Card>
-          ))
-        )}
-      </div>
-
-      {selectedBackup && selectedBackup.file_url && (
-        <div className="mt-8 p-4 border rounded-lg bg-background">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">{selectedBackup.title}</h3>
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={() => downloadBackup(selectedBackup)}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-          </div>
-          <iframe 
-            src={selectedBackup.file_url} 
-            className="w-full h-96 border rounded bg-white"
-            title={selectedBackup.title}
-          />
+          ))}
         </div>
       )}
     </div>

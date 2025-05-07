@@ -42,6 +42,9 @@ export const SaveModal: React.FC<SaveModalProps> = ({
       if (isOpen) {
         setIsLoading(true);
         try {
+          // Ensure Backup folder exists
+          await folderService.ensureBackupFolderExists();
+          
           const fetchedFolders = await folderService.getFolders();
           setFolders(fetchedFolders);
         } catch (error) {
@@ -140,7 +143,7 @@ export const SaveModal: React.FC<SaveModalProps> = ({
                   ) : (
                     folders.map(folder => (
                       <SelectItem key={folder.id} value={folder.id}>
-                        {folder.name}
+                        {folder.name} {folder.is_system ? '(Sistema)' : ''}
                       </SelectItem>
                     ))
                   )}

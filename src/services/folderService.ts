@@ -6,6 +6,7 @@ export interface Folder {
   name: string;
   created_at?: string;
   updated_at?: string;
+  is_system?: boolean; // Add this property to mark system folders
 }
 
 export interface Song {
@@ -17,8 +18,50 @@ export interface Song {
   updated_at?: string;
 }
 
+// Check if a backup folder exists, if not create it
+export const ensureBackupFolderExists = async (): Promise<void> => {
+  try {
+    // Get the current user ID
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+
+    // Check if Backup folder already exists
+    const { data: folders, error: folderError } = await supabase
+      .from('folders')
+      .select('*')
+      .eq('name', 'Backup')
+      .eq('user_id', userId);
+    
+    if (folderError) throw folderError;
+    
+    // If Backup folder doesn't exist, create it
+    if (!folders || folders.length === 0) {
+      const { error } = await supabase
+        .from('folders')
+        .insert({ 
+          name: 'Backup',
+          user_id: userId,
+          is_system: true // Mark as system folder that shouldn't be deleted
+        });
+      
+      if (error) throw error;
+      
+      console.log('Created system Backup folder');
+    }
+  } catch (error) {
+    console.error('Error ensuring backup folder exists:', error);
+  }
+};
+
 export const getFolders = async (): Promise<Folder[]> => {
   try {
+    // Ensure the Backup folder exists before fetching folders
+    await ensureBackupFolderExists();
+    
     const { data, error } = await supabase
       .from('folders')
       .select('*')
@@ -62,7 +105,8 @@ export const createFolder = async (name: string): Promise<Folder> => {
       .from('folders')
       .insert({ 
         name,
-        user_id: userId
+        user_id: userId,
+        is_system: false // Not a system folder
       })
       .select()
       .single();
@@ -77,7 +121,21 @@ export const createFolder = async (name: string): Promise<Folder> => {
 
 export const deleteFolder = async (id: string): Promise<void> => {
   try {
-    // First, delete all songs in this folder
+    // First check if it's a system folder
+    const { data: folder, error: folderError } = await supabase
+      .from('folders')
+      .select('is_system')
+      .eq('id', id)
+      .single();
+    
+    if (folderError) throw folderError;
+    
+    // Prevent deletion if it's a system folder
+    if (folder?.is_system) {
+      throw new Error('Cannot delete a system folder');
+    }
+
+    // Delete all songs in this folder
     const { error: songsError } = await supabase
       .from('songs')
       .delete()

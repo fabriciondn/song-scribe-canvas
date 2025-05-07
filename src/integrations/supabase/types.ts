@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      drafts: {
+        Row: {
+          audio_url: string | null
+          content: string
+          created_at: string | null
+          id: string
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       folders: {
         Row: {
           created_at: string | null
@@ -71,6 +101,36 @@ export type Database = {
           },
         ]
       }
+      system_backups: {
+        Row: {
+          created_at: string | null
+          file_path: string
+          id: string
+          is_system: boolean | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_path: string
+          id?: string
+          is_system?: boolean | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_path?: string
+          id?: string
+          is_system?: boolean | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       templates: {
         Row: {
           city: string | null
@@ -130,7 +190,75 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_draft: {
+        Args: {
+          draft_title: string
+          draft_content: string
+          draft_audio_url: string
+          draft_user_id: string
+        }
+        Returns: {
+          audio_url: string | null
+          content: string
+          created_at: string | null
+          id: string
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+      }
+      delete_draft: {
+        Args: { draft_id: string }
+        Returns: undefined
+      }
+      get_draft_by_id: {
+        Args: { draft_id: string }
+        Returns: {
+          audio_url: string | null
+          content: string
+          created_at: string | null
+          id: string
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+      }
+      get_drafts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          audio_url: string | null
+          content: string
+          created_at: string | null
+          id: string
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }[]
+      }
+      get_system_backups: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string | null
+          file_path: string
+          id: string
+          is_system: boolean | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }[]
+      }
+      update_draft: {
+        Args: { draft_id: string; draft_updates: Json }
+        Returns: {
+          audio_url: string | null
+          content: string
+          created_at: string | null
+          id: string
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+      }
     }
     Enums: {
       [_ in never]: never
