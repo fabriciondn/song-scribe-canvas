@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type AuthMode = 'login' | 'register';
 
@@ -15,12 +16,14 @@ export const AuthForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   
   const { login, register } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setIsSubmitting(true);
     
     try {
@@ -28,7 +31,7 @@ export const AuthForm: React.FC = () => {
         await login(email, password);
         toast({
           title: 'Login realizado com sucesso!',
-          description: 'Bem-vindo de volta ao SongScribe.',
+          description: 'Bem-vindo de volta ao Compuse.',
         });
       } else {
         if (!name) {
@@ -37,15 +40,26 @@ export const AuthForm: React.FC = () => {
         await register(name, email, password);
         toast({
           title: 'Conta criada com sucesso!',
-          description: 'Bem-vindo ao SongScribe.',
+          description: 'Bem-vindo ao Compuse.',
         });
       }
-    } catch (error) {
-      toast({
-        title: 'Erro',
-        description: error instanceof Error ? error.message : 'Ocorreu um erro ao processar sua solicitação',
-        variant: 'destructive',
-      });
+    } catch (error: any) {
+      console.error('Erro na autenticação:', error);
+      let errorMessage = 'Ocorreu um erro ao processar sua solicitação';
+      
+      if (error.message) {
+        if (error.message.includes('Email already in use')) {
+          errorMessage = 'Este e-mail já está em uso. Por favor, tente outro ou faça login.';
+        } else if (error.message.includes('Invalid login credentials')) {
+          errorMessage = 'E-mail ou senha incorretos. Por favor, verifique suas credenciais.';
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = 'Por favor, confirme seu e-mail antes de fazer login.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -53,13 +67,14 @@ export const AuthForm: React.FC = () => {
 
   const toggleMode = () => {
     setMode(mode === 'login' ? 'register' : 'login');
+    setError('');
   };
 
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-center">
-          {mode === 'login' ? 'Entrar no SongScribe' : 'Criar sua conta'}
+          {mode === 'login' ? 'Entrar no Compuse' : 'Criar sua conta'}
         </CardTitle>
         <CardDescription className="text-center">
           {mode === 'login' 
@@ -69,6 +84,12 @@ export const AuthForm: React.FC = () => {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
           {mode === 'register' && (
             <div className="space-y-2">
               <Label htmlFor="name">Nome</Label>
@@ -104,6 +125,7 @@ export const AuthForm: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="********"
               required
+              minLength={6}
             />
           </div>
         </CardContent>
@@ -126,6 +148,7 @@ export const AuthForm: React.FC = () => {
               className="px-2 py-0 h-auto" 
               onClick={toggleMode} 
               type="button"
+              disabled={isSubmitting}
             >
               {mode === 'login' ? 'Registre-se' : 'Faça login'}
             </Button>

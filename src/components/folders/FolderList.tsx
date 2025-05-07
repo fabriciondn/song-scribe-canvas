@@ -13,85 +13,135 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
-
-// Initial folder data
-const INITIAL_FOLDERS = [
-  { id: '1', name: 'Ideias', songs: ['Ideia para balada', 'Conceito de música pop'] },
-  { id: '2', name: 'Rascunhos', songs: ['Primeiro rascunho - Rock'] },
-  { id: '3', name: 'Finalizadas', songs: ['Canção do Verão', 'Balada de Inverno'] },
-];
+import { useAuth } from '@/hooks/useAuth';
+import { Folder as FolderType, Song, getFolders, createFolder, deleteFolder, getSongsByFolderId } from '@/services/folderService';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const FolderList: React.FC = () => {
-  const [folders, setFolders] = useState(INITIAL_FOLDERS);
+  const [folders, setFolders] = useState<FolderType[]>([]);
+  const [folderSongs, setFolderSongs] = useState<Record<string, string[]>>({});
   const [newFolderName, setNewFolderName] = useState('');
   const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   const { toast } = useToast();
   const navigate = useNavigate();
-  
-  // Load folders from localStorage on initial render
-  useEffect(() => {
-    const savedFolders = localStorage.getItem('folders');
-    if (savedFolders) {
-      setFolders(JSON.parse(savedFolders));
-    } else {
-      // Initialize localStorage with default folders
-      localStorage.setItem('folders', JSON.stringify(INITIAL_FOLDERS));
-    }
-  }, []);
-  
-  const handleAddFolder = () => {
-    if (!newFolderName.trim()) return;
-    
-    const newFolder = {
-      id: Date.now().toString(),
-      name: newFolderName,
-      songs: [],
-    };
-    
-    const updatedFolders = [...folders, newFolder];
-    setFolders(updatedFolders);
-    localStorage.setItem('folders', JSON.stringify(updatedFolders));
-    
-    setNewFolderName('');
-    setIsNewFolderModalOpen(false);
-    
-    toast({
-      title: 'Pasta criada',
-      description: `A pasta "${newFolderName}" foi criada com sucesso.`,
-    });
-  };
-  
-  const handleDeleteFolder = (folderId: string) => {
-    const updatedFolders = folders.filter(folder => folder.id !== folderId);
-    setFolders(updatedFolders);
-    localStorage.setItem('folders', JSON.stringify(updatedFolders));
-    
-    // Remove songs saved in this folder
-    localStorage.removeItem(`folder_${folderId}`);
-    
-    toast({
-      title: 'Pasta excluída',
-      description: 'A pasta foi excluída com sucesso.',
-    });
-  };
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // Get songs for each folder from localStorage
-  const getFolderSongs = (folderId: string) => {
-    const savedSongs = localStorage.getItem(`folder_${folderId}`);
-    if (savedSongs) {
-      const parsedSongs = JSON.parse(savedSongs);
-      return parsedSongs.map((song: any) => song.title || 'Sem título');
+  // Verificar autenticação
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/');
+      toast({
+        title: 'Acesso negado',
+        description: 'Você precisa estar logado para acessar esta página.',
+        variant: 'destructive',
+      });
+    }
+  }, [isAuthenticated, authLoading, navigate, toast]);
+  
+  // Carregar pastas do Supabase
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    const loadFolders = async () => {
+      setIsLoading(true);
+      try {
+        const foldersData = await getFolders();
+        setFolders(foldersData);
+        
+        // Carregar músicas de cada pasta
+        const songsMap: Record<string, string[]> = {};
+        for (const folder of foldersData) {
+          const songs = await getSongsByFolderId(folder.id);
+          songsMap[folder.id] = songs.map(song => song.title);
+        }
+        setFolderSongs(songsMap);
+      } catch (error) {
+        console.error('Erro ao carregar pastas:', error);
+        toast({
+          title: 'Erro ao carregar pastas',
+          description: 'Não foi possível carregar suas pastas.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFolders();
+  }, [isAuthenticated, toast]);
+  
+  const handleAddFolder = async () => {
+    if (!newFolderName.trim()) {
+      toast({
+        title: 'Nome inválido',
+        description: 'Por favor, insira um nome para a pasta.',
+        variant: 'destructive',
+      });
+      return;
     }
     
-    // Return default songs if none in localStorage
-    const folder = folders.find(f => f.id === folderId);
-    return folder?.songs || [];
+    try {
+      const newFolder = await createFolder(newFolderName);
+      setFolders(prev => [newFolder, ...prev]);
+      setFolderSongs(prev => ({...prev, [newFolder.id]: []}));
+      setNewFolderName('');
+      setIsNewFolderModalOpen(false);
+      
+      toast({
+        title: 'Pasta criada',
+        description: `A pasta "${newFolderName}" foi criada com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao criar pasta:', error);
+      toast({
+        title: 'Erro ao criar pasta',
+        description: 'Não foi possível criar a pasta.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const handleDeleteFolder = async (folderId: string) => {
+    try {
+      await deleteFolder(folderId);
+      setFolders(prev => prev.filter(folder => folder.id !== folderId));
+      
+      toast({
+        title: 'Pasta excluída',
+        description: 'A pasta foi excluída com sucesso.',
+      });
+    } catch (error) {
+      console.error('Erro ao excluir pasta:', error);
+      toast({
+        title: 'Erro ao excluir pasta',
+        description: 'Não foi possível excluir a pasta.',
+        variant: 'destructive',
+      });
+    }
   };
   
   const handleFolderClick = (folderId: string) => {
     navigate(`/folders/${folderId}`);
   };
+
+  if (isLoading) {
+    return (
+      <div>
+        <div className="flex justify-between items-center mb-6">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-10 w-28" />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4].map(i => (
+            <Skeleton key={i} className="h-52 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -103,59 +153,76 @@ export const FolderList: React.FC = () => {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {folders.map(folder => (
-          <div 
-            key={folder.id} 
-            className="folder-card p-4 border rounded-lg hover:border-primary cursor-pointer transition-all"
-            onClick={() => handleFolderClick(folder.id)}
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex items-center">
-                <Folder className="h-10 w-10 text-primary mr-2" />
-                <h3 className="text-lg font-semibold">{folder.name}</h3>
+      {folders.length === 0 ? (
+        <div className="text-center py-12 border rounded-lg bg-muted/10">
+          <Folder className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+          <h3 className="text-lg font-medium mb-2">Nenhuma pasta encontrada</h3>
+          <p className="text-muted-foreground mb-6">Crie uma pasta para começar a organizar suas composições.</p>
+          <Button onClick={() => setIsNewFolderModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Pasta
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {folders.map(folder => (
+            <div 
+              key={folder.id} 
+              className="folder-card p-4 border rounded-lg hover:border-primary cursor-pointer transition-all"
+              onClick={() => handleFolderClick(folder.id)}
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex items-center">
+                  <Folder className="h-10 w-10 text-primary mr-2" />
+                  <h3 className="text-lg font-semibold">{folder.name}</h3>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteFolder(folder.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteFolder(folder.id);
-                }}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
+              
+              <div className="mt-4 text-sm text-muted-foreground">
+                {(!folderSongs[folder.id] || folderSongs[folder.id].length === 0) ? (
+                  <p>Pasta vazia</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {folderSongs[folder.id].slice(0, 3).map((songTitle, idx) => (
+                      <li key={idx} className="flex items-center">
+                        <File className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">{songTitle}</span>
+                      </li>
+                    ))}
+                    {folderSongs[folder.id].length > 3 && (
+                      <li className="text-xs text-muted-foreground">
+                        +{folderSongs[folder.id].length - 3} mais...
+                      </li>
+                    )}
+                  </ul>
+                )}
+              </div>
+              
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-xs">
+                  {folderSongs[folder.id]?.length || 0} {(folderSongs[folder.id]?.length || 0) === 1 ? 'item' : 'itens'}
+                </p>
+                {folder.created_at && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Criado em {new Date(folder.created_at).toLocaleDateString('pt-BR')}
+                  </p>
+                )}
+              </div>
             </div>
-            
-            <div className="mt-4 text-sm text-muted-foreground">
-              {getFolderSongs(folder.id).length === 0 ? (
-                <p>Pasta vazia</p>
-              ) : (
-                <ul className="space-y-2">
-                  {getFolderSongs(folder.id).slice(0, 3).map((song: string, idx: number) => (
-                    <li key={idx} className="flex items-center">
-                      <File className="h-4 w-4 mr-2 flex-shrink-0" />
-                      <span className="truncate">{song}</span>
-                    </li>
-                  ))}
-                  {getFolderSongs(folder.id).length > 3 && (
-                    <li className="text-xs text-muted-foreground">
-                      +{getFolderSongs(folder.id).length - 3} mais...
-                    </li>
-                  )}
-                </ul>
-              )}
-            </div>
-            
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-xs">
-                {getFolderSongs(folder.id).length} {getFolderSongs(folder.id).length === 1 ? 'item' : 'itens'}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
       
       {/* New Folder Dialog */}
       <Dialog open={isNewFolderModalOpen} onOpenChange={setIsNewFolderModalOpen}>

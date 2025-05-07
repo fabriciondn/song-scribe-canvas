@@ -1,82 +1,103 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { Template, TemplateField } from '@/types/template';
+import { supabase } from '@/integrations/supabase/client';
+import { TemplateField } from '@/types/template';
 
-// Default initial template for local storage fallback
-export const INITIAL_TEMPLATES: Template[] = [
-  {
-    id: '1',
-    name: 'Template Padrão',
-    location: 'Estúdio',
-    city: 'São Paulo',
-    notes: 'Template padrão para documentação de anterioridade.',
-    selectedFields: ["location", "city", "notes"],
-    isActive: true,
-    createdAt: new Date().toLocaleDateString('pt-BR'),
-    createdTime: new Date().toLocaleTimeString('pt-BR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    }),
-  }
-];
+export interface Template {
+  id: string;
+  name: string;
+  location: string;
+  city: string;
+  notes: string;
+  genre: string;
+  version: string;
+  collaborators: string;
+  instrumentation: string;
+  duration: string;
+  selectedFields: TemplateField[];
+  isActive: boolean;
+  createdAt: string;
+  createdTime: string;
+}
 
-export const STORAGE_KEY = 'songscribe_templates';
-export const ACTIVE_TEMPLATE_KEY = 'songscribe_active_template';
-
-// Fetch all templates for the current user
-export async function fetchTemplates(): Promise<Template[]> {
+export const getAllTemplates = async (): Promise<Template[]> => {
   try {
     const { data, error } = await supabase
       .from('templates')
       .select('*')
       .order('created_at', { ascending: false });
-      
-    if (error) {
-      console.error('Error fetching templates:', error);
-      // Fall back to local storage
-      const savedTemplates = localStorage.getItem(STORAGE_KEY);
-      return savedTemplates ? JSON.parse(savedTemplates) : INITIAL_TEMPLATES;
-    }
-    
-    // Transform from Supabase format to our app format
-    const templates = data.map(item => ({
-      id: item.id,
-      name: item.name,
-      location: item.location || '',
-      city: item.city || '',
-      notes: item.notes || '',
-      genre: item.genre || '',
-      version: item.version || '',
-      collaborators: item.collaborators || '',
-      instrumentation: item.instrumentation || '',
-      duration: item.duration || '',
-      selectedFields: item.selected_fields || ["location", "city", "notes"],
-      isActive: item.is_active || false,
-      createdAt: new Date(item.created_at).toLocaleDateString('pt-BR'),
-      createdTime: new Date(item.created_at).toLocaleTimeString('pt-BR', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }),
-    }));
-    
-    // If no templates found, return initial template
-    if (templates.length === 0) {
-      return INITIAL_TEMPLATES;
-    }
-    
-    return templates;
-  } catch (error) {
-    console.error('Error in fetchTemplates:', error);
-    // Fall back to local storage
-    const savedTemplates = localStorage.getItem(STORAGE_KEY);
-    return savedTemplates ? JSON.parse(savedTemplates) : INITIAL_TEMPLATES;
-  }
-}
 
-// Create a new template
-export async function createTemplate(template: Omit<Template, 'id' | 'createdAt' | 'createdTime'>): Promise<Template | null> {
+    if (error) throw new Error(error.message);
+
+    if (!data) return [];
+
+    return data.map((template) => ({
+      id: template.id,
+      name: template.name,
+      location: template.location || '',
+      city: template.city || '',
+      notes: template.notes || '',
+      genre: template.genre || '',
+      version: template.version || '',
+      collaborators: template.collaborators || '',
+      instrumentation: template.instrumentation || '',
+      duration: template.duration || '',
+      selectedFields: template.selected_fields as TemplateField[] || [],
+      isActive: template.is_active || false,
+      createdAt: template.created_at || new Date().toISOString(),
+      createdTime: new Date(template.created_at || new Date()).toLocaleTimeString(),
+    }));
+  } catch (error) {
+    console.error('Error fetching templates:', error);
+    throw error;
+  }
+};
+
+export const getTemplateById = async (templateId: string): Promise<Template | null> => {
   try {
-    // Convert to Supabase format
+    const { data, error } = await supabase
+      .from('templates')
+      .select('*')
+      .eq('id', templateId)
+      .single();
+
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      name: data.name,
+      location: data.location || '',
+      city: data.city || '',
+      notes: data.notes || '',
+      genre: data.genre || '',
+      version: data.version || '',
+      collaborators: data.collaborators || '',
+      instrumentation: data.instrumentation || '',
+      duration: data.duration || '',
+      selectedFields: data.selected_fields as TemplateField[] || [],
+      isActive: data.is_active || false,
+      createdAt: data.created_at || new Date().toISOString(),
+      createdTime: new Date(data.created_at || new Date()).toLocaleTimeString(),
+    };
+  } catch (error) {
+    console.error('Error fetching template by ID:', error);
+    throw error;
+  }
+};
+
+export const createTemplate = async (template: {
+  name: string;
+  location: string;
+  city: string;
+  notes: string;
+  genre: string;
+  version: string;
+  collaborators: string;
+  instrumentation: string;
+  duration: string;
+  selectedFields: TemplateField[];
+}): Promise<Template> => {
+  try {
     const { data, error } = await supabase
       .from('templates')
       .insert({
@@ -90,17 +111,14 @@ export async function createTemplate(template: Omit<Template, 'id' | 'createdAt'
         instrumentation: template.instrumentation,
         duration: template.duration,
         selected_fields: template.selectedFields,
-        is_active: template.isActive,
+        user_id: supabase.auth.getSession().then((result) => result?.data?.session?.user?.id)
       })
-      .select()
+      .select('*')
       .single();
-    
-    if (error) {
-      console.error('Error creating template:', error);
-      return null;
-    }
-    
-    // Transform to our app format
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Failed to create template');
+
     return {
       id: data.id,
       name: data.name,
@@ -112,50 +130,55 @@ export async function createTemplate(template: Omit<Template, 'id' | 'createdAt'
       collaborators: data.collaborators || '',
       instrumentation: data.instrumentation || '',
       duration: data.duration || '',
-      selectedFields: data.selected_fields || ["location", "city", "notes"],
+      selectedFields: data.selected_fields as TemplateField[] || [],
       isActive: data.is_active || false,
-      createdAt: new Date(data.created_at).toLocaleDateString('pt-BR'),
-      createdTime: new Date(data.created_at).toLocaleTimeString('pt-BR', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }),
+      createdAt: data.created_at || new Date().toISOString(),
+      createdTime: new Date(data.created_at || new Date()).toLocaleTimeString(),
     };
   } catch (error) {
-    console.error('Error in createTemplate:', error);
-    return null;
+    console.error('Error creating template:', error);
+    throw error;
   }
-}
+};
 
-// Update an existing template
-export async function updateTemplate(templateId: string, updates: Partial<Template>): Promise<Template | null> {
+export const updateTemplate = async (
+  templateId: string,
+  template: {
+    name: string;
+    location: string;
+    city: string;
+    notes: string;
+    genre: string;
+    version: string;
+    collaborators: string;
+    instrumentation: string;
+    duration: string;
+    selectedFields: TemplateField[];
+  }
+): Promise<Template> => {
   try {
-    // Convert to Supabase format
-    const supabaseUpdates: any = {};
-    if (updates.name) supabaseUpdates.name = updates.name;
-    if (updates.location !== undefined) supabaseUpdates.location = updates.location;
-    if (updates.city !== undefined) supabaseUpdates.city = updates.city;
-    if (updates.notes !== undefined) supabaseUpdates.notes = updates.notes;
-    if (updates.genre !== undefined) supabaseUpdates.genre = updates.genre;
-    if (updates.version !== undefined) supabaseUpdates.version = updates.version;
-    if (updates.collaborators !== undefined) supabaseUpdates.collaborators = updates.collaborators;
-    if (updates.instrumentation !== undefined) supabaseUpdates.instrumentation = updates.instrumentation;
-    if (updates.duration !== undefined) supabaseUpdates.duration = updates.duration;
-    if (updates.selectedFields) supabaseUpdates.selected_fields = updates.selectedFields;
-    if (updates.isActive !== undefined) supabaseUpdates.is_active = updates.isActive;
-    
     const { data, error } = await supabase
       .from('templates')
-      .update(supabaseUpdates)
+      .update({
+        name: template.name,
+        location: template.location,
+        city: template.city,
+        notes: template.notes,
+        genre: template.genre,
+        version: template.version,
+        collaborators: template.collaborators,
+        instrumentation: template.instrumentation,
+        duration: template.duration,
+        selected_fields: template.selectedFields,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', templateId)
-      .select()
+      .select('*')
       .single();
-    
-    if (error) {
-      console.error('Error updating template:', error);
-      return null;
-    }
-    
-    // Transform to our app format
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Failed to update template');
+
     return {
       id: data.id,
       name: data.name,
@@ -167,68 +190,27 @@ export async function updateTemplate(templateId: string, updates: Partial<Templa
       collaborators: data.collaborators || '',
       instrumentation: data.instrumentation || '',
       duration: data.duration || '',
-      selectedFields: data.selected_fields || ["location", "city", "notes"],
+      selectedFields: data.selected_fields as TemplateField[] || [],
       isActive: data.is_active || false,
-      createdAt: new Date(data.created_at).toLocaleDateString('pt-BR'),
-      createdTime: new Date(data.created_at).toLocaleTimeString('pt-BR', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }),
+      createdAt: data.created_at || new Date().toISOString(),
+      createdTime: new Date(data.created_at || new Date()).toLocaleTimeString(),
     };
   } catch (error) {
-    console.error('Error in updateTemplate:', error);
-    return null;
+    console.error('Error updating template:', error);
+    throw error;
   }
-}
+};
 
-// Delete a template
-export async function deleteTemplate(templateId: string): Promise<boolean> {
+export const deleteTemplate = async (templateId: string): Promise<void> => {
   try {
     const { error } = await supabase
       .from('templates')
       .delete()
       .eq('id', templateId);
-    
-    if (error) {
-      console.error('Error deleting template:', error);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error in deleteTemplate:', error);
-    return false;
-  }
-}
 
-// Set a template as active and all others as inactive
-export async function setActiveTemplate(templateId: string): Promise<boolean> {
-  try {
-    // First, set all templates to inactive
-    const { error: error1 } = await supabase
-      .from('templates')
-      .update({ is_active: false })
-      .not('id', 'eq', templateId);
-    
-    if (error1) {
-      console.error('Error deactivating other templates:', error1);
-      return false;
-    }
-    
-    // Then set the selected template to active
-    const { error: error2 } = await supabase
-      .from('templates')
-      .update({ is_active: true })
-      .eq('id', templateId);
-    
-    if (error2) {
-      console.error('Error activating template:', error2);
-      return false;
-    }
-    
-    return true;
+    if (error) throw new Error(error.message);
   } catch (error) {
-    console.error('Error in setActiveTemplate:', error);
-    return false;
+    console.error('Error deleting template:', error);
+    throw error;
   }
-}
+};
