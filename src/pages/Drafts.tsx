@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -11,42 +11,67 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Save } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, Loader2 } from 'lucide-react';
 import { AudioRecorder } from '../components/drafts/AudioRecorder';
 import { useToast } from '@/components/ui/use-toast';
-
-interface Draft {
-  id: string;
-  title: string;
-  content: string;
-  audioUrl?: string;
-  date: string;
-}
-
-const INITIAL_DRAFTS: Draft[] = [
-  {
-    id: '1',
-    title: 'Ideia para refrão pop',
-    content: 'Algo sobre as estrelas e o caminho para casa',
-    date: new Date().toLocaleString(),
-  }
-];
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import * as draftService from '../services/draftService';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Draft } from '../services/draftService';
 
 const Drafts: React.FC = () => {
-  const [drafts, setDrafts] = useState<Draft[]>(INITIAL_DRAFTS);
+  const [drafts, setDrafts] = useState<Draft[]>([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [activeId, setActiveId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  
+  // Check authentication and load drafts
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/');
+      toast({
+        title: 'Acesso negado',
+        description: 'Você precisa estar logado para acessar esta página.',
+        variant: 'destructive',
+      });
+    } else if (isAuthenticated && !authLoading) {
+      loadDrafts();
+    }
+  }, [isAuthenticated, authLoading, navigate, toast]);
+  
+  const loadDrafts = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedDrafts = await draftService.getDrafts();
+      setDrafts(fetchedDrafts);
+    } catch (error) {
+      console.error('Failed to load drafts:', error);
+      toast({
+        title: 'Erro ao carregar rascunhos',
+        description: 'Não foi possível carregar seus rascunhos.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const startNewDraft = () => {
     setTitle('');
     setContent('');
     setAudioUrl(undefined);
+    setAudioBlob(null);
     setActiveId(null);
     setIsEditing(true);
   };
@@ -54,12 +79,13 @@ const Drafts: React.FC = () => {
   const startEditingDraft = (draft: Draft) => {
     setTitle(draft.title);
     setContent(draft.content);
-    setAudioUrl(draft.audioUrl);
+    setAudioUrl(draft.audio_url);
+    setAudioBlob(null);
     setActiveId(draft.id);
     setIsEditing(true);
   };
   
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     if (!title.trim()) {
       toast({
         title: 'Título obrigatório',
@@ -69,53 +95,100 @@ const Drafts: React.FC = () => {
       return;
     }
     
-    const now = new Date().toLocaleString();
+    setIsSaving(true);
     
-    if (activeId) {
-      // Update existing draft
-      setDrafts(drafts.map(d => 
-        d.id === activeId 
-          ? { ...d, title, content, audioUrl, date: now } 
-          : d
-      ));
+    try {
+      let finalAudioUrl = audioUrl;
       
+      // If we have a new audio blob, upload it
+      if (audioBlob) {
+        const filename = `audio_${Date.now()}.wav`;
+        finalAudioUrl = await draftService.uploadAudio(audioBlob, filename);
+      }
+      
+      if (activeId) {
+        // Update existing draft
+        const updatedDraft = await draftService.updateDraft(activeId, {
+          title,
+          content,
+          audioUrl: finalAudioUrl
+        });
+        
+        setDrafts(drafts.map(d => d.id === activeId ? updatedDraft : d));
+        
+        toast({
+          title: 'Rascunho atualizado',
+          description: `O rascunho "${title}" foi atualizado com sucesso.`,
+        });
+      } else {
+        // Create new draft
+        const newDraft = await draftService.createDraft({
+          title,
+          content,
+          audioUrl: finalAudioUrl
+        });
+        
+        setDrafts([newDraft, ...drafts]);
+        
+        toast({
+          title: 'Rascunho criado',
+          description: `O rascunho "${title}" foi criado com sucesso.`,
+        });
+      }
+      
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error saving draft:', error);
       toast({
-        title: 'Rascunho atualizado',
-        description: `O rascunho "${title}" foi atualizado com sucesso.`,
+        title: 'Erro ao salvar',
+        description: 'Ocorreu um erro ao salvar o rascunho. Tente novamente.',
+        variant: 'destructive',
       });
-    } else {
-      // Create new draft
-      const newDraft: Draft = {
-        id: Date.now().toString(),
-        title,
-        content,
-        audioUrl,
-        date: now,
-      };
-      
-      setDrafts([newDraft, ...drafts]);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  const handleDeleteDraft = async (id: string) => {
+    try {
+      await draftService.deleteDraft(id);
+      setDrafts(drafts.filter(d => d.id !== id));
       
       toast({
-        title: 'Rascunho criado',
-        description: `O rascunho "${title}" foi criado com sucesso.`,
+        title: 'Rascunho excluído',
+        description: 'O rascunho foi excluído com sucesso.',
+      });
+    } catch (error) {
+      console.error('Error deleting draft:', error);
+      toast({
+        title: 'Erro ao excluir',
+        description: 'Ocorreu um erro ao excluir o rascunho. Tente novamente.',
+        variant: 'destructive',
       });
     }
-    
-    setIsEditing(false);
   };
   
-  const handleDeleteDraft = (id: string) => {
-    setDrafts(drafts.filter(d => d.id !== id));
-    
-    toast({
-      title: 'Rascunho excluído',
-      description: 'O rascunho foi excluído com sucesso.',
-    });
-  };
-  
-  const handleSaveRecording = (url: string) => {
+  const handleSaveRecording = (url: string, blob: Blob) => {
     setAudioUrl(url);
+    setAudioBlob(blob);
   };
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-10 w-36" />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map(i => (
+            <Skeleton key={i} className="h-64 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -152,18 +225,31 @@ const Drafts: React.FC = () => {
               />
             </div>
             
-            <AudioRecorder onSaveRecording={handleSaveRecording} />
+            <AudioRecorder onSaveRecording={handleSaveRecording} initialAudioUrl={audioUrl} />
             
             <div className="flex justify-end space-x-2 pt-4">
               <Button 
                 variant="outline" 
                 onClick={() => setIsEditing(false)}
+                disabled={isSaving}
               >
                 Cancelar
               </Button>
-              <Button onClick={handleSaveDraft}>
-                <Save className="mr-2 h-4 w-4" />
-                Salvar Rascunho
+              <Button 
+                onClick={handleSaveDraft} 
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Salvar Rascunho
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -199,16 +285,24 @@ const Drafts: React.FC = () => {
                       </Button>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">{draft.date}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(draft.created_at).toLocaleDateString('pt-BR', { 
+                      day: '2-digit', 
+                      month: '2-digit', 
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm whitespace-pre-line line-clamp-4">
                     {draft.content || <span className="text-muted-foreground italic">Sem conteúdo</span>}
                   </p>
                   
-                  {draft.audioUrl && (
+                  {draft.audio_url && (
                     <div className="mt-4">
-                      <audio controls src={draft.audioUrl} className="w-full h-8" />
+                      <audio controls src={draft.audio_url} className="w-full h-8" />
                     </div>
                   )}
                 </CardContent>

@@ -50,9 +50,20 @@ export const getFolderById = async (folderId: string): Promise<Folder | null> =>
 
 export const createFolder = async (name: string): Promise<Folder> => {
   try {
+    // Get the current user ID
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+
     const { data, error } = await supabase
       .from('folders')
-      .insert({ name })
+      .insert({ 
+        name,
+        user_id: userId
+      })
       .select()
       .single();
     
@@ -66,6 +77,15 @@ export const createFolder = async (name: string): Promise<Folder> => {
 
 export const deleteFolder = async (id: string): Promise<void> => {
   try {
+    // First, delete all songs in this folder
+    const { error: songsError } = await supabase
+      .from('songs')
+      .delete()
+      .eq('folder_id', id);
+
+    if (songsError) throw songsError;
+    
+    // Then delete the folder
     const { error } = await supabase
       .from('folders')
       .delete()
@@ -112,12 +132,21 @@ export const getSongById = async (songId: string): Promise<Song | null> => {
 
 export const createSong = async (song: { title: string, content: string, folder_id: string }): Promise<Song> => {
   try {
+    // Get the current user ID
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+
     const { data, error } = await supabase
       .from('songs')
       .insert({
         title: song.title,
         content: song.content,
-        folder_id: song.folder_id
+        folder_id: song.folder_id,
+        user_id: userId
       })
       .select()
       .single();

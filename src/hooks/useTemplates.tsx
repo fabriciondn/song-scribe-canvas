@@ -4,6 +4,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { Template } from '@/types/template';
 import { useTemplateState } from './useTemplateState';
 import * as templateService from '@/services/templateService';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export const useTemplates = () => {
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -11,14 +13,25 @@ export const useTemplates = () => {
   const [isNewTemplateOpen, setIsNewTemplateOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   
   // Import all template state fields
   const templateState = useTemplateState();
   
   // Load templates when the component mounts
   useEffect(() => {
-    loadTemplates();
-  }, []);
+    if (isAuthenticated) {
+      loadTemplates();
+    } else if (!isAuthenticated && !isLoading) {
+      navigate('/');
+      toast({
+        title: 'Acesso negado',
+        description: 'Você precisa estar logado para acessar esta página.',
+        variant: 'destructive',
+      });
+    }
+  }, [isAuthenticated, navigate, toast]);
 
   // Save templates to localStorage whenever they change (as a backup)
   useEffect(() => {
@@ -90,14 +103,12 @@ export const useTemplates = () => {
           selectedFields: templateState.selectedFields
         });
         
-        if (updatedTemplate) {
-          setTemplates(templates.map(t => t.id === editingTemplate.id ? updatedTemplate : t));
-          
-          toast({
-            title: 'Template atualizado',
-            description: `O template "${templateState.name}" foi atualizado com sucesso.`,
-          });
-        }
+        setTemplates(templates.map(t => t.id === editingTemplate.id ? updatedTemplate : t));
+        
+        toast({
+          title: 'Template atualizado',
+          description: `O template "${templateState.name}" foi atualizado com sucesso.`,
+        });
       } else {
         // Create new template
         const newTemplate = await templateService.createTemplate({
@@ -110,18 +121,15 @@ export const useTemplates = () => {
           collaborators: templateState.collaborators,
           instrumentation: templateState.instrumentation,
           duration: templateState.duration,
-          selectedFields: templateState.selectedFields,
-          isActive: false
+          selectedFields: templateState.selectedFields
         });
         
-        if (newTemplate) {
-          setTemplates([...templates, newTemplate]);
-          
-          toast({
-            title: 'Template criado',
-            description: `O template "${templateState.name}" foi criado com sucesso.`,
-          });
-        }
+        setTemplates([...templates, newTemplate]);
+        
+        toast({
+          title: 'Template criado',
+          description: `O template "${templateState.name}" foi criado com sucesso.`,
+        });
       }
       
       setIsNewTemplateOpen(false);

@@ -1,6 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { TemplateField } from '@/types/template';
+import { Json } from '@/integrations/supabase/types';
+
+// Constants for localStorage keys
+export const STORAGE_KEY = 'saved_templates';
+export const ACTIVE_TEMPLATE_KEY = 'active_template_id';
 
 export interface Template {
   id: string;
@@ -19,7 +24,7 @@ export interface Template {
   createdTime: string;
 }
 
-export const getAllTemplates = async (): Promise<Template[]> => {
+export const fetchTemplates = async (): Promise<Template[]> => {
   try {
     const { data, error } = await supabase
       .from('templates')
@@ -50,6 +55,10 @@ export const getAllTemplates = async (): Promise<Template[]> => {
     console.error('Error fetching templates:', error);
     throw error;
   }
+};
+
+export const getAllTemplates = async (): Promise<Template[]> => {
+  return fetchTemplates();
 };
 
 export const getTemplateById = async (templateId: string): Promise<Template | null> => {
@@ -98,6 +107,11 @@ export const createTemplate = async (template: {
   selectedFields: TemplateField[];
 }): Promise<Template> => {
   try {
+    // First, get the user ID
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
+    // Then create the template
     const { data, error } = await supabase
       .from('templates')
       .insert({
@@ -111,7 +125,7 @@ export const createTemplate = async (template: {
         instrumentation: template.instrumentation,
         duration: template.duration,
         selected_fields: template.selectedFields,
-        user_id: supabase.auth.getSession().then((result) => result?.data?.session?.user?.id)
+        user_id: userId
       })
       .select('*')
       .single();
@@ -201,7 +215,7 @@ export const updateTemplate = async (
   }
 };
 
-export const deleteTemplate = async (templateId: string): Promise<void> => {
+export const deleteTemplate = async (templateId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('templates')
@@ -209,8 +223,31 @@ export const deleteTemplate = async (templateId: string): Promise<void> => {
       .eq('id', templateId);
 
     if (error) throw new Error(error.message);
+    return true;
   } catch (error) {
     console.error('Error deleting template:', error);
+    throw error;
+  }
+};
+
+export const setActiveTemplate = async (templateId: string): Promise<boolean> => {
+  try {
+    // First, unset active state for all templates
+    await supabase
+      .from('templates')
+      .update({ is_active: false })
+      .not('id', 'eq', templateId);
+
+    // Then set active state for the selected template
+    const { error } = await supabase
+      .from('templates')
+      .update({ is_active: true })
+      .eq('id', templateId);
+
+    if (error) throw new Error(error.message);
+    return true;
+  } catch (error) {
+    console.error('Error setting active template:', error);
     throw error;
   }
 };

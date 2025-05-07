@@ -37,40 +37,38 @@ export const FolderList: React.FC = () => {
         description: 'Você precisa estar logado para acessar esta página.',
         variant: 'destructive',
       });
+    } else if (isAuthenticated && !authLoading) {
+      loadFolders();
     }
   }, [isAuthenticated, authLoading, navigate, toast]);
   
   // Carregar pastas do Supabase
-  useEffect(() => {
+  const loadFolders = async () => {
     if (!isAuthenticated) return;
     
-    const loadFolders = async () => {
-      setIsLoading(true);
-      try {
-        const foldersData = await getFolders();
-        setFolders(foldersData);
-        
-        // Carregar músicas de cada pasta
-        const songsMap: Record<string, string[]> = {};
-        for (const folder of foldersData) {
-          const songs = await getSongsByFolderId(folder.id);
-          songsMap[folder.id] = songs.map(song => song.title);
-        }
-        setFolderSongs(songsMap);
-      } catch (error) {
-        console.error('Erro ao carregar pastas:', error);
-        toast({
-          title: 'Erro ao carregar pastas',
-          description: 'Não foi possível carregar suas pastas.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
+    setIsLoading(true);
+    try {
+      const foldersData = await getFolders();
+      setFolders(foldersData);
+      
+      // Carregar músicas de cada pasta
+      const songsMap: Record<string, string[]> = {};
+      for (const folder of foldersData) {
+        const songs = await getSongsByFolderId(folder.id);
+        songsMap[folder.id] = songs.map(song => song.title);
       }
-    };
-
-    loadFolders();
-  }, [isAuthenticated, toast]);
+      setFolderSongs(songsMap);
+    } catch (error) {
+      console.error('Erro ao carregar pastas:', error);
+      toast({
+        title: 'Erro ao carregar pastas',
+        description: 'Não foi possível carregar suas pastas.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const handleAddFolder = async () => {
     if (!newFolderName.trim()) {

@@ -1,20 +1,28 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 interface AudioRecorderProps {
-  onSaveRecording: (audioUrl: string) => void;
+  onSaveRecording: (audioUrl: string, audioBlob: Blob) => void;
+  initialAudioUrl?: string;
 }
 
-export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onSaveRecording }) => {
+export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onSaveRecording, initialAudioUrl }) => {
   const [isRecording, setIsRecording] = useState(false);
-  const [audioURL, setAudioURL] = useState<string | null>(null);
+  const [audioURL, setAudioURL] = useState<string | null>(initialAudioUrl || null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   
   const { toast } = useToast();
+  
+  // Update audioURL if initialAudioUrl changes
+  useEffect(() => {
+    if (initialAudioUrl) {
+      setAudioURL(initialAudioUrl);
+    }
+  }, [initialAudioUrl]);
   
   const startRecording = async () => {
     try {
@@ -34,7 +42,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onSaveRecording })
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         const url = URL.createObjectURL(audioBlob);
         setAudioURL(url);
-        onSaveRecording(url);
+        onSaveRecording(url, audioBlob);
       };
       
       mediaRecorder.start();
@@ -73,6 +81,9 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onSaveRecording })
     if (audioURL) {
       URL.revokeObjectURL(audioURL);
       setAudioURL(null);
+      
+      // Call onSaveRecording with null values to indicate deletion
+      onSaveRecording('', new Blob());
       
       toast({
         title: 'Gravação excluída',
