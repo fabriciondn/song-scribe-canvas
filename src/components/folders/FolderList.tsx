@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Folder, File, Edit, Trash2 } from 'lucide-react';
+import { Plus, Folder, File, Trash2 } from 'lucide-react';
 import { 
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 
-// Simple mock data
+// Initial folder data
 const INITIAL_FOLDERS = [
   { id: '1', name: 'Ideias', songs: ['Ideia para balada', 'Conceito de música pop'] },
   { id: '2', name: 'Rascunhos', songs: ['Primeiro rascunho - Rock'] },
@@ -28,6 +28,17 @@ export const FolderList: React.FC = () => {
   
   const { toast } = useToast();
   
+  // Load folders from localStorage on initial render
+  useEffect(() => {
+    const savedFolders = localStorage.getItem('folders');
+    if (savedFolders) {
+      setFolders(JSON.parse(savedFolders));
+    } else {
+      // Initialize localStorage with default folders
+      localStorage.setItem('folders', JSON.stringify(INITIAL_FOLDERS));
+    }
+  }, []);
+  
   const handleAddFolder = () => {
     if (!newFolderName.trim()) return;
     
@@ -37,7 +48,10 @@ export const FolderList: React.FC = () => {
       songs: [],
     };
     
-    setFolders([...folders, newFolder]);
+    const updatedFolders = [...folders, newFolder];
+    setFolders(updatedFolders);
+    localStorage.setItem('folders', JSON.stringify(updatedFolders));
+    
     setNewFolderName('');
     setIsNewFolderModalOpen(false);
     
@@ -48,12 +62,30 @@ export const FolderList: React.FC = () => {
   };
   
   const handleDeleteFolder = (folderId: string) => {
-    setFolders(folders.filter(folder => folder.id !== folderId));
+    const updatedFolders = folders.filter(folder => folder.id !== folderId);
+    setFolders(updatedFolders);
+    localStorage.setItem('folders', JSON.stringify(updatedFolders));
+    
+    // Remove songs saved in this folder
+    localStorage.removeItem(`folder_${folderId}`);
     
     toast({
       title: 'Pasta excluída',
       description: 'A pasta foi excluída com sucesso.',
     });
+  };
+
+  // Get songs for each folder from localStorage
+  const getFolderSongs = (folderId: string) => {
+    const savedSongs = localStorage.getItem(`folder_${folderId}`);
+    if (savedSongs) {
+      const parsedSongs = JSON.parse(savedSongs);
+      return parsedSongs.map((song: any) => song.title || 'Sem título');
+    }
+    
+    // Return default songs if none in localStorage
+    const folder = folders.find(f => f.id === folderId);
+    return folder?.songs || [];
   };
 
   return (
@@ -70,7 +102,7 @@ export const FolderList: React.FC = () => {
         {folders.map(folder => (
           <div 
             key={folder.id} 
-            className="folder-card"
+            className="folder-card p-4 border rounded-lg hover:border-primary cursor-pointer transition-all"
             onClick={() => setSelectedFolder(folder.id)}
           >
             <div className="flex justify-between items-start">
@@ -92,11 +124,11 @@ export const FolderList: React.FC = () => {
             </div>
             
             <div className="mt-4 text-sm text-muted-foreground">
-              {folder.songs.length === 0 ? (
+              {getFolderSongs(folder.id).length === 0 ? (
                 <p>Pasta vazia</p>
               ) : (
                 <ul className="space-y-2">
-                  {folder.songs.map((song, idx) => (
+                  {getFolderSongs(folder.id).map((song: string, idx: number) => (
                     <li key={idx} className="flex items-center">
                       <File className="h-4 w-4 mr-2 flex-shrink-0" />
                       <span className="truncate">{song}</span>
@@ -108,7 +140,7 @@ export const FolderList: React.FC = () => {
             
             <div className="mt-4 pt-4 border-t">
               <p className="text-xs">
-                {folder.songs.length} {folder.songs.length === 1 ? 'item' : 'itens'}
+                {getFolderSongs(folder.id).length} {getFolderSongs(folder.id).length === 1 ? 'item' : 'itens'}
               </p>
             </div>
           </div>
