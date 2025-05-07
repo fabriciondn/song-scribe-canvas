@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { createSystemBackup } from './backupService';
 
 export interface Draft {
   id: string;
@@ -11,43 +12,28 @@ export interface Draft {
   user_id?: string;
 }
 
-// Create a storage bucket name for audio recordings
-const AUDIO_BUCKET = 'audio-recordings';
+export interface DraftInput {
+  title: string;
+  content: string;
+  audioUrl?: string;
+}
 
-// Initialize the storage bucket if it doesn't exist yet
-export const ensureAudioBucketExists = async (): Promise<void> => {
-  try {
-    // Check if the bucket exists
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const exists = buckets?.some(bucket => bucket.name === AUDIO_BUCKET);
-
-    // If the bucket doesn't exist, create it
-    if (!exists) {
-      const { error } = await supabase.storage.createBucket(AUDIO_BUCKET, {
-        public: false, // Keep drafts private
-      });
-      if (error) throw error;
-    }
-  } catch (error) {
-    console.error('Error ensuring audio bucket exists:', error);
-    // We'll continue even if this fails
-  }
-};
-
-// Get all drafts for the current user
 export const getDrafts = async (): Promise<Draft[]> => {
   try {
-    // Use the raw REST API approach to bypass TypeScript issues
+    // Use RPC function
     const { data, error } = await supabase
       .rpc('get_drafts')
       .returns<Draft[]>();
     
     if (error) {
-      // Fallback to direct query if RPC fails
+      // Fallback to direct query
       const { data: directData, error: directError } = await supabase
         .from('drafts')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as {
+          data: Draft[] | null,
+          error: any
+        };
       
       if (directError) throw directError;
       return directData as Draft[] || [];
@@ -60,24 +46,26 @@ export const getDrafts = async (): Promise<Draft[]> => {
   }
 };
 
-// Get a specific draft by ID
 export const getDraftById = async (draftId: string): Promise<Draft | null> => {
   try {
-    // Use the raw REST API approach
+    // Use RPC function
     const { data, error } = await supabase
       .rpc('get_draft_by_id', { draft_id: draftId })
-      .returns<Draft | null>();
+      .returns<Draft>();
     
     if (error) {
-      // Fallback to direct query if RPC fails
+      // Fallback to direct query
       const { data: directData, error: directError } = await supabase
         .from('drafts')
         .select('*')
         .eq('id', draftId)
-        .single();
+        .single() as {
+          data: Draft | null,
+          error: any
+        };
       
       if (directError) throw directError;
-      return directData as Draft | null;
+      return directData;
     }
     
     return data;
@@ -87,45 +75,7 @@ export const getDraftById = async (draftId: string): Promise<Draft | null> => {
   }
 };
 
-// Upload an audio recording to Supabase Storage
-export const uploadAudio = async (audioBlob: Blob, filename: string): Promise<string> => {
-  try {
-    await ensureAudioBucketExists();
-    
-    // Get user ID to create a user-specific path
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
-    
-    if (!userId) {
-      throw new Error('User not authenticated');
-    }
-    
-    // Create a unique filename
-    const uniqueFilename = `${userId}/${Date.now()}_${filename}`;
-    
-    // Upload the audio file
-    const { data, error } = await supabase.storage
-      .from(AUDIO_BUCKET)
-      .upload(uniqueFilename, audioBlob);
-    
-    if (error) throw error;
-    
-    // Get the public URL
-    const { data: publicURL } = supabase.storage
-      .from(AUDIO_BUCKET)
-      .getPublicUrl(uniqueFilename);
-    
-    return publicURL.publicUrl;
-  } catch (error) {
-    console.error('Error uploading audio:', error);
-    throw error;
-  }
-};
-
-// Create a new draft with optional audio
-export const createDraft = async (
-  draft: { title: string, content: string, audioUrl?: string }
-): Promise<Draft> => {
+export const createDraft = async (draft: DraftInput): Promise<Draft> => {
   try {
     // Get the current user ID
     const { data: { session } } = await supabase.auth.getSession();
@@ -134,14 +84,16 @@ export const createDraft = async (
     if (!userId) {
       throw new Error('User not authenticated');
     }
-
-    // Use direct API call to bypass type checking
-    const { data, error } = await supabase.rpc('create_draft', {
-      draft_title: draft.title,
-      draft_content: draft.content,
-      draft_audio_url: draft.audioUrl || null,
-      draft_user_id: userId
-    }).returns<Draft>();
+    
+    // Use RPC function
+    const { data, error } = await supabase
+      .rpc('create_draft', { 
+        draft_title: draft.title,
+        draft_content: draft.content,
+        draft_audio_url: draft.audioUrl || null,
+        draft_user_id: userId
+      })
+      .returns<Draft>();
     
     if (error) {
       // Fallback to direct insert
@@ -154,7 +106,10 @@ export const createDraft = async (
           user_id: userId
         })
         .select()
-        .single();
+        .single() as {
+          data: Draft | null,
+          error: any
+        };
       
       if (directError) throw directError;
       return directData as Draft;
@@ -167,32 +122,46 @@ export const createDraft = async (
   }
 };
 
-// Update an existing draft
 export const updateDraft = async (
-  id: string, 
-  updates: { title?: string, content?: string, audioUrl?: string }
+  draftId: string,
+  updates: {
+    title?: string;
+    content?: string;
+    audioUrl?: string;
+  }
 ): Promise<Draft> => {
   try {
-    const updatePayload: Record<string, any> = {};
-    if (updates.title) updatePayload.title = updates.title;
-    if (updates.content) updatePayload.content = updates.content;
-    if (updates.audioUrl) updatePayload.audio_url = updates.audioUrl;
-    updatePayload.updated_at = new Date().toISOString();
+    // Convert updates to the format expected by RPC function
+    const jsonUpdates = {
+      title: updates.title,
+      content: updates.content,
+      audio_url: updates.audioUrl
+    };
     
-    // Use raw REST API approach
-    const { data, error } = await supabase.rpc('update_draft', {
-      draft_id: id,
-      draft_updates: updatePayload
-    }).returns<Draft>();
+    // Use RPC function
+    const { data, error } = await supabase
+      .rpc('update_draft', { 
+        draft_id: draftId,
+        draft_updates: jsonUpdates
+      })
+      .returns<Draft>();
     
     if (error) {
       // Fallback to direct update
+      const updateValues: any = {};
+      if (updates.title !== undefined) updateValues.title = updates.title;
+      if (updates.content !== undefined) updateValues.content = updates.content;
+      if (updates.audioUrl !== undefined) updateValues.audio_url = updates.audioUrl;
+      
       const { data: directData, error: directError } = await supabase
         .from('drafts')
-        .update(updatePayload)
-        .eq('id', id)
+        .update(updateValues)
+        .eq('id', draftId)
         .select()
-        .single();
+        .single() as {
+          data: Draft | null,
+          error: any
+        };
       
       if (directError) throw directError;
       return directData as Draft;
@@ -200,49 +169,43 @@ export const updateDraft = async (
     
     return data;
   } catch (error) {
-    console.error(`Error updating draft with ID ${id}:`, error);
+    console.error(`Error updating draft with ID ${draftId}:`, error);
     throw error;
   }
 };
 
-// Delete a draft
-export const deleteDraft = async (id: string): Promise<void> => {
+export const deleteDraft = async (draftId: string): Promise<void> => {
   try {
-    // First get the draft to check if it has an audio file
-    const draft = await getDraftById(id);
-    
-    // Delete the draft from the database
-    const { error } = await supabase.rpc('delete_draft', { draft_id: id });
+    // Use RPC function
+    const { error } = await supabase.rpc('delete_draft', { draft_id: draftId });
     
     if (error) {
       // Fallback to direct delete
       const { error: directError } = await supabase
         .from('drafts')
         .delete()
-        .eq('id', id);
+        .eq('id', draftId);
       
       if (directError) throw directError;
     }
-    
-    // If there's an audio file, delete it from storage
-    if (draft?.audio_url) {
-      // Extract the path from the URL
-      const audioUrl = draft.audio_url;
-      const pathMatch = audioUrl.match(/\/storage\/v1\/object\/public\/audio-recordings\/(.+)/);
-      
-      if (pathMatch && pathMatch[1]) {
-        const filePath = decodeURIComponent(pathMatch[1]);
-        await supabase.storage.from(AUDIO_BUCKET).remove([filePath]);
-      }
-    }
   } catch (error) {
-    console.error(`Error deleting draft with ID ${id}:`, error);
+    console.error(`Error deleting draft with ID ${draftId}:`, error);
     throw error;
   }
 };
 
-// Create a backup of a composition
-export const createBackup = async (title: string, content: string): Promise<string> => {
+// Create a backup directly to the backup system
+export const createBackup = async (title: string, content: string): Promise<void> => {
+  try {
+    await createSystemBackup(title, content);
+  } catch (error) {
+    console.error('Error creating backup:', error);
+    throw error;
+  }
+};
+
+// Upload audio for a draft
+export const uploadAudio = async (audioBlob: Blob, filename: string): Promise<string> => {
   try {
     // Get the current user ID
     const { data: { session } } = await supabase.auth.getSession();
@@ -251,55 +214,32 @@ export const createBackup = async (title: string, content: string): Promise<stri
     if (!userId) {
       throw new Error('User not authenticated');
     }
-
-    // Create a text file
-    const fileName = `${Date.now()}_${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
-    const filePath = `${userId}/${fileName}`;
-    const file = new Blob([content], { type: 'text/plain' });
-
-    // Upload the file to 'backups' bucket
-    await ensureBackupBucketExists();
-    const { data, error } = await supabase.storage
-      .from('backups')
-      .upload(filePath, file);
     
-    if (error) throw error;
-
-    // Save record in the system_backups table
-    await supabase.from('system_backups').insert({
-      title,
-      file_path: filePath,
-      user_id: userId
+    const filePath = `${userId}/${filename}`;
+    
+    // Create bucket if it doesn't exist
+    await supabase.storage.createBucket('audio', {
+      public: true,
+    }).catch(err => {
+      // Bucket might already exist, continue
+      console.log('Bucket creation skipped:', err);
     });
     
-    // Get the public URL
-    const { data: publicURL } = supabase.storage
-      .from('backups')
+    // Upload the audio file
+    const { error: uploadError } = await supabase.storage
+      .from('audio')
+      .upload(filePath, audioBlob);
+    
+    if (uploadError) throw uploadError;
+    
+    // Get the public URL of the uploaded file
+    const { data } = supabase.storage
+      .from('audio')
       .getPublicUrl(filePath);
     
-    return publicURL.publicUrl;
+    return data.publicUrl;
   } catch (error) {
-    console.error('Error creating backup:', error);
+    console.error('Error uploading audio:', error);
     throw error;
-  }
-};
-
-// Initialize the backup bucket if it doesn't exist yet
-export const ensureBackupBucketExists = async (): Promise<void> => {
-  try {
-    // Check if the bucket exists
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const exists = buckets?.some(bucket => bucket.name === 'backups');
-
-    // If the bucket doesn't exist, create it
-    if (!exists) {
-      const { error } = await supabase.storage.createBucket('backups', {
-        public: true, // Make backups accessible
-      });
-      if (error) throw error;
-    }
-  } catch (error) {
-    console.error('Error ensuring backup bucket exists:', error);
-    // We'll continue even if this fails
   }
 };

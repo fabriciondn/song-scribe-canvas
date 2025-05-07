@@ -33,22 +33,25 @@ export const ensureBackupBucketExists = async (): Promise<void> => {
 // Get all backups for the current user
 export const getBackups = async (): Promise<Backup[]> => {
   try {
-    // Use a raw query
+    // Use a stored procedure to get backups
     const { data, error } = await supabase
       .rpc('get_system_backups')
       .returns<Backup[]>();
     
     if (error) {
-      // Fallback to direct query
+      // Fallback to direct query with casting to handle type issues
       const { data: directData, error: directError } = await supabase
         .from('system_backups')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as { 
+          data: Backup[] | null, 
+          error: any 
+        };
       
       if (directError) throw directError;
       
       // Add file URLs
-      const backups = directData as Backup[];
+      const backups = directData as Backup[] || [];
       for (const backup of backups) {
         if (backup.file_path) {
           const { data: url } = supabase.storage
@@ -82,12 +85,15 @@ export const getBackups = async (): Promise<Backup[]> => {
 // Get a specific backup by ID
 export const getBackupById = async (backupId: string): Promise<Backup | null> => {
   try {
-    // Use a direct query
+    // Use a direct query with type casting
     const { data, error } = await supabase
       .from('system_backups')
       .select('*')
       .eq('id', backupId)
-      .single();
+      .single() as { 
+        data: Backup | null, 
+        error: any 
+      };
     
     if (error) throw error;
     
@@ -132,17 +138,22 @@ export const createSystemBackup = async (title: string, content: string): Promis
     
     if (uploadError) throw uploadError;
 
-    // Save record in the system_backups table
+    // Save record in the system_backups table using raw insert due to type issues
+    const insertData = {
+      title,
+      file_path: filePath,
+      user_id: userId,
+      is_system: true // Mark as system backup
+    };
+
     const { data, error } = await supabase
       .from('system_backups')
-      .insert({
-        title,
-        file_path: filePath,
-        user_id: userId,
-        is_system: true // Mark as system backup
-      })
+      .insert(insertData)
       .select()
-      .single();
+      .single() as { 
+        data: Backup | null, 
+        error: any 
+      };
     
     if (error) throw error;
     
