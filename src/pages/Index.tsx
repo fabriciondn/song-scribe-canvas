@@ -37,10 +37,7 @@ const Index: React.FC = () => {
               com elegância e facilidade
             </h1>
             
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              SongScribe é a plataforma para compositores organizarem suas letras,
-              gerarem documentos de anterioridade e colaborarem em tempo real.
-            </p>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Compuse é a plataforma para compositores organizarem suas letras, gerarem documentos de anterioridade e colaborarem em tempo real.</p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button onClick={() => setShowAuth(true)} size="lg" className="text-lg px-8">
