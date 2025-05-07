@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { FileText } from 'lucide-react';
+import { FileText, Loader2 } from 'lucide-react';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -14,25 +14,37 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { SaveModal } from './SaveModal';
+import { createBackup } from '@/services/draftService';
+import { useToast } from '@/components/ui/use-toast';
 
 export const Editor: React.FC = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isDAModalOpen, setIsDAModalOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [processing, setProcessing] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Load saved content from localStorage
   useEffect(() => {
-    const savedTitle = localStorage.getItem('songscribe_current_title');
-    const savedContent = localStorage.getItem('songscribe_current_content');
-    if (savedTitle) setTitle(savedTitle);
-    if (savedContent) setContent(savedContent);
+    try {
+      const savedTitle = localStorage.getItem('songscribe_current_title');
+      const savedContent = localStorage.getItem('songscribe_current_content');
+      if (savedTitle) setTitle(savedTitle);
+      if (savedContent) setContent(savedContent);
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+    }
   }, []);
 
   // Save content to localStorage
   useEffect(() => {
-    localStorage.setItem('songscribe_current_title', title);
-    localStorage.setItem('songscribe_current_content', content);
+    try {
+      localStorage.setItem('songscribe_current_title', title);
+      localStorage.setItem('songscribe_current_content', content);
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
   }, [title, content]);
 
   const handleSectionClick = (sectionText: string) => {
@@ -64,6 +76,35 @@ export const Editor: React.FC = () => {
     setIsSaveModalOpen(false);
   };
 
+  const handleBackup = async () => {
+    if (!title.trim()) {
+      toast({
+        title: 'Título necessário',
+        description: 'Por favor, adicione um título antes de criar um backup.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setProcessing('backup');
+    try {
+      await createBackup(title, content);
+      toast({
+        title: 'Backup criado',
+        description: 'Sua composição foi salva automaticamente na pasta de Backup.',
+      });
+    } catch (error) {
+      console.error('Error creating backup:', error);
+      toast({
+        title: 'Erro ao criar backup',
+        description: 'Não foi possível criar o backup da sua composição.',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessing(null);
+    }
+  };
+
   const handleSaveComplete = () => {
     // Clear the form fields after saving
     setTitle('');
@@ -85,17 +126,37 @@ export const Editor: React.FC = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button>
-              Finalizar
+              {processing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                'Finalizar'
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={openDAModal}>
+            <DropdownMenuItem 
+              onClick={openDAModal}
+              disabled={!!processing}
+            >
               <FileText className="mr-2 h-4 w-4" />
               Gerar e enviar DA
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={openSaveModal}>
+            <DropdownMenuItem 
+              onClick={openSaveModal}
+              disabled={!!processing}
+            >
               <FileText className="mr-2 h-4 w-4" />
               Guardar em pasta
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={handleBackup}
+              disabled={!!processing}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Criar backup
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -115,7 +176,12 @@ export const Editor: React.FC = () => {
         </div>
       </div>
       
-      <DAModal isOpen={isDAModalOpen} onClose={closeDAModal} songContent={content} songTitle={title} />
+      <DAModal 
+        isOpen={isDAModalOpen} 
+        onClose={closeDAModal} 
+        songContent={content} 
+        songTitle={title} 
+      />
       <SaveModal 
         isOpen={isSaveModalOpen} 
         onClose={closeSaveModal} 

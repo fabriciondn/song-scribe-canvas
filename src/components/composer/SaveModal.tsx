@@ -12,6 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { Folder } from '@/services/folderService';
+import * as folderService from '@/services/folderService';
+import { Loader2 } from 'lucide-react';
 
 interface SaveModalProps {
   isOpen: boolean;
@@ -19,12 +22,6 @@ interface SaveModalProps {
   songTitle: string;
   songContent: string;
   onSaveComplete: () => void;
-}
-
-interface Folder {
-  id: string;
-  name: string;
-  songs: string[];
 }
 
 export const SaveModal: React.FC<SaveModalProps> = ({
@@ -36,20 +33,35 @@ export const SaveModal: React.FC<SaveModalProps> = ({
 }) => {
   const [selectedFolder, setSelectedFolder] = useState<string>('');
   const [folders, setFolders] = useState<Folder[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Load folders from localStorage
+  // Load folders from Supabase when modal opens
   useEffect(() => {
-    if (isOpen) {
-      const savedFolders = localStorage.getItem('folders');
-      if (savedFolders) {
-        setFolders(JSON.parse(savedFolders));
+    const loadFolders = async () => {
+      if (isOpen) {
+        setIsLoading(true);
+        try {
+          const fetchedFolders = await folderService.getFolders();
+          setFolders(fetchedFolders);
+        } catch (error) {
+          console.error('Error fetching folders:', error);
+          toast({
+            title: 'Erro ao carregar pastas',
+            description: 'Não foi possível carregar suas pastas.',
+            variant: 'destructive',
+          });
+        } finally {
+          setIsLoading(false);
+          setSelectedFolder(''); // Reset selection when modal opens
+        }
       }
-      setSelectedFolder(''); // Reset selection when modal opens
-    }
-  }, [isOpen]);
+    };
+    
+    loadFolders();
+  }, [isOpen, toast]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedFolder) {
       toast({
         title: 'Selecione uma pasta',
@@ -68,40 +80,34 @@ export const SaveModal: React.FC<SaveModalProps> = ({
       return;
     }
 
-    // Get existing songs for the selected folder
-    const folderSongs = JSON.parse(localStorage.getItem(`folder_${selectedFolder}`) || '[]');
+    setIsLoading(true);
     
-    // Add new song
-    const newSong = {
-      id: Date.now().toString(),
-      title: songTitle.trim(),
-      content: songContent,
-      createdAt: new Date().toISOString()
-    };
-    
-    folderSongs.push(newSong);
-    localStorage.setItem(`folder_${selectedFolder}`, JSON.stringify(folderSongs));
+    try {
+      // Save the song to the selected folder
+      await folderService.createSong({
+        title: songTitle.trim(),
+        content: songContent,
+        folder_id: selectedFolder
+      });
+      
+      toast({
+        title: 'Composição guardada',
+        description: `"${songTitle || 'Sem título'}" foi guardada na pasta selecionada.`,
+      });
 
-    // Update folder data in localStorage with the new song title
-    const updatedFolders = folders.map(folder => {
-      if (folder.id === selectedFolder) {
-        return {
-          ...folder,
-          songs: [...(folder.songs || []), songTitle.trim()]
-        };
-      }
-      return folder;
-    });
-    localStorage.setItem('folders', JSON.stringify(updatedFolders));
-
-    toast({
-      title: 'Composição guardada',
-      description: `"${songTitle || 'Sem título'}" foi guardada na pasta selecionada.`,
-    });
-
-    // Call onSaveComplete to clear the form
-    onSaveComplete();
-    onClose();
+      // Call onSaveComplete to clear the form
+      onSaveComplete();
+      onClose();
+    } catch (error) {
+      console.error('Error saving song:', error);
+      toast({
+        title: 'Erro ao guardar',
+        description: 'Ocorreu um erro ao guardar sua composição.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -115,29 +121,53 @@ export const SaveModal: React.FC<SaveModalProps> = ({
         </DialogHeader>
 
         <div className="py-4">
-          <div className="space-y-2">
-            <Label htmlFor="folder-select">Pasta</Label>
-            <Select value={selectedFolder} onValueChange={setSelectedFolder}>
-              <SelectTrigger id="folder-select">
-                <SelectValue placeholder="Selecione uma pasta" />
-              </SelectTrigger>
-              <SelectContent>
-                {folders.map(folder => (
-                  <SelectItem key={folder.id} value={folder.id}>
-                    {folder.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="folder-select">Pasta</Label>
+              <Select value={selectedFolder} onValueChange={setSelectedFolder} disabled={isLoading}>
+                <SelectTrigger id="folder-select">
+                  <SelectValue placeholder="Selecione uma pasta" />
+                </SelectTrigger>
+                <SelectContent>
+                  {folders.length === 0 ? (
+                    <SelectItem value="no-folders" disabled>
+                      Nenhuma pasta encontrada
+                    </SelectItem>
+                  ) : (
+                    folders.map(folder => (
+                      <SelectItem key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              {folders.length === 0 && !isLoading && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Você precisa criar pastas na aba "Pastas" antes de salvar.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancelar
           </Button>
-          <Button onClick={handleSave}>
-            Guardar
+          <Button onClick={handleSave} disabled={isLoading || folders.length === 0}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              'Guardar'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

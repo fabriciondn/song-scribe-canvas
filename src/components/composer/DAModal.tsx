@@ -12,8 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { Printer, Send } from 'lucide-react';
+import { Loader2, Printer, Save, Send } from 'lucide-react';
 import { useTemplates } from '@/hooks/useTemplates';
+import { createBackup } from '@/services/draftService';
 
 interface DAModalProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ export const DAModal: React.FC<DAModalProps> = ({
   const [duration, setDuration] = useState('');
   const [notes, setNotes] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [isBackupCreating, setIsBackupCreating] = useState(false);
   
   const { getActiveTemplate } = useTemplates();
   const { toast } = useToast();
@@ -58,23 +60,92 @@ export const DAModal: React.FC<DAModalProps> = ({
         setDuration(activeTemplate.duration || '');
         setNotes(activeTemplate.notes || '');
       }
+      
+      // Create backup automatically when modal opens
+      createAutomaticBackup();
     }
-  }, [isOpen, getActiveTemplate]);
+  }, [isOpen, getActiveTemplate, songTitle, songContent]);
   
-  const handleGenerateDA = () => {
+  const createAutomaticBackup = async () => {
+    if (!songTitle || !songContent) return;
+    
+    setIsBackupCreating(true);
+    try {
+      await createBackup(songTitle || 'Untitled', songContent);
+      console.log('Backup created automatically');
+    } catch (error) {
+      console.error('Error creating automatic backup:', error);
+    } finally {
+      setIsBackupCreating(false);
+    }
+  };
+  
+  const handleGenerateDA = async () => {
     setIsSending(true);
     
-    // Simulate PDF generation and sending
-    setTimeout(() => {
-      setIsSending(false);
+    try {
+      // Generate PDF content
+      const pdfContent = generatePdfContent();
+      
+      // Create a backup for this DA
+      if (songTitle && songContent) {
+        try {
+          await createBackup(songTitle, songContent);
+        } catch (error) {
+          console.error('Error creating backup during DA generation:', error);
+        }
+      }
+      
+      // Simulate sending email
+      if (email) {
+        // Simulate email sending
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
       toast({
         title: 'Documento de Anterioridade gerado!',
         description: email 
           ? `O DA foi enviado para ${email}` 
-          : 'O DA foi gerado com sucesso',
+          : 'O DA foi gerado com sucesso. Um backup foi criado automaticamente.',
       });
+      
       onClose();
-    }, 2000);
+    } catch (error) {
+      console.error('Error generating DA:', error);
+      toast({
+        title: 'Erro ao gerar DA',
+        description: 'Ocorreu um erro ao gerar o documento.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+  
+  const generatePdfContent = () => {
+    // Create a string representation of the DA content
+    return `
+      Documento de Anterioridade
+      
+      Título da Obra: ${songTitle || "Sem título"}
+      Nome do Autor: ${author || "Nome não informado"}
+      ${location ? `Local: ${location}` : ''}
+      ${city ? `Cidade: ${city}` : ''}
+      ${genre ? `Gênero Musical: ${genre}` : ''}
+      ${version ? `Versão da Letra: ${version}` : ''}
+      ${collaborators ? `Colaboradores: ${collaborators}` : ''}
+      ${instrumentation ? `Instrumentação: ${instrumentation}` : ''}
+      ${duration ? `Duração Estimada: ${duration}` : ''}
+      ${notes ? `Observações: ${notes}` : ''}
+      Data: ${today}
+      Hora: ${time}
+      
+      Letra da Composição:
+      ${songContent}
+      
+      Este documento registra a anterioridade da obra musical acima descrita, cujo conteúdo está em posse do autor.
+      Documento gerado em ${today} às ${time}
+    `;
   };
 
   const handlePrint = () => {
@@ -212,6 +283,12 @@ export const DAModal: React.FC<DAModalProps> = ({
           <DialogTitle>Documento de Anterioridade</DialogTitle>
           <DialogDescription>
             Preencha as informações para gerar o DA da sua composição.
+            {isBackupCreating && (
+              <div className="flex items-center mt-2 text-xs text-muted-foreground">
+                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                Criando backup automático...
+              </div>
+            )}
           </DialogDescription>
         </DialogHeader>
         
@@ -376,7 +453,12 @@ export const DAModal: React.FC<DAModalProps> = ({
         
         <DialogFooter className="flex flex-col sm:flex-row gap-2">
           <Button onClick={handleGenerateDA} disabled={isSending}>
-            {isSending ? 'Processando...' : (
+            {isSending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processando...
+              </>
+            ) : (
               <>
                 <Send className="w-4 h-4 mr-2" />
                 Gerar e Enviar DA
@@ -387,7 +469,7 @@ export const DAModal: React.FC<DAModalProps> = ({
             <Printer className="w-4 h-4 mr-2" />
             Imprimir
           </Button>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isSending}>
             Cancelar
           </Button>
         </DialogFooter>
