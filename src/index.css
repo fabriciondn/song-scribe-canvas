@@ -103,6 +103,19 @@
            hover:bg-primary/80 hover:text-primary-foreground;
   }
 
+  /* Nova estrutura de grid para o editor */
+  .container-editor {
+    @apply grid gap-6;
+    grid-template-columns: 2.5fr 4fr 2.5fr;
+  }
+
+  /* Nova classe para as seções do editor */
+  .section-box {
+    @apply w-full p-6 bg-card rounded-lg shadow-sm;
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+  }
+
   .editor-container {
     @apply w-full p-6 bg-card rounded-lg shadow-sm;
   }
@@ -131,3 +144,4 @@
     @apply cursor-grab active:cursor-grabbing;
   }
 }
+

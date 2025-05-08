@@ -4,7 +4,7 @@ import { Editor } from '../components/composer/Editor';
 
 const Composer: React.FC = () => {
   return (
-    <div className="max-w-[1400px] mx-auto">
+    <div className="max-w-[1400px] mx-auto px-4">
       <Editor />
     </div>
   );

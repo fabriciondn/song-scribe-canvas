@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ChordPreviewProps {
   content: string;
@@ -93,9 +94,11 @@ export const ChordPreview: React.FC<ChordPreviewProps> = ({ content }) => {
   };
 
   return (
-    <div className="p-4 bg-card rounded-md h-full overflow-y-auto">
+    <div className="rounded-md h-full">
       <h3 className="text-sm font-semibold mb-4">Pré-visualização da Cifra</h3>
-      <div>{renderChordedText()}</div>
+      <ScrollArea className="h-[calc(100vh-280px)]">
+        <div className="p-4">{renderChordedText()}</div>
+      </ScrollArea>
     </div>
   );
 };
