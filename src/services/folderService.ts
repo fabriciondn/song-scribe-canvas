@@ -63,8 +63,10 @@ export const getFolders = async (): Promise<Folder[]> => {
     
     if (error) throw error;
     
-    // Create default System Backup folder if it doesn't exist
-    const backupFolder = data?.find(folder => 
+    // Check if the system backup folder exists
+    // We need to type cast data to ensure TypeScript knows it has is_system
+    const folderData = data as Folder[];
+    const backupFolder = folderData.find(folder => 
       folder.name === 'Backup do Sistema' && folder.is_system === true
     );
     
@@ -80,7 +82,7 @@ export const getFolders = async (): Promise<Folder[]> => {
       return updatedData as Folder[] || [];
     }
     
-    return data as Folder[] || [];
+    return folderData || [];
   } catch (error) {
     console.error('Error fetching folders:', error);
     throw error;
