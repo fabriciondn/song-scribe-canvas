@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { Folder as FolderType, Song, getFolderById, getSongsByFolderId, createSong, updateSong, deleteSong } from '@/services/folderService';
+import { Folder as FolderType, Song, getFolderById, getSongsInFolder, createSong, updateSong, deleteSong } from '@/services/folderService';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const FolderPage: React.FC = () => {
@@ -53,7 +53,7 @@ export const FolderPage: React.FC = () => {
         if (folderData) {
           setFolder(folderData);
           
-          const songsData = await getSongsByFolderId(folderId);
+          const songsData = await getSongsInFolder(folderId);
           setSongs(songsData);
           
           if (songsData.length > 0 && !selectedSong) {

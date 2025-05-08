@@ -64,7 +64,10 @@ export const getFolders = async (): Promise<Folder[]> => {
     if (error) throw error;
     
     // Create default System Backup folder if it doesn't exist
-    const backupFolder = data?.find(folder => folder.name === 'Backup do Sistema' && folder.is_system === true);
+    const backupFolder = data?.find(folder => 
+      folder.name === 'Backup do Sistema' && folder.is_system === true
+    );
+    
     if (!backupFolder) {
       await createDefaultSystemBackupFolder();
       // Fetch again with the new folder
@@ -256,11 +259,11 @@ export const createSong = async (song: { title: string; content: string; folder_
 };
 
 // Update a song
-export const updateSong = async (songId: string, title: string, content: string): Promise<Song> => {
+export const updateSong = async (songId: string, updates: { title?: string; content?: string }): Promise<Song> => {
   try {
     const { data, error } = await supabase
       .from('songs')
-      .update({ title, content })
+      .update(updates)
       .eq('id', songId)
       .select()
       .single();

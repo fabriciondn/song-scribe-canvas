@@ -43,7 +43,7 @@ export const SaveModal: React.FC<SaveModalProps> = ({
         setIsLoading(true);
         try {
           // Ensure Backup folder exists
-          await folderService.ensureBackupFolderExists();
+          await folderService.ensureSystemBackupFolderExists();
           
           const fetchedFolders = await folderService.getFolders();
           setFolders(fetchedFolders);
