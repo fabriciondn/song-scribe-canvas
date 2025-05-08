@@ -41,7 +41,7 @@ export const RhymeAssistant: React.FC = () => {
             'ão': ['coração', 'paixão', 'canção', 'emoção', 'solidão'],
             'ia': ['alegria', 'dia', 'fantasia', 'melodia', 'poesia'],
             'ez': ['vez', 'talvez', 'rapidez', 'timidez', 'altivez'],
-            'ar': ['olhar', 'mar', 'amar', 'lugar', 'despertar'],
+            // Removed the duplicate 'ar' key here
             'im': ['assim', 'fim', 'ruim', 'jardim', 'enfim']
           };
           
