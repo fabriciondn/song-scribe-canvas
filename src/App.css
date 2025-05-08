@@ -1,9 +1,25 @@
 
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 1rem;
-  text-align: center;
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  overflow-x: hidden;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.composer-page {
+  width: 100%;
+  height: 100vh;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
 }
 
 .logo {
@@ -40,4 +56,22 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Estilos para o editor de composição */
+.editor-content {
+  min-height: 350px;
+  resize: none;
+  font-family: monospace;
+}
+
+.song-section {
+  font-size: 0.85rem;
+}
+
+/* Aumentar altura da área de texto em telas maiores */
+@media (min-height: 800px) {
+  .editor-content {
+    min-height: 450px;
+  }
 }
