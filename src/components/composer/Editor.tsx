@@ -1,21 +1,29 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SectionButtons } from './SectionButtons';
 import { DAModal } from './DAModal';
+import { SaveModal } from './SaveModal';
+import { ChordPalette } from './ChordPalette';
+import { ChordPreview } from './ChordPreview';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { FileText, Loader2 } from 'lucide-react';
+import { FileText, Loader2, ArrowLeftRight } from 'lucide-react';
 import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { SaveModal } from './SaveModal';
 import { createBackup } from '@/services/draftService';
 import { useToast } from '@/components/ui/use-toast';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 export const Editor: React.FC = () => {
   const [title, setTitle] = useState('');
@@ -23,6 +31,8 @@ export const Editor: React.FC = () => {
   const [isDAModalOpen, setIsDAModalOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(true);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
   // Load saved content from localStorage
@@ -50,6 +60,26 @@ export const Editor: React.FC = () => {
   const handleSectionClick = (sectionText: string) => {
     // Insert the section at cursor position or at the end
     setContent(prev => prev + sectionText);
+  };
+
+  const handleChordClick = (chord: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const cursorPosition = textarea.selectionStart;
+    const textBeforeCursor = content.substring(0, cursorPosition);
+    const textAfterCursor = content.substring(cursorPosition);
+
+    // Insert the chord at the cursor position
+    const newContent = `${textBeforeCursor}[${chord}] ${textAfterCursor}`;
+    setContent(newContent);
+
+    // Set focus back to textarea and place cursor after inserted chord
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = cursorPosition + chord.length + 3; // +3 for the [, ], and space
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
   };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,8 +144,31 @@ export const Editor: React.FC = () => {
     localStorage.removeItem('songscribe_current_content');
   };
 
+  const handleTextAreaDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    const chord = e.dataTransfer.getData('text/plain');
+    if (chord) {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+
+      const cursorPosition = textarea.selectionStart;
+      const textBeforeCursor = content.substring(0, cursorPosition);
+      const textAfterCursor = content.substring(cursorPosition);
+
+      const newContent = `${textBeforeCursor}${chord} ${textAfterCursor}`;
+      setContent(newContent);
+      
+      // Set focus back to textarea
+      setTimeout(() => {
+        textarea.focus();
+        const newCursorPos = cursorPosition + chord.length + 1; // +1 for the space
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+    }
+  };
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <img 
           src="/lovable-uploads/913b0b45-af0f-4a18-9433-06da553e8273.png" 
@@ -162,17 +215,52 @@ export const Editor: React.FC = () => {
         </DropdownMenu>
       </div>
       
-      <div className="editor-container">
-        <div className="mb-4">
-          <Label htmlFor="song-title">Título da Composição</Label>
-          <Input id="song-title" value={title} onChange={handleTitleChange} placeholder="Digite o título da sua música" className="mt-1" />
+      <div className="flex flex-col md:flex-row gap-4">
+        {/* Left side: Chord preview and palette */}
+        <div className="w-full md:w-2/5 flex flex-col gap-4">
+          <div className="bg-card rounded-lg shadow-sm p-4">
+            <Tabs defaultValue="preview">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="preview">Pré-visualização</TabsTrigger>
+                <TabsTrigger value="chords">Acordes</TabsTrigger>
+              </TabsList>
+              <TabsContent value="preview" className="mt-2">
+                <ChordPreview content={content} />
+              </TabsContent>
+              <TabsContent value="chords" className="mt-2">
+                <ChordPalette onChordClick={handleChordClick} />
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
         
-        <SectionButtons onSectionClick={handleSectionClick} />
-        
-        <div>
-          <Label htmlFor="song-content">Letra</Label>
-          <Textarea id="song-content" value={content} onChange={handleContentChange} placeholder="Comece a compor sua letra aqui..." className="editor-content min-h-[400px] font-mono mt-1" />
+        {/* Right side: Editor container */}
+        <div className="w-full md:w-3/5">
+          <div className="editor-container">
+            <div className="mb-4">
+              <Label htmlFor="song-title">Título da Composição</Label>
+              <Input id="song-title" value={title} onChange={handleTitleChange} placeholder="Digite o título da sua música" className="mt-1" />
+            </div>
+            
+            <SectionButtons onSectionClick={handleSectionClick} />
+            
+            <div>
+              <Label htmlFor="song-content">Letra</Label>
+              <Textarea 
+                id="song-content" 
+                value={content} 
+                onChange={handleContentChange} 
+                placeholder="Comece a compor sua letra aqui... Use [C] para adicionar o acorde C" 
+                className="editor-content min-h-[400px] font-mono mt-1"
+                ref={textareaRef}
+                onDrop={handleTextAreaDrop}
+                onDragOver={(e) => e.preventDefault()}
+              />
+              <p className="text-xs mt-1 text-muted-foreground">
+                Dica: Use colchetes para cifrar, exemplo: [C] Quando eu [G] canto
+              </p>
+            </div>
+          </div>
         </div>
       </div>
       

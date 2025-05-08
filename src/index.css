@@ -125,4 +125,9 @@
   .nav-link.active {
     @apply bg-sidebar-accent text-sidebar-primary font-medium;
   }
+  
+  /* Chord-specific styles */
+  .chord-button {
+    @apply cursor-grab active:cursor-grabbing;
+  }
 }

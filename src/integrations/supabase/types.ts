@@ -43,6 +43,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          is_system: boolean | null
           name: string
           updated_at: string | null
           user_id: string | null
@@ -50,6 +51,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          is_system?: boolean | null
           name: string
           updated_at?: string | null
           user_id?: string | null
@@ -57,6 +59,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          is_system?: boolean | null
           name?: string
           updated_at?: string | null
           user_id?: string | null
@@ -100,36 +103,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      system_backups: {
-        Row: {
-          created_at: string | null
-          file_path: string
-          id: string
-          is_system: boolean | null
-          title: string
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          file_path: string
-          id?: string
-          is_system?: boolean | null
-          title: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          file_path?: string
-          id?: string
-          is_system?: boolean | null
-          title?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
       }
       templates: {
         Row: {
@@ -230,18 +203,6 @@ export type Database = {
           content: string
           created_at: string | null
           id: string
-          title: string
-          updated_at: string | null
-          user_id: string | null
-        }[]
-      }
-      get_system_backups: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          created_at: string | null
-          file_path: string
-          id: string
-          is_system: boolean | null
           title: string
           updated_at: string | null
           user_id: string | null
