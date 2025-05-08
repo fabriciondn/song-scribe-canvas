@@ -5,6 +5,7 @@ import { DAModal } from './DAModal';
 import { SaveModal } from './SaveModal';
 import { ChordPalette } from './ChordPalette';
 import { ChordPreview } from './ChordPreview';
+import { MusicBases } from './MusicBases';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,6 +25,12 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { useMobileDetection } from '@/hooks/use-mobile';
 
 export const Editor: React.FC = () => {
   const [title, setTitle] = useState('');
@@ -34,6 +41,7 @@ export const Editor: React.FC = () => {
   const [showPreview, setShowPreview] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+  const isMobile = useMobileDetection();
 
   // Load saved content from localStorage
   useEffect(() => {
@@ -167,6 +175,138 @@ export const Editor: React.FC = () => {
     }
   };
 
+  const handleInsertBase = (baseInfo: { title: string; genre: string }) => {
+    // Inserir informações da base na composição
+    const baseInfoText = `\n\n[Base Musical: ${baseInfo.title} - Gênero: ${baseInfo.genre}]\n\n`;
+    setContent(prev => prev + baseInfoText);
+    
+    // Mover o cursor para o final do texto inserido
+    setTimeout(() => {
+      if (textareaRef.current) {
+        const newPosition = content.length + baseInfoText.length;
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newPosition, newPosition);
+      }
+    }, 0);
+  };
+
+  // Conteúdo do editor para dispositivos desktop
+  const editorContent = (
+    <div className="flex flex-col md:flex-row gap-4">
+      {/* Left side: Chord preview and palette */}
+      <div className="w-full md:w-2/5 flex flex-col gap-4">
+        <div className="bg-card rounded-lg shadow-sm p-4">
+          <Tabs defaultValue="preview">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="preview">Pré-visualização</TabsTrigger>
+              <TabsTrigger value="chords">Acordes</TabsTrigger>
+            </TabsList>
+            <TabsContent value="preview" className="mt-2">
+              <ChordPreview content={content} />
+            </TabsContent>
+            <TabsContent value="chords" className="mt-2">
+              <ChordPalette onChordClick={handleChordClick} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+      
+      {/* Center: Editor container */}
+      <div className="w-full md:w-2/5">
+        <div className="editor-container">
+          <div className="mb-4">
+            <Label htmlFor="song-title">Título da Composição</Label>
+            <Input id="song-title" value={title} onChange={handleTitleChange} placeholder="Digite o título da sua música" className="mt-1" />
+          </div>
+          
+          <SectionButtons onSectionClick={handleSectionClick} />
+          
+          <div>
+            <Label htmlFor="song-content">Letra</Label>
+            <Textarea 
+              id="song-content" 
+              value={content} 
+              onChange={handleContentChange} 
+              placeholder="Comece a compor sua letra aqui... Use [C] para adicionar o acorde C" 
+              className="editor-content min-h-[400px] font-mono mt-1"
+              ref={textareaRef}
+              onDrop={handleTextAreaDrop}
+              onDragOver={(e) => e.preventDefault()}
+            />
+            <p className="text-xs mt-1 text-muted-foreground">
+              Dica: Use colchetes para cifrar, exemplo: [C] Quando eu [G] canto
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Right side: Music Bases */}
+      <div className="w-full md:w-1/5">
+        <MusicBases onInsertBase={handleInsertBase} />
+      </div>
+    </div>
+  );
+
+  // Versão mobile com drawer para as bases musicais
+  const mobileEditorContent = (
+    <div className="flex flex-col gap-4">
+      <div className="bg-card rounded-lg shadow-sm p-4">
+        <Tabs defaultValue="preview">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="preview">Pré-visualização</TabsTrigger>
+            <TabsTrigger value="chords">Acordes</TabsTrigger>
+          </TabsList>
+          <TabsContent value="preview" className="mt-2">
+            <ChordPreview content={content} />
+          </TabsContent>
+          <TabsContent value="chords" className="mt-2">
+            <ChordPalette onChordClick={handleChordClick} />
+          </TabsContent>
+        </Tabs>
+      </div>
+      
+      <div className="editor-container">
+        <div className="mb-4">
+          <Label htmlFor="song-title-mobile">Título da Composição</Label>
+          <Input id="song-title-mobile" value={title} onChange={handleTitleChange} placeholder="Digite o título da sua música" className="mt-1" />
+        </div>
+        
+        <SectionButtons onSectionClick={handleSectionClick} />
+        
+        <div>
+          <div className="flex justify-between items-center">
+            <Label htmlFor="song-content-mobile">Letra</Label>
+            <Drawer>
+              <DrawerTrigger asChild>
+                <Button variant="outline" size="sm" className="mb-2">
+                  Bases Musicais
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <div className="p-4 max-h-[80vh] overflow-auto">
+                  <MusicBases onInsertBase={handleInsertBase} />
+                </div>
+              </DrawerContent>
+            </Drawer>
+          </div>
+          <Textarea 
+            id="song-content-mobile" 
+            value={content} 
+            onChange={handleContentChange} 
+            placeholder="Comece a compor sua letra aqui... Use [C] para adicionar o acorde C" 
+            className="editor-content min-h-[300px] font-mono mt-1"
+            ref={textareaRef}
+            onDrop={handleTextAreaDrop}
+            onDragOver={(e) => e.preventDefault()}
+          />
+          <p className="text-xs mt-1 text-muted-foreground">
+            Dica: Use colchetes para cifrar, exemplo: [C] Quando eu [G] canto
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -215,54 +355,7 @@ export const Editor: React.FC = () => {
         </DropdownMenu>
       </div>
       
-      <div className="flex flex-col md:flex-row gap-4">
-        {/* Left side: Chord preview and palette */}
-        <div className="w-full md:w-2/5 flex flex-col gap-4">
-          <div className="bg-card rounded-lg shadow-sm p-4">
-            <Tabs defaultValue="preview">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="preview">Pré-visualização</TabsTrigger>
-                <TabsTrigger value="chords">Acordes</TabsTrigger>
-              </TabsList>
-              <TabsContent value="preview" className="mt-2">
-                <ChordPreview content={content} />
-              </TabsContent>
-              <TabsContent value="chords" className="mt-2">
-                <ChordPalette onChordClick={handleChordClick} />
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
-        
-        {/* Right side: Editor container */}
-        <div className="w-full md:w-3/5">
-          <div className="editor-container">
-            <div className="mb-4">
-              <Label htmlFor="song-title">Título da Composição</Label>
-              <Input id="song-title" value={title} onChange={handleTitleChange} placeholder="Digite o título da sua música" className="mt-1" />
-            </div>
-            
-            <SectionButtons onSectionClick={handleSectionClick} />
-            
-            <div>
-              <Label htmlFor="song-content">Letra</Label>
-              <Textarea 
-                id="song-content" 
-                value={content} 
-                onChange={handleContentChange} 
-                placeholder="Comece a compor sua letra aqui... Use [C] para adicionar o acorde C" 
-                className="editor-content min-h-[400px] font-mono mt-1"
-                ref={textareaRef}
-                onDrop={handleTextAreaDrop}
-                onDragOver={(e) => e.preventDefault()}
-              />
-              <p className="text-xs mt-1 text-muted-foreground">
-                Dica: Use colchetes para cifrar, exemplo: [C] Quando eu [G] canto
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {isMobile ? mobileEditorContent : editorContent}
       
       <DAModal 
         isOpen={isDAModalOpen} 
