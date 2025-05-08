@@ -164,151 +164,166 @@ export const Editor: React.FC = () => {
     }, 0);
   };
 
-  // New 3-column layout for desktop
-  const desktopLayout = (
-    <div className="container-editor">
-      {/* Left Column: Music Bases */}
-      <div className="section-box">
-        <ScrollArea className="h-[calc(100vh-180px)]">
-          <MusicBases onInsertBase={handleInsertBase} />
-        </ScrollArea>
+  // Header component with action buttons
+  const EditorHeader = () => (
+    <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm">
+      <div className="flex items-center">
+        <img 
+          src="/lovable-uploads/913b0b45-af0f-4a18-9433-06da553e8273.png" 
+          alt="Compuse Logo" 
+          className="h-10" 
+        />
+        <span className="ml-4 font-semibold text-lg">Compuse</span>
       </div>
       
-      {/* Center Column: Editor */}
-      <div className="section-box flex flex-col">
-        <div className="mb-4">
-          <Label htmlFor="song-title">Título da Composição</Label>
-          <Input id="song-title" value={title} onChange={handleTitleChange} placeholder="Digite o título da sua música" className="mt-1" />
-        </div>
+      <div className="flex gap-2">
+        <Button 
+          variant="default" 
+          className="bg-orange-500 hover:bg-orange-600" 
+          onClick={() => {
+            setTitle('');
+            setContent('');
+            localStorage.removeItem('songscribe_current_title');
+            localStorage.removeItem('songscribe_current_content');
+          }}
+        >
+          Nova
+        </Button>
         
-        <SectionButtons onSectionClick={handleSectionClick} />
+        <Button 
+          variant="default"
+          className="bg-purple-600 hover:bg-purple-700"
+          onClick={openSaveModal}
+        >
+          Salvar
+        </Button>
         
-        <div className="flex-1 flex flex-col">
-          <Label htmlFor="song-content">Letra</Label>
-          <Textarea 
-            id="song-content" 
-            value={content} 
-            onChange={handleContentChange} 
-            placeholder="Comece a compor sua letra aqui..." 
-            className="editor-content flex-1 min-h-[400px] font-mono mt-1"
-            ref={textareaRef}
-            onDrop={handleTextAreaDrop}
-            onDragOver={(e) => e.preventDefault()}
-          />
-          <p className="text-xs mt-1 text-muted-foreground">
-            Digite sua letra e use os botões de seção para organizar a estrutura da música
-          </p>
-        </div>
-      </div>
-      
-      {/* Right Column: AI Tools */}
-      <div className="section-box">
-        <ScrollArea className="h-[calc(100vh-180px)]">
-          <div className="flex flex-col space-y-6">
-            <ThemeGenerator />
-            <RhymeAssistant />
-          </div>
-        </ScrollArea>
+        <Button 
+          variant="default"
+          className="bg-purple-600 hover:bg-purple-700"
+          onClick={openDAModal}
+        >
+          Gerar DA
+        </Button>
       </div>
     </div>
+  );
+
+  // New 3-column layout for desktop with smaller side margins
+  const desktopLayout = (
+    <>
+      <EditorHeader />
+      <div className="container-editor">
+        {/* Left Column: Music Bases */}
+        <div className="section-box">
+          <ScrollArea className="h-[calc(100vh-180px)]">
+            <MusicBases onInsertBase={handleInsertBase} />
+          </ScrollArea>
+        </div>
+        
+        {/* Center Column: Editor */}
+        <div className="section-box flex flex-col">
+          <div className="mb-4">
+            <Label htmlFor="song-title">Título da Composição</Label>
+            <Input id="song-title" value={title} onChange={handleTitleChange} placeholder="Digite o título da sua música" className="mt-1" />
+          </div>
+          
+          <SectionButtons onSectionClick={handleSectionClick} />
+          
+          <div className="flex-1 flex flex-col">
+            <Label htmlFor="song-content">Letra</Label>
+            <Textarea 
+              id="song-content" 
+              value={content} 
+              onChange={handleContentChange} 
+              placeholder="Comece a compor sua letra aqui..." 
+              className="editor-content flex-1 min-h-[400px] font-mono mt-1"
+              ref={textareaRef}
+              onDrop={handleTextAreaDrop}
+              onDragOver={(e) => e.preventDefault()}
+            />
+            <p className="text-xs mt-1 text-muted-foreground">
+              Digite sua letra e use os botões de seção para organizar a estrutura da música
+            </p>
+          </div>
+        </div>
+        
+        {/* Right Column: AI Tools */}
+        <div className="section-box">
+          <ScrollArea className="h-[calc(100vh-180px)]">
+            <div className="flex flex-col space-y-6">
+              <ThemeGenerator />
+              <RhymeAssistant />
+            </div>
+          </ScrollArea>
+        </div>
+      </div>
+    </>
   );
 
   // Mobile layout with drawer for sidebar elements
   const mobileLayout = (
-    <div className="flex flex-col gap-4">
-      <div className="section-box">
-        <div className="mb-4">
-          <Label htmlFor="song-title-mobile">Título da Composição</Label>
-          <Input id="song-title-mobile" value={title} onChange={handleTitleChange} placeholder="Digite o título da sua música" className="mt-1" />
-        </div>
-        
-        <SectionButtons onSectionClick={handleSectionClick} />
-        
-        <div>
-          <div className="flex justify-between items-center">
-            <Label htmlFor="song-content-mobile">Letra</Label>
-            <div className="flex gap-2">
-              <Drawer>
-                <DrawerTrigger asChild>
-                  <Button variant="outline" size="sm" className="text-xs">
-                    <Plus size={14} className="mr-1" /> Bases
-                  </Button>
-                </DrawerTrigger>
-                <DrawerContent>
-                  <div className="p-4 max-h-[80vh] overflow-auto">
-                    <MusicBases onInsertBase={handleInsertBase} />
-                  </div>
-                </DrawerContent>
-              </Drawer>
-
-              <Drawer>
-                <DrawerTrigger asChild>
-                  <Button variant="outline" size="sm" className="text-xs">
-                    <Plus size={14} className="mr-1" /> Ferramentas
-                  </Button>
-                </DrawerTrigger>
-                <DrawerContent>
-                  <div className="p-4 max-h-[80vh] overflow-auto space-y-6">
-                    <ThemeGenerator />
-                    <RhymeAssistant />
-                  </div>
-                </DrawerContent>
-              </Drawer>
-            </div>
+    <>
+      <EditorHeader />
+      <div className="flex flex-col gap-4">
+        <div className="section-box">
+          <div className="mb-4">
+            <Label htmlFor="song-title-mobile">Título da Composição</Label>
+            <Input id="song-title-mobile" value={title} onChange={handleTitleChange} placeholder="Digite o título da sua música" className="mt-1" />
           </div>
-          <Textarea 
-            id="song-content-mobile" 
-            value={content} 
-            onChange={handleContentChange} 
-            placeholder="Comece a compor sua letra aqui..." 
-            className="editor-content min-h-[300px] font-mono mt-1"
-            ref={textareaRef}
-            onDrop={handleTextAreaDrop}
-            onDragOver={(e) => e.preventDefault()}
-          />
+          
+          <SectionButtons onSectionClick={handleSectionClick} />
+          
+          <div>
+            <div className="flex justify-between items-center">
+              <Label htmlFor="song-content-mobile">Letra</Label>
+              <div className="flex gap-2">
+                <Drawer>
+                  <DrawerTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      <Plus size={14} className="mr-1" /> Bases
+                    </Button>
+                  </DrawerTrigger>
+                  <DrawerContent>
+                    <div className="p-4 max-h-[80vh] overflow-auto">
+                      <MusicBases onInsertBase={handleInsertBase} />
+                    </div>
+                  </DrawerContent>
+                </Drawer>
+
+                <Drawer>
+                  <DrawerTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      <Plus size={14} className="mr-1" /> Ferramentas
+                    </Button>
+                  </DrawerTrigger>
+                  <DrawerContent>
+                    <div className="p-4 max-h-[80vh] overflow-auto space-y-6">
+                      <ThemeGenerator />
+                      <RhymeAssistant />
+                    </div>
+                  </DrawerContent>
+                </Drawer>
+              </div>
+            </div>
+            <Textarea 
+              id="song-content-mobile" 
+              value={content} 
+              onChange={handleContentChange} 
+              placeholder="Comece a compor sua letra aqui..." 
+              className="editor-content min-h-[300px] font-mono mt-1"
+              ref={textareaRef}
+              onDrop={handleTextAreaDrop}
+              onDragOver={(e) => e.preventDefault()}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <img 
-          src="/lovable-uploads/913b0b45-af0f-4a18-9433-06da553e8273.png" 
-          alt="Compuse Logo" 
-          className="h-12" 
-        />
-        
-        <div className="flex gap-2">
-          <Button 
-            variant="default" 
-            color="secondary" 
-            onClick={() => {
-              setTitle('');
-              setContent('');
-              localStorage.removeItem('songscribe_current_title');
-              localStorage.removeItem('songscribe_current_content');
-            }}
-          >
-            Nova
-          </Button>
-          
-          <Button 
-            variant="secondary" 
-            onClick={openSaveModal}
-          >
-            Salvar
-          </Button>
-          
-          <Button 
-            onClick={openDAModal}
-          >
-            Gerar DA
-          </Button>
-        </div>
-      </div>
-      
+    <div className="max-w-[1400px] mx-auto px-4">
       {isMobile ? mobileLayout : desktopLayout}
       
       <DAModal 

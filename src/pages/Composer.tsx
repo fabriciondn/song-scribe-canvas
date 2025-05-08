@@ -8,7 +8,7 @@ const styles = `
   .container-editor {
     display: grid;
     grid-template-columns: 2.5fr 4fr 2.5fr;
-    gap: 24px;
+    gap: 16px;
   }
 
   .section-box {
