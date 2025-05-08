@@ -24,3 +24,6 @@ export function useMobileDetection() {
 
   return isMobile;
 }
+
+// Add an alias export for better compatibility with components
+export const useIsMobile = useMobileDetection;
