@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Backup, getBackups } from '@/services/backupService';
+import { Backup, getBackups } from '@/services/drafts/backupService';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';

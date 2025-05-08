@@ -17,11 +17,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { 
   Folder as FolderType, 
   Song, 
-  getFolders, 
+  getFolders,
   createFolder, 
   deleteFolder, 
-  getSongsByFolderId,
-  ensureBackupFolderExists
+  getSongsInFolder,
+  ensureSystemBackupFolderExists
 } from '@/services/folderService';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -56,8 +56,8 @@ export const FolderList: React.FC = () => {
     
     setIsLoading(true);
     try {
-      // Make sure the Backup folder exists
-      await ensureBackupFolderExists();
+      // Make sure the System Backup folder exists
+      await ensureSystemBackupFolderExists();
       
       const foldersData = await getFolders();
       setFolders(foldersData);
@@ -65,7 +65,7 @@ export const FolderList: React.FC = () => {
       // Carregar músicas de cada pasta
       const songsMap: Record<string, string[]> = {};
       for (const folder of foldersData) {
-        const songs = await getSongsByFolderId(folder.id);
+        const songs = await getSongsInFolder(folder.id);
         songsMap[folder.id] = songs.map(song => song.title);
       }
       setFolderSongs(songsMap);
@@ -134,7 +134,7 @@ export const FolderList: React.FC = () => {
     } catch (error) {
       console.error('Erro ao excluir pasta:', error);
       
-      if ((error as Error).message === 'Cannot delete a system folder') {
+      if ((error as Error).message === 'Cannot delete system folders') {
         toast({
           title: 'Operação não permitida',
           description: 'Pastas do sistema não podem ser excluídas.',
@@ -212,18 +212,19 @@ export const FolderList: React.FC = () => {
                     )}
                   </div>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteFolder(folder.id, folder.is_system);
-                  }}
-                  disabled={folder.is_system}
-                >
-                  <Trash2 className={`h-4 w-4 ${folder.is_system ? 'text-muted' : 'text-destructive'}`} />
-                </Button>
+                {!folder.is_system && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteFolder(folder.id, folder.is_system);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
               </div>
               
               <div className="mt-4 text-sm text-muted-foreground">

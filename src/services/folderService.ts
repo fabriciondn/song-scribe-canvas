@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { nanoid } from 'nanoid';
 
 export interface Folder {
   id: string;
@@ -21,30 +20,29 @@ export interface Song {
   updated_at?: string;
 }
 
-// Ensure default Backup folder exists
-export const ensureBackupFolderExists = async (): Promise<void> => {
+// Ensure default System Backup folder exists
+export const ensureSystemBackupFolderExists = async (): Promise<void> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
       throw new Error('No authenticated user');
-      
     }
     
     const { data, error } = await supabase
       .from('folders')
       .select('*')
-      .eq('name', 'Backup')
+      .eq('name', 'Backup do Sistema')
       .eq('is_system', true)
       .eq('user_id', session.user.id);
     
     if (error) throw error;
     
     if (!data || data.length === 0) {
-      await createDefaultBackupFolder();
+      await createDefaultSystemBackupFolder();
     }
   } catch (error) {
-    console.error('Error ensuring backup folder exists:', error);
+    console.error('Error ensuring system backup folder exists:', error);
     // Continue even if this fails
   }
 };
@@ -65,10 +63,10 @@ export const getFolders = async (): Promise<Folder[]> => {
     
     if (error) throw error;
     
-    // Create default Backup folder if it doesn't exist
-    const backupFolder = data?.find(folder => folder.name === 'Backup' && folder.is_system === true);
+    // Create default System Backup folder if it doesn't exist
+    const backupFolder = data?.find(folder => folder.name === 'Backup do Sistema' && folder.is_system === true);
     if (!backupFolder) {
-      await createDefaultBackupFolder();
+      await createDefaultSystemBackupFolder();
       // Fetch again with the new folder
       const { data: updatedData, error: updatedError } = await supabase
         .from('folders')
@@ -76,18 +74,18 @@ export const getFolders = async (): Promise<Folder[]> => {
         .order('created_at', { ascending: false });
       
       if (updatedError) throw updatedError;
-      return updatedData || [];
+      return updatedData as Folder[] || [];
     }
     
-    return data || [];
+    return data as Folder[] || [];
   } catch (error) {
     console.error('Error fetching folders:', error);
     throw error;
   }
 };
 
-// Create default backup folder for the user
-export const createDefaultBackupFolder = async (): Promise<Folder> => {
+// Create default system backup folder for the user
+export const createDefaultSystemBackupFolder = async (): Promise<Folder> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -96,7 +94,7 @@ export const createDefaultBackupFolder = async (): Promise<Folder> => {
     }
     
     const folderData = {
-      name: 'Backup',
+      name: 'Backup do Sistema',
       user_id: session.user.id,
       is_system: true
     };
@@ -111,7 +109,7 @@ export const createDefaultBackupFolder = async (): Promise<Folder> => {
     
     return data as Folder;
   } catch (error) {
-    console.error('Error creating default backup folder:', error);
+    console.error('Error creating default system backup folder:', error);
     throw error;
   }
 };
@@ -127,7 +125,7 @@ export const getFolderById = async (folderId: string): Promise<Folder | null> =>
     
     if (error) throw error;
     
-    return data;
+    return data as Folder;
   } catch (error) {
     console.error('Error fetching folder:', error);
     throw error;
@@ -201,7 +199,7 @@ export const getSongsInFolder = async (folderId: string): Promise<Song[]> => {
     
     if (error) throw error;
     
-    return data || [];
+    return data as Song[] || [];
   } catch (error) {
     console.error('Error fetching songs:', error);
     throw error;
@@ -219,7 +217,7 @@ export const getSongById = async (songId: string): Promise<Song | null> => {
     
     if (error) throw error;
     
-    return data;
+    return data as Song;
   } catch (error) {
     console.error('Error fetching song:', error);
     throw error;

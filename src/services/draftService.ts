@@ -2,7 +2,7 @@
 // Re-export all functions and types from the refactored services
 // This maintains backward compatibility with code that imports from this file
 
-export { Draft, DraftInput } from './drafts/types';
+export type { Draft, DraftInput } from './drafts/types';
 export { 
   getDrafts,
   getDraftById,
@@ -17,5 +17,5 @@ export {
   getBackups,
   getBackupById,
   createSystemBackup,
-  type Backup
 } from './drafts/backupService';
+export type { Backup } from './drafts/backupService';
