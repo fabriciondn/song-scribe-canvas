@@ -1,15 +1,16 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { SectionButtons } from './SectionButtons';
 import { DAModal } from './DAModal';
 import { SaveModal } from './SaveModal';
-import { ChordPalette } from './ChordPalette';
-import { ChordPreview } from './ChordPreview';
 import { MusicBases } from './MusicBases';
+import { ThemeGenerator } from './ThemeGenerator';
+import { RhymeAssistant } from './RhymeAssistant';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { FileText, Loader2 } from 'lucide-react';
+import { FileText, Loader2, Plus } from 'lucide-react';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -18,12 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { createBackup } from '@/services/draftService';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Drawer,
   DrawerContent,
@@ -37,7 +33,6 @@ export const Editor: React.FC = () => {
   const [isDAModalOpen, setIsDAModalOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [processing, setProcessing] = useState<string | null>(null);
-  const [showPreview, setShowPreview] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const isMobile = useMobileDetection();
@@ -67,26 +62,6 @@ export const Editor: React.FC = () => {
   const handleSectionClick = (sectionText: string) => {
     // Insert the section at cursor position or at the end
     setContent(prev => prev + sectionText);
-  };
-
-  const handleChordClick = (chord: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const cursorPosition = textarea.selectionStart;
-    const textBeforeCursor = content.substring(0, cursorPosition);
-    const textAfterCursor = content.substring(cursorPosition);
-
-    // Insert the chord at the cursor position
-    const newContent = `${textBeforeCursor}[${chord}] ${textAfterCursor}`;
-    setContent(newContent);
-
-    // Set focus back to textarea and place cursor after inserted chord
-    setTimeout(() => {
-      textarea.focus();
-      const newCursorPos = cursorPosition + chord.length + 3; // +3 for the [, ], and space
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
   };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,27 +164,18 @@ export const Editor: React.FC = () => {
     }, 0);
   };
 
-  // Conteúdo do editor para dispositivos desktop
-  const editorContent = (
+  // New 3-column layout for desktop
+  const desktopLayout = (
     <div className="container-editor">
-      {/* Coluna Esquerda: Chord preview and palette */}
+      {/* Left Column: Music Bases */}
       <div className="section-box">
-        <Tabs defaultValue="preview">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="preview">Pré-visualização</TabsTrigger>
-            <TabsTrigger value="chords">Acordes</TabsTrigger>
-          </TabsList>
-          <TabsContent value="preview" className="mt-2">
-            <ChordPreview content={content} />
-          </TabsContent>
-          <TabsContent value="chords" className="mt-2">
-            <ChordPalette onChordClick={handleChordClick} />
-          </TabsContent>
-        </Tabs>
+        <ScrollArea className="h-[calc(100vh-180px)]">
+          <MusicBases onInsertBase={handleInsertBase} />
+        </ScrollArea>
       </div>
       
-      {/* Coluna Central: Editor container */}
-      <div className="section-box">
+      {/* Center Column: Editor */}
+      <div className="section-box flex flex-col">
         <div className="mb-4">
           <Label htmlFor="song-title">Título da Composição</Label>
           <Input id="song-title" value={title} onChange={handleTitleChange} placeholder="Digite o título da sua música" className="mt-1" />
@@ -217,49 +183,39 @@ export const Editor: React.FC = () => {
         
         <SectionButtons onSectionClick={handleSectionClick} />
         
-        <div>
+        <div className="flex-1 flex flex-col">
           <Label htmlFor="song-content">Letra</Label>
           <Textarea 
             id="song-content" 
             value={content} 
             onChange={handleContentChange} 
-            placeholder="Comece a compor sua letra aqui... Use [C] para adicionar o acorde C" 
-            className="editor-content min-h-[400px] font-mono mt-1"
+            placeholder="Comece a compor sua letra aqui..." 
+            className="editor-content flex-1 min-h-[400px] font-mono mt-1"
             ref={textareaRef}
             onDrop={handleTextAreaDrop}
             onDragOver={(e) => e.preventDefault()}
           />
           <p className="text-xs mt-1 text-muted-foreground">
-            Dica: Use colchetes para cifrar, exemplo: [C] Quando eu [G] canto
+            Digite sua letra e use os botões de seção para organizar a estrutura da música
           </p>
         </div>
       </div>
       
-      {/* Coluna Direita: Music Bases */}
-      <div className="section-box h-full overflow-auto">
-        <MusicBases onInsertBase={handleInsertBase} />
+      {/* Right Column: AI Tools */}
+      <div className="section-box">
+        <ScrollArea className="h-[calc(100vh-180px)]">
+          <div className="flex flex-col space-y-6">
+            <ThemeGenerator />
+            <RhymeAssistant />
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );
 
-  // Versão mobile com drawer para as bases musicais
-  const mobileEditorContent = (
+  // Mobile layout with drawer for sidebar elements
+  const mobileLayout = (
     <div className="flex flex-col gap-4">
-      <div className="section-box">
-        <Tabs defaultValue="preview">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="preview">Pré-visualização</TabsTrigger>
-            <TabsTrigger value="chords">Acordes</TabsTrigger>
-          </TabsList>
-          <TabsContent value="preview" className="mt-2">
-            <ChordPreview content={content} />
-          </TabsContent>
-          <TabsContent value="chords" className="mt-2">
-            <ChordPalette onChordClick={handleChordClick} />
-          </TabsContent>
-        </Tabs>
-      </div>
-      
       <div className="section-box">
         <div className="mb-4">
           <Label htmlFor="song-title-mobile">Título da Composição</Label>
@@ -271,32 +227,45 @@ export const Editor: React.FC = () => {
         <div>
           <div className="flex justify-between items-center">
             <Label htmlFor="song-content-mobile">Letra</Label>
-            <Drawer>
-              <DrawerTrigger asChild>
-                <Button variant="outline" size="sm" className="mb-2">
-                  Bases Musicais
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent>
-                <div className="p-4 max-h-[80vh] overflow-auto">
-                  <MusicBases onInsertBase={handleInsertBase} />
-                </div>
-              </DrawerContent>
-            </Drawer>
+            <div className="flex gap-2">
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-xs">
+                    <Plus size={14} className="mr-1" /> Bases
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <div className="p-4 max-h-[80vh] overflow-auto">
+                    <MusicBases onInsertBase={handleInsertBase} />
+                  </div>
+                </DrawerContent>
+              </Drawer>
+
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-xs">
+                    <Plus size={14} className="mr-1" /> Ferramentas
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <div className="p-4 max-h-[80vh] overflow-auto space-y-6">
+                    <ThemeGenerator />
+                    <RhymeAssistant />
+                  </div>
+                </DrawerContent>
+              </Drawer>
+            </div>
           </div>
           <Textarea 
             id="song-content-mobile" 
             value={content} 
             onChange={handleContentChange} 
-            placeholder="Comece a compor sua letra aqui... Use [C] para adicionar o acorde C" 
+            placeholder="Comece a compor sua letra aqui..." 
             className="editor-content min-h-[300px] font-mono mt-1"
             ref={textareaRef}
             onDrop={handleTextAreaDrop}
             onDragOver={(e) => e.preventDefault()}
           />
-          <p className="text-xs mt-1 text-muted-foreground">
-            Dica: Use colchetes para cifrar, exemplo: [C] Quando eu [G] canto
-          </p>
         </div>
       </div>
     </div>
@@ -311,46 +280,36 @@ export const Editor: React.FC = () => {
           className="h-12" 
         />
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button>
-              {processing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processando...
-                </>
-              ) : (
-                'Finalizar'
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem 
-              onClick={openDAModal}
-              disabled={!!processing}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Gerar e enviar DA
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={openSaveModal}
-              disabled={!!processing}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Guardar em pasta
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={handleBackup}
-              disabled={!!processing}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Criar backup
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex gap-2">
+          <Button 
+            variant="default" 
+            color="secondary" 
+            onClick={() => {
+              setTitle('');
+              setContent('');
+              localStorage.removeItem('songscribe_current_title');
+              localStorage.removeItem('songscribe_current_content');
+            }}
+          >
+            Nova
+          </Button>
+          
+          <Button 
+            variant="secondary" 
+            onClick={openSaveModal}
+          >
+            Salvar
+          </Button>
+          
+          <Button 
+            onClick={openDAModal}
+          >
+            Gerar DA
+          </Button>
+        </div>
       </div>
       
-      {isMobile ? mobileEditorContent : editorContent}
+      {isMobile ? mobileLayout : desktopLayout}
       
       <DAModal 
         isOpen={isDAModalOpen} 
