@@ -9,7 +9,7 @@ const Folders: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<FolderList />} />
-      <Route path="/:folderId" element={<FolderPage />} />
+      <Route path="/:folderId/*" element={<FolderPage />} />
       <Route path="/backup" element={<BackupFolderPage />} />
     </Routes>
   );

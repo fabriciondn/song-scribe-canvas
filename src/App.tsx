@@ -59,8 +59,7 @@ const App = () => {
                   <Route index element={<Templates />} />
                 </Route>
                 <Route path="/folders" element={<Dashboard />}>
-                  <Route index element={<Folders />} />
-                  <Route path=":folderId" element={<Folders />} />
+                  <Route path="*" element={<Folders />} />
                 </Route>
                 <Route path="/drafts" element={<Dashboard />}>
                   <Route index element={<Drafts />} />
