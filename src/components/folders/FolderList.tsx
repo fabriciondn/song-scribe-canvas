@@ -150,6 +150,7 @@ export const FolderList: React.FC = () => {
   };
   
   const handleFolderClick = (folderId: string) => {
+    console.log('Navegando para a pasta:', folderId);
     navigate(`/folders/${folderId}`);
   };
 
