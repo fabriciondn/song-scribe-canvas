@@ -75,3 +75,33 @@ body, html {
     min-height: 450px;
   }
 }
+
+/* Estilos para a lista de pastas */
+.folder-card {
+  transition: all 0.3s ease;
+}
+
+.folder-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transform: translateY(-2px);
+}
+
+/* Estilos para o menu lateral */
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-link.active {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: rgb(139, 92, 246);
+  font-weight: 500;
+}
+
+.nav-link:hover:not(.active) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+

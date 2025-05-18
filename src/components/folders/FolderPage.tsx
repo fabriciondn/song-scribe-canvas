@@ -210,7 +210,7 @@ export const FolderPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto py-8 px-6">
         <Button 
           variant="outline" 
           className="mb-4 flex items-center opacity-60" 
@@ -228,7 +228,7 @@ export const FolderPage: React.FC = () => {
           <Skeleton className="h-4 w-24 mt-2" />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
             <Skeleton className="h-6 w-32 mb-4" />
             <div className="space-y-2">
@@ -247,18 +247,18 @@ export const FolderPage: React.FC = () => {
 
   if (!folder) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-64 px-6">
         <p>Pasta não encontrada.</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-8 px-6">
       <Button 
         variant="outline" 
-        className="mb-4 flex items-center" 
-        onClick={handleBackClick}
+        className="mb-6 flex items-center" 
+        onClick={() => navigate('/folders')}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Voltar para Pastas
@@ -266,21 +266,21 @@ export const FolderPage: React.FC = () => {
 
       <div className="mb-6 flex justify-between items-center">
         <div className="flex items-center">
-          <Folder className="h-8 w-8 text-primary mr-2" />
+          <Folder className="h-8 w-8 text-primary mr-3" />
           <h1 className="text-3xl font-bold">{folder.name}</h1>
         </div>
         
-        <Button onClick={handleAddNewSong}>
+        <Button className="bg-primary hover:bg-primary/90" onClick={handleAddNewSong}>
           <Plus className="mr-2 h-4 w-4" />
           Nova Composição
         </Button>
       </div>
       
-      <p className="text-muted-foreground mb-6">
+      <p className="text-muted-foreground mb-8">
         {songs.length} {songs.length === 1 ? 'composição' : 'composições'}
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-4">
           <h2 className="text-xl font-semibold">Composições</h2>
           
@@ -297,10 +297,10 @@ export const FolderPage: React.FC = () => {
                 <Card 
                   key={song.id}
                   className={`cursor-pointer hover:border-primary transition-colors ${
-                    selectedSong?.id === song.id ? 'border-primary' : ''
+                    selectedSong?.id === song.id ? 'border-primary shadow-sm' : ''
                   }`}
                 >
-                  <CardContent className="p-4" onClick={() => handleSongClick(song)}>
+                  <CardContent className="p-4" onClick={() => setSelectedSong(song)}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center overflow-hidden">
                         <File className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
@@ -341,7 +341,11 @@ export const FolderPage: React.FC = () => {
                   </p>
                 </div>
                 {!isEditing && (
-                  <Button variant="outline" size="sm" onClick={handleEditClick}>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setEditTitle(selectedSong.title);
+                    setEditContent(selectedSong.content);
+                    setIsEditing(true);
+                  }}>
                     <Edit className="h-4 w-4 mr-2" /> Editar
                   </Button>
                 )}
@@ -351,7 +355,7 @@ export const FolderPage: React.FC = () => {
                   <Textarea 
                     value={selectedSong.content}
                     readOnly
-                    className="min-h-[400px] font-mono"
+                    className="min-h-[450px] font-mono resize-none"
                   />
                 ) : (
                   <div className="space-y-4">
@@ -375,7 +379,7 @@ export const FolderPage: React.FC = () => {
                         value={editContent}
                         onChange={(e) => setEditContent(e.target.value)}
                         placeholder="Letra da música"
-                        className="min-h-[360px] font-mono"
+                        className="min-h-[400px] font-mono resize-none"
                       />
                     </div>
                   </div>
@@ -386,7 +390,7 @@ export const FolderPage: React.FC = () => {
                   <Button variant="outline" onClick={() => setIsEditing(false)}>
                     Cancelar
                   </Button>
-                  <Button onClick={handleSaveEdit}>
+                  <Button className="bg-primary hover:bg-primary/90" onClick={handleSaveEdit}>
                     Salvar Alterações
                   </Button>
                 </CardFooter>
@@ -432,7 +436,7 @@ export const FolderPage: React.FC = () => {
                 placeholder="Insira a letra da música"
                 value={newSongContent}
                 onChange={(e) => setNewSongContent(e.target.value)}
-                className="min-h-[200px]"
+                className="min-h-[200px] resize-none"
               />
             </div>
           </div>
@@ -440,7 +444,7 @@ export const FolderPage: React.FC = () => {
             <Button variant="outline" onClick={() => setIsNewSongDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSaveNewSong}>Criar Composição</Button>
+            <Button className="bg-primary hover:bg-primary/90" onClick={handleSaveNewSong}>Criar Composição</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

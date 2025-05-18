@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -156,7 +155,7 @@ export const FolderList: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div>
+      <div className="px-6 py-8">
         <div className="flex justify-between items-center mb-6">
           <Skeleton className="h-8 w-32" />
           <Skeleton className="h-10 w-28" />
@@ -172,17 +171,17 @@ export const FolderList: React.FC = () => {
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="px-6 py-8">
+      <div className="flex justify-between items-center mb-8">
         <h2 className="text-2xl font-bold">Suas Pastas</h2>
-        <Button onClick={() => setIsNewFolderModalOpen(true)}>
+        <Button onClick={() => setIsNewFolderModalOpen(true)} className="bg-primary hover:bg-primary/90">
           <Plus className="mr-2 h-4 w-4" />
           Nova Pasta
         </Button>
       </div>
       
       {folders.length === 0 ? (
-        <div className="text-center py-12 border rounded-lg bg-muted/10">
+        <div className="text-center py-12 border rounded-lg bg-muted/10 mx-4">
           <Folder className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
           <h3 className="text-lg font-medium mb-2">Nenhuma pasta encontrada</h3>
           <p className="text-muted-foreground mb-6">Crie uma pasta para começar a organizar suas composições.</p>
@@ -192,16 +191,16 @@ export const FolderList: React.FC = () => {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mx-2">
           {folders.map(folder => (
             <div 
               key={folder.id} 
-              className={`folder-card p-4 border rounded-lg hover:border-primary cursor-pointer transition-all ${folder.is_system ? 'border-amber-400' : ''}`}
+              className={`folder-card p-6 border rounded-lg cursor-pointer transition-all hover:shadow-md ${folder.is_system ? 'border-amber-400' : 'hover:border-primary'}`}
               onClick={() => handleFolderClick(folder.id)}
             >
-              <div className="flex justify-between items-start">
+              <div className="flex justify-between items-start mb-2">
                 <div className="flex items-center">
-                  <Folder className={`h-10 w-10 mr-2 ${folder.is_system ? 'text-amber-500' : 'text-primary'}`} />
+                  <Folder className={`h-10 w-10 mr-3 ${folder.is_system ? 'text-amber-500' : 'text-primary'}`} />
                   <div>
                     <h3 className="text-lg font-semibold">{folder.name}</h3>
                     {folder.is_system && (
@@ -231,7 +230,7 @@ export const FolderList: React.FC = () => {
                 {(!folderSongs[folder.id] || folderSongs[folder.id].length === 0) ? (
                   <p>Pasta vazia</p>
                 ) : (
-                  <ul className="space-y-2">
+                  <ul className="space-y-3">
                     {folderSongs[folder.id].slice(0, 3).map((songTitle, idx) => (
                       <li key={idx} className="flex items-center">
                         <File className="h-4 w-4 mr-2 flex-shrink-0" />
@@ -247,7 +246,7 @@ export const FolderList: React.FC = () => {
                 )}
               </div>
               
-              <div className="mt-4 pt-4 border-t">
+              <div className="mt-5 pt-4 border-t">
                 <p className="text-xs">
                   {folderSongs[folder.id]?.length || 0} {(folderSongs[folder.id]?.length || 0) === 1 ? 'item' : 'itens'}
                 </p>
