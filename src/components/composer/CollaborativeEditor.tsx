@@ -23,6 +23,17 @@ interface CollaborativeEditorProps {
   partnershipId: string;
 }
 
+interface CompositionData {
+  content?: string;
+  author_segments?: Segment[];
+}
+
+interface ProfileData {
+  id: string;
+  name?: string;
+  email?: string;
+}
+
 export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partnershipId }) => {
   const [content, setContent] = useState('');
   const [segments, setSegments] = useState<Segment[]>([]);
@@ -51,9 +62,9 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
     
     const loadInitialData = async () => {
       try {
-        // Load composition content
+        // Load composition content - usando any para contornar limitação dos tipos
         const { data: compositionData, error: compositionError } = await supabase
-          .from('partnership_compositions')
+          .from('partnership_compositions' as any)
           .select('content, author_segments')
           .eq('partnership_id', partnershipId)
           .single();
@@ -61,13 +72,14 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
         if (compositionError) throw compositionError;
         
         if (compositionData) {
-          setContent(compositionData.content || '');
-          setSegments(compositionData.author_segments || []);
+          const typedData = compositionData as CompositionData;
+          setContent(typedData.content || '');
+          setSegments(typedData.author_segments || []);
         }
         
-        // Load collaborators info
+        // Load collaborators info - usando any para contornar limitação dos tipos
         const { data: collaborators, error: collaboratorsError } = await supabase
-          .from('partnership_collaborators')
+          .from('partnership_collaborators' as any)
           .select(`
             user_id,
             profiles:user_id (
@@ -79,9 +91,9 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
           
         if (collaboratorsError) throw collaboratorsError;
         
-        // Also get partnership creator
+        // Also get partnership creator - usando any para contornar limitação dos tipos
         const { data: partnership, error: partnershipError } = await supabase
-          .from('partnerships')
+          .from('partnerships' as any)
           .select(`
             user_id,
             profiles:user_id (
@@ -99,9 +111,10 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
         
         // Add partnership creator
         if (partnership?.user_id && partnership?.profiles) {
+          const profile = partnership.profiles as ProfileData;
           authorsMap[partnership.user_id] = {
             id: partnership.user_id,
-            name: partnership.profiles.name || 'Criador',
+            name: profile.name || 'Criador',
             color: colorPalette[0]
           };
         }
@@ -113,9 +126,10 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
               // Skip if already added (creator)
               if (authorsMap[collab.user_id]) return;
               
+              const profile = collab.profiles as ProfileData;
               authorsMap[collab.user_id] = {
                 id: collab.user_id,
-                name: collab.profiles.name || `Colaborador ${index + 1}`,
+                name: profile.name || `Colaborador ${index + 1}`,
                 color: colorPalette[(index + 1) % colorPalette.length]
               };
             }
@@ -222,13 +236,13 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
       const newSegments = [...updatedSegments, newSegment];
       setSegments(newSegments);
       
-      // Save to database
+      // Save to database - usando any para contornar limitação dos tipos
       await supabase
-        .from('partnership_compositions')
+        .from('partnership_compositions' as any)
         .update({
           content: newContent,
           author_segments: newSegments,
-          updated_at: new Date(),
+          updated_at: new Date().toISOString(),
           last_modified_by: user.id
         })
         .eq('partnership_id', partnershipId);
@@ -285,13 +299,13 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
       
       setSegments(updatedSegments);
       
-      // Save to database
+      // Save to database - usando any para contornar limitação dos tipos
       await supabase
-        .from('partnership_compositions')
+        .from('partnership_compositions' as any)
         .update({
           content: newContent,
           author_segments: updatedSegments,
-          updated_at: new Date(),
+          updated_at: new Date().toISOString(),
           last_modified_by: user.id
         })
         .eq('partnership_id', partnershipId);

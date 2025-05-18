@@ -1,9 +1,38 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Draft, DraftInput, AudioFile } from './types';
 import { uploadAudio } from './audioService';
 import { createSystemBackup } from './backupService';
 import { ensureAudioBucketExists } from '../storage/storageBuckets';
 import { nanoid } from 'nanoid';
+
+// Tipos para os componentes de parceria
+interface PartnershipData {
+  id: string;
+  title: string;
+  description: string;
+  created_at: string;
+  user_id: string;
+  partnership_collaborators?: CollaboratorData[];
+}
+
+interface CollaboratorData {
+  id: string;
+  user_id: string;
+  permission: 'read' | 'edit';
+  status: 'pending' | 'active';
+  profiles?: {
+    id: string;
+    name?: string;
+    email?: string;
+  };
+}
+
+interface ProfileInfo {
+  id: string;
+  name?: string;
+  email?: string;
+}
 
 export const getDrafts = async (): Promise<Draft[]> => {
   try {
@@ -199,11 +228,11 @@ export const generateCollaborationToken = async (partnershipId: string): Promise
     
     // Store the token in the database linked to the partnership
     const { error } = await supabase
-      .from('partnership_tokens')
+      .from('partnership_tokens' as any)
       .insert({
         partnership_id: partnershipId,
         token,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
       });
     
     if (error) throw error;
@@ -233,7 +262,7 @@ export const validateCollaborationToken = async (token: string): Promise<{
     
     // Find the token in the database
     const { data, error } = await supabase
-      .from('partnership_tokens')
+      .from('partnership_tokens' as any)
       .select('partnership_id, expires_at, used')
       .eq('token', token)
       .single();
@@ -249,7 +278,7 @@ export const validateCollaborationToken = async (token: string): Promise<{
     
     // Add user to partnership
     const { error: partnerError } = await supabase
-      .from('partnership_collaborators')
+      .from('partnership_collaborators' as any)
       .insert({
         partnership_id: data.partnership_id,
         user_id: userId,
@@ -263,7 +292,7 @@ export const validateCollaborationToken = async (token: string): Promise<{
     
     // Mark token as used
     await supabase
-      .from('partnership_tokens')
+      .from('partnership_tokens' as any)
       .update({ used: true })
       .eq('token', token);
     
@@ -289,7 +318,7 @@ export const getUserPartnerships = async () => {
     
     // Get partnerships where the user is either the creator or a collaborator
     const { data: createdPartnerships, error: createdError } = await supabase
-      .from('partnerships')
+      .from('partnerships' as any)
       .select(`
         id,
         title,
@@ -308,7 +337,7 @@ export const getUserPartnerships = async () => {
     if (createdError) throw createdError;
     
     const { data: collaboratingPartnerships, error: collaboratingError } = await supabase
-      .from('partnership_collaborators')
+      .from('partnership_collaborators' as any)
       .select(`
         partnerships (
           id,
@@ -329,11 +358,11 @@ export const getUserPartnerships = async () => {
     if (collaboratingError) throw collaboratingError;
     
     // Combine and format the partnerships
-    let allPartnerships = [...(createdPartnerships || [])];
+    let allPartnerships: PartnershipData[] = [...(createdPartnerships as PartnershipData[] || [])];
     
     if (collaboratingPartnerships) {
       const collaborations = collaboratingPartnerships
-        .map(collab => collab.partnerships)
+        .map(collab => collab.partnerships as unknown as PartnershipData)
         .filter(Boolean);
       
       allPartnerships = [...allPartnerships, ...collaborations];
@@ -350,14 +379,14 @@ export const getUserPartnerships = async () => {
     
     // Get user profiles
     const { data: profiles } = await supabase
-      .from('profiles')
+      .from('profiles' as any)
       .select('id, name, email')
       .in('id', Array.from(userIds));
     
     const userProfiles = (profiles || []).reduce((acc, profile) => {
       acc[profile.id] = profile;
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, ProfileInfo>);
     
     // Format partnerships with user info
     return allPartnerships.map(partnership => ({
@@ -391,10 +420,10 @@ export const updatePartnershipComposition = async (
 ): Promise<void> => {
   try {
     const { error } = await supabase
-      .from('partnership_compositions')
+      .from('partnership_compositions' as any)
       .update({ 
         content, 
-        updated_at: new Date(),
+        updated_at: new Date().toISOString(),
         last_modified_by: authorId
       })
       .eq('partnership_id', partnershipId);

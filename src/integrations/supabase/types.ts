@@ -69,6 +69,162 @@ export type Database = {
         }
         Relationships: []
       }
+      partnership_collaborators: {
+        Row: {
+          created_at: string | null
+          id: string
+          partnership_id: string | null
+          permission: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          partnership_id?: string | null
+          permission?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          partnership_id?: string | null
+          permission?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partnership_collaborators_partnership_id_fkey"
+            columns: ["partnership_id"]
+            isOneToOne: false
+            referencedRelation: "partnerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partnership_compositions: {
+        Row: {
+          author_segments: Json | null
+          content: string | null
+          created_at: string | null
+          id: string
+          last_modified_by: string | null
+          partnership_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          author_segments?: Json | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          last_modified_by?: string | null
+          partnership_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          author_segments?: Json | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          last_modified_by?: string | null
+          partnership_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partnership_compositions_partnership_id_fkey"
+            columns: ["partnership_id"]
+            isOneToOne: true
+            referencedRelation: "partnerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partnership_tokens: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          id: string
+          partnership_id: string | null
+          token: string
+          used: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          partnership_id?: string | null
+          token: string
+          used?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          partnership_id?: string | null
+          token?: string
+          used?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partnership_tokens_partnership_id_fkey"
+            columns: ["partnership_id"]
+            isOneToOne: false
+            referencedRelation: "partnerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partnerships: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+          name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
       songs: {
         Row: {
           content: string
