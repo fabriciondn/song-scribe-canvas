@@ -8,6 +8,8 @@ import { AuthProvider, LoginMessageProvider } from "./context/AuthContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Composer from "./pages/Composer";
+import Cifrador from "./pages/Cifrador";
+import Bases from "./pages/Bases";
 import Templates from "./pages/Templates";
 import Folders from "./pages/Folders";
 import Drafts from "./pages/Drafts";
@@ -37,6 +39,8 @@ const App = () => {
                 <Route path="/dashboard" element={<Dashboard />}>
                   <Route index element={<Composer />} />
                   <Route path="composer" element={<Composer />} />
+                  <Route path="cifrador" element={<Cifrador />} />
+                  <Route path="bases" element={<Bases />} />
                   <Route path="templates" element={<Templates />} />
                   <Route path="folders/*" element={<Folders />} />
                   <Route path="drafts" element={<Drafts />} />
@@ -44,6 +48,12 @@ const App = () => {
                 </Route>
                 <Route path="/composer" element={<Dashboard />}>
                   <Route index element={<Composer />} />
+                </Route>
+                <Route path="/cifrador" element={<Dashboard />}>
+                  <Route index element={<Cifrador />} />
+                </Route>
+                <Route path="/bases" element={<Dashboard />}>
+                  <Route index element={<Bases />} />
                 </Route>
                 <Route path="/templates" element={<Dashboard />}>
                   <Route index element={<Templates />} />

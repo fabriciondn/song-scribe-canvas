@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Edit, FileText, Folder, BookText, Users, Menu, X } from 'lucide-react';
+import { Edit, FileText, Folder, BookText, Users, Menu, X, Music, FileMusic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 interface SidebarProps {
@@ -16,6 +17,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     label: 'Compor',
     icon: <Edit size={20} />,
     path: '/composer'
+  }, {
+    label: 'Cifrador',
+    icon: <Music size={20} />,
+    path: '/cifrador'
+  }, {
+    label: 'Bases',
+    icon: <FileMusic size={20} />,
+    path: '/bases'
   }, {
     label: 'Modelos de DA',
     icon: <FileText size={20} />,

@@ -1,9 +1,12 @@
+
 import React, { useState } from 'react';
 import { Play, Pause, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useToast } from '@/components/ui/use-toast';
+import { Link } from 'react-router-dom';
+
 interface MusicBase {
   id: string;
   title: string;
@@ -63,12 +66,14 @@ const mockBases: MusicBase[] = [{
   audioUrl: '/lovable-uploads/bases/funk2.mp3',
   genre: 'Funk'
 }];
+
 interface MusicBasesProps {
   onInsertBase: (baseInfo: {
     title: string;
     genre: string;
   }) => void;
 }
+
 export const MusicBases: React.FC<MusicBasesProps> = ({
   onInsertBase
 }) => {
@@ -86,6 +91,7 @@ export const MusicBases: React.FC<MusicBasesProps> = ({
     acc[base.genre].push(base);
     return acc;
   }, {} as Record<string, MusicBase[]>);
+  
   const handlePlay = (base: MusicBase) => {
     if (audioElement) {
       audioElement.pause();
@@ -118,6 +124,7 @@ export const MusicBases: React.FC<MusicBasesProps> = ({
       setPlayingId(null);
     });
   };
+  
   const handleInsert = (base: MusicBase) => {
     onInsertBase({
       title: base.title,
@@ -128,8 +135,17 @@ export const MusicBases: React.FC<MusicBasesProps> = ({
       description: `A base "${base.title}" foi adicionada à sua composição.`
     });
   };
+  
   return <div className="h-full">
-      <h3 className="mb-4 font-medium text-sm text-violet-950">Escolha sua base aqui!</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-medium text-sm text-violet-950">Escolha sua base aqui!</h3>
+        <Link to="/bases">
+          <Button variant="ghost" size="sm" className="text-xs">
+            <Plus size={14} className="mr-1" /> Gerenciar
+          </Button>
+        </Link>
+      </div>
+      
       <ScrollArea className="h-[calc(100vh-280px)]">
         <Accordion type="single" collapsible className="w-full">
           {Object.entries(basesByGenre).map(([genre, bases]) => <AccordionItem value={genre} key={genre}>
