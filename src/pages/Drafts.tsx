@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -18,7 +17,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import * as draftService from '../services/draftService';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Draft } from '../services/draftService';
+import { Draft, AudioFile } from '../services/drafts/types';
+import { prepareAudioFilesForStorage } from '../services/drafts/audioService';
 
 const Drafts: React.FC = () => {
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -29,8 +29,10 @@ const Drafts: React.FC = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  
+  // Novo estado para gerenciar múltiplos arquivos de áudio
+  const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
+  const [audioBlobs, setAudioBlobs] = useState<Map<string, Blob>>(new Map());
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -70,8 +72,8 @@ const Drafts: React.FC = () => {
   const startNewDraft = () => {
     setTitle('');
     setContent('');
-    setAudioUrl(undefined);
-    setAudioBlob(null);
+    setAudioFiles([]);
+    setAudioBlobs(new Map());
     setActiveId(null);
     setIsEditing(true);
   };
@@ -79,10 +81,47 @@ const Drafts: React.FC = () => {
   const startEditingDraft = (draft: Draft) => {
     setTitle(draft.title);
     setContent(draft.content);
-    setAudioUrl(draft.audio_url);
-    setAudioBlob(null);
+    
+    // Inicializar os arquivos de áudio do rascunho
+    if (draft.audio_files && draft.audio_files.length > 0) {
+      setAudioFiles(draft.audio_files);
+    } else if (draft.audio_url) {
+      // Para compatibilidade com rascunhos anteriores que só tinham uma URL de áudio
+      setAudioFiles([{
+        id: 'legacy_audio',
+        name: 'Áudio 1',
+        url: draft.audio_url,
+        created_at: draft.created_at
+      }]);
+    } else {
+      setAudioFiles([]);
+    }
+    
+    setAudioBlobs(new Map());
     setActiveId(draft.id);
     setIsEditing(true);
+  };
+  
+  const handleSaveRecordings = (newAudioFiles: AudioFile[]) => {
+    // Extrair os blobs dos novos arquivos (URLs temporárias que começam com blob:)
+    const newBlobs = new Map<string, Blob>(audioBlobs);
+    
+    newAudioFiles.forEach(file => {
+      if (file.url.startsWith('blob:') && !audioBlobs.has(file.url)) {
+        // Fazer fetch do blob a partir da URL temporária
+        fetch(file.url)
+          .then(response => response.blob())
+          .then(blob => {
+            newBlobs.set(file.url, blob);
+            setAudioBlobs(newBlobs);
+          })
+          .catch(error => {
+            console.error('Error fetching blob from URL:', error);
+          });
+      }
+    });
+    
+    setAudioFiles(newAudioFiles);
   };
   
   const handleSaveDraft = async () => {
@@ -98,12 +137,26 @@ const Drafts: React.FC = () => {
     setIsSaving(true);
     
     try {
-      let finalAudioUrl = audioUrl;
+      let uploadedFiles: AudioFile[] = [];
       
-      // If we have a new audio blob, upload it
-      if (audioBlob) {
-        const filename = `audio_${Date.now()}.wav`;
-        finalAudioUrl = await draftService.uploadAudio(audioBlob, filename);
+      // Processar cada arquivo de áudio com blob
+      for (const file of audioFiles) {
+        // Se a URL é temporária (blob:), precisamos fazer upload
+        if (file.url.startsWith('blob:') && audioBlobs.has(file.url)) {
+          const blob = audioBlobs.get(file.url);
+          if (blob) {
+            const safeFileName = `${file.id || 'audio'}_${Date.now()}.wav`.replace(/[^a-zA-Z0-9_.-]/g, '_');
+            const uploadedUrl = await draftService.uploadAudio(blob, safeFileName);
+            
+            uploadedFiles.push({
+              ...file,
+              url: uploadedUrl
+            });
+          }
+        } else {
+          // URL já é permanente, manter como está
+          uploadedFiles.push(file);
+        }
       }
       
       if (activeId) {
@@ -111,7 +164,7 @@ const Drafts: React.FC = () => {
         const updatedDraft = await draftService.updateDraft(activeId, {
           title,
           content,
-          audioUrl: finalAudioUrl
+          audioFiles: uploadedFiles
         });
         
         setDrafts(drafts.map(d => d.id === activeId ? updatedDraft : d));
@@ -125,7 +178,7 @@ const Drafts: React.FC = () => {
         const newDraft = await draftService.createDraft({
           title,
           content,
-          audioUrl: finalAudioUrl
+          audioFiles: uploadedFiles
         });
         
         setDrafts([newDraft, ...drafts]);
@@ -168,11 +221,6 @@ const Drafts: React.FC = () => {
     }
   };
   
-  const handleSaveRecording = (url: string, blob: Blob) => {
-    setAudioUrl(url);
-    setAudioBlob(blob);
-  };
-
   if (isLoading) {
     return (
       <div className="max-w-4xl mx-auto">
@@ -225,7 +273,10 @@ const Drafts: React.FC = () => {
               />
             </div>
             
-            <AudioRecorder onSaveRecording={handleSaveRecording} initialAudioUrl={audioUrl} />
+            <AudioRecorder 
+              onSaveRecordings={handleSaveRecordings} 
+              initialAudioFiles={audioFiles}
+            />
             
             <div className="flex justify-end space-x-2 pt-4">
               <Button 
@@ -300,11 +351,24 @@ const Drafts: React.FC = () => {
                     {draft.content || <span className="text-muted-foreground italic">Sem conteúdo</span>}
                   </p>
                   
-                  {draft.audio_url && (
+                  {draft.audio_files && draft.audio_files.length > 0 ? (
+                    <div className="mt-4">
+                      <p className="text-xs text-muted-foreground mb-1">
+                        {draft.audio_files.length} {draft.audio_files.length === 1 ? 'áudio' : 'áudios'} gravados
+                      </p>
+                      {/* Mostra apenas o primeiro áudio na visualização do card */}
+                      <audio 
+                        controls 
+                        src={draft.audio_files[0].url} 
+                        className="w-full h-8"
+                        title={draft.audio_files[0].name} 
+                      />
+                    </div>
+                  ) : draft.audio_url ? (
                     <div className="mt-4">
                       <audio controls src={draft.audio_url} className="w-full h-8" />
                     </div>
-                  )}
+                  ) : null}
                 </CardContent>
                 <CardFooter>
                   <Button 

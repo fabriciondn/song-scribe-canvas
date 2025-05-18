@@ -1,6 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { Draft, DraftInput } from './types';
+import { Draft, DraftInput, AudioFile } from './types';
 import { uploadAudio } from './audioService';
 import { createSystemBackup } from './backupService';
 import { ensureAudioBucketExists } from '../storage/storageBuckets';
@@ -79,39 +78,34 @@ export const createDraft = async (draft: DraftInput): Promise<Draft> => {
     // Ensure the audio bucket exists before trying to use it
     await ensureAudioBucketExists();
     
-    // Use RPC function
-    const { data, error } = await supabase
-      .rpc('create_draft', { 
-        draft_title: draft.title,
-        draft_content: draft.content,
-        draft_audio_url: draft.audioUrl || null,
-        draft_user_id: userId
-      }) as {
-        data: Draft | null;
-        error: any;
-      };
+    // Prepare data for insert
+    const draftData: any = {
+      title: draft.title,
+      content: draft.content,
+      user_id: userId
+    };
     
-    if (error) {
-      // Fallback to direct insert
-      const { data: directData, error: directError } = await supabase
-        .from('drafts')
-        .insert({
-          title: draft.title,
-          content: draft.content,
-          audio_url: draft.audioUrl,
-          user_id: userId
-        })
-        .select()
-        .single() as {
-          data: Draft | null,
-          error: any
-        };
-      
-      if (directError) throw directError;
-      return directData as Draft;
+    // Adicionar informações de áudio, se disponíveis
+    if (draft.audioFiles && draft.audioFiles.length > 0) {
+      draftData.audio_files = draft.audioFiles;
+      // Para compatibilidade com a versão anterior, também definimos audio_url
+      draftData.audio_url = draft.audioFiles[0].url;
+    } else if (draft.audioUrl) {
+      draftData.audio_url = draft.audioUrl;
     }
     
-    return data as Draft;
+    // Direct insert since RPC function doesn't support the new audio_files field
+    const { data: newDraft, error } = await supabase
+      .from('drafts')
+      .insert(draftData)
+      .select()
+      .single() as {
+        data: Draft | null,
+        error: any
+      };
+    
+    if (error) throw error;
+    return newDraft as Draft;
   } catch (error) {
     console.error('Error creating draft:', error);
     throw error;
@@ -124,48 +118,38 @@ export const updateDraft = async (
     title?: string;
     content?: string;
     audioUrl?: string;
+    audioFiles?: AudioFile[];
   }
 ): Promise<Draft> => {
   try {
-    // Convert updates to the format expected by RPC function
-    const jsonUpdates = {
-      title: updates.title,
-      content: updates.content,
-      audio_url: updates.audioUrl
-    };
+    // Prepare data for update
+    const updateData: any = {};
     
-    // Use RPC function
-    const { data, error } = await supabase
-      .rpc('update_draft', { 
-        draft_id: draftId,
-        draft_updates: jsonUpdates
-      }) as {
-        data: Draft | null;
-        error: any;
-      };
+    if (updates.title !== undefined) updateData.title = updates.title;
+    if (updates.content !== undefined) updateData.content = updates.content;
     
-    if (error) {
-      // Fallback to direct update
-      const updateValues: any = {};
-      if (updates.title !== undefined) updateValues.title = updates.title;
-      if (updates.content !== undefined) updateValues.content = updates.content;
-      if (updates.audioUrl !== undefined) updateValues.audio_url = updates.audioUrl;
-      
-      const { data: directData, error: directError } = await supabase
-        .from('drafts')
-        .update(updateValues)
-        .eq('id', draftId)
-        .select()
-        .single() as {
-          data: Draft | null,
-          error: any
-        };
-      
-      if (directError) throw directError;
-      return directData as Draft;
+    // Atualizar informações de áudio
+    if (updates.audioFiles && updates.audioFiles.length > 0) {
+      updateData.audio_files = updates.audioFiles;
+      // Para compatibilidade com a versão anterior, também definimos audio_url
+      updateData.audio_url = updates.audioFiles[0].url;
+    } else if (updates.audioUrl) {
+      updateData.audio_url = updates.audioUrl;
     }
     
-    return data as Draft;
+    // Direct update since RPC function doesn't support the new audio_files field
+    const { data: updatedDraft, error } = await supabase
+      .from('drafts')
+      .update(updateData)
+      .eq('id', draftId)
+      .select()
+      .single() as {
+        data: Draft | null,
+        error: any
+      };
+    
+    if (error) throw error;
+    return updatedDraft as Draft;
   } catch (error) {
     console.error(`Error updating draft with ID ${draftId}:`, error);
     throw error;
