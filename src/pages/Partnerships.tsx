@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -26,11 +26,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Users, Mail, User, Eye, Edit as EditIcon } from 'lucide-react';
+import { Plus, Users, Mail, User, Eye, Edit as EditIcon, Copy, ExternalLink } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { 
+  generateCollaborationToken, 
+  validateCollaborationToken,
+  getUserPartnerships
+} from '@/services/drafts/draftService';
 
 interface Partner {
   id: string;
+  userId: string;
   name: string;
   email: string;
   permission: 'read' | 'edit';
@@ -42,31 +51,19 @@ interface Partnership {
   title: string;
   description: string;
   date: string;
+  creator: {
+    name: string;
+    email: string;
+  };
   partners: Partner[];
 }
 
-const INITIAL_PARTNERSHIPS: Partnership[] = [
-  {
-    id: '1',
-    title: 'Canção do Verão',
-    description: 'Parceria para composição pop com tema de verão',
-    date: new Date().toLocaleDateString(),
-    partners: [
-      {
-        id: '1',
-        name: 'João Silva',
-        email: 'joao@example.com',
-        permission: 'edit',
-        status: 'active',
-      }
-    ]
-  }
-];
-
 const Partnerships: React.FC = () => {
-  const [partnerships, setPartnerships] = useState<Partnership[]>(INITIAL_PARTNERSHIPS);
+  const [partnerships, setPartnerships] = useState<Partnership[]>([]);
   const [isNewPartnershipOpen, setIsNewPartnershipOpen] = useState(false);
   const [isInvitePartnerOpen, setIsInvitePartnerOpen] = useState(false);
+  const [isTokenDialogOpen, setIsTokenDialogOpen] = useState(false);
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   
   const [activePartnershipId, setActivePartnershipId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -75,7 +72,33 @@ const Partnerships: React.FC = () => {
   const [partnerEmail, setPartnerEmail] = useState('');
   const [partnerPermission, setPartnerPermission] = useState<'read' | 'edit'>('read');
   
+  const [collaborationToken, setCollaborationToken] = useState('');
+  const [joinToken, setJoinToken] = useState('');
+  const [isTokenCopied, setIsTokenCopied] = useState(false);
+  const [isValidatingToken, setIsValidatingToken] = useState(false);
+  
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // Load partnerships
+  useEffect(() => {
+    loadPartnerships();
+  }, []);
+  
+  const loadPartnerships = async () => {
+    try {
+      const loadedPartnerships = await getUserPartnerships();
+      setPartnerships(loadedPartnerships);
+    } catch (error) {
+      console.error('Error loading partnerships:', error);
+      toast({
+        title: 'Erro ao carregar parcerias',
+        description: 'Não foi possível carregar as suas parcerias.',
+        variant: 'destructive',
+      });
+    }
+  };
   
   const openNewPartnershipDialog = () => {
     setTitle('');
@@ -90,7 +113,7 @@ const Partnerships: React.FC = () => {
     setIsInvitePartnerOpen(true);
   };
   
-  const handleCreatePartnership = () => {
+  const handleCreatePartnership = async () => {
     if (!title.trim()) {
       toast({
         title: 'Título obrigatório',
@@ -100,76 +123,144 @@ const Partnerships: React.FC = () => {
       return;
     }
     
-    const newPartnership: Partnership = {
-      id: Date.now().toString(),
-      title,
-      description,
-      date: new Date().toLocaleDateString(),
-      partners: [],
-    };
-    
-    setPartnerships([...partnerships, newPartnership]);
-    setIsNewPartnershipOpen(false);
+    try {
+      // Create partnership in database
+      const { data, error } = await supabase
+        .from('partnerships')
+        .insert({
+          title,
+          description: description || null,
+          user_id: user?.id
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        // Create empty composition
+        await supabase
+          .from('partnership_compositions')
+          .insert({
+            partnership_id: data.id,
+            content: '',
+            author_segments: []
+          });
+        
+        // Refresh partnerships
+        await loadPartnerships();
+      }
+      
+      setIsNewPartnershipOpen(false);
+      
+      toast({
+        title: 'Parceria criada',
+        description: `A parceria "${title}" foi criada com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Error creating partnership:', error);
+      toast({
+        title: 'Erro ao criar parceria',
+        description: 'Não foi possível criar a parceria.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const handleGenerateToken = async (partnershipId: string) => {
+    try {
+      const token = await generateCollaborationToken(partnershipId);
+      setCollaborationToken(token);
+      setActivePartnershipId(partnershipId);
+      setIsTokenDialogOpen(true);
+    } catch (error) {
+      console.error('Error generating token:', error);
+      toast({
+        title: 'Erro ao gerar token',
+        description: 'Não foi possível gerar o token de convite.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const handleCopyToken = () => {
+    navigator.clipboard.writeText(collaborationToken);
+    setIsTokenCopied(true);
+    setTimeout(() => setIsTokenCopied(false), 3000);
     
     toast({
-      title: 'Parceria criada',
-      description: `A parceria "${title}" foi criada com sucesso.`,
+      title: 'Token copiado!',
+      description: 'O token foi copiado para a área de transferência.',
     });
   };
   
-  const handleInvitePartner = () => {
-    if (!partnerEmail.trim()) {
+  const handleJoinPartnership = async () => {
+    if (!joinToken.trim()) {
       toast({
-        title: 'E-mail obrigatório',
-        description: 'Por favor, insira o e-mail do parceiro.',
+        title: 'Token obrigatório',
+        description: 'Por favor, insira o token de parceria.',
         variant: 'destructive',
       });
       return;
     }
     
-    if (!activePartnershipId) return;
+    setIsValidatingToken(true);
     
-    // Simple email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(partnerEmail)) {
+    try {
+      const result = await validateCollaborationToken(joinToken);
+      
+      if (result.valid && result.partnershipId) {
+        toast({
+          title: 'Parceria acessada!',
+          description: 'Você agora tem acesso à parceria.',
+        });
+        
+        setIsJoinDialogOpen(false);
+        setJoinToken('');
+        
+        // Refresh partnerships
+        await loadPartnerships();
+      } else {
+        toast({
+          title: 'Token inválido',
+          description: result.error || 'O token fornecido não é válido ou expirou.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error validating token:', error);
       toast({
-        title: 'E-mail inválido',
-        description: 'Por favor, insira um e-mail válido.',
+        title: 'Erro ao validar token',
+        description: 'Não foi possível validar o token de parceria.',
         variant: 'destructive',
       });
-      return;
+    } finally {
+      setIsValidatingToken(false);
     }
-    
-    const newPartner: Partner = {
-      id: Date.now().toString(),
-      name: partnerEmail.split('@')[0], // Extract name from email
-      email: partnerEmail,
-      permission: partnerPermission,
-      status: 'pending',
-    };
-    
-    setPartnerships(partnerships.map(p => 
-      p.id === activePartnershipId 
-        ? { ...p, partners: [...p.partners, newPartner] } 
-        : p
-    ));
-    
-    setIsInvitePartnerOpen(false);
-    
-    toast({
-      title: 'Convite enviado',
-      description: `Um convite foi enviado para ${partnerEmail}.`,
-    });
+  };
+  
+  const openCollaborativeEditor = (partnershipId: string) => {
+    // Navigate to collaborative editor with partnership ID
+    navigate(`/composer?partnership=${partnershipId}`);
   };
   
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Parcerias</h2>
-        <Button onClick={openNewPartnershipDialog}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Parceria
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setIsJoinDialogOpen(true)}
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Entrar com Token
+          </Button>
+          <Button onClick={openNewPartnershipDialog}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Parceria
+          </Button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -194,15 +285,17 @@ const Partnerships: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-medium">Parceiros</h4>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 text-xs"
-                      onClick={() => openInvitePartnerDialog(partnership.id)}
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Convidar
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 text-xs"
+                        onClick={() => handleGenerateToken(partnership.id)}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Token
+                      </Button>
+                    </div>
                   </div>
                   
                   {partnership.partners.length === 0 ? (
@@ -249,9 +342,10 @@ const Partnerships: React.FC = () => {
                 <Button 
                   variant="default" 
                   className="w-full"
+                  onClick={() => openCollaborativeEditor(partnership.id)}
                 >
                   <EditIcon className="h-4 w-4 mr-2" />
-                  Abrir Compositor
+                  Abrir Compositor Colaborativo
                 </Button>
               </CardFooter>
             </Card>
@@ -302,59 +396,80 @@ const Partnerships: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Invite Partner Dialog */}
-      <Dialog open={isInvitePartnerOpen} onOpenChange={setIsInvitePartnerOpen}>
+      {/* Token Dialog */}
+      <Dialog open={isTokenDialogOpen} onOpenChange={setIsTokenDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Convidar Parceiro</DialogTitle>
+            <DialogTitle>Token de Convite</DialogTitle>
             <DialogDescription>
-              Envie um convite para um compositor colaborar nesta parceria.
+              Compartilhe este token com outro compositor para que ele possa se juntar à parceria.
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">E-mail do Parceiro</Label>
+              <Label htmlFor="token">Token de Colaboração</Label>
               <div className="flex">
-                <Mail className="h-4 w-4 mr-2 text-muted-foreground self-center" />
                 <Input
-                  id="email"
-                  type="email"
-                  value={partnerEmail}
-                  onChange={(e) => setPartnerEmail(e.target.value)}
-                  placeholder="parceiro@email.com"
+                  id="token"
+                  value={collaborationToken}
+                  readOnly
+                  className="font-mono"
                 />
+                <Button
+                  variant="outline"
+                  className="ml-2"
+                  onClick={handleCopyToken}
+                >
+                  {isTokenCopied ? 'Copiado!' : 'Copiar'}
+                </Button>
               </div>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="permission">Permissão</Label>
-              <Select 
-                value={partnerPermission} 
-                onValueChange={(value) => setPartnerPermission(value as 'read' | 'edit')}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma permissão" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="read">Somente leitura</SelectItem>
-                  <SelectItem value="edit">Leitura e edição</SelectItem>
-                </SelectContent>
-              </Select>
               <p className="text-xs text-muted-foreground mt-1">
-                {partnerPermission === 'read' 
-                  ? 'O parceiro poderá apenas visualizar a composição, sem editar.' 
-                  : 'O parceiro poderá visualizar e editar a composição.'}
+                Este token é válido por 7 dias e só pode ser usado uma vez.
               </p>
             </div>
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsInvitePartnerOpen(false)}>
+            <Button onClick={() => setIsTokenDialogOpen(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Join Partnership Dialog */}
+      <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Entrar em uma Parceria</DialogTitle>
+            <DialogDescription>
+              Insira o token de convite que você recebeu para acessar uma parceria.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="join-token">Token de Parceria</Label>
+              <Input
+                id="join-token"
+                value={joinToken}
+                onChange={(e) => setJoinToken(e.target.value)}
+                placeholder="Insira o token aqui"
+                className="font-mono"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsJoinDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleInvitePartner}>
-              Enviar Convite
+            <Button 
+              onClick={handleJoinPartnership}
+              disabled={isValidatingToken}
+            >
+              {isValidatingToken ? 'Validando...' : 'Entrar'}
             </Button>
           </DialogFooter>
         </DialogContent>

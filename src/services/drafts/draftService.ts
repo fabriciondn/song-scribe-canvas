@@ -1,9 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Draft, DraftInput, AudioFile } from './types';
 import { uploadAudio } from './audioService';
 import { createSystemBackup } from './backupService';
 import { ensureAudioBucketExists } from '../storage/storageBuckets';
+import { nanoid } from 'nanoid';
 
 export const getDrafts = async (): Promise<Draft[]> => {
   try {
@@ -183,6 +183,225 @@ export const createBackup = async (title: string, content: string): Promise<void
     await createSystemBackup(title, content);
   } catch (error) {
     console.error('Error creating backup:', error);
+    throw error;
+  }
+};
+
+// New functions for partnership collaboration
+
+/**
+ * Generate a unique collaboration token for a partnership
+ */
+export const generateCollaborationToken = async (partnershipId: string): Promise<string> => {
+  try {
+    // Create a unique token using nanoid
+    const token = nanoid(12);
+    
+    // Store the token in the database linked to the partnership
+    const { error } = await supabase
+      .from('partnership_tokens')
+      .insert({
+        partnership_id: partnershipId,
+        token,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      });
+    
+    if (error) throw error;
+    return token;
+  } catch (error) {
+    console.error('Error generating collaboration token:', error);
+    throw error;
+  }
+};
+
+/**
+ * Validate a collaboration token and join the partnership
+ */
+export const validateCollaborationToken = async (token: string): Promise<{
+  valid: boolean;
+  partnershipId?: string;
+  error?: string;
+}> => {
+  try {
+    // Get the current user ID
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    
+    if (!userId) {
+      return { valid: false, error: 'User not authenticated' };
+    }
+    
+    // Find the token in the database
+    const { data, error } = await supabase
+      .from('partnership_tokens')
+      .select('partnership_id, expires_at, used')
+      .eq('token', token)
+      .single();
+    
+    if (error || !data) {
+      return { valid: false, error: 'Invalid or expired token' };
+    }
+    
+    // Check if token is expired
+    if (new Date(data.expires_at) < new Date() || data.used) {
+      return { valid: false, error: 'Token has expired or already been used' };
+    }
+    
+    // Add user to partnership
+    const { error: partnerError } = await supabase
+      .from('partnership_collaborators')
+      .insert({
+        partnership_id: data.partnership_id,
+        user_id: userId,
+        permission: 'edit',
+        status: 'active'
+      });
+    
+    if (partnerError) {
+      return { valid: false, error: 'Error joining partnership' };
+    }
+    
+    // Mark token as used
+    await supabase
+      .from('partnership_tokens')
+      .update({ used: true })
+      .eq('token', token);
+    
+    return { valid: true, partnershipId: data.partnership_id };
+  } catch (error) {
+    console.error('Error validating token:', error);
+    return { valid: false, error: 'Error processing token' };
+  }
+};
+
+/**
+ * Get all partnerships the current user is part of
+ */
+export const getUserPartnerships = async () => {
+  try {
+    // Get the current user ID
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Get partnerships where the user is either the creator or a collaborator
+    const { data: createdPartnerships, error: createdError } = await supabase
+      .from('partnerships')
+      .select(`
+        id,
+        title,
+        description,
+        created_at,
+        user_id,
+        partnership_collaborators (
+          id,
+          user_id,
+          permission,
+          status
+        )
+      `)
+      .eq('user_id', userId);
+      
+    if (createdError) throw createdError;
+    
+    const { data: collaboratingPartnerships, error: collaboratingError } = await supabase
+      .from('partnership_collaborators')
+      .select(`
+        partnerships (
+          id,
+          title,
+          description,
+          created_at,
+          user_id,
+          partnership_collaborators (
+            id,
+            user_id,
+            permission,
+            status
+          )
+        )
+      `)
+      .eq('user_id', userId);
+      
+    if (collaboratingError) throw collaboratingError;
+    
+    // Combine and format the partnerships
+    let allPartnerships = [...(createdPartnerships || [])];
+    
+    if (collaboratingPartnerships) {
+      const collaborations = collaboratingPartnerships
+        .map(collab => collab.partnerships)
+        .filter(Boolean);
+      
+      allPartnerships = [...allPartnerships, ...collaborations];
+    }
+    
+    // Get user info for partners
+    const userIds = new Set<string>();
+    allPartnerships.forEach(partnership => {
+      if (partnership.user_id) userIds.add(partnership.user_id);
+      partnership.partnership_collaborators?.forEach(collab => {
+        if (collab.user_id) userIds.add(collab.user_id);
+      });
+    });
+    
+    // Get user profiles
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, name, email')
+      .in('id', Array.from(userIds));
+    
+    const userProfiles = (profiles || []).reduce((acc, profile) => {
+      acc[profile.id] = profile;
+      return acc;
+    }, {} as Record<string, any>);
+    
+    // Format partnerships with user info
+    return allPartnerships.map(partnership => ({
+      id: partnership.id,
+      title: partnership.title,
+      description: partnership.description,
+      date: new Date(partnership.created_at).toLocaleDateString(),
+      creator: userProfiles[partnership.user_id] || { name: 'Unknown', email: '' },
+      partners: (partnership.partnership_collaborators || []).map(collab => ({
+        id: collab.id,
+        userId: collab.user_id,
+        name: userProfiles[collab.user_id]?.name || 'Unknown User',
+        email: userProfiles[collab.user_id]?.email || '',
+        permission: collab.permission,
+        status: collab.status
+      }))
+    }));
+  } catch (error) {
+    console.error('Error getting user partnerships:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update the content of a partnership composition with author tracking
+ */
+export const updatePartnershipComposition = async (
+  partnershipId: string,
+  content: string,
+  authorId: string
+): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('partnership_compositions')
+      .update({ 
+        content, 
+        updated_at: new Date(),
+        last_modified_by: authorId
+      })
+      .eq('partnership_id', partnershipId);
+    
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error updating partnership composition:', error);
     throw error;
   }
 };

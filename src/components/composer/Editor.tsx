@@ -6,11 +6,12 @@ import { SaveModal } from './SaveModal';
 import { MusicBases } from './MusicBases';
 import { ThemeGenerator } from './ThemeGenerator';
 import { RhymeAssistant } from './RhymeAssistant';
+import { CollaborativeEditor } from './CollaborativeEditor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { FileText, Loader2, Plus } from 'lucide-react';
+import { FileText, Loader2, Plus, Users } from 'lucide-react';
 import { createBackup } from '@/services/draftService';
 import { useToast } from '@/components/ui/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -20,6 +21,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { useMobileDetection } from '@/hooks/use-mobile';
+import { useSearchParams } from 'react-router-dom';
 
 export const Editor: React.FC = () => {
   const [title, setTitle] = useState('');
@@ -30,9 +32,13 @@ export const Editor: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const isMobile = useMobileDetection();
-
-  // Load saved content from localStorage
+  const [searchParams] = useSearchParams();
+  const partnershipId = searchParams.get('partnership');
+  
+  // Load saved content from localStorage (only for non-collaborative mode)
   useEffect(() => {
+    if (partnershipId) return;
+    
     try {
       const savedTitle = localStorage.getItem('songscribe_current_title');
       const savedContent = localStorage.getItem('songscribe_current_content');
@@ -41,17 +47,19 @@ export const Editor: React.FC = () => {
     } catch (error) {
       console.error('Error loading from localStorage:', error);
     }
-  }, []);
+  }, [partnershipId]);
 
-  // Save content to localStorage
+  // Save content to localStorage (only for non-collaborative mode)
   useEffect(() => {
+    if (partnershipId) return;
+    
     try {
       localStorage.setItem('songscribe_current_title', title);
       localStorage.setItem('songscribe_current_content', content);
     } catch (error) {
       console.error('Error saving to localStorage:', error);
     }
-  }, [title, content]);
+  }, [title, content, partnershipId]);
 
   const handleSectionClick = (sectionText: string) => {
     // Insert the section at cursor position or at the end
@@ -168,6 +176,12 @@ export const Editor: React.FC = () => {
           className="h-8" 
         />
         <span className="ml-2 font-semibold text-lg">Compuse</span>
+        {partnershipId && (
+          <div className="ml-3 flex items-center bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs">
+            <Users className="h-3 w-3 mr-1" />
+            Modo Colaborativo
+          </div>
+        )}
       </div>
       
       <div className="flex gap-2">
@@ -181,6 +195,7 @@ export const Editor: React.FC = () => {
             localStorage.removeItem('songscribe_current_content');
           }}
           size="sm"
+          disabled={!!partnershipId}
         >
           Nova
         </Button>
@@ -190,6 +205,7 @@ export const Editor: React.FC = () => {
           className="bg-purple-600 hover:bg-purple-700"
           onClick={openSaveModal}
           size="sm"
+          disabled={!!partnershipId}
         >
           Salvar
         </Button>
@@ -219,32 +235,38 @@ export const Editor: React.FC = () => {
       <div className="section-box flex flex-col">
         <EditorHeader />
         
-        <div className="mb-3">
-          <Label htmlFor="song-title" className="text-sm font-medium">Título da Composição</Label>
-          <Input 
-            id="song-title" 
-            value={title} 
-            onChange={handleTitleChange} 
-            placeholder="Digite o título da sua música" 
-            className="mt-1" 
-          />
-        </div>
-        
-        <SectionButtons onSectionClick={handleSectionClick} />
-        
-        <div className="flex-1 flex flex-col">
-          <Label htmlFor="song-content" className="text-sm font-medium mt-2">Letra</Label>
-          <Textarea 
-            id="song-content" 
-            value={content} 
-            onChange={handleContentChange} 
-            placeholder="Comece a compor sua letra aqui..." 
-            className="editor-content flex-1 min-h-[450px] font-mono mt-1"
-            ref={textareaRef}
-            onDrop={handleTextAreaDrop}
-            onDragOver={(e) => e.preventDefault()}
-          />
-        </div>
+        {partnershipId ? (
+          <CollaborativeEditor partnershipId={partnershipId} />
+        ) : (
+          <>
+            <div className="mb-3">
+              <Label htmlFor="song-title" className="text-sm font-medium">Título da Composição</Label>
+              <Input 
+                id="song-title" 
+                value={title} 
+                onChange={handleTitleChange} 
+                placeholder="Digite o título da sua música" 
+                className="mt-1" 
+              />
+            </div>
+            
+            <SectionButtons onSectionClick={handleSectionClick} />
+            
+            <div className="flex-1 flex flex-col">
+              <Label htmlFor="song-content" className="text-sm font-medium mt-2">Letra</Label>
+              <Textarea 
+                id="song-content" 
+                value={content} 
+                onChange={handleContentChange} 
+                placeholder="Comece a compor sua letra aqui..." 
+                className="editor-content flex-1 min-h-[450px] font-mono mt-1"
+                ref={textareaRef}
+                onDrop={handleTextAreaDrop}
+                onDragOver={(e) => e.preventDefault()}
+              />
+            </div>
+          </>
+        )}
       </div>
       
       {/* Coluna Direita: Ferramentas de IA */}
@@ -265,56 +287,62 @@ export const Editor: React.FC = () => {
       <div className="bg-white rounded-lg shadow-sm p-3">
         <EditorHeader />
         
-        <div className="mb-3 mt-3">
-          <Label htmlFor="song-title-mobile">Título da Composição</Label>
-          <Input id="song-title-mobile" value={title} onChange={handleTitleChange} placeholder="Digite o título da sua música" className="mt-1" />
-        </div>
-        
-        <SectionButtons onSectionClick={handleSectionClick} />
-        
-        <div className="mt-3">
-          <div className="flex justify-between items-center mb-1">
-            <Label htmlFor="song-content-mobile">Letra</Label>
-            <div className="flex gap-2">
-              <Drawer>
-                <DrawerTrigger asChild>
-                  <Button variant="outline" size="sm" className="text-xs">
-                    <Plus size={14} className="mr-1" /> Bases
-                  </Button>
-                </DrawerTrigger>
-                <DrawerContent>
-                  <div className="p-4 max-h-[80vh] overflow-auto">
-                    <MusicBases onInsertBase={handleInsertBase} />
-                  </div>
-                </DrawerContent>
-              </Drawer>
-
-              <Drawer>
-                <DrawerTrigger asChild>
-                  <Button variant="outline" size="sm" className="text-xs">
-                    <Plus size={14} className="mr-1" /> Ferramentas
-                  </Button>
-                </DrawerTrigger>
-                <DrawerContent>
-                  <div className="p-4 max-h-[80vh] overflow-auto space-y-6">
-                    <ThemeGenerator />
-                    <RhymeAssistant />
-                  </div>
-                </DrawerContent>
-              </Drawer>
+        {partnershipId ? (
+          <CollaborativeEditor partnershipId={partnershipId} />
+        ) : (
+          <>
+            <div className="mb-3 mt-3">
+              <Label htmlFor="song-title-mobile">Título da Composição</Label>
+              <Input id="song-title-mobile" value={title} onChange={handleTitleChange} placeholder="Digite o título da sua música" className="mt-1" />
             </div>
-          </div>
-          <Textarea 
-            id="song-content-mobile" 
-            value={content} 
-            onChange={handleContentChange} 
-            placeholder="Comece a compor sua letra aqui..." 
-            className="editor-content min-h-[350px] font-mono mt-1"
-            ref={textareaRef}
-            onDrop={handleTextAreaDrop}
-            onDragOver={(e) => e.preventDefault()}
-          />
-        </div>
+            
+            <SectionButtons onSectionClick={handleSectionClick} />
+            
+            <div className="mt-3">
+              <div className="flex justify-between items-center mb-1">
+                <Label htmlFor="song-content-mobile">Letra</Label>
+                <div className="flex gap-2">
+                  <Drawer>
+                    <DrawerTrigger asChild>
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <Plus size={14} className="mr-1" /> Bases
+                      </Button>
+                    </DrawerTrigger>
+                    <DrawerContent>
+                      <div className="p-4 max-h-[80vh] overflow-auto">
+                        <MusicBases onInsertBase={handleInsertBase} />
+                      </div>
+                    </DrawerContent>
+                  </Drawer>
+
+                  <Drawer>
+                    <DrawerTrigger asChild>
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <Plus size={14} className="mr-1" /> Ferramentas
+                      </Button>
+                    </DrawerTrigger>
+                    <DrawerContent>
+                      <div className="p-4 max-h-[80vh] overflow-auto space-y-6">
+                        <ThemeGenerator />
+                        <RhymeAssistant />
+                      </div>
+                    </DrawerContent>
+                  </Drawer>
+                </div>
+              </div>
+              <Textarea 
+                id="song-content-mobile" 
+                value={content} 
+                onChange={handleContentChange} 
+                placeholder="Comece a compor sua letra aqui..." 
+                className="editor-content min-h-[350px] font-mono mt-1"
+                ref={textareaRef}
+                onDrop={handleTextAreaDrop}
+                onDragOver={(e) => e.preventDefault()}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -326,8 +354,8 @@ export const Editor: React.FC = () => {
       <DAModal 
         isOpen={isDAModalOpen} 
         onClose={closeDAModal} 
-        songContent={content} 
-        songTitle={title} 
+        songContent={partnershipId ? '' : content} 
+        songTitle={partnershipId ? '' : title} 
       />
       <SaveModal 
         isOpen={isSaveModalOpen} 
