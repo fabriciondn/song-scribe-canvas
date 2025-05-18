@@ -21,7 +21,10 @@ export const uploadAudio = async (audioBlob: Blob, filename: string): Promise<st
     // Upload the audio file
     const { error: uploadError, data } = await supabase.storage
       .from('audio')
-      .upload(filePath, audioBlob);
+      .upload(filePath, audioBlob, {
+        cacheControl: '3600',
+        upsert: true
+      });
     
     if (uploadError) throw uploadError;
     

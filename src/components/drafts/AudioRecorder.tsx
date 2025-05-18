@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { ensureAudioBucketExists } from '@/services/draftService';
+import { ensureAudioBucketExists } from '@/services/storage/storageBuckets';
 
 interface AudioRecorderProps {
   onSaveRecording: (audioUrl: string, audioBlob: Blob) => void;
