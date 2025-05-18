@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, File, Folder, Plus, Trash2, Edit } from 'lucide-react';
+import { ArrowLeft, File, Folder, Plus, Trash2, Edit, FilePdf, Printer, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
@@ -25,6 +25,8 @@ export const FolderPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
+  const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false);
+  const pdfContentRef = useRef<HTMLDivElement>(null);
   
   const [isNewSongDialogOpen, setIsNewSongDialogOpen] = useState(false);
   const [newSongTitle, setNewSongTitle] = useState('');
@@ -80,7 +82,29 @@ export const FolderPage: React.FC = () => {
     };
 
     loadFolderAndSongs();
-  }, [folderId, isAuthenticated, navigate, toast, selectedSong]);
+  }, [folderId, isAuthenticated, navigate, toast]);
+
+  // Função para visualizar a música em formato PDF
+  const handleViewAsPdf = () => {
+    if (selectedSong) {
+      setIsPdfDialogOpen(true);
+    }
+  };
+
+  // Função para imprimir ou salvar como PDF
+  const handlePrint = () => {
+    if (!pdfContentRef.current) return;
+    
+    const originalContents = document.body.innerHTML;
+    const printContent = pdfContentRef.current.innerHTML;
+    
+    document.body.innerHTML = printContent;
+    window.print();
+    document.body.innerHTML = originalContents;
+    
+    // Re-renderiza o componente após a impressão
+    window.location.reload();
+  };
 
   const handleBackClick = () => {
     navigate('/folders');
@@ -208,6 +232,16 @@ export const FolderPage: React.FC = () => {
     });
   };
 
+  // Função para formatar o conteúdo da música para o PDF
+  const formatSongContentForPdf = (content: string) => {
+    const lines = content.split('\n');
+    return lines.map((line, index) => (
+      <p key={index} className={line.trim() === '' ? 'my-4' : 'my-1'}>
+        {line || '\u00A0'}
+      </p>
+    ));
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-8 px-6">
@@ -258,7 +292,7 @@ export const FolderPage: React.FC = () => {
       <Button 
         variant="outline" 
         className="mb-6 flex items-center" 
-        onClick={() => navigate('/folders')}
+        onClick={handleBackClick}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Voltar para Pastas
@@ -300,7 +334,7 @@ export const FolderPage: React.FC = () => {
                     selectedSong?.id === song.id ? 'border-primary shadow-sm' : ''
                   }`}
                 >
-                  <CardContent className="p-4" onClick={() => setSelectedSong(song)}>
+                  <CardContent className="p-4" onClick={() => handleSongClick(song)}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center overflow-hidden">
                         <File className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
@@ -311,17 +345,31 @@ export const FolderPage: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="ml-2 opacity-70 hover:opacity-100"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteSong(song.id);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="flex items-center">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="ml-2 opacity-70 hover:opacity-100"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedSong(song);
+                            handleViewAsPdf();
+                          }}
+                        >
+                          <FilePdf className="h-4 w-4 text-primary" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="ml-1 opacity-70 hover:opacity-100"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteSong(song.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -340,15 +388,27 @@ export const FolderPage: React.FC = () => {
                     Criado em {formatDate(selectedSong.created_at)}
                   </p>
                 </div>
-                {!isEditing && (
-                  <Button variant="outline" size="sm" onClick={() => {
-                    setEditTitle(selectedSong.title);
-                    setEditContent(selectedSong.content);
-                    setIsEditing(true);
-                  }}>
-                    <Edit className="h-4 w-4 mr-2" /> Editar
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center"
+                    onClick={handleViewAsPdf}
+                  >
+                    <FilePdf className="h-4 w-4 mr-2" /> 
+                    Visualizar PDF
                   </Button>
-                )}
+                  {!isEditing && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleEditClick}
+                    >
+                      <Edit className="h-4 w-4 mr-2" /> 
+                      Editar
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 {!isEditing ? (
@@ -445,6 +505,51 @@ export const FolderPage: React.FC = () => {
               Cancelar
             </Button>
             <Button className="bg-primary hover:bg-primary/90" onClick={handleSaveNewSong}>Criar Composição</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para visualizar música como PDF */}
+      <Dialog open={isPdfDialogOpen} onOpenChange={setIsPdfDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Visualização de PDF</DialogTitle>
+            <DialogDescription>
+              Visualize e imprima sua composição em formato PDF.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="border rounded-lg p-8 bg-white" ref={pdfContentRef}>
+            {selectedSong && (
+              <div className="pdf-content space-y-4">
+                <h1 className="text-2xl font-bold text-center mb-6">{selectedSong.title}</h1>
+                <div className="text-sm text-right">
+                  Criado em: {formatDate(selectedSong.created_at)}
+                </div>
+                <div className="my-8 text-base whitespace-pre-wrap font-mono">
+                  {formatSongContentForPdf(selectedSong.content)}
+                </div>
+                <div className="mt-12 text-xs text-center text-gray-500">
+                  Documento gerado pelo Compuse - {new Date().toLocaleDateString('pt-BR')}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter className="flex justify-between mt-4">
+            <Button variant="outline" onClick={() => setIsPdfDialogOpen(false)}>
+              Fechar
+            </Button>
+            <div className="flex space-x-2">
+              <Button variant="outline" onClick={handlePrint} className="flex items-center">
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimir PDF
+              </Button>
+              <Button onClick={handlePrint} className="flex items-center">
+                <Download className="h-4 w-4 mr-2" />
+                Salvar PDF
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
