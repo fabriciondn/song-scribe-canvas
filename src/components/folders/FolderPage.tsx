@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, File, Folder, Plus, Trash2, Edit, FilePdf, Printer, Download } from 'lucide-react';
+import { ArrowLeft, File, Folder, Plus, Trash2, Edit, FileText, Printer, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
@@ -356,7 +355,7 @@ export const FolderPage: React.FC = () => {
                             handleViewAsPdf();
                           }}
                         >
-                          <FilePdf className="h-4 w-4 text-primary" />
+                          <FileText className="h-4 w-4 text-primary" />
                         </Button>
                         <Button 
                           variant="ghost" 
@@ -395,7 +394,7 @@ export const FolderPage: React.FC = () => {
                     className="flex items-center"
                     onClick={handleViewAsPdf}
                   >
-                    <FilePdf className="h-4 w-4 mr-2" /> 
+                    <FileText className="h-4 w-4 mr-2" /> 
                     Visualizar PDF
                   </Button>
                   {!isEditing && (
