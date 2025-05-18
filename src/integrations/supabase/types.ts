@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       drafts: {
         Row: {
+          audio_files: Json | null
           audio_url: string | null
           content: string
           created_at: string | null
@@ -20,6 +21,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          audio_files?: Json | null
           audio_url?: string | null
           content: string
           created_at?: string | null
@@ -29,6 +31,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          audio_files?: Json | null
           audio_url?: string | null
           content?: string
           created_at?: string | null
@@ -171,6 +174,7 @@ export type Database = {
           draft_user_id: string
         }
         Returns: {
+          audio_files: Json | null
           audio_url: string | null
           content: string
           created_at: string | null
@@ -187,6 +191,7 @@ export type Database = {
       get_draft_by_id: {
         Args: { draft_id: string }
         Returns: {
+          audio_files: Json | null
           audio_url: string | null
           content: string
           created_at: string | null
@@ -199,6 +204,7 @@ export type Database = {
       get_drafts: {
         Args: Record<PropertyKey, never>
         Returns: {
+          audio_files: Json | null
           audio_url: string | null
           content: string
           created_at: string | null
@@ -211,6 +217,7 @@ export type Database = {
       update_draft: {
         Args: { draft_id: string; draft_updates: Json }
         Returns: {
+          audio_files: Json | null
           audio_url: string | null
           content: string
           created_at: string | null
