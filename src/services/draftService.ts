@@ -12,9 +12,8 @@ export {
 } from './drafts/draftService';
 export { uploadAudio } from './drafts/audioService';
 export { ensureAudioBucketExists } from './storage/storageBuckets';
-export { createSystemBackup as createBackup } from './drafts/backupService';
 
-// Create a direct wrapper function for createBackup to ensure proper export
+// Export only one version of createBackup (the wrapper function)
 export const createBackup = async (title: string, content: string): Promise<void> => {
   const { createSystemBackup } = await import('./drafts/backupService');
   return createSystemBackup(title, content);
