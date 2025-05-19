@@ -12,5 +12,6 @@ export {
 } from './drafts/draftService';
 export { uploadAudio } from './drafts/audioService';
 export { ensureAudioBucketExists } from './storage/storageBuckets';
+export { createSystemBackup as createBackup } from './drafts/backupService';
 
 // Removed backup service exports since we're disabling that functionality
