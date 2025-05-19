@@ -34,6 +34,17 @@ interface ProfileData {
   email?: string;
 }
 
+// Type definitions for Supabase responses
+interface CollaboratorResponse {
+  user_id: string;
+  profiles: ProfileData;
+}
+
+interface PartnershipResponse {
+  user_id: string;
+  profiles: ProfileData;
+}
+
 export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partnershipId }) => {
   const [content, setContent] = useState('');
   const [segments, setSegments] = useState<Segment[]>([]);
@@ -62,9 +73,9 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
     
     const loadInitialData = async () => {
       try {
-        // Load composition content - usando any para contornar limitação dos tipos
+        // Load composition content
         const { data: compositionData, error: compositionError } = await supabase
-          .from('partnership_compositions' as any)
+          .from('partnership_compositions')
           .select('content, author_segments')
           .eq('partnership_id', partnershipId)
           .single();
@@ -77,9 +88,9 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
           setSegments(typedData.author_segments || []);
         }
         
-        // Load collaborators info - usando any para contornar limitação dos tipos
-        const { data: collaborators, error: collaboratorsError } = await supabase
-          .from('partnership_collaborators' as any)
+        // Load collaborators info
+        const { data: collaboratorsData, error: collaboratorsError } = await supabase
+          .from('partnership_collaborators')
           .select(`
             user_id,
             profiles:user_id (
@@ -91,9 +102,9 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
           
         if (collaboratorsError) throw collaboratorsError;
         
-        // Also get partnership creator - usando any para contornar limitação dos tipos
-        const { data: partnership, error: partnershipError } = await supabase
-          .from('partnerships' as any)
+        // Also get partnership creator
+        const { data: partnershipData, error: partnershipError } = await supabase
+          .from('partnerships')
           .select(`
             user_id,
             profiles:user_id (
@@ -110,25 +121,31 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
         const authorsMap: Record<string, AuthorInfo> = {};
         
         // Add partnership creator
-        if (partnership?.user_id && partnership?.profiles) {
-          const profile = partnership.profiles as ProfileData;
-          authorsMap[partnership.user_id] = {
-            id: partnership.user_id,
-            name: profile.name || 'Criador',
-            color: colorPalette[0]
-          };
+        if (partnershipData) {
+          // Type casting to access properties safely
+          const partnershipInfo = partnershipData as unknown as PartnershipResponse;
+          if (partnershipInfo.user_id && partnershipInfo.profiles) {
+            const profile = partnershipInfo.profiles;
+            authorsMap[partnershipInfo.user_id] = {
+              id: partnershipInfo.user_id,
+              name: profile.name || 'Criador',
+              color: colorPalette[0]
+            };
+          }
         }
         
         // Add collaborators
-        if (collaborators) {
-          collaborators.forEach((collab, index) => {
-            if (collab.user_id && collab.profiles) {
+        if (collaboratorsData) {
+          collaboratorsData.forEach((collab, index) => {
+            // Type casting to access properties safely
+            const collaboratorInfo = collab as unknown as CollaboratorResponse;
+            if (collaboratorInfo.user_id && collaboratorInfo.profiles) {
               // Skip if already added (creator)
-              if (authorsMap[collab.user_id]) return;
+              if (authorsMap[collaboratorInfo.user_id]) return;
               
-              const profile = collab.profiles as ProfileData;
-              authorsMap[collab.user_id] = {
-                id: collab.user_id,
+              const profile = collaboratorInfo.profiles;
+              authorsMap[collaboratorInfo.user_id] = {
+                id: collaboratorInfo.user_id,
                 name: profile.name || `Colaborador ${index + 1}`,
                 color: colorPalette[(index + 1) % colorPalette.length]
               };

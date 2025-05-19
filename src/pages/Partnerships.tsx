@@ -89,7 +89,17 @@ const Partnerships: React.FC = () => {
   const loadPartnerships = async () => {
     try {
       const loadedPartnerships = await getUserPartnerships();
-      setPartnerships(loadedPartnerships);
+      
+      // Ensure that creator.name is never undefined
+      const formattedPartnerships = loadedPartnerships.map(partnership => ({
+        ...partnership,
+        creator: {
+          name: partnership.creator.name || 'Unknown',
+          email: partnership.creator.email || '',
+        }
+      }));
+      
+      setPartnerships(formattedPartnerships as Partnership[]);
     } catch (error) {
       console.error('Error loading partnerships:', error);
       toast({
