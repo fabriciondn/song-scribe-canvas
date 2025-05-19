@@ -29,10 +29,10 @@ body, html {
   transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em #00bd4baa);
 }
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  filter: drop-shadow(0 0 2em #00bd4baa);
 }
 
 @keyframes logo-spin {
@@ -96,12 +96,11 @@ body, html {
 }
 
 .nav-link.active {
-  background-color: rgba(139, 92, 246, 0.1);
-  color: rgb(139, 92, 246);
+  background-color: rgba(0, 189, 75, 0.1);
+  color: #00bd4b;
   font-weight: 500;
 }
 
 .nav-link:hover:not(.active) {
   background-color: rgba(0, 0, 0, 0.05);
 }
-

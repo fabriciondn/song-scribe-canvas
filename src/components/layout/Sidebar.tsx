@@ -48,15 +48,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <>
       <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-50 md:hidden" onClick={toggleSidebar}>
-        <Menu size={24} />
+        <Menu size={24} className="text-white" />
       </Button>
 
       <div className={cn("fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-200", isOpen ? "opacity-100" : "opacity-0 pointer-events-none")} onClick={toggleSidebar} />
 
-      <aside className={cn("fixed left-0 top-0 bottom-0 w-64 bg-sidebar z-50 p-5 flex flex-col border-r border-sidebar-border transition-transform duration-300 md:translate-x-0", isOpen ? "translate-x-0" : "-translate-x-full")}>
+      <aside className={cn("fixed left-0 top-0 bottom-0 w-64 bg-black z-50 p-5 flex flex-col border-r border-sidebar-border transition-transform duration-300 md:translate-x-0", isOpen ? "translate-x-0" : "-translate-x-full")}>
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-xl font-bold text-sidebar-foreground">Compuse</h2>
-          <Button variant="ghost" size="icon" className="md:hidden text-sidebar-foreground" onClick={toggleSidebar}>
+          <img 
+            src="/lovable-uploads/34f3e3cb-f162-46fc-bd7b-472265904f88.png"
+            alt="Compuse" 
+            className="h-8"
+          />
+          <Button variant="ghost" size="icon" className="md:hidden text-white" onClick={toggleSidebar}>
             <X size={20} />
           </Button>
         </div>
@@ -67,10 +71,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               key={item.path} 
               to={item.path} 
               className={cn(
-                "nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground transition-colors", 
+                "nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-colors", 
                 location.pathname === item.path || location.pathname.startsWith(`${item.path}/`) 
-                  ? "bg-sidebar-active text-sidebar-active-foreground" 
-                  : "hover:bg-sidebar-hover"
+                  ? "bg-[#111111] text-[#00bd4b]" 
+                  : "hover:bg-[#111111]"
               )}
               onClick={() => {
                 if (window.innerWidth < 768) {
@@ -85,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         <div className="pt-4 mt-auto border-t border-sidebar-border">
-          <p className="text-xs text-sidebar-foreground/70 text-center">Compuse v1.0</p>
+          <p className="text-xs text-gray-400 text-center">Compuse v1.0</p>
         </div>
       </aside>
     </>

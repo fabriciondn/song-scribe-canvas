@@ -37,11 +37,10 @@ export const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
         </Button>
         <Link to="/" className="flex items-center gap-2">
           <img 
-            src="/lovable-uploads/913b0b45-af0f-4a18-9433-06da553e8273.png" 
+            src="/lovable-uploads/34f3e3cb-f162-46fc-bd7b-472265904f88.png" 
             alt="Compuse" 
             className="h-8" 
           />
-          <span className="text-lg font-bold hidden md:inline">Compuse</span>
         </Link>
       </div>
       
