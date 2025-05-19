@@ -56,7 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <aside className={cn("fixed left-0 top-0 bottom-0 w-64 bg-black z-50 p-5 flex flex-col border-r border-sidebar-border transition-transform duration-300 md:translate-x-0", isOpen ? "translate-x-0" : "-translate-x-full")}>
         <div className="flex items-center justify-between mb-8">
           <img 
-            src="/lovable-uploads/34f3e3cb-f162-46fc-bd7b-472265904f88.png"
+            src="/lovable-uploads/87b8e4b6-6bc8-4091-b080-aa4d3f63dfaa.png"
             alt="Compuse" 
             className="h-8"
           />

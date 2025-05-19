@@ -8,14 +8,9 @@ export {
   getDraftById,
   createDraft,
   updateDraft,
-  deleteDraft,
-  createBackup
+  deleteDraft
 } from './drafts/draftService';
 export { uploadAudio } from './drafts/audioService';
 export { ensureAudioBucketExists } from './storage/storageBuckets';
-export { 
-  getBackups,
-  getBackupById,
-  createSystemBackup,
-} from './drafts/backupService';
-export type { Backup } from './drafts/backupService';
+
+// Removed backup service exports since we're disabling that functionality

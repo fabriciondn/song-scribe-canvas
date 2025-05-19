@@ -20,38 +20,13 @@ export interface Song {
   updated_at?: string;
 }
 
-// Ensure default System Backup folder exists
+// No longer ensures system backup folder exists - function kept for backward compatibility
 export const ensureSystemBackupFolderExists = async (): Promise<void> => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
-      throw new Error('No authenticated user');
-    }
-    
-    // We use the .select('*') approach and then filter the results in JavaScript
-    // to avoid TypeScript issues with the is_system column
-    const { data, error } = await supabase
-      .from('folders')
-      .select('*')
-      .eq('name', 'Backup do Sistema')
-      .eq('user_id', session.user.id);
-    
-    if (error) throw error;
-    
-    // Check if there's a system folder by name (since is_system field has issues)
-    const systemFolder = data?.find(folder => folder.name === 'Backup do Sistema');
-    
-    if (!data || data.length === 0 || !systemFolder) {
-      await createDefaultSystemBackupFolder();
-    }
-  } catch (error) {
-    console.error('Error ensuring system backup folder exists:', error);
-    // Continue even if this fails
-  }
+  // This function is intentionally empty now as we don't want to create system backup folders
+  return;
 };
 
-// Get all folders for the current user
+// Get all folders for the current user - excluding system folders
 export const getFolders = async (): Promise<Folder[]> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
@@ -63,64 +38,19 @@ export const getFolders = async (): Promise<Folder[]> => {
     const { data, error } = await supabase
       .from('folders')
       .select('*')
+      .eq('is_system', false) // Only get non-system folders
       .order('created_at', { ascending: false });
     
     if (error) throw error;
     
-    // Type cast data to work with the custom Folder interface
-    const folderData = data as unknown as Folder[];
-    
-    // Check if the system backup folder exists by looking for a folder with name 'Backup do Sistema'
-    const backupFolder = folderData.find(folder => folder.name === 'Backup do Sistema');
-    
-    if (!backupFolder) {
-      await createDefaultSystemBackupFolder();
-      // Fetch again with the new folder
-      const { data: updatedData, error: updatedError } = await supabase
-        .from('folders')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (updatedError) throw updatedError;
-      return updatedData as unknown as Folder[] || [];
-    }
-    
-    return folderData || [];
+    return data as Folder[] || [];
   } catch (error) {
     console.error('Error fetching folders:', error);
     throw error;
   }
 };
 
-// Create default system backup folder for the user
-export const createDefaultSystemBackupFolder = async (): Promise<Folder> => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
-      throw new Error('No authenticated user');
-    }
-    
-    const folderData = {
-      name: 'Backup do Sistema',
-      user_id: session.user.id,
-      is_system: true
-    };
-    
-    const { data, error } = await supabase
-      .from('folders')
-      .insert(folderData)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    
-    return data as Folder;
-  } catch (error) {
-    console.error('Error creating default system backup folder:', error);
-    throw error;
-  }
-};
+// Removed: createDefaultSystemBackupFolder function
 
 // Get a folder by ID
 export const getFolderById = async (folderId: string): Promise<Folder | null> => {
@@ -152,7 +82,7 @@ export const createFolder = async (name: string): Promise<Folder> => {
     const folderData = {
       name,
       user_id: session.user.id,
-      is_system: false
+      is_system: false  // Never create system folders
     };
     
     const { data, error } = await supabase
@@ -174,7 +104,6 @@ export const createFolder = async (name: string): Promise<Folder> => {
 export const deleteFolder = async (folderId: string): Promise<void> => {
   try {
     // Check if this is a system folder (don't allow deletion)
-    // We'll work with the field as a generic property instead of relying on type checking
     const { data: folder } = await supabase
       .from('folders')
       .select('*')

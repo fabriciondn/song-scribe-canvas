@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Folder, File, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, Folder, File, Trash2 } from 'lucide-react';
 import { 
   Dialog,
   DialogContent,
@@ -19,8 +20,7 @@ import {
   getFolders,
   createFolder, 
   deleteFolder, 
-  getSongsInFolder,
-  ensureSystemBackupFolderExists
+  getSongsInFolder
 } from '@/services/folderService';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -55,9 +55,7 @@ export const FolderList: React.FC = () => {
     
     setIsLoading(true);
     try {
-      // Make sure the System Backup folder exists
-      await ensureSystemBackupFolderExists();
-      
+      // No longer ensuring system backup folder exists
       const foldersData = await getFolders();
       setFolders(foldersData);
       
@@ -111,17 +109,7 @@ export const FolderList: React.FC = () => {
     }
   };
   
-  const handleDeleteFolder = async (folderId: string, isSystemFolder?: boolean) => {
-    // Prevent deletion of system folders
-    if (isSystemFolder) {
-      toast({
-        title: 'Operação não permitida',
-        description: 'Pastas do sistema não podem ser excluídas.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
+  const handleDeleteFolder = async (folderId: string) => {
     try {
       await deleteFolder(folderId);
       setFolders(prev => prev.filter(folder => folder.id !== folderId));
@@ -196,35 +184,27 @@ export const FolderList: React.FC = () => {
           {folders.map(folder => (
             <div 
               key={folder.id} 
-              className={`folder-card p-6 border rounded-lg cursor-pointer transition-all hover:shadow-md ${folder.is_system ? 'border-amber-400' : 'hover:border-primary'}`}
+              className="folder-card p-6 border rounded-lg cursor-pointer transition-all hover:shadow-md hover:border-primary"
               onClick={() => handleFolderClick(folder.id)}
             >
               <div className="flex justify-between items-start mb-2">
                 <div className="flex items-center">
-                  <Folder className={`h-10 w-10 mr-3 ${folder.is_system ? 'text-amber-500' : 'text-primary'}`} />
+                  <Folder className="h-10 w-10 mr-3 text-primary" />
                   <div>
                     <h3 className="text-lg font-semibold">{folder.name}</h3>
-                    {folder.is_system && (
-                      <div className="flex items-center text-xs text-amber-600">
-                        <AlertTriangle className="h-3 w-3 mr-1" />
-                        Pasta do Sistema
-                      </div>
-                    )}
                   </div>
                 </div>
-                {!folder.is_system && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteFolder(folder.id, folder.is_system);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                )}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteFolder(folder.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
               </div>
               
               <div className="mt-4 text-sm text-muted-foreground">
