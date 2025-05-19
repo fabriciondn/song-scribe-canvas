@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 interface Segment {
   text: string;
@@ -83,9 +84,30 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
         if (compositionError) throw compositionError;
         
         if (compositionData) {
-          const typedData = compositionData as CompositionData;
-          setContent(typedData.content || '');
-          setSegments(typedData.author_segments || []);
+          // Cast the data and handle the Json type properly
+          const content = compositionData.content as string || '';
+          
+          // Convert Json to Segment[] with proper type casting
+          let parsedSegments: Segment[] = [];
+          if (compositionData.author_segments) {
+            // Cast Json to appropriate type and ensure it has the required properties
+            const jsonSegments = compositionData.author_segments as any[];
+            parsedSegments = jsonSegments.filter(segment => 
+              typeof segment === 'object' && 
+              'text' in segment && 
+              'authorId' in segment && 
+              'startOffset' in segment && 
+              'endOffset' in segment
+            ).map(segment => ({
+              text: String(segment.text),
+              authorId: String(segment.authorId),
+              startOffset: Number(segment.startOffset),
+              endOffset: Number(segment.endOffset)
+            }));
+          }
+          
+          setContent(content);
+          setSegments(parsedSegments);
         }
         
         // Load collaborators info
@@ -123,9 +145,9 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
         // Add partnership creator
         if (partnershipData) {
           // Type casting to access properties safely
-          const partnershipInfo = partnershipData as unknown as PartnershipResponse;
+          const partnershipInfo = partnershipData as any;
           if (partnershipInfo.user_id && partnershipInfo.profiles) {
-            const profile = partnershipInfo.profiles;
+            const profile = partnershipInfo.profiles as ProfileData;
             authorsMap[partnershipInfo.user_id] = {
               id: partnershipInfo.user_id,
               name: profile.name || 'Criador',
@@ -136,16 +158,15 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
         
         // Add collaborators
         if (collaboratorsData) {
-          collaboratorsData.forEach((collab, index) => {
+          (collaboratorsData as any[]).forEach((collab, index) => {
             // Type casting to access properties safely
-            const collaboratorInfo = collab as unknown as CollaboratorResponse;
-            if (collaboratorInfo.user_id && collaboratorInfo.profiles) {
+            if (collab.user_id && collab.profiles) {
               // Skip if already added (creator)
-              if (authorsMap[collaboratorInfo.user_id]) return;
+              if (authorsMap[collab.user_id]) return;
               
-              const profile = collaboratorInfo.profiles;
-              authorsMap[collaboratorInfo.user_id] = {
-                id: collaboratorInfo.user_id,
+              const profile = collab.profiles as ProfileData;
+              authorsMap[collab.user_id] = {
+                id: collab.user_id,
                 name: profile.name || `Colaborador ${index + 1}`,
                 color: colorPalette[(index + 1) % colorPalette.length]
               };
@@ -183,8 +204,37 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
           
           // Only update if not from current user
           if (newData.last_modified_by !== user.id) {
-            setContent(newData.content);
-            setSegments(newData.author_segments || []);
+            setContent(newData.content || '');
+            
+            // Handle author_segments with proper type casting
+            if (newData.author_segments) {
+              try {
+                // Ensure we properly cast the incoming data
+                const jsonSegments = newData.author_segments as any[];
+                const parsedSegments = jsonSegments
+                  .filter(segment => 
+                    typeof segment === 'object' && 
+                    'text' in segment && 
+                    'authorId' in segment && 
+                    'startOffset' in segment && 
+                    'endOffset' in segment
+                  )
+                  .map(segment => ({
+                    text: String(segment.text),
+                    authorId: String(segment.authorId),
+                    startOffset: Number(segment.startOffset),
+                    endOffset: Number(segment.endOffset)
+                  }));
+                  
+                setSegments(parsedSegments);
+              } catch (error) {
+                console.error('Error parsing segments from real-time update:', error);
+                // Fallback to empty array if parsing fails
+                setSegments([]);
+              }
+            } else {
+              setSegments([]);
+            }
           }
         }
       )

@@ -271,7 +271,7 @@ export const validateCollaborationToken = async (token: string): Promise<{
       return { valid: false, error: 'Invalid or expired token' };
     }
     
-    // Need to cast the data to access its properties safely
+    // Cast data to expected type
     const tokenData = data as {
       partnership_id: string;
       expires_at: string;
@@ -343,7 +343,7 @@ export const getUserPartnerships = async () => {
       
     if (createdError) throw createdError;
     
-    const { data: collaboratingPartnerships, error: collaboratingError } = await supabase
+    const { data: collaboratingPartnershipsData, error: collaboratingError } = await supabase
       .from('partnership_collaborators')
       .select(`
         partnerships (
@@ -365,17 +365,20 @@ export const getUserPartnerships = async () => {
     if (collaboratingError) throw collaboratingError;
     
     // Combine and format the partnerships
-    let allPartnerships: PartnershipData[] = createdPartnerships as PartnershipData[] || [];
+    let allPartnerships: PartnershipData[] = (createdPartnerships || []) as PartnershipData[];
     
-    if (collaboratingPartnerships) {
-      // Need to cast and ensure proper type safety
-      const collaborations = collaboratingPartnerships
+    if (collaboratingPartnershipsData) {
+      // Extract partnerships from the nested response and cast to correct type
+      const collaborations = collaboratingPartnershipsData
         .map(collab => {
           // Type assertion needed to handle the complex nested structure
-          const partnerships = collab.partnerships as unknown as PartnershipData;
-          return partnerships;
+          const partnership = collab.partnerships as unknown as PartnershipData;
+          if (partnership && partnership.id) {
+            return partnership;
+          }
+          return null;
         })
-        .filter(Boolean);
+        .filter((partnership): partnership is PartnershipData => partnership !== null);
       
       allPartnerships = [...allPartnerships, ...collaborations];
     }
@@ -390,14 +393,14 @@ export const getUserPartnerships = async () => {
     });
     
     // Get user profiles
-    const { data: profiles } = await supabase
+    const { data: profilesData } = await supabase
       .from('profiles')
       .select('id, name, email')
       .in('id', Array.from(userIds));
     
-    const profilesData = profiles || [];
+    const profiles = profilesData || [];
     
-    const userProfiles = profilesData.reduce((acc, profile) => {
+    const userProfiles = profiles.reduce((acc, profile) => {
       acc[profile.id] = profile;
       return acc;
     }, {} as Record<string, ProfileInfo>);
@@ -406,7 +409,7 @@ export const getUserPartnerships = async () => {
     return allPartnerships.map(partnership => ({
       id: partnership.id,
       title: partnership.title,
-      description: partnership.description,
+      description: partnership.description || '',
       date: new Date(partnership.created_at).toLocaleDateString(),
       creator: userProfiles[partnership.user_id] || { name: 'Unknown', email: '' },
       partners: (partnership.partnership_collaborators || []).map(collab => ({
@@ -414,8 +417,8 @@ export const getUserPartnerships = async () => {
         userId: collab.user_id,
         name: userProfiles[collab.user_id]?.name || 'Unknown User',
         email: userProfiles[collab.user_id]?.email || '',
-        permission: collab.permission,
-        status: collab.status
+        permission: collab.permission || 'read',
+        status: collab.status || 'pending'
       }))
     }));
   } catch (error) {

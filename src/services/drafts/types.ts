@@ -24,3 +24,30 @@ export interface AudioFile {
   url: string;
   created_at?: string;
 }
+
+// Types for partnership functionality
+export interface Segment {
+  text: string;
+  authorId: string;
+  startOffset: number;
+  endOffset: number;
+}
+
+export interface Partnership {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  creator: {
+    name: string;
+    email: string;
+  };
+  partners: {
+    id: string;
+    userId: string;
+    name: string;
+    email: string;
+    permission: 'read' | 'edit';
+    status: 'pending' | 'active';
+  }[];
+}
