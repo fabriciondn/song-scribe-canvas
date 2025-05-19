@@ -14,4 +14,8 @@ export { uploadAudio } from './drafts/audioService';
 export { ensureAudioBucketExists } from './storage/storageBuckets';
 export { createSystemBackup as createBackup } from './drafts/backupService';
 
-// Removed backup service exports since we're disabling that functionality
+// Create a direct wrapper function for createBackup to ensure proper export
+export const createBackup = async (title: string, content: string): Promise<void> => {
+  const { createSystemBackup } = await import('./drafts/backupService');
+  return createSystemBackup(title, content);
+};
