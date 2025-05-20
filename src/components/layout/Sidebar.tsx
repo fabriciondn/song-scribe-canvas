@@ -56,9 +56,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <aside className={cn("fixed left-0 top-0 bottom-0 w-64 bg-black z-50 p-5 flex flex-col border-r border-sidebar-border transition-transform duration-300 md:translate-x-0", isOpen ? "translate-x-0" : "-translate-x-full")}>
         <div className="flex items-center justify-between mb-8">
           <img 
-            src="/lovable-uploads/87b8e4b6-6bc8-4091-b080-aa4d3f63dfaa.png"
-            alt="Compuse" 
-            className="h-8"
+            src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+            alt="Logo" 
+            className="h-10"
           />
           <Button variant="ghost" size="icon" className="md:hidden text-white" onClick={toggleSidebar}>
             <X size={20} />

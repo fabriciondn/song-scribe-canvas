@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { SectionButtons } from './SectionButtons';
 import { DAModal } from './DAModal';
@@ -171,8 +170,8 @@ export const Editor: React.FC = () => {
     <div className="flex justify-between items-center mb-2 bg-white py-2 px-3 rounded-lg shadow-sm sticky top-0">
       <div className="flex items-center">
         <img 
-          src="/lovable-uploads/913b0b45-af0f-4a18-9433-06da553e8273.png" 
-          alt="Compuse Logo" 
+          src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" 
+          alt="Logo" 
           className="h-8" 
         />
         <span className="ml-2 font-semibold text-lg">Compuse</span>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   DropdownMenu,
@@ -37,9 +36,9 @@ export const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
         </Button>
         <Link to="/" className="flex items-center gap-2">
           <img 
-            src="/lovable-uploads/34f3e3cb-f162-46fc-bd7b-472265904f88.png" 
-            alt="Compuse" 
-            className="h-8" 
+            src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" 
+            alt="Logo" 
+            className="h-9" 
           />
         </Link>
       </div>
