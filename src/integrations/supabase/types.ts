@@ -69,6 +69,50 @@ export type Database = {
         }
         Relationships: []
       }
+      music_bases: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_path: string
+          folder_id: string | null
+          genre: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_path: string
+          folder_id?: string | null
+          genre: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_path?: string
+          folder_id?: string | null
+          genre?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_bases_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partnership_collaborators: {
         Row: {
           created_at: string | null

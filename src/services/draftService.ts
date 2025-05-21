@@ -12,6 +12,7 @@ export {
 } from './drafts/draftService';
 export { uploadAudio } from './drafts/audioService';
 export { ensureAudioBucketExists } from './storage/storageBuckets';
+export { ensureMusicBasesBucketExists } from './basesMusicais/basesService';
 
 // Import the Backup type for the return type
 import type { Backup } from './drafts/backupService';

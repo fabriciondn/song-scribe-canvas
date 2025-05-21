@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Pause, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useToast } from '@/components/ui/use-toast';
 import { Link } from 'react-router-dom';
+import { BaseMusical, getBases } from '@/services/basesMusicais/basesService';
 
 interface MusicBase {
   id: string;
@@ -13,59 +14,6 @@ interface MusicBase {
   audioUrl: string;
   genre: string;
 }
-
-// Mock data para demonstração
-const mockBases: MusicBase[] = [{
-  id: '1',
-  title: 'Piseiro Básico 1',
-  audioUrl: '/lovable-uploads/bases/piseiro1.mp3',
-  genre: 'Piseiro'
-}, {
-  id: '2',
-  title: 'Piseiro Melódico',
-  audioUrl: '/lovable-uploads/bases/piseiro2.mp3',
-  genre: 'Piseiro'
-}, {
-  id: '3',
-  title: 'Trap 808',
-  audioUrl: '/lovable-uploads/bases/trap1.mp3',
-  genre: 'Trap'
-}, {
-  id: '4',
-  title: 'Trap Melódico',
-  audioUrl: '/lovable-uploads/bases/trap2.mp3',
-  genre: 'Trap'
-}, {
-  id: '5',
-  title: 'Sertanejo Universitário',
-  audioUrl: '/lovable-uploads/bases/sertanejo1.mp3',
-  genre: 'Sertanejo'
-}, {
-  id: '6',
-  title: 'Sertanejo Raiz',
-  audioUrl: '/lovable-uploads/bases/sertanejo2.mp3',
-  genre: 'Sertanejo'
-}, {
-  id: '7',
-  title: 'Gospel Adoração',
-  audioUrl: '/lovable-uploads/bases/gospel1.mp3',
-  genre: 'Gospel'
-}, {
-  id: '8',
-  title: 'Gospel Celebração',
-  audioUrl: '/lovable-uploads/bases/gospel2.mp3',
-  genre: 'Gospel'
-}, {
-  id: '9',
-  title: 'Funk Batidão',
-  audioUrl: '/lovable-uploads/bases/funk1.mp3',
-  genre: 'Funk'
-}, {
-  id: '10',
-  title: 'Funk Melody',
-  audioUrl: '/lovable-uploads/bases/funk2.mp3',
-  genre: 'Funk'
-}];
 
 interface MusicBasesProps {
   onInsertBase: (baseInfo: {
@@ -79,12 +27,46 @@ export const MusicBases: React.FC<MusicBasesProps> = ({
 }) => {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
-  const {
-    toast
-  } = useToast();
+  const [bases, setBases] = useState<MusicBase[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { toast } = useToast();
 
+  // Carregar bases do banco de dados
+  useEffect(() => {
+    const loadBases = async () => {
+      try {
+        setIsLoading(true);
+        const basesData = await getBases();
+        
+        // Converter do formato da API para o formato usado pelo componente
+        const formattedBases: MusicBase[] = basesData.map(base => ({
+          id: base.id,
+          title: base.name,
+          audioUrl: base.file_url || '',
+          genre: base.genre
+        }));
+        
+        setBases(formattedBases);
+      } catch (error) {
+        console.error('Erro ao carregar bases musicais:', error);
+        toast({
+          title: "Erro ao carregar",
+          description: "Não foi possível carregar as bases musicais.",
+          variant: "destructive"
+        });
+        
+        // Caso falhe, manter as bases padrão para demonstração
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadBases();
+  }, [toast]);
+  
   // Agrupar as bases por gênero
-  const basesByGenre = mockBases.reduce((acc, base) => {
+  const basesByGenre = (bases || []).reduce((acc, base) => {
     if (!acc[base.genre]) {
       acc[base.genre] = [];
     }
@@ -146,29 +128,50 @@ export const MusicBases: React.FC<MusicBasesProps> = ({
         </Link>
       </div>
       
-      <ScrollArea className="h-[calc(100vh-280px)]">
-        <Accordion type="single" collapsible className="w-full">
-          {Object.entries(basesByGenre).map(([genre, bases]) => <AccordionItem value={genre} key={genre}>
-              <AccordionTrigger className="text-md font-medium">{genre}</AccordionTrigger>
-              <AccordionContent>
-                <div className="flex flex-col space-y-2">
-                  {bases.map(base => <div key={base.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{base.title}</p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button variant="ghost" size="icon" onClick={() => handlePlay(base)} className="h-8 w-8">
-                          {playingId === base.id ? <Pause size={16} /> : <Play size={16} />}
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => handleInsert(base)}>
-                          <Plus size={14} className="mr-1" /> Inserir
-                        </Button>
-                      </div>
-                    </div>)}
-                </div>
-              </AccordionContent>
-            </AccordionItem>)}
-        </Accordion>
-      </ScrollArea>
+      {isLoading ? (
+        <div className="flex justify-center my-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700"></div>
+        </div>
+      ) : (
+        <ScrollArea className="h-[calc(100vh-280px)]">
+          {Object.keys(basesByGenre).length === 0 ? (
+            <div className="text-center p-4">
+              <p className="text-sm text-muted-foreground mb-2">Nenhuma base musical encontrada.</p>
+              <Link to="/bases">
+                <Button variant="outline" size="sm">
+                  <Plus size={14} className="mr-1" /> Adicionar Base
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <Accordion type="single" collapsible className="w-full">
+              {Object.entries(basesByGenre).map(([genre, bases]) => (
+                <AccordionItem value={genre} key={genre}>
+                  <AccordionTrigger className="text-md font-medium">{genre}</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="flex flex-col space-y-2">
+                      {bases.map(base => (
+                        <div key={base.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{base.title}</p>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button variant="ghost" size="icon" onClick={() => handlePlay(base)} className="h-8 w-8">
+                              {playingId === base.id ? <Pause size={16} /> : <Play size={16} />}
+                            </Button>
+                            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => handleInsert(base)}>
+                              <Plus size={14} className="mr-1" /> Inserir
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )}
+        </ScrollArea>
+      )}
     </div>;
 };

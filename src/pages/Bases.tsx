@@ -21,17 +21,32 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Folder, Music, Plus, Upload } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Folder, Music, Plus, Trash2, Upload } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { 
+  BaseMusical, 
+  BaseMusicalInput, 
+  getBases, 
+  getBasesByFolder,
+  createBaseMusical,
+  removeBaseMusical,
+  ensureMusicBasesBucketExists
+} from '@/services/basesMusicais/basesService';
 
-// Types for Base folders and files
-interface BaseFile {
-  id: string;
-  name: string;
-  genre: string;
-  description: string;
-  fileUrl: string;
-}
+// Interfaces para pastas e arquivos de base
+interface BaseFile extends BaseMusical {}
 
 interface BaseFolder {
   id: string;
@@ -40,54 +55,87 @@ interface BaseFolder {
   files: BaseFile[];
 }
 
-// Mock data for demonstration
-const mockFolders: BaseFolder[] = [
-  {
-    id: '1',
-    name: 'Piseiro',
-    description: 'Bases de piseiro para composição',
-    files: [
-      { 
-        id: '101', 
-        name: 'Piseiro Base 1', 
-        genre: 'Piseiro', 
-        description: 'Base de piseiro com 120 BPM', 
-        fileUrl: '/lovable-uploads/bases/piseiro1.mp3' 
-      },
-      { 
-        id: '102', 
-        name: 'Piseiro Base 2', 
-        genre: 'Piseiro', 
-        description: 'Base de piseiro com 110 BPM', 
-        fileUrl: '/lovable-uploads/bases/piseiro2.mp3' 
-      }
-    ]
-  },
-  {
-    id: '2',
-    name: 'Sertanejo',
-    description: 'Bases de sertanejo para composição',
-    files: [
-      { 
-        id: '201', 
-        name: 'Sertanejo Base 1', 
-        genre: 'Sertanejo', 
-        description: 'Base de sertanejo universitário', 
-        fileUrl: '/lovable-uploads/bases/sertanejo1.mp3' 
-      }
-    ]
-  }
-];
-
 const Bases: React.FC = () => {
-  const [folders, setFolders] = useState<BaseFolder[]>(mockFolders);
+  const [folders, setFolders] = useState<BaseFolder[]>([]);
   const [newFolder, setNewFolder] = useState({ name: '', description: '' });
   const [selectedFolder, setSelectedFolder] = useState<BaseFolder | null>(null);
-  const [newBase, setNewBase] = useState({ name: '', genre: '', description: '', file: null as File | null });
+  const [newBase, setNewBase] = useState({ 
+    name: '', 
+    genre: '', 
+    description: '', 
+    file: null as File | null 
+  });
   const [isAddingFolder, setIsAddingFolder] = useState(false);
   const [isAddingBase, setIsAddingBase] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [baseToDelete, setBaseToDelete] = useState<BaseFile | null>(null);
   
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Carregar pastas e bases do banco de dados
+  useEffect(() => {
+    if (!user) return;
+    
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Garantir que o bucket de storage exista
+        await ensureMusicBasesBucketExists();
+        
+        // Carregar todas as bases
+        const basesData = await getBases();
+        
+        // Agrupar bases por pasta
+        const folderMap = new Map<string, BaseFolder>();
+        
+        // Adicionar pasta "Sem pasta" para bases sem folder_id
+        folderMap.set('uncategorized', {
+          id: 'uncategorized',
+          name: 'Sem pasta',
+          description: 'Bases musicais não categorizadas',
+          files: []
+        });
+        
+        // Organizar bases em suas respectivas pastas
+        basesData.forEach(base => {
+          const folderId = base.folder_id || 'uncategorized';
+          
+          if (!folderMap.has(folderId)) {
+            folderMap.set(folderId, {
+              id: folderId,
+              name: `Pasta ${folderMap.size + 1}`,  // Nome temporário até carregarmos os nomes reais
+              description: '',
+              files: []
+            });
+          }
+          
+          const folder = folderMap.get(folderId);
+          if (folder) {
+            folder.files.push(base);
+          }
+        });
+        
+        // Carregar informações das pastas do banco de dados
+        // Aqui poderíamos fazer uma consulta para obter nomes e descrições das pastas
+        // Por enquanto, vamos simplesmente usar o que já temos
+        
+        setFolders(Array.from(folderMap.values()));
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        toast({
+          title: "Erro ao carregar",
+          description: "Não foi possível carregar suas bases musicais.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [user, toast]);
   
   const handleAddFolder = () => {
     if (!newFolder.name.trim()) {
@@ -116,8 +164,9 @@ const Bases: React.FC = () => {
     });
   };
   
-  const handleAddBase = () => {
+  const handleAddBase = async () => {
     if (!selectedFolder) return;
+    
     if (!newBase.name.trim() || !newBase.genre.trim()) {
       toast({
         title: "Erro",
@@ -136,29 +185,97 @@ const Bases: React.FC = () => {
       return;
     }
     
-    // In a real application, we would upload the file to a server/storage here
-    // For this mockup, we'll simulate the upload
-    const newBaseFile: BaseFile = {
-      id: Date.now().toString(),
-      name: newBase.name,
-      genre: newBase.genre,
-      description: newBase.description,
-      fileUrl: URL.createObjectURL(newBase.file) // Temporary URL for demonstration
-    };
-    
-    setFolders(prev => prev.map(folder => 
-      folder.id === selectedFolder.id 
-        ? { ...folder, files: [...folder.files, newBaseFile] } 
-        : folder
-    ));
-    
-    setNewBase({ name: '', genre: '', description: '', file: null });
-    setIsAddingBase(false);
-    
-    toast({
-      title: "Base adicionada",
-      description: `A base "${newBase.name}" foi adicionada à pasta "${selectedFolder.name}"`
-    });
+    try {
+      setIsLoading(true);
+      
+      // Verificar tamanho do arquivo (máximo de 10MB)
+      const fileSizeMB = newBase.file.size / (1024 * 1024);
+      if (fileSizeMB > 10) {
+        toast({
+          title: "Arquivo muito grande",
+          description: "O tamanho máximo permitido é 10MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Verificar tipo do arquivo
+      if (!newBase.file.type.startsWith('audio/')) {
+        toast({
+          title: "Tipo de arquivo inválido",
+          description: "Por favor, selecione um arquivo de áudio",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Criar base musical no banco de dados
+      const baseInput: BaseMusicalInput = {
+        name: newBase.name,
+        genre: newBase.genre,
+        description: newBase.description,
+        folder_id: selectedFolder.id === 'uncategorized' ? undefined : selectedFolder.id,
+        file: newBase.file
+      };
+      
+      const newBaseFile = await createBaseMusical(baseInput);
+      
+      // Atualizar a interface
+      setFolders(prev => prev.map(folder => 
+        folder.id === selectedFolder.id 
+          ? { ...folder, files: [...folder.files, newBaseFile] } 
+          : folder
+      ));
+      
+      setNewBase({ name: '', genre: '', description: '', file: null });
+      setIsAddingBase(false);
+      
+      toast({
+        title: "Base adicionada",
+        description: `A base "${newBase.name}" foi adicionada à pasta "${selectedFolder.name}"`
+      });
+    } catch (error) {
+      console.error('Erro ao criar base musical:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível adicionar a base musical",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleDeleteBase = async (base: BaseFile) => {
+    try {
+      setIsLoading(true);
+      
+      // Remover base musical do banco de dados
+      await removeBaseMusical(base.id);
+      
+      // Atualizar a interface
+      setFolders(prev => 
+        prev.map(folder => ({
+          ...folder,
+          files: folder.files.filter(file => file.id !== base.id)
+        }))
+      );
+      
+      toast({
+        title: "Base removida",
+        description: `A base "${base.name}" foi removida com sucesso`
+      });
+    } catch (error) {
+      console.error('Erro ao remover base musical:', error);
+      toast({
+        title: "Erro ao remover",
+        description: "Não foi possível remover a base musical",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+      setBaseToDelete(null);
+    }
   };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,109 +330,151 @@ const Bases: React.FC = () => {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {folders.map((folder) => (
-          <Card key={folder.id} className="overflow-hidden">
-            <CardHeader className="bg-slate-50">
-              <div className="flex items-center gap-2">
-                <Folder className="text-purple-500" />
-                <CardTitle>{folder.name}</CardTitle>
-              </div>
-              <CardDescription>{folder.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground mb-2">
-                {folder.files.length} base{folder.files.length !== 1 ? 's' : ''}
-              </p>
-              
-              <div className="space-y-2">
-                {folder.files.map(file => (
-                  <div key={file.id} className="flex items-center justify-between p-2 bg-muted/40 rounded-md">
-                    <div className="flex items-center">
-                      <Music className="mr-2 h-4 w-4 text-purple-500" />
-                      <div>
-                        <p className="text-sm font-medium">{file.name}</p>
-                        <p className="text-xs text-muted-foreground">{file.genre}</p>
+      {isLoading && (
+        <div className="flex justify-center my-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700"></div>
+        </div>
+      )}
+
+      {!isLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {folders.map((folder) => (
+            <Card key={folder.id} className="overflow-hidden">
+              <CardHeader className="bg-slate-50">
+                <div className="flex items-center gap-2">
+                  <Folder className="text-purple-500" />
+                  <CardTitle>{folder.name}</CardTitle>
+                </div>
+                <CardDescription>{folder.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <p className="text-sm text-muted-foreground mb-2">
+                  {folder.files.length} base{folder.files.length !== 1 ? 's' : ''}
+                </p>
+                
+                <div className="space-y-2">
+                  {folder.files.map(file => (
+                    <div key={file.id} className="flex items-center justify-between p-2 bg-muted/40 rounded-md">
+                      <div className="flex items-center">
+                        <Music className="mr-2 h-4 w-4 text-purple-500" />
+                        <div>
+                          <p className="text-sm font-medium">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">{file.genre}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <audio
+                          controls
+                          className="h-8 w-36"
+                          preload="none"
+                          src={file.file_url}
+                        />
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-red-500"
+                              onClick={() => setBaseToDelete(file)}
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remover base musical</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja remover a base "{file.name}"? Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction 
+                                className="bg-red-500 hover:bg-red-600"
+                                onClick={() => handleDeleteBase(file)}
+                              >
+                                Remover
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
-                    <audio
-                      controls
-                      className="h-8 w-36"
-                      preload="none"
-                      src={file.fileUrl}
-                    />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-end bg-slate-50 py-3">
-              <Dialog open={isAddingBase && selectedFolder?.id === folder.id} onOpenChange={(open) => {
-                setIsAddingBase(open);
-                if (open) setSelectedFolder(folder);
-              }}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" onClick={() => setSelectedFolder(folder)}>
-                    <Upload className="mr-2 h-4 w-4" /> Adicionar Base
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
-                  <DialogHeader>
-                    <DialogTitle>Adicionar Base Musical</DialogTitle>
-                    <DialogDescription>
-                      Adicione uma nova base musical à pasta "{folder.name}"
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="base-name">Nome da Base</Label>
-                      <Input
-                        id="base-name"
-                        value={newBase.name}
-                        onChange={(e) => setNewBase(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Ex: Base de Piseiro 120 BPM"
-                      />
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-end bg-slate-50 py-3">
+                <Dialog open={isAddingBase && selectedFolder?.id === folder.id} onOpenChange={(open) => {
+                  setIsAddingBase(open);
+                  if (open) setSelectedFolder(folder);
+                }}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" onClick={() => setSelectedFolder(folder)}>
+                      <Upload className="mr-2 h-4 w-4" /> Adicionar Base
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Adicionar Base Musical</DialogTitle>
+                      <DialogDescription>
+                        Adicione uma nova base musical à pasta "{folder.name}"
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="base-name">Nome da Base</Label>
+                        <Input
+                          id="base-name"
+                          value={newBase.name}
+                          onChange={(e) => setNewBase(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="Ex: Base de Piseiro 120 BPM"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="base-genre">Gênero</Label>
+                        <Input
+                          id="base-genre"
+                          value={newBase.genre}
+                          onChange={(e) => setNewBase(prev => ({ ...prev, genre: e.target.value }))}
+                          placeholder="Ex: Piseiro"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="base-description">Descrição (opcional)</Label>
+                        <Textarea
+                          id="base-description"
+                          value={newBase.description}
+                          onChange={(e) => setNewBase(prev => ({ ...prev, description: e.target.value }))}
+                          placeholder="Descreva esta base musical..."
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="base-file">Arquivo MP3</Label>
+                        <Input
+                          id="base-file"
+                          type="file"
+                          accept=".mp3,audio/*"
+                          onChange={handleFileChange}
+                        />
+                        <p className="text-xs text-muted-foreground">Tamanho máximo: 10MB</p>
+                      </div>
                     </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="base-genre">Gênero</Label>
-                      <Input
-                        id="base-genre"
-                        value={newBase.genre}
-                        onChange={(e) => setNewBase(prev => ({ ...prev, genre: e.target.value }))}
-                        placeholder="Ex: Piseiro"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="base-description">Descrição (opcional)</Label>
-                      <Textarea
-                        id="base-description"
-                        value={newBase.description}
-                        onChange={(e) => setNewBase(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Descreva esta base musical..."
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="base-file">Arquivo MP3</Label>
-                      <Input
-                        id="base-file"
-                        type="file"
-                        accept=".mp3,audio/*"
-                        onChange={handleFileChange}
-                      />
-                      <p className="text-xs text-muted-foreground">Tamanho máximo: 10MB</p>
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsAddingBase(false)}>Cancelar</Button>
-                    <Button onClick={handleAddBase}>Adicionar Base</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsAddingBase(false)}>Cancelar</Button>
+                      <Button onClick={handleAddBase} disabled={isLoading}>
+                        {isLoading ? 'Enviando...' : 'Adicionar Base'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
 
-      {folders.length === 0 && (
+      {!isLoading && folders.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <Folder className="h-16 w-16 text-muted-foreground/50 mb-4" />
           <h3 className="text-xl font-medium mb-2">Nenhuma pasta de bases</h3>
