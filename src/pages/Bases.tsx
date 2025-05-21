@@ -220,6 +220,10 @@ const Bases: React.FC = () => {
       
       const newBaseFile = await createBaseMusical(baseInput);
       
+      if (!newBaseFile) {
+        throw new Error('Falha ao criar base musical');
+      }
+      
       // Atualizar a interface
       setFolders(prev => prev.map(folder => 
         folder.id === selectedFolder.id 
@@ -251,7 +255,11 @@ const Bases: React.FC = () => {
       setIsLoading(true);
       
       // Remover base musical do banco de dados
-      await removeBaseMusical(base.id);
+      const success = await removeBaseMusical(base.id);
+      
+      if (!success) {
+        throw new Error('Falha ao remover base musical');
+      }
       
       // Atualizar a interface
       setFolders(prev => 

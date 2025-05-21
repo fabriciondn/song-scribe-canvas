@@ -15,6 +15,15 @@ export interface BaseMusical {
   updated_at: string;
 }
 
+// Interface para criação de bases musicais
+export interface BaseMusicalInput {
+  name: string;
+  genre: string;
+  description: string;
+  folder_id?: string;
+  file: File;
+}
+
 // Função para garantir que o bucket existe
 export const ensureMusicBasesBucketExists = async (): Promise<void> => {
   try {
@@ -23,7 +32,7 @@ export const ensureMusicBasesBucketExists = async (): Promise<void> => {
     const { data } = await supabase.storage.from('music_bases').list();
     
     // Se chegamos aqui, o bucket existe e está acessível
-    console.log('Music bases bucket is accessible');
+    console.log('Bucket de bases musicais está acessível');
   } catch (error) {
     console.error('Error accessing music bases bucket:', error);
     // Não lançamos o erro para evitar falhas na interface do usuário
@@ -42,6 +51,41 @@ export const getBases = async (): Promise<BaseMusical[]> => {
   if (error) {
     console.error('Error fetching music bases:', error);
     throw new Error('Failed to fetch music bases');
+  }
+
+  // Adiciona URLs de arquivo para cada base
+  const basesWithUrls = await Promise.all(
+    data.map(async (base) => {
+      let fileUrl = null;
+      if (base.file_path) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('music_bases')
+          .getPublicUrl(base.file_path);
+        fileUrl = publicUrl;
+      }
+      return {
+        ...base,
+        file_url: fileUrl
+      };
+    })
+  );
+
+  return basesWithUrls;
+};
+
+/**
+ * Busca bases musicais de uma determinada pasta
+ */
+export const getBasesByFolder = async (folderId: string): Promise<BaseMusical[]> => {
+  const { data, error } = await supabase
+    .from('music_bases')
+    .select('*')
+    .eq('folder_id', folderId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching music bases by folder:', error);
+    throw new Error('Failed to fetch music bases by folder');
   }
 
   // Adiciona URLs de arquivo para cada base
@@ -97,15 +141,13 @@ export const getBaseById = async (id: string): Promise<BaseMusical | null> => {
 /**
  * Cria uma nova base musical
  */
-export const createBase = async (
-  name: string,
-  genre: string,
-  description: string,
-  folder_id: string | null,
-  file: File
+export const createBaseMusical = async (
+  baseInput: BaseMusicalInput
 ): Promise<BaseMusical | null> => {
   try {
     // 1. Primeiro, fazemos upload do arquivo
+    const { name, genre, description, folder_id, file } = baseInput;
+    
     const fileExtension = file.name.split('.').pop();
     const fileName = `${nanoid()}.${fileExtension}`;
     const filePath = `${genre}/${fileName}`;
@@ -163,7 +205,7 @@ export const createBase = async (
 /**
  * Remove uma base musical
  */
-export const removeBase = async (id: string): Promise<boolean> => {
+export const removeBaseMusical = async (id: string): Promise<boolean> => {
   try {
     // 1. Primeiro, obtenha o registro para ter o caminho do arquivo
     const { data, error: fetchError } = await supabase
@@ -206,3 +248,4 @@ export const removeBase = async (id: string): Promise<boolean> => {
     return false;
   }
 };
+
