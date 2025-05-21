@@ -5,9 +5,10 @@ import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, Download } from 'lucide-react';
+import { ArrowLeft, FileText, Download, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export const BackupFolderPage: React.FC = () => {
   const [backups, setBackups] = useState<Backup[]>([]);
@@ -101,17 +102,20 @@ export const BackupFolderPage: React.FC = () => {
         <h1 className="text-2xl font-bold">Pasta de Backup</h1>
       </div>
       
-      <p className="text-muted-foreground mb-6">
-        Esta é uma pasta do sistema que armazena backups automáticos das suas composições.
-        Os arquivos nesta pasta não podem ser excluídos para garantir que você não perca seu trabalho.
-      </p>
+      <Alert className="mb-6 border-amber-500 bg-amber-50">
+        <AlertCircle className="h-4 w-4 text-amber-500" />
+        <AlertTitle className="text-amber-500">Funcionalidade desativada</AlertTitle>
+        <AlertDescription>
+          A funcionalidade de backup automático foi desativada. Não serão mais criadas pastas de backup automático.
+        </AlertDescription>
+      </Alert>
       
       {backups.length === 0 ? (
         <div className="text-center p-12 border rounded-lg">
           <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
           <h3 className="text-lg font-medium">Nenhum backup encontrado</h3>
           <p className="text-sm text-muted-foreground mt-2">
-            Os backups aparecerão aqui quando você criar composições e exportar documentos.
+            A funcionalidade de backup automático foi desativada.
           </p>
         </div>
       ) : (

@@ -16,8 +16,17 @@ export { ensureAudioBucketExists } from './storage/storageBuckets';
 // Import the Backup type for the return type
 import type { Backup } from './drafts/backupService';
 
-// Export only one version of createBackup (the wrapper function)
+// Export only one version of createBackup (the wrapper function) - NOW A NO-OP FUNCTION
 export const createBackup = async (title: string, content: string): Promise<Backup> => {
-  const { createSystemBackup } = await import('./drafts/backupService');
-  return createSystemBackup(title, content);
+  // Skip importing and calling the real backup service
+  console.log('Backup creation skipped (feature disabled)');
+  
+  // Return a mock backup object to maintain the function signature
+  return {
+    id: 'no-op-backup',
+    title: title,
+    file_path: '',
+    created_at: new Date().toISOString(),
+    is_system: true
+  };
 };

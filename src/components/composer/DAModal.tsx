@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -61,23 +60,14 @@ export const DAModal: React.FC<DAModalProps> = ({
         setNotes(activeTemplate.notes || '');
       }
       
-      // Create backup automatically when modal opens
-      createAutomaticBackup();
+      // REMOVED automatic backup creation when modal opens
     }
   }, [isOpen, getActiveTemplate, songTitle, songContent]);
   
+  // This function is now empty but kept for compatibility
   const createAutomaticBackup = async () => {
-    if (!songTitle || !songContent) return;
-    
-    setIsBackupCreating(true);
-    try {
-      await createBackup(songTitle || 'Untitled', songContent);
-      console.log('Backup created automatically');
-    } catch (error) {
-      console.error('Error creating automatic backup:', error);
-    } finally {
-      setIsBackupCreating(false);
-    }
+    // No-op function - does nothing
+    console.log('Automatic backup disabled');
   };
   
   const handleGenerateDA = async () => {
@@ -87,13 +77,10 @@ export const DAModal: React.FC<DAModalProps> = ({
       // Generate PDF content
       const pdfContent = generatePdfContent();
       
-      // Create a backup for this DA
+      // We no longer create backups, but keeping the code structure
+      // for compatibility with existing components
       if (songTitle && songContent) {
-        try {
-          await createBackup(songTitle, songContent);
-        } catch (error) {
-          console.error('Error creating backup during DA generation:', error);
-        }
+        console.log('Backup during DA generation skipped (feature disabled)');
       }
       
       // Simulate sending email
@@ -106,7 +93,7 @@ export const DAModal: React.FC<DAModalProps> = ({
         title: 'Documento de Anterioridade gerado!',
         description: email 
           ? `O DA foi enviado para ${email}` 
-          : 'O DA foi gerado com sucesso. Um backup foi criado automaticamente.',
+          : 'O DA foi gerado com sucesso.',
       });
       
       onClose();

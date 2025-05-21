@@ -89,6 +89,7 @@ export const Editor: React.FC = () => {
     setIsSaveModalOpen(false);
   };
 
+  // This function is now a no-op but kept for compatibility
   const handleBackup = async () => {
     if (!title.trim()) {
       toast({
@@ -101,18 +102,14 @@ export const Editor: React.FC = () => {
 
     setProcessing('backup');
     try {
-      await createBackup(title, content);
+      // The createBackup function is now a no-op
+      console.log('Backup creation skipped (feature disabled)');
       toast({
-        title: 'Backup criado',
-        description: 'Sua composição foi salva automaticamente na pasta de Backup.',
+        title: 'Recurso de backup desativado',
+        description: 'A função de backup automático foi desativada.',
       });
     } catch (error) {
-      console.error('Error creating backup:', error);
-      toast({
-        title: 'Erro ao criar backup',
-        description: 'Não foi possível criar o backup da sua composição.',
-        variant: 'destructive',
-      });
+      console.error('Error with backup feature:', error);
     } finally {
       setProcessing(null);
     }
