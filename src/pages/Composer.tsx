@@ -38,6 +38,12 @@ const styles = `
     .section-box {
       max-height: 70vh;
     }
+    
+    .composer-page {
+      padding: 0;
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
   }
 `;
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { SectionButtons } from './SectionButtons';
 import { DAModal } from './DAModal';
@@ -19,6 +20,7 @@ import {
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { useSearchParams } from 'react-router-dom';
 
@@ -298,32 +300,33 @@ export const Editor: React.FC = () => {
               <div className="flex justify-between items-center mb-1">
                 <Label htmlFor="song-content-mobile">Letra</Label>
                 <div className="flex gap-2">
-                  <Drawer>
-                    <DrawerTrigger asChild>
+                  <Sheet>
+                    <SheetTrigger asChild>
                       <Button variant="outline" size="sm" className="text-xs">
                         <Plus size={14} className="mr-1" /> Bases
                       </Button>
-                    </DrawerTrigger>
-                    <DrawerContent>
-                      <div className="p-4 max-h-[80vh] overflow-auto">
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="h-[80vh] sm:max-w-none pt-10">
+                      <div className="p-2 max-h-[70vh] overflow-auto">
+                        <h3 className="text-lg font-medium mb-3">Bases Musicais</h3>
                         <MusicBases onInsertBase={handleInsertBase} />
                       </div>
-                    </DrawerContent>
-                  </Drawer>
+                    </SheetContent>
+                  </Sheet>
 
-                  <Drawer>
-                    <DrawerTrigger asChild>
+                  <Sheet>
+                    <SheetTrigger asChild>
                       <Button variant="outline" size="sm" className="text-xs">
                         <Plus size={14} className="mr-1" /> Ferramentas
                       </Button>
-                    </DrawerTrigger>
-                    <DrawerContent>
-                      <div className="p-4 max-h-[80vh] overflow-auto space-y-6">
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="h-[80vh] sm:max-w-none pt-10">
+                      <div className="p-2 max-h-[70vh] overflow-auto space-y-6">
                         <ThemeGenerator />
                         <RhymeAssistant />
                       </div>
-                    </DrawerContent>
-                  </Drawer>
+                    </SheetContent>
+                  </Sheet>
                 </div>
               </div>
               <Textarea 
