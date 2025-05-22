@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Edit, FileText, Folder, BookText, Users, Menu, X, Music, FileMusic, ListMusic } from 'lucide-react';
+import { Edit, FileText, Folder, BookText, Users, Menu, X, Music, FileMusic, ListMusic, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -16,6 +16,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const location = useLocation();
   const menuItems = [{
+    label: 'Início',
+    icon: <Home size={20} />,
+    path: '/dashboard'
+  }, {
     label: 'Compor',
     icon: <Edit size={20} />,
     path: '/composer'

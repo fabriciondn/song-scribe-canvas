@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   DropdownMenu,
@@ -7,11 +8,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
-import { Menu, LogOut } from 'lucide-react';
+import { Menu, LogOut, Music, Home } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
   const { user, logout } = useAuth();
@@ -34,13 +45,35 @@ export const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
         <Button variant="ghost" size="icon" className="mr-2 lg:hidden" onClick={toggleSidebar}>
           <Menu className="h-5 w-5" />
         </Button>
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2 mr-6">
           <img 
             src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" 
             alt="Logo" 
             className="h-9" 
           />
         </Link>
+        
+        {/* Menu de navegação superior */}
+        <NavigationMenu className="hidden md:flex">
+          <NavigationMenuList>
+            <NavigationMenuItem>
+              <Link to="/dashboard">
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  <Home className="h-4 w-4 mr-2" />
+                  <span>Início</span>
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to="/guia-musical">
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  <Music className="h-4 w-4 mr-2" />
+                  <span>Guia Musical</span>
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
       </div>
       
       {user ? (
