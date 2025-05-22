@@ -14,6 +14,7 @@ import Templates from "./pages/Templates";
 import Folders from "./pages/Folders";
 import Drafts from "./pages/Drafts";
 import Partnerships from "./pages/Partnerships";
+import GuiaMusical from "./pages/GuiaMusical";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -41,6 +42,7 @@ const App = () => {
                   <Route path="composer" element={<Composer />} />
                   <Route path="cifrador" element={<Cifrador />} />
                   <Route path="bases" element={<Bases />} />
+                  <Route path="guia-musical" element={<GuiaMusical />} />
                   <Route path="templates" element={<Templates />} />
                   <Route path="folders/*" element={<Folders />} />
                   <Route path="drafts" element={<Drafts />} />
@@ -54,6 +56,9 @@ const App = () => {
                 </Route>
                 <Route path="/bases" element={<Dashboard />}>
                   <Route index element={<Bases />} />
+                </Route>
+                <Route path="/guia-musical" element={<Dashboard />}>
+                  <Route index element={<GuiaMusical />} />
                 </Route>
                 <Route path="/templates" element={<Dashboard />}>
                   <Route index element={<Templates />} />
