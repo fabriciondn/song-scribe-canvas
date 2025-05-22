@@ -15,6 +15,7 @@ import Folders from "./pages/Folders";
 import Drafts from "./pages/Drafts";
 import Partnerships from "./pages/Partnerships";
 import GuiaMusical from "./pages/GuiaMusical";
+import ProducerProfile from "./pages/ProducerProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -59,6 +60,7 @@ const App = () => {
                 </Route>
                 <Route path="/guia-musical" element={<Dashboard />}>
                   <Route index element={<GuiaMusical />} />
+                  <Route path="producer/:id" element={<ProducerProfile />} />
                 </Route>
                 <Route path="/templates" element={<Dashboard />}>
                   <Route index element={<Templates />} />

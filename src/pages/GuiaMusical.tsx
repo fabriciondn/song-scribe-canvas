@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Search, Play, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Link } from 'react-router-dom';
 
 // Dados de exemplo para o marketplace
 const mockProducers = [
@@ -13,31 +14,40 @@ const mockProducers = [
     id: 1,
     name: "João Silva",
     genres: ["Sertanejo", "Pop"],
-    avatar: "",
+    avatar: "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952",
+    coverImage: "https://images.unsplash.com/photo-1518495973542-4542c06a5843",
     playlists: [
       { id: 101, title: "Melhores Composições 2023", tracks: 12 },
       { id: 102, title: "Sertanejo Universitário", tracks: 8 },
-    ]
+    ],
+    followers: 1240,
+    featuredWorks: ["Amor de Verão", "Lua Cheia", "Estrada da Vida"]
   },
   {
     id: 2,
     name: "Marina Santos",
     genres: ["MPB", "Jazz"],
-    avatar: "",
+    avatar: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
+    coverImage: "https://images.unsplash.com/photo-1501286353178-1ec871214838",
     playlists: [
       { id: 201, title: "Colaborações MPB", tracks: 6 },
       { id: 202, title: "Instrumental Brasileiro", tracks: 14 },
-    ]
+    ],
+    followers: 980,
+    featuredWorks: ["Brisa do Mar", "Noites de Inverno", "Horizonte Azul"]
   },
   {
     id: 3,
     name: "Carlos Mendes",
     genres: ["Rock", "Pop Rock"],
-    avatar: "",
+    avatar: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
+    coverImage: "https://images.unsplash.com/photo-1518495973542-4542c06a5843",
     playlists: [
       { id: 301, title: "Rock Nacional", tracks: 10 },
       { id: 302, title: "Baladas Pop Rock", tracks: 9 },
-    ]
+    ],
+    followers: 1540,
+    featuredWorks: ["Asas da Liberdade", "Estradas", "Coração de Pedra"]
   },
 ];
 
@@ -77,40 +87,42 @@ const GuiaMusical: React.FC = () => {
         <TabsContent value="producers" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducers.map(producer => (
-              <Card key={producer.id} className="overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="bg-gradient-to-r from-purple-600 to-blue-500 h-24 flex items-center justify-center">
-                    <Avatar className="h-16 w-16 border-4 border-white">
-                      <AvatarImage src={producer.avatar} alt={producer.name} />
-                      <AvatarFallback>
-                        <User className="h-8 w-8" />
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  
-                  <div className="p-4">
-                    <h3 className="font-bold text-xl">{producer.name}</h3>
-                    <div className="flex flex-wrap gap-1 mt-2 mb-4">
-                      {producer.genres.map(genre => (
-                        <Badge key={genre} variant="outline">{genre}</Badge>
-                      ))}
+              <Link to={`/guia-musical/producer/${producer.id}`} key={producer.id}>
+                <Card key={producer.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <CardContent className="p-0">
+                    <div className="bg-gradient-to-r from-brand-dark to-brand-light h-24 flex items-center justify-center">
+                      <Avatar className="h-16 w-16 border-4 border-white">
+                        <AvatarImage src={producer.avatar} alt={producer.name} />
+                        <AvatarFallback>
+                          <User className="h-8 w-8" />
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
                     
-                    <h4 className="font-medium text-sm text-gray-500 mb-2">Playlists</h4>
-                    {producer.playlists.map(playlist => (
-                      <div key={playlist.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                        <span className="text-sm">{playlist.title}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">{playlist.tracks} faixas</span>
-                          <button className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white hover:bg-green-600">
-                            <Play className="h-4 w-4" />
-                          </button>
-                        </div>
+                    <div className="p-4">
+                      <h3 className="font-bold text-xl">{producer.name}</h3>
+                      <div className="flex flex-wrap gap-1 mt-2 mb-4">
+                        {producer.genres.map(genre => (
+                          <Badge key={genre} variant="outline">{genre}</Badge>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      
+                      <h4 className="font-medium text-sm text-gray-500 mb-2">Playlists</h4>
+                      {producer.playlists.map(playlist => (
+                        <div key={playlist.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                          <span className="text-sm">{playlist.title}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">{playlist.tracks} faixas</span>
+                            <button className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white hover:bg-green-600">
+                              <Play className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
           
