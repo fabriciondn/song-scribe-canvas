@@ -21,7 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
-import { Menu, LogOut, Music, Home, DollarSign, BarChart3 } from 'lucide-react';
+import { Menu, LogOut, Music, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
@@ -57,26 +57,10 @@ export const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
             <NavigationMenuItem>
-              <Link to="/dashboard">
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  <span>Dashboard</span>
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
               <Link to="/guia-musical">
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   <Music className="h-4 w-4 mr-2" />
                   <span>Guia Musical</span>
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <Link to="/distribuicao">
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  <span>Distribuição</span>
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
