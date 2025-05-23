@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Table, 
@@ -214,8 +213,8 @@ const Distribuicao: React.FC = () => {
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="valor" fill="#00bd4b" radius={[4, 4, 0, 0]} />
               </BarChart>
-              <ChartLegend content={<ChartLegendContent />} />
             </ChartContainer>
+            <ChartLegend content={<ChartLegendContent />} />
           </CardContent>
         </Card>
         
