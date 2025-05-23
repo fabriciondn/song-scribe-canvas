@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, LoginMessageProvider } from "./context/AuthContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import DashboardHome from "./pages/DashboardHome";
 import Composer from "./pages/Composer";
 import Cifrador from "./pages/Cifrador";
 import Bases from "./pages/Bases";
@@ -41,7 +42,7 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/dashboard" element={<Dashboard />}>
-                  <Route index element={<Composer />} />
+                  <Route index element={<DashboardHome />} />
                   <Route path="composer" element={<Composer />} />
                   <Route path="cifrador" element={<Cifrador />} />
                   <Route path="bases" element={<Bases />} />
