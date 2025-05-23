@@ -22,8 +22,6 @@ import { Link } from 'react-router-dom';
 import { Search, Upload, RefreshCw, ArrowUpRight } from 'lucide-react';
 import {
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
@@ -214,7 +212,6 @@ const Distribuicao: React.FC = () => {
                 <Bar dataKey="valor" fill="#00bd4b" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ChartContainer>
-            <ChartLegend content={<ChartLegendContent />} />
           </CardContent>
         </Card>
         
