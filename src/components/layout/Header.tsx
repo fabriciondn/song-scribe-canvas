@@ -41,11 +41,11 @@ export const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
 
   return (
     <header className="bg-white border-b border-gray-200 py-3 px-6 flex items-center justify-between">
-      <div className="flex items-center">
+      <div className="flex items-center flex-1">
         <Button variant="ghost" size="icon" className="mr-2 lg:hidden" onClick={toggleSidebar}>
           <Menu className="h-5 w-5" />
         </Button>
-        <Link to="/" className="flex items-center gap-2 mr-8">
+        <Link to="/" className="flex items-center gap-2 mr-12">
           <img 
             src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" 
             alt="Logo" 
@@ -54,7 +54,7 @@ export const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
         </Link>
         
         {/* Menu de navegação superior com espaçamento adequado */}
-        <NavigationMenu className="hidden md:flex ml-4">
+        <NavigationMenu className="hidden md:flex ml-8">
           <NavigationMenuList>
             <NavigationMenuItem>
               <Link to="/guia-musical">
