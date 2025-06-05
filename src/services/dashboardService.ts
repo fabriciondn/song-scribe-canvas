@@ -46,6 +46,8 @@ export interface DashboardStats {
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   try {
+    console.log('🔄 Iniciando carregamento das estatísticas do dashboard...');
+    
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
@@ -53,56 +55,57 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     }
 
     const userId = session.user.id;
+    console.log('👤 User ID:', userId);
 
-    // Fetch compositions (songs)
-    const { data: songs, error: songsError } = await supabase
-      .from('songs')
-      .select('*')
-      .eq('user_id', userId);
+    // Fetch all data in parallel for better performance
+    const [songsResult, draftsResult, partnershipsResult, foldersResult, templatesResult] = await Promise.allSettled([
+      supabase.from('songs').select('*').eq('user_id', userId),
+      supabase.from('drafts').select('*').eq('user_id', userId),
+      supabase.from('partnerships').select('*').eq('user_id', userId),
+      supabase.from('folders').select('*').eq('user_id', userId),
+      supabase.from('templates').select('*').eq('user_id', userId)
+    ]);
 
-    if (songsError) throw songsError;
+    console.log('📊 Resultados das consultas:', {
+      songs: songsResult.status,
+      drafts: draftsResult.status,
+      partnerships: partnershipsResult.status,
+      folders: foldersResult.status,
+      templates: templatesResult.status
+    });
 
-    // Fetch drafts
-    const { data: drafts, error: draftsError } = await supabase
-      .from('drafts')
-      .select('*')
-      .eq('user_id', userId);
+    // Handle results and extract data
+    const songs = songsResult.status === 'fulfilled' ? songsResult.value.data || [] : [];
+    const drafts = draftsResult.status === 'fulfilled' ? draftsResult.value.data || [] : [];
+    const partnerships = partnershipsResult.status === 'fulfilled' ? partnershipsResult.value.data || [] : [];
+    const folders = foldersResult.status === 'fulfilled' ? foldersResult.value.data || [] : [];
+    const templates = templatesResult.status === 'fulfilled' ? templatesResult.value.data || [] : [];
 
-    if (draftsError) throw draftsError;
+    // Log any errors
+    [songsResult, draftsResult, partnershipsResult, foldersResult, templatesResult].forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const tables = ['songs', 'drafts', 'partnerships', 'folders', 'templates'];
+        console.error(`❌ Erro ao carregar ${tables[index]}:`, result.reason);
+      }
+    });
 
-    // Fetch partnerships
-    const { data: partnerships, error: partnershipsError } = await supabase
-      .from('partnerships')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (partnershipsError) throw partnershipsError;
-
-    // Fetch folders
-    const { data: folders, error: foldersError } = await supabase
-      .from('folders')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (foldersError) throw foldersError;
-
-    // Fetch templates
-    const { data: templates, error: templatesError } = await supabase
-      .from('templates')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (templatesError) throw templatesError;
+    console.log('📈 Dados carregados:', {
+      songs: songs.length,
+      drafts: drafts.length,
+      partnerships: partnerships.length,
+      folders: folders.length,
+      templates: templates.length
+    });
 
     // Calculate stats
-    const totalSongs = songs?.length || 0;
-    const totalDrafts = drafts?.length || 0;
+    const totalSongs = songs.length;
+    const totalDrafts = drafts.length;
     const totalCompositions = totalSongs + totalDrafts;
 
     // Get last edited song/draft
     const allCompositions = [
-      ...(songs || []).map(s => ({ ...s, type: 'song' })),
-      ...(drafts || []).map(d => ({ ...d, type: 'draft' }))
+      ...songs.map(s => ({ ...s, type: 'song' })),
+      ...drafts.map(d => ({ ...d, type: 'draft' }))
     ].sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime());
 
     const lastEdited = allCompositions[0] ? {
@@ -111,16 +114,16 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     } : undefined;
 
     // Group songs by folder for breakdown
-    const folderBreakdown = folders?.map(folder => {
-      const songsInFolder = songs?.filter(song => song.folder_id === folder.id).length || 0;
+    const folderBreakdown = folders.map(folder => {
+      const songsInFolder = songs.filter(song => song.folder_id === folder.id).length;
       return {
         name: folder.name,
         count: songsInFolder
       };
-    }) || [];
+    });
 
     // Add drafts and songs without folder
-    const songsWithoutFolder = songs?.filter(song => !song.folder_id).length || 0;
+    const songsWithoutFolder = songs.filter(song => !song.folder_id).length;
     if (songsWithoutFolder > 0) {
       folderBreakdown.push({
         name: 'Sem pasta',
@@ -135,11 +138,11 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       });
     }
 
-    const lastTemplate = templates?.sort((a, b) => 
+    const lastTemplate = templates.sort((a, b) => 
       new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()
     )[0];
 
-    return {
+    const dashboardStats = {
       compositions: {
         total: totalCompositions,
         finished: totalSongs,
@@ -153,15 +156,15 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
         topSong: undefined
       },
       partnerships: {
-        active: partnerships?.length || 0,
+        active: partnerships.length,
         recent: [] // Would need to fetch collaborator details from partnerships
       },
       folders: {
-        total: folders?.length || 0,
+        total: folders.length,
         breakdown: folderBreakdown
       },
       templates: {
-        created: templates?.length || 0,
+        created: templates.length,
         generated: 0, // Would need to track DA generations
         lastDA: lastTemplate ? {
           title: `DA - ${lastTemplate.name}`,
@@ -169,15 +172,12 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
         } : undefined
       }
     };
+
+    console.log('✅ Estatísticas calculadas:', dashboardStats);
+    return dashboardStats;
+
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
-    // Return empty stats on error
-    return {
-      compositions: { total: 0, finished: 0, drafts: 0 },
-      distribution: { totalEarnings: 0, monthlyEarnings: 0 },
-      partnerships: { active: 0, recent: [] },
-      folders: { total: 0, breakdown: [] },
-      templates: { created: 0, generated: 0 }
-    };
+    console.error('❌ Erro ao carregar estatísticas do dashboard:', error);
+    throw error;
   }
 };
