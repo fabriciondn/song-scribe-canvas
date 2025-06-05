@@ -18,13 +18,16 @@ import {
   BarChart3,
   PieChart,
   Music,
-  FileMusic
+  FileMusic,
+  ChevronRight
 } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { useMobileDetection } from '@/hooks/use-mobile';
 
 const DashboardHome: React.FC = () => {
   const [expandedSections, setExpandedSections] = useState<string[]>(['all']);
   const { stats, isLoading, error } = useDashboardStats();
+  const isMobile = useMobileDetection();
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => 
@@ -38,7 +41,7 @@ const DashboardHome: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-6 space-y-6">
+      <div className={`${isMobile ? 'p-4' : 'container mx-auto py-6'} space-y-6`}>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
         </div>
@@ -48,7 +51,7 @@ const DashboardHome: React.FC = () => {
 
   if (error || !stats) {
     return (
-      <div className="container mx-auto py-6 space-y-6">
+      <div className={`${isMobile ? 'p-4' : 'container mx-auto py-6'} space-y-6`}>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <p className="text-red-600 mb-4">{error || 'Erro ao carregar dados'}</p>
@@ -59,6 +62,223 @@ const DashboardHome: React.FC = () => {
     );
   }
 
+  // Layout Mobile Específico
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20">
+        {/* Header Mobile */}
+        <div className="bg-white px-4 py-6 border-b border-gray-200 sticky top-0 z-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-gray-600 text-sm mt-1">Visão geral da sua atividade musical</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => toggleSection('all')}>
+              {expandedSections.includes('all') ? 'Recolher' : 'Expandir'}
+            </Button>
+          </div>
+        </div>
+
+        <div className="px-4 py-4 space-y-4">
+          {/* Cards de Estatísticas Rápidas - Mobile */}
+          <div className="grid grid-cols-2 gap-3">
+            <Card className="shadow-sm">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-blue-600">{stats.compositions.total}</div>
+                <div className="text-xs text-gray-600 mt-1">Total de Letras</div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-green-600">{stats.compositions.finished}</div>
+                <div className="text-xs text-gray-600 mt-1">Finalizadas</div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-orange-600">{stats.compositions.drafts}</div>
+                <div className="text-xs text-gray-600 mt-1">Rascunhos</div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-purple-600">{stats.partnerships.active}</div>
+                <div className="text-xs text-gray-600 mt-1">Parcerias</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Última Composição - Mobile */}
+          {stats.compositions.lastEdited && (
+            <Card className="shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Edit className="h-5 w-5 text-blue-600" />
+                  Última Composição
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="font-semibold text-purple-600">{stats.compositions.lastEdited.title}</div>
+                    <div className="text-sm text-gray-500">{stats.compositions.lastEdited.date}</div>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/composer">
+                      <Eye className="h-4 w-4 mr-1" />
+                      Ver
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Ações Rápidas - Mobile */}
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Ações Rápidas</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-3">
+              <Button className="w-full justify-between" asChild>
+                <Link to="/composer">
+                  <div className="flex items-center">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Compor Nova Música
+                  </div>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button variant="outline" className="w-full justify-between" asChild>
+                <Link to="/partnerships">
+                  <div className="flex items-center">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    {stats.partnerships.active === 0 ? 'Criar Primeira Parceria' : 'Convidar Novo Parceiro'}
+                  </div>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button variant="outline" className="w-full justify-between" asChild>
+                <Link to="/folders">
+                  <div className="flex items-center">
+                    <Folder className="h-4 w-4 mr-2" />
+                    {stats.folders.total === 0 ? 'Criar Primeira Pasta' : 'Ver Todas as Pastas'}
+                  </div>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Seção Expansível - Parcerias - Mobile */}
+          {isExpanded('partnerships') && stats.partnerships.recent.length > 0 && (
+            <Card className="shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  Últimos Colaboradores
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-3">
+                  {stats.partnerships.recent.map((partner, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <div className="font-medium text-sm">{partner.name}</div>
+                        <div className="text-xs text-gray-600">{partner.role}</div>
+                      </div>
+                      <Button variant="ghost" size="sm">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Seção Expansível - Pastas - Mobile */}
+          {isExpanded('folders') && stats.folders.breakdown.length > 0 && (
+            <Card className="shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Folder className="h-5 w-5 text-yellow-600" />
+                  Organização de Pastas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  {stats.folders.breakdown.map((folder, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="font-medium text-sm">{folder.name}</span>
+                      <Badge variant="secondary">{folder.count}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Seção Expansível - Modelos de DA - Mobile */}
+          {isExpanded('templates') && (
+            <Card className="shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-indigo-600" />
+                  Modelos de DA
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="text-center p-3 bg-indigo-50 rounded-lg">
+                    <div className="text-xl font-bold text-indigo-600">{stats.templates.created}</div>
+                    <div className="text-xs text-gray-600">Modelos Criados</div>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <div className="text-xl font-bold text-green-600">{stats.templates.generated}</div>
+                    <div className="text-xs text-gray-600">DAs Gerados</div>
+                  </div>
+                </div>
+                {stats.templates.lastDA ? (
+                  <div className="p-3 bg-gray-50 rounded-lg mb-3">
+                    <div className="font-medium text-sm">{stats.templates.lastDA.title}</div>
+                    <div className="text-xs text-gray-600 mb-2">{stats.templates.lastDA.date}</div>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Eye className="h-4 w-4 mr-1" />
+                      Visualizar PDF
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center p-4 bg-gray-50 rounded-lg mb-3">
+                    <FileText className="h-6 w-6 mx-auto mb-2 text-gray-400" />
+                    <p className="text-gray-500 text-sm">Nenhum modelo criado ainda</p>
+                  </div>
+                )}
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to="/templates">{stats.templates.created === 0 ? 'Criar Primeiro Modelo' : 'Gerenciar Modelos'}</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Aviso sobre dados em tempo real - Mobile */}
+          <Card className="bg-blue-50 border-blue-200 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Bell className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-blue-800 font-medium text-sm">Dashboard em tempo real</p>
+                  <p className="text-blue-600 text-xs mt-1">Os dados são atualizados automaticamente conforme você usa a plataforma.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Layout Desktop Original (sem alterações)
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
