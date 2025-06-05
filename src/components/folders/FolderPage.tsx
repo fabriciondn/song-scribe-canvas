@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, File, Folder, Plus, Trash2, Edit, FileText, Printer, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -510,7 +512,7 @@ export const FolderPage: React.FC = () => {
 
       {/* Modal para visualizar música como PDF */}
       <Dialog open={isPdfDialogOpen} onOpenChange={setIsPdfDialogOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Visualização de PDF</DialogTitle>
             <DialogDescription>
@@ -518,22 +520,24 @@ export const FolderPage: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="border rounded-lg p-8 bg-white" ref={pdfContentRef}>
-            {selectedSong && (
-              <div className="pdf-content space-y-4">
-                <h1 className="text-2xl font-bold text-center mb-6">{selectedSong.title}</h1>
-                <div className="text-sm text-right">
-                  Criado em: {formatDate(selectedSong.created_at)}
+          <ScrollArea className="h-[70vh] w-full">
+            <div className="border rounded-lg p-8 bg-white mx-2" ref={pdfContentRef}>
+              {selectedSong && (
+                <div className="pdf-content space-y-6">
+                  <h1 className="text-2xl font-bold text-center mb-8">{selectedSong.title}</h1>
+                  <div className="text-sm text-right mb-6">
+                    Criado em: {formatDate(selectedSong.created_at)}
+                  </div>
+                  <div className="my-8 text-base whitespace-pre-wrap font-mono leading-relaxed">
+                    {formatSongContentForPdf(selectedSong.content)}
+                  </div>
+                  <div className="mt-12 pt-8 border-t text-xs text-center text-gray-500">
+                    Documento gerado pelo Compuse - {new Date().toLocaleDateString('pt-BR')}
+                  </div>
                 </div>
-                <div className="my-8 text-base whitespace-pre-wrap font-mono">
-                  {formatSongContentForPdf(selectedSong.content)}
-                </div>
-                <div className="mt-12 text-xs text-center text-gray-500">
-                  Documento gerado pelo Compuse - {new Date().toLocaleDateString('pt-BR')}
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          </ScrollArea>
           
           <DialogFooter className="flex justify-between mt-4">
             <Button variant="outline" onClick={() => setIsPdfDialogOpen(false)}>
