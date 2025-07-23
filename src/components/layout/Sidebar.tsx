@@ -47,10 +47,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     label: 'Parcerias',
     icon: <Users size={20} />,
     path: '/partnerships'
-  }, {
-    label: 'Distribuição',
-    icon: <DollarSign size={20} />,
-    path: '/distribuicao'
   }];
 
   return (

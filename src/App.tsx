@@ -15,10 +15,6 @@ import Templates from "./pages/Templates";
 import Folders from "./pages/Folders";
 import Drafts from "./pages/Drafts";
 import Partnerships from "./pages/Partnerships";
-import GuiaMusical from "./pages/GuiaMusical";
-import ProducerProfile from "./pages/ProducerProfile";
-import Distribuicao from "./pages/Distribuicao";
-import DetalhesObra from "./pages/DetalhesObra";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -46,13 +42,10 @@ const App = () => {
                   <Route path="composer" element={<Composer />} />
                   <Route path="cifrador" element={<Cifrador />} />
                   <Route path="bases" element={<Bases />} />
-                  <Route path="guia-musical" element={<GuiaMusical />} />
                   <Route path="templates" element={<Templates />} />
                   <Route path="folders/*" element={<Folders />} />
                   <Route path="drafts" element={<Drafts />} />
                   <Route path="partnerships" element={<Partnerships />} />
-                  <Route path="distribuicao" element={<Distribuicao />} />
-                  <Route path="distribuicao/:id" element={<DetalhesObra />} />
                 </Route>
                 <Route path="/composer" element={<Dashboard />}>
                   <Route index element={<Composer />} />
@@ -62,10 +55,6 @@ const App = () => {
                 </Route>
                 <Route path="/bases" element={<Dashboard />}>
                   <Route index element={<Bases />} />
-                </Route>
-                <Route path="/guia-musical" element={<Dashboard />}>
-                  <Route index element={<GuiaMusical />} />
-                  <Route path="producer/:id" element={<ProducerProfile />} />
                 </Route>
                 <Route path="/templates" element={<Dashboard />}>
                   <Route index element={<Templates />} />
@@ -78,10 +67,6 @@ const App = () => {
                 </Route>
                 <Route path="/partnerships" element={<Dashboard />}>
                   <Route index element={<Partnerships />} />
-                </Route>
-                <Route path="/distribuicao" element={<Dashboard />}>
-                  <Route index element={<Distribuicao />} />
-                  <Route path=":id" element={<DetalhesObra />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

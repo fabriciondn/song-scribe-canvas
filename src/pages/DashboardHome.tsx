@@ -148,9 +148,6 @@ const DashboardHome: React.FC = () => {
                 <p>Dados de distribuição não disponíveis</p>
                 <p className="text-sm">Conecte sua conta de distribuição para ver os rendimentos</p>
               </div>
-              <Button variant="outline" asChild>
-                <Link to="/distribuicao">Configurar Distribuição</Link>
-              </Button>
             </div>
           </CardContent>
         </Card>

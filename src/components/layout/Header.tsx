@@ -36,19 +36,6 @@ export const Header = ({
           <img src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" alt="Logo" className="h-9" />
         </Link>
         
-        {/* Menu de navegação superior com espaçamento adequado */}
-        <NavigationMenu className="hidden md:flex ml-8">
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <Link to="/guia-musical">
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  <Music className="h-4 w-4 mr-2 mx-[26px]" />
-                  <span className="mx-[2px]">Guia Musical</span>
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
       </div>
       
       {user ? <DropdownMenu>
