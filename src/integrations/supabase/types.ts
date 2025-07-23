@@ -482,6 +482,10 @@ export type Database = {
           user_id: string | null
         }
       }
+      decrement_user_credit: {
+        Args: { user_id: string }
+        Returns: undefined
+      }
       delete_draft: {
         Args: { draft_id: string }
         Returns: undefined

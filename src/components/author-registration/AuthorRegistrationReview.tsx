@@ -9,6 +9,7 @@ import { AuthorRegistrationData } from '@/pages/AuthorRegistration';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserCredits } from '@/hooks/useUserCredits';
 
 interface AuthorRegistrationReviewProps {
   data: AuthorRegistrationData;
@@ -22,6 +23,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   const [isRegistering, setIsRegistering] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { refreshCredits } = useUserCredits();
 
   const handleRegister = async () => {
     if (!user) {
@@ -77,19 +79,27 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       }
 
       // Decrementar crédito do usuário
-      const { error: creditError } = await supabase.rpc('decrement_user_credit', {
-        user_id: user.id
-      });
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', user.id)
+        .single();
 
-      if (creditError) {
-        console.warn('Erro ao decrementar crédito:', creditError);
-        // Não bloqueamos o registro por causa disso
+      if (profileData) {
+        const newCredits = Math.max((profileData.credits || 0) - 1, 0);
+        await supabase
+          .from('profiles')
+          .update({ credits: newCredits })
+          .eq('id', user.id);
       }
 
       toast({
         title: 'Sucesso!',
         description: 'Sua música foi registrada com sucesso!',
       });
+
+      // Refresh dos créditos para mostrar a atualização
+      refreshCredits();
 
       onRegister();
     } catch (error) {

@@ -90,6 +90,23 @@ const AuthorRegistration: React.FC = () => {
     setStep('review');
   };
 
+  const handleRegisterComplete = () => {
+    // Limpar o formulário e voltar para o início
+    setFormData({
+      title: '',
+      author: '',
+      otherAuthors: '',
+      genre: '',
+      rhythm: '',
+      songVersion: '',
+      lyrics: '',
+      audioFile: null,
+      additionalInfo: '',
+      termsAccepted: false,
+    });
+    setStep('form');
+  };
+
   const handleBackToForm = () => {
     setStep('form');
   };
@@ -125,10 +142,7 @@ const AuthorRegistration: React.FC = () => {
             
             <AuthorRegistrationReview
               data={formData}
-              onRegister={() => {
-                // Implementar lógica de registro final
-                console.log('Registrando música...', formData);
-              }}
+              onRegister={handleRegisterComplete}
             />
           </div>
         )}
