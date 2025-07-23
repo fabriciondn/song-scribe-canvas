@@ -27,15 +27,28 @@ const ACCEPTED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3'];
 const formSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
   author: z.string().min(1, 'Autor é obrigatório'),
-  otherAuthors: z.string().optional(),
+  authorCpf: z.string().min(11, 'CPF deve ter pelo menos 11 dígitos').max(14, 'CPF inválido'),
+  hasOtherAuthors: z.boolean(),
+  otherAuthors: z.array(z.object({
+    name: z.string(),
+    cpf: z.string(),
+  })).default([]),
   genre: z.string().min(1, 'Gênero é obrigatório'),
-  rhythm: z.string().min(1, 'Ritmo é obrigatório'),
+  styleVariation: z.string().min(1, 'Variação do estilo é obrigatória'),
   songVersion: z.string().min(1, 'Versão da música é obrigatória'),
   lyrics: z.string().min(1, 'Letra é obrigatória'),
   additionalInfo: z.string().optional(),
   termsAccepted: z.boolean().refine((val) => val === true, {
     message: 'Você deve aceitar os termos para continuar',
   }),
+}).refine((data) => {
+  if (data.hasOtherAuthors && (!data.otherAuthors || data.otherAuthors.length === 0)) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Quando há outros autores, pelo menos um deve ser adicionado',
+  path: ['otherAuthors'],
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -60,15 +73,20 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
     defaultValues: {
       title: initialData.title,
       author: initialData.author,
+      authorCpf: initialData.authorCpf,
+      hasOtherAuthors: initialData.hasOtherAuthors,
       otherAuthors: initialData.otherAuthors,
       genre: initialData.genre,
-      rhythm: initialData.rhythm,
+      styleVariation: initialData.styleVariation,
       songVersion: initialData.songVersion,
       lyrics: initialData.lyrics,
       additionalInfo: initialData.additionalInfo,
       termsAccepted: initialData.termsAccepted,
     },
   });
+
+  const hasOtherAuthors = form.watch('hasOtherAuthors');
+  const otherAuthors = form.watch('otherAuthors') || [];
 
   const handleAudioFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -105,15 +123,36 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
     onSubmit({
       title: data.title,
       author: data.author,
+      authorCpf: data.authorCpf,
+      hasOtherAuthors: data.hasOtherAuthors,
+      otherAuthors: data.otherAuthors as Array<{ name: string; cpf: string; }>,
       genre: data.genre,
-      rhythm: data.rhythm,
+      styleVariation: data.styleVariation,
       songVersion: data.songVersion,
       lyrics: data.lyrics,
       termsAccepted: data.termsAccepted,
-      otherAuthors: data.otherAuthors || '',
       additionalInfo: data.additionalInfo || '',
       audioFile,
     });
+  };
+
+  const addOtherAuthor = () => {
+    const currentAuthors = form.getValues('otherAuthors') || [];
+    form.setValue('otherAuthors', [...currentAuthors, { name: '', cpf: '' }] as Array<{ name: string; cpf: string; }>);
+  };
+
+  const removeOtherAuthor = (index: number) => {
+    const currentAuthors = form.getValues('otherAuthors') || [];
+    const newAuthors = currentAuthors.filter((_, i) => i !== index);
+    form.setValue('otherAuthors', newAuthors);
+  };
+
+  const formatCpf = (value: string) => {
+    const onlyNumbers = value.replace(/\D/g, '');
+    if (onlyNumbers.length <= 11) {
+      return onlyNumbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+    return onlyNumbers.slice(0, 11).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
 
   const isFormValid = form.formState.isValid && audioFile && !audioError;
@@ -147,38 +186,146 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
               )}
             />
 
-            {/* Autor */}
+            <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+              {/* Autor */}
+              <FormField
+                control={form.control}
+                name="author"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Autor *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o nome do autor principal" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* CPF do Autor */}
+              <FormField
+                control={form.control}
+                name="authorCpf"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CPF do Autor *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="000.000.000-00" 
+                        {...field}
+                        onChange={(e) => {
+                          const formatted = formatCpf(e.target.value);
+                          field.onChange(formatted);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Possui outros autores */}
             <FormField
               control={form.control}
-              name="author"
+              name="hasOtherAuthors"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Autor *</FormLabel>
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                   <FormControl>
-                    <Input placeholder="Digite o nome do autor principal" {...field} />
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+                        if (!checked) {
+                          form.setValue('otherAuthors', []);
+                        }
+                      }}
+                    />
                   </FormControl>
-                  <FormMessage />
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Esta música possui outros autores?
+                    </FormLabel>
+                  </div>
                 </FormItem>
               )}
             />
 
-            {/* Outros Autores */}
-            <FormField
-              control={form.control}
-              name="otherAuthors"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Outros Autores</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Digite outros autores (opcional)" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Se houver outros autores, separe-os por vírgula
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Lista de outros autores */}
+            {hasOtherAuthors && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Outros Autores</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addOtherAuthor}
+                  >
+                    Adicionar Autor
+                  </Button>
+                </div>
+                
+                {otherAuthors.map((author, index) => (
+                  <div key={index} className="space-y-2 p-4 border rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium">Autor {index + 1}</h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeOtherAuthor(index)}
+                      >
+                        Remover
+                      </Button>
+                    </div>
+                    
+                    <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                      <FormField
+                        control={form.control}
+                        name={`otherAuthors.${index}.name`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nome Completo *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Digite o nome completo" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name={`otherAuthors.${index}.cpf`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CPF *</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="000.000.000-00" 
+                                {...field}
+                                onChange={(e) => {
+                                  const formatted = formatCpf(e.target.value);
+                                  field.onChange(formatted);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                ))}
+                
+                {otherAuthors.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Clique em "Adicionar Autor" para incluir outros autores
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
               {/* Gênero */}
@@ -196,13 +343,13 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
                 )}
               />
 
-              {/* Ritmo */}
+              {/* Variação do Estilo */}
               <FormField
                 control={form.control}
-                name="rhythm"
+                name="styleVariation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ritmo *</FormLabel>
+                    <FormLabel>Variação do Estilo *</FormLabel>
                     <FormControl>
                       <Input placeholder="Ex: Balada, Uptempo" {...field} />
                     </FormControl>

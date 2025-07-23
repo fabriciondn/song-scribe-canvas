@@ -12,9 +12,11 @@ import { useMobileDetection } from '@/hooks/use-mobile';
 export interface AuthorRegistrationData {
   title: string;
   author: string;
-  otherAuthors: string;
+  authorCpf: string;
+  hasOtherAuthors: boolean;
+  otherAuthors: Array<{ name: string; cpf: string; }>;
   genre: string;
-  rhythm: string;
+  styleVariation: string;
   songVersion: string;
   lyrics: string;
   audioFile: File | null;
@@ -30,9 +32,11 @@ const AuthorRegistration: React.FC = () => {
   const [formData, setFormData] = useState<AuthorRegistrationData>({
     title: '',
     author: '',
-    otherAuthors: '',
+    authorCpf: '',
+    hasOtherAuthors: false,
+    otherAuthors: [],
     genre: '',
-    rhythm: '',
+    styleVariation: '',
     songVersion: '',
     lyrics: '',
     audioFile: null,
@@ -102,9 +106,11 @@ const AuthorRegistration: React.FC = () => {
     setFormData({
       title: '',
       author: '',
-      otherAuthors: '',
+      authorCpf: '',
+      hasOtherAuthors: false,
+      otherAuthors: [],
       genre: '',
-      rhythm: '',
+      styleVariation: '',
       songVersion: '',
       lyrics: '',
       audioFile: null,

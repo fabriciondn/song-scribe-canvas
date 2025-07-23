@@ -63,9 +63,13 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
           user_id: user.id,
           title: data.title,
           author: data.author,
-          other_authors: data.otherAuthors || null,
+          other_authors: JSON.stringify({
+            author_cpf: data.authorCpf,
+            has_other_authors: data.hasOtherAuthors,
+            other_authors: data.otherAuthors
+          }),
           genre: data.genre,
-          rhythm: data.rhythm,
+          rhythm: data.styleVariation,
           song_version: data.songVersion,
           lyrics: data.lyrics,
           audio_file_path: audioFilePath,
@@ -146,10 +150,22 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
                 <p className="text-base">{data.author}</p>
               </div>
               
-              {data.otherAuthors && (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">CPF do Autor</label>
+                <p className="text-base">{data.authorCpf}</p>
+              </div>
+              
+              {data.hasOtherAuthors && data.otherAuthors.length > 0 && (
                 <div className="md:col-span-2">
                   <label className="text-sm font-medium text-muted-foreground">Outros Autores</label>
-                  <p className="text-base">{data.otherAuthors}</p>
+                  <div className="space-y-2 mt-1">
+                    {data.otherAuthors.map((author, index) => (
+                      <div key={index} className="flex justify-between items-center p-2 bg-muted rounded">
+                        <span>{author.name}</span>
+                        <span className="text-sm text-muted-foreground">{author.cpf}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               
@@ -159,8 +175,8 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
               </div>
               
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Ritmo</label>
-                <Badge variant="secondary">{data.rhythm}</Badge>
+                <label className="text-sm font-medium text-muted-foreground">Variação do Estilo</label>
+                <Badge variant="secondary">{data.styleVariation}</Badge>
               </div>
               
               <div>
