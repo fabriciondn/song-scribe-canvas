@@ -19,7 +19,9 @@ import {
   PieChart,
   Music,
   FileMusic,
-  ChevronRight
+  ChevronRight,
+  Shield,
+  Download
 } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useMobileDetection } from '@/hooks/use-mobile';
@@ -182,6 +184,48 @@ const DashboardHome: React.FC = () => {
                 )}
               </div>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Obras Registradas */}
+      {isExpanded('registeredWorks') && (
+        <Card className="hover:shadow-lg transition-all duration-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-green-600" />
+              Obras Registradas
+            </CardTitle>
+            <CardDescription>Registros de autoria das suas criações</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center p-4 bg-green-50 rounded-lg mb-4">
+              <div className="text-2xl font-bold text-green-600">{stats.registeredWorks.total}</div>
+              <div className="text-sm text-gray-600">Obras Protegidas</div>
+            </div>
+            {stats.registeredWorks.lastRegistered ? (
+              <div className="p-4 bg-gray-50 rounded-lg mb-4">
+                <div className="font-medium">{stats.registeredWorks.lastRegistered.title}</div>
+                <div className="text-sm text-gray-600 mb-2">Registrada em {stats.registeredWorks.lastRegistered.date}</div>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/dashboard/registered-works">
+                    <Eye className="h-4 w-4 mr-1" />
+                    Ver Certificado
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center p-4 bg-gray-50 rounded-lg mb-4">
+                <Shield className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                <p className="text-gray-500">Nenhuma obra registrada ainda</p>
+              </div>
+            )}
+            <Button variant="outline" className="w-full" asChild>
+              <Link to="/dashboard/registered-works">
+                {stats.registeredWorks.total === 0 ? 'Registrar Primeira Obra' : 'Ver Todas as Obras'}
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       )}

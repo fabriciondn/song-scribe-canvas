@@ -42,6 +42,13 @@ export interface DashboardStats {
       date: string;
     };
   };
+  registeredWorks: {
+    total: number;
+    lastRegistered?: {
+      title: string;
+      date: string;
+    };
+  };
 }
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {
@@ -58,12 +65,13 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     console.log('👤 User ID:', userId);
 
     // Fetch all data in parallel for better performance
-    const [songsResult, draftsResult, partnershipsResult, foldersResult, templatesResult] = await Promise.allSettled([
+    const [songsResult, draftsResult, partnershipsResult, foldersResult, templatesResult, registeredWorksResult] = await Promise.allSettled([
       supabase.from('songs').select('*').eq('user_id', userId),
       supabase.from('drafts').select('*').eq('user_id', userId),
       supabase.from('partnerships').select('*').eq('user_id', userId),
       supabase.from('folders').select('*').eq('user_id', userId),
-      supabase.from('templates').select('*').eq('user_id', userId)
+      supabase.from('templates').select('*').eq('user_id', userId),
+      supabase.from('author_registrations').select('*').eq('user_id', userId).eq('status', 'registered')
     ]);
 
     console.log('📊 Resultados das consultas:', {
@@ -71,7 +79,8 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       drafts: draftsResult.status,
       partnerships: partnershipsResult.status,
       folders: foldersResult.status,
-      templates: templatesResult.status
+      templates: templatesResult.status,
+      registeredWorks: registeredWorksResult.status
     });
 
     // Handle results and extract data
@@ -80,11 +89,12 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     const partnerships = partnershipsResult.status === 'fulfilled' ? partnershipsResult.value.data || [] : [];
     const folders = foldersResult.status === 'fulfilled' ? foldersResult.value.data || [] : [];
     const templates = templatesResult.status === 'fulfilled' ? templatesResult.value.data || [] : [];
+    const registeredWorks = registeredWorksResult.status === 'fulfilled' ? registeredWorksResult.value.data || [] : [];
 
     // Log any errors
-    [songsResult, draftsResult, partnershipsResult, foldersResult, templatesResult].forEach((result, index) => {
+    [songsResult, draftsResult, partnershipsResult, foldersResult, templatesResult, registeredWorksResult].forEach((result, index) => {
       if (result.status === 'rejected') {
-        const tables = ['songs', 'drafts', 'partnerships', 'folders', 'templates'];
+        const tables = ['songs', 'drafts', 'partnerships', 'folders', 'templates', 'author_registrations'];
         console.error(`❌ Erro ao carregar ${tables[index]}:`, result.reason);
       }
     });
@@ -94,7 +104,8 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       drafts: drafts.length,
       partnerships: partnerships.length,
       folders: folders.length,
-      templates: templates.length
+      templates: templates.length,
+      registeredWorks: registeredWorks.length
     });
 
     // Calculate stats
@@ -142,6 +153,10 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()
     )[0];
 
+    const lastRegisteredWork = registeredWorks.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )[0];
+
     const dashboardStats = {
       compositions: {
         total: totalCompositions,
@@ -169,6 +184,13 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
         lastDA: lastTemplate ? {
           title: `DA - ${lastTemplate.name}`,
           date: new Date(lastTemplate.updated_at || lastTemplate.created_at).toLocaleDateString('pt-BR')
+        } : undefined
+      },
+      registeredWorks: {
+        total: registeredWorks.length,
+        lastRegistered: lastRegisteredWork ? {
+          title: lastRegisteredWork.title,
+          date: new Date(lastRegisteredWork.created_at).toLocaleDateString('pt-BR')
         } : undefined
       }
     };

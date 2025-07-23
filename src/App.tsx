@@ -16,6 +16,7 @@ import Folders from "./pages/Folders";
 import Drafts from "./pages/Drafts";
 import Partnerships from "./pages/Partnerships";
 import AuthorRegistration from "./pages/AuthorRegistration";
+import RegisteredWorks from "./pages/RegisteredWorks";
 import Trash from "./pages/Trash";
 import NotFound from "./pages/NotFound";
 
@@ -49,6 +50,7 @@ const App = () => {
                   <Route path="drafts" element={<Drafts />} />
                   <Route path="partnerships" element={<Partnerships />} />
                   <Route path="author-registration" element={<AuthorRegistration />} />
+                  <Route path="registered-works" element={<RegisteredWorks />} />
                   <Route path="trash" element={<Trash />} />
                 </Route>
                 <Route path="/composer" element={<Dashboard />}>
