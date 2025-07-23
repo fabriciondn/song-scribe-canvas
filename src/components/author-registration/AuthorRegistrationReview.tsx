@@ -25,6 +25,15 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   const { user } = useAuth();
   const { refreshCredits } = useUserCredits();
 
+  // Função para gerar hash SHA-256
+  const gerarHash = async (texto: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(texto);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
   const handleRegister = async () => {
     if (!user) {
       toast({
@@ -38,6 +47,9 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
     setIsRegistering(true);
 
     try {
+      // Gerar hash SHA-256 da letra
+      const hash = await gerarHash(data.lyrics);
+
       // Upload do arquivo de áudio
       let audioFilePath = null;
       
@@ -76,6 +88,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
           additional_info: data.additionalInfo || null,
           terms_accepted: data.termsAccepted,
           status: 'registered',
+          hash: hash,
         });
 
       if (insertError) {
