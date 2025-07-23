@@ -131,27 +131,6 @@ const DashboardHome: React.FC = () => {
         </Card>
       )}
 
-      {/* Distribuição Musical */}
-      {isExpanded('distribution') && (
-        <Card className="hover:shadow-lg transition-all duration-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              Distribuição Musical
-            </CardTitle>
-            <CardDescription>Rendimentos e performance financeira</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center p-8 bg-gray-50 rounded-lg">
-              <div className="text-gray-500 mb-4">
-                <DollarSign className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Dados de distribuição não disponíveis</p>
-                <p className="text-sm">Conecte sua conta de distribuição para ver os rendimentos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Parcerias */}
       {isExpanded('partnerships') && (
