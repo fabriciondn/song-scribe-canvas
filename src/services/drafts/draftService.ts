@@ -48,6 +48,7 @@ export const getDrafts = async (): Promise<Draft[]> => {
       const { data: directData, error: directError } = await supabase
         .from('drafts')
         .select('*')
+        .is('deleted_at', null) // Exclude deleted drafts
         .order('created_at', { ascending: false }) as {
           data: Draft[] | null,
           error: any
@@ -188,18 +189,16 @@ export const updateDraft = async (
 
 export const deleteDraft = async (draftId: string): Promise<void> => {
   try {
-    // Use RPC function
-    const { error } = await supabase.rpc('delete_draft', { draft_id: draftId });
+    // Use soft delete instead of hard delete
+    const { error: directError } = await supabase
+      .from('drafts')
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: (await supabase.auth.getUser()).data.user?.id
+      })
+      .eq('id', draftId);
     
-    if (error) {
-      // Fallback to direct delete
-      const { error: directError } = await supabase
-        .from('drafts')
-        .delete()
-        .eq('id', draftId);
-      
-      if (directError) throw directError;
-    }
+    if (directError) throw directError;
   } catch (error) {
     console.error(`Error deleting draft with ID ${draftId}:`, error);
     throw error;

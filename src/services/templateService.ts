@@ -26,10 +26,11 @@ export interface Template {
 
 export const fetchTemplates = async (): Promise<Template[]> => {
   try {
-    const { data, error } = await supabase
-      .from('templates')
-      .select('*')
-      .order('created_at', { ascending: false });
+  const { data, error } = await supabase
+    .from('templates')
+    .select('*')
+    .is('deleted_at', null) // Exclude deleted templates
+    .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
 
@@ -219,7 +220,10 @@ export const deleteTemplate = async (templateId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('templates')
-      .delete()
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: (await supabase.auth.getUser()).data.user?.id
+      })
       .eq('id', templateId);
 
     if (error) throw new Error(error.message);

@@ -46,6 +46,7 @@ export const getBases = async (): Promise<BaseMusical[]> => {
   const { data, error } = await supabase
     .from('music_bases')
     .select('*')
+    .is('deleted_at', null) // Exclude deleted bases
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -81,6 +82,7 @@ export const getBasesByFolder = async (folderId: string): Promise<BaseMusical[]>
     .from('music_bases')
     .select('*')
     .eq('folder_id', folderId)
+    .is('deleted_at', null) // Exclude deleted bases
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -231,10 +233,13 @@ export const removeBaseMusical = async (id: string): Promise<boolean> => {
       }
     }
 
-    // 3. Remova o registro do banco de dados
+    // 3. Soft delete o registro do banco de dados
     const { error: deleteError } = await supabase
       .from('music_bases')
-      .delete()
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: (await supabase.auth.getUser()).data.user?.id
+      })
       .eq('id', id);
 
     if (deleteError) {

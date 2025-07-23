@@ -39,6 +39,7 @@ export const getFolders = async (): Promise<Folder[]> => {
       .from('folders')
       .select('*')
       .eq('is_system', false) // Only get non-system folders
+      .is('deleted_at', null) // Exclude deleted folders
       .order('created_at', { ascending: false });
     
     if (error) throw error;
@@ -117,7 +118,10 @@ export const deleteFolder = async (folderId: string): Promise<void> => {
     
     const { error } = await supabase
       .from('folders')
-      .delete()
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: (await supabase.auth.getUser()).data.user?.id
+      })
       .eq('id', folderId);
     
     if (error) throw error;
@@ -134,6 +138,7 @@ export const getSongsInFolder = async (folderId: string): Promise<Song[]> => {
       .from('songs')
       .select('*')
       .eq('folder_id', folderId)
+      .is('deleted_at', null) // Exclude deleted songs
       .order('created_at', { ascending: false });
     
     if (error) throw error;
@@ -213,12 +218,15 @@ export const updateSong = async (songId: string, updates: { title?: string; cont
   }
 };
 
-// Delete a song
+// Delete a song (soft delete)
 export const deleteSong = async (songId: string): Promise<void> => {
   try {
     const { error } = await supabase
       .from('songs')
-      .delete()
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: (await supabase.auth.getUser()).data.user?.id
+      })
       .eq('id', songId);
     
     if (error) throw error;
