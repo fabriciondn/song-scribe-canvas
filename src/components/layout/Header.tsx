@@ -3,9 +3,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from '@/hooks/useAuth';
+import { useUserCredits } from '@/hooks/useUserCredits';
 import { Link } from 'react-router-dom';
-import { Menu, LogOut, Music, Home } from 'lucide-react';
+import { Menu, LogOut, Music, Home, CreditCard, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 export const Header = ({
   toggleSidebar
@@ -16,6 +18,7 @@ export const Header = ({
     user,
     logout
   } = useAuth();
+  const { credits } = useUserCredits();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -38,31 +41,70 @@ export const Header = ({
         
       </div>
       
-      {user ? <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src="" alt={user.email || "User"} />
-                <AvatarFallback>
-                  {user.email ? user.email.charAt(0).toUpperCase() : "U"}
-                </AvatarFallback>
-              </Avatar>
+      {user ? (
+        <div className="flex items-center gap-3">
+          {/* Exibição dos créditos */}
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <CreditCard className="h-3 w-3" />
+              {credits || 0} créditos
+            </Badge>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="h-8 px-2"
+              onClick={() => {
+                // TODO: Implementar modal para adicionar créditos
+                console.log('Adicionar créditos via Pix');
+              }}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Adicionar
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user.email}</p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem disabled={isLoggingOut} onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>{isLoggingOut ? 'Saindo...' : 'Sair'}</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu> : <Link to="/">
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src="" alt={user.email || "User"} />
+                  <AvatarFallback>
+                    {user.email ? user.email.charAt(0).toUpperCase() : "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{user.email}</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {credits || 0} créditos disponíveis
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => {
+                  // TODO: Implementar modal para adicionar créditos
+                  console.log('Adicionar créditos via Pix');
+                }}
+              >
+                <CreditCard className="mr-2 h-4 w-4" />
+                <span>Adicionar Créditos</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled={isLoggingOut} onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>{isLoggingOut ? 'Saindo...' : 'Sair'}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ) : (
+        <Link to="/">
           <Button size="sm">Entrar</Button>
-        </Link>}
+        </Link>
+      )}
     </header>;
 };
