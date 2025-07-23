@@ -21,6 +21,7 @@ export type Database = {
           author: string
           created_at: string
           genre: string
+          hash: string | null
           id: string
           lyrics: string
           other_authors: string | null
@@ -38,6 +39,7 @@ export type Database = {
           author: string
           created_at?: string
           genre: string
+          hash?: string | null
           id?: string
           lyrics: string
           other_authors?: string | null
@@ -55,6 +57,7 @@ export type Database = {
           author?: string
           created_at?: string
           genre?: string
+          hash?: string | null
           id?: string
           lyrics?: string
           other_authors?: string | null
