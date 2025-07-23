@@ -4,8 +4,10 @@ interface RegisteredWork {
   id: string;
   title: string;
   author: string;
+  author_cpf?: string;
   other_authors: string | null;
   genre: string;
+  style?: string;
   song_version: string;
   lyrics: string;
   hash: string | null;
@@ -17,12 +19,12 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   const pdf = new jsPDF();
   
   // Configurações de cores e estilos
-  const primaryColor: [number, number, number] = [37, 99, 235]; // RGB para azul primário
+  const blackColor: [number, number, number] = [0, 0, 0]; // RGB para preto
   const secondaryColor: [number, number, number] = [75, 85, 99]; // RGB para cinza escuro
   const accentColor: [number, number, number] = [34, 197, 94]; // RGB para verde
 
-  // Cabeçalho
-  pdf.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+  // Tarja preta superior
+  pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
   pdf.rect(0, 0, 210, 40, 'F');
   
   pdf.setTextColor(255, 255, 255);
@@ -34,11 +36,25 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   pdf.setFont('helvetica', 'normal');
   pdf.text('DE OBRA MUSICAL', 105, 30, { align: 'center' });
 
+  // Waveform visual (representação simples)
+  pdf.setDrawColor(blackColor[0], blackColor[1], blackColor[2]);
+  pdf.setLineWidth(1);
+  let xWave = 20;
+  const waveY = 50;
+  const waveWidth = 170;
+  const waveHeight = 8;
+  
+  // Desenha uma waveform simples
+  for (let i = 0; i < waveWidth; i += 3) {
+    const height = Math.sin(i * 0.1) * waveHeight / 2 + waveHeight / 2;
+    pdf.line(xWave + i, waveY, xWave + i, waveY + height);
+  }
+
   // Reset da cor do texto
   pdf.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
 
   // Informações principais
-  let yPosition = 60;
+  let yPosition = 70;
   
   pdf.setFontSize(16);
   pdf.setFont('helvetica', 'bold');
@@ -64,6 +80,15 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   
   yPosition += 10;
   
+  // CPF do autor (se houver)
+  if (work.author_cpf) {
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('CPF do Autor:', 20, yPosition);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(work.author_cpf, 65, yPosition);
+    yPosition += 10;
+  }
+  
   // Co-autores (se houver)
   if (work.other_authors) {
     pdf.setFont('helvetica', 'bold');
@@ -80,6 +105,15 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   pdf.text(work.genre, 45, yPosition);
   
   yPosition += 10;
+  
+  // Estilo (se houver)
+  if (work.style) {
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Estilo:', 20, yPosition);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(work.style, 45, yPosition);
+    yPosition += 10;
+  }
   
   // Versão
   pdf.setFont('helvetica', 'bold');
@@ -148,22 +182,21 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   const displayLines = splitText.slice(0, maxLines);
   pdf.text(displayLines, 20, yPosition);
   
-  // Rodapé
-  pdf.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+  // Tarja preta inferior com logo da Compuse
+  pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
   pdf.rect(0, 270, 210, 27, 'F');
   
   pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('Este certificado atesta o registro da obra musical na plataforma.', 105, 280, { align: 'center' });
-  pdf.text(`Documento ID: ${work.id}`, 105, 290, { align: 'center' });
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('COMPUSE', 105, 285, { align: 'center' });
   
   // Se a letra for muito longa, adiciona uma segunda página
   if (work.lyrics.length > 400) {
     pdf.addPage();
     
     // Cabeçalho da segunda página
-    pdf.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
     pdf.setFontSize(16);
     pdf.setFont('helvetica', 'bold');
     pdf.text('LETRA COMPLETA', 105, 30, { align: 'center' });
@@ -174,6 +207,15 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
     
     const fullLyricsLines = pdf.splitTextToSize(work.lyrics, 170);
     pdf.text(fullLyricsLines, 20, 50);
+    
+    // Tarja preta inferior na segunda página também
+    pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
+    pdf.rect(0, 270, 210, 27, 'F');
+    
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('COMPUSE', 105, 285, { align: 'center' });
   }
   
   // Download do PDF
