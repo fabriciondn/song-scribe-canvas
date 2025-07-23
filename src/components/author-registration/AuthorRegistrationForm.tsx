@@ -245,8 +245,8 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
             {/* Upload de áudio */}
             <div className="space-y-2">
               <Label>Upload do áudio (MP3) *</Label>
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
-                <div className="flex flex-col items-center justify-center space-y-2">
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 relative cursor-pointer hover:border-muted-foreground/50 transition-colors">
+                <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
                   {audioFile ? (
                     <>
                       <FileAudio className="h-8 w-8 text-primary" />
@@ -254,6 +254,7 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
                       <p className="text-xs text-muted-foreground">
                         {(audioFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
+                      <p className="text-xs text-primary">Clique para alterar o arquivo</p>
                     </>
                   ) : (
                     <>
@@ -261,15 +262,18 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
                       <p className="text-sm text-muted-foreground">
                         Clique para selecionar o arquivo MP3
                       </p>
+                      <p className="text-xs text-muted-foreground">
+                        Ou arraste e solte aqui
+                      </p>
                     </>
                   )}
-                  <input
-                    type="file"
-                    accept=".mp3,audio/mpeg"
-                    onChange={handleAudioFileChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
                 </div>
+                <input
+                  type="file"
+                  accept=".mp3,audio/mpeg,audio/mp3"
+                  onChange={handleAudioFileChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
               </div>
               {audioError && (
                 <p className="text-sm text-red-500">{audioError}</p>
