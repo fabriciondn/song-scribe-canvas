@@ -15,6 +15,7 @@ import Templates from "./pages/Templates";
 import Folders from "./pages/Folders";
 import Drafts from "./pages/Drafts";
 import Partnerships from "./pages/Partnerships";
+import AuthorRegistration from "./pages/AuthorRegistration";
 import Trash from "./pages/Trash";
 import NotFound from "./pages/NotFound";
 
@@ -47,6 +48,7 @@ const App = () => {
                   <Route path="folders/*" element={<Folders />} />
                   <Route path="drafts" element={<Drafts />} />
                   <Route path="partnerships" element={<Partnerships />} />
+                  <Route path="author-registration" element={<AuthorRegistration />} />
                   <Route path="trash" element={<Trash />} />
                 </Route>
                 <Route path="/composer" element={<Dashboard />}>

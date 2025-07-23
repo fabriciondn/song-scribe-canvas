@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      author_registrations: {
+        Row: {
+          additional_info: string | null
+          audio_file_path: string | null
+          author: string
+          created_at: string
+          genre: string
+          id: string
+          lyrics: string
+          other_authors: string | null
+          rhythm: string
+          song_version: string
+          status: string
+          terms_accepted: boolean
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_info?: string | null
+          audio_file_path?: string | null
+          author: string
+          created_at?: string
+          genre: string
+          id?: string
+          lyrics: string
+          other_authors?: string | null
+          rhythm: string
+          song_version: string
+          status?: string
+          terms_accepted?: boolean
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_info?: string | null
+          audio_file_path?: string | null
+          author?: string
+          created_at?: string
+          genre?: string
+          id?: string
+          lyrics?: string
+          other_authors?: string | null
+          rhythm?: string
+          song_version?: string
+          status?: string
+          terms_accepted?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       drafts: {
         Row: {
           audio_files: Json | null
@@ -274,18 +328,21 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string | null
+          credits: number | null
           email: string | null
           id: string
           name: string | null
         }
         Insert: {
           created_at?: string | null
+          credits?: number | null
           email?: string | null
           id: string
           name?: string | null
         }
         Update: {
           created_at?: string | null
+          credits?: number | null
           email?: string | null
           id?: string
           name?: string | null
