@@ -38,8 +38,8 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   onInsertBase
 }) => {
   return (
-    <div className="flex flex-col gap-3 p-2">
-      <div className="bg-white rounded-lg shadow-sm p-3">
+    <div className="flex flex-col gap-2 p-2 safe-area-inset">
+      <div className="bg-card rounded-lg shadow-sm p-3 border border-border">
         <EditorHeader 
           partnershipId={partnershipId}
           onNewClick={onNewClick}
@@ -74,7 +74,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
                 value={content} 
                 onChange={onContentChange} 
                 placeholder="Comece a compor sua letra aqui..." 
-                className="editor-content min-h-[350px] font-mono mt-1"
+                className="editor-content min-h-[300px] font-mono mt-1 text-sm md:text-base"
                 ref={textareaRef}
                 onDrop={onTextAreaDrop}
                 onDragOver={(e) => e.preventDefault()}

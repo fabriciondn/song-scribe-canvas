@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { useMobileDetection } from '@/hooks/use-mobile';
 import {
   Form,
   FormControl,
@@ -50,6 +51,7 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
   onSubmit,
   userCredits,
 }) => {
+  const { isMobile } = useMobileDetection();
   const [audioFile, setAudioFile] = useState<File | null>(initialData.audioFile);
   const [audioError, setAudioError] = useState<string>('');
 
@@ -117,17 +119,19 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
   const isFormValid = form.formState.isValid && audioFile && !audioError;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Formulário de Registro Autoral</CardTitle>
-        <CardDescription>
+    <Card className={isMobile ? "border-0 shadow-none" : ""}>
+      <CardHeader className={isMobile ? "px-4 py-3" : ""}>
+        <CardTitle className={isMobile ? "text-lg" : ""}>
+          Formulário de Registro Autoral
+        </CardTitle>
+        <CardDescription className={isMobile ? "text-sm" : ""}>
           Preencha todos os campos para registrar sua música. 
           Você possui {userCredits} crédito(s) disponível(is).
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className={isMobile ? "px-4 py-3" : ""}>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className={isMobile ? "space-y-4" : "space-y-6"}>
             {/* Título */}
             <FormField
               control={form.control}
@@ -176,7 +180,7 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
               {/* Gênero */}
               <FormField
                 control={form.control}
@@ -233,7 +237,7 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
                   <FormControl>
                     <Textarea 
                       placeholder="Digite a letra completa da música"
-                      className="min-h-32"
+                      className={isMobile ? "min-h-24 text-sm" : "min-h-32"}
                       {...field}
                     />
                   </FormControl>
@@ -244,13 +248,13 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
 
             {/* Upload de áudio */}
             <div className="space-y-2">
-              <Label>Upload do áudio (MP3) *</Label>
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 relative cursor-pointer hover:border-muted-foreground/50 transition-colors">
+              <Label className={isMobile ? "text-sm" : ""}>Upload do áudio (MP3) *</Label>
+              <div className={`border-2 border-dashed border-muted-foreground/25 rounded-lg relative cursor-pointer hover:border-muted-foreground/50 transition-colors ${isMobile ? 'p-4' : 'p-6'}`}>
                 <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
                   {audioFile ? (
                     <>
-                      <FileAudio className="h-8 w-8 text-primary" />
-                      <p className="text-sm font-medium">{audioFile.name}</p>
+                      <FileAudio className={isMobile ? "h-6 w-6 text-primary" : "h-8 w-8 text-primary"} />
+                      <p className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>{audioFile.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {(audioFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
@@ -258,13 +262,15 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
                     </>
                   ) : (
                     <>
-                      <Upload className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">
+                      <Upload className={isMobile ? "h-6 w-6 text-muted-foreground" : "h-8 w-8 text-muted-foreground"} />
+                      <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
                         Clique para selecionar o arquivo MP3
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        Ou arraste e solte aqui
-                      </p>
+                      {!isMobile && (
+                        <p className="text-xs text-muted-foreground">
+                          Ou arraste e solte aqui
+                        </p>
+                      )}
                     </>
                   )}
                 </div>
@@ -278,7 +284,7 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
               {audioError && (
                 <p className="text-sm text-red-500">{audioError}</p>
               )}
-              <p className="text-xs text-muted-foreground">
+              <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
                 Máximo 10MB, apenas arquivos MP3
               </p>
             </div>
@@ -333,11 +339,12 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
               )}
             />
 
-            <div className="flex justify-end">
+            <div className={isMobile ? "pt-4" : "flex justify-end"}>
               <Button 
                 type="submit" 
-                size="lg"
+                size={isMobile ? "default" : "lg"}
                 disabled={!isFormValid}
+                className={isMobile ? "w-full" : ""}
               >
                 Revisar Registro
               </Button>

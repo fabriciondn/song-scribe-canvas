@@ -2,13 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { MobileLayout } from '@/components/layout/MobileLayout';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
+import { useMobileDetection } from '@/hooks/use-mobile';
 
 const Dashboard: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { isAuthenticated, isLoading } = useAuth();
+  const { isMobile } = useMobileDetection();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -39,6 +42,18 @@ const Dashboard: React.FC = () => {
     return null;
   }
 
+  // Layout mobile otimizado
+  if (isMobile) {
+    return (
+      <MobileLayout toggleSidebar={toggleSidebar}>
+        <div className="p-4">
+          <Outlet />
+        </div>
+      </MobileLayout>
+    );
+  }
+
+  // Layout desktop
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header toggleSidebar={toggleSidebar} />

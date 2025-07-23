@@ -16,7 +16,7 @@ export const Editor: React.FC = () => {
   const [processing, setProcessing] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
-  const isMobile = useMobileDetection();
+  const { isMobile } = useMobileDetection();
   const [searchParams] = useSearchParams();
   const partnershipId = searchParams.get('partnership');
   

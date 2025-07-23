@@ -6,6 +6,8 @@ import { CreditCard, ArrowLeft } from 'lucide-react';
 import { AuthorRegistrationForm } from '@/components/author-registration/AuthorRegistrationForm';
 import { AuthorRegistrationReview } from '@/components/author-registration/AuthorRegistrationReview';
 import { useUserCredits } from '@/hooks/useUserCredits';
+import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
+import { useMobileDetection } from '@/hooks/use-mobile';
 
 export interface AuthorRegistrationData {
   title: string;
@@ -23,6 +25,7 @@ export interface AuthorRegistrationData {
 const AuthorRegistration: React.FC = () => {
   const { user } = useAuth();
   const { credits, isLoading: creditsLoading } = useUserCredits();
+  const { isMobile } = useMobileDetection();
   const [step, setStep] = useState<'form' | 'review'>('form');
   const [formData, setFormData] = useState<AuthorRegistrationData>({
     title: '',
@@ -47,23 +50,27 @@ const AuthorRegistration: React.FC = () => {
 
   if (!credits || credits === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-2xl mx-auto">
+      <ResponsiveContainer
+        mobileClassName="px-4 py-2"
+        desktopClassName="container mx-auto px-4 py-8"
+      >
+        <Card className={isMobile ? "mx-auto" : "max-w-2xl mx-auto"}>
           <CardHeader className="text-center">
-            <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+            <CardTitle className={`flex items-center justify-center gap-2 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
               <CreditCard className="h-6 w-6" />
               Créditos necessários
             </CardTitle>
             <CardDescription>
-              Você precisa ter créditos para registrar suas músicas autoralmente
+              Você precisa ter créditos para registrar suas músicas
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center space-y-6">
-            <div className="bg-muted p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-2">Por que preciso de créditos?</h3>
-              <p className="text-muted-foreground mb-4">
-                O registro autoral é um serviço que garante a proteção dos seus direitos autorais.
-                Cada registro consome 1 crédito.
+            <div className="bg-muted p-4 md:p-6 rounded-lg">
+              <h3 className={`font-semibold mb-2 ${isMobile ? 'text-base' : 'text-lg'}`}>
+                Por que preciso de créditos?
+              </h3>
+              <p className="text-muted-foreground mb-4 text-sm">
+                O registro autoral protege seus direitos autorais. Cada registro consome 1 crédito.
               </p>
               <div className="text-sm text-muted-foreground">
                 <p>Seus créditos atuais: <span className="font-semibold">{credits || 0}</span></p>
@@ -71,17 +78,17 @@ const AuthorRegistration: React.FC = () => {
             </div>
             
             <div className="space-y-4">
-              <Button size="lg" className="w-full">
+              <Button size={isMobile ? "default" : "lg"} className="w-full">
                 <CreditCard className="mr-2 h-4 w-4" />
                 Adicionar Créditos via Pix
               </Button>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Entre em contato conosco para adicionar créditos à sua conta
               </p>
             </div>
           </CardContent>
         </Card>
-      </div>
+      </ResponsiveContainer>
     );
   }
 
@@ -112,11 +119,17 @@ const AuthorRegistration: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Registro Autoral</h1>
-          <p className="text-muted-foreground">
+    <ResponsiveContainer
+      mobileClassName="px-2 py-2"
+      tabletClassName="px-4 py-4"
+      desktopClassName="container mx-auto px-4 py-8"
+    >
+      <div className={isMobile ? "w-full" : "max-w-4xl mx-auto"}>
+        <div className={isMobile ? "mb-4" : "mb-6"}>
+          <h1 className={`font-bold mb-2 ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
+            Registro Autoral
+          </h1>
+          <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>
             Registre suas músicas e proteja seus direitos autorais
           </p>
         </div>
@@ -130,11 +143,12 @@ const AuthorRegistration: React.FC = () => {
         )}
 
         {step === 'review' && (
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <Button 
               variant="outline" 
               onClick={handleBackToForm}
               className="mb-4"
+              size={isMobile ? "sm" : "default"}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar ao formulário
@@ -147,7 +161,7 @@ const AuthorRegistration: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </ResponsiveContainer>
   );
 };
 

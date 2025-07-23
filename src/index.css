@@ -88,10 +88,27 @@
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Mobile-first safe area support */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-area-inset {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 }
 
@@ -141,5 +158,53 @@
   /* Chord-specific styles */
   .chord-button {
     @apply cursor-grab active:cursor-grabbing;
+  }
+  
+  /* Mobile optimizations */
+  @media (max-width: 768px) {
+    .container-editor {
+      @apply flex flex-col gap-4;
+      grid-template-columns: none;
+    }
+    
+    .section-box {
+      @apply p-4;
+      max-height: 70vh;
+    }
+    
+    .editor-content {
+      @apply min-h-[250px] text-base;
+    }
+    
+    /* Touch-friendly targets */
+    .song-section,
+    button,
+    [role="button"],
+    input[type="submit"],
+    input[type="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Smooth scrolling */
+    * {
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .scroll-smooth {
+      scroll-behavior: smooth;
+    }
+  }
+  
+  /* Tablet optimizations */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .container-editor {
+      grid-template-columns: 1fr 2fr 1fr;
+      @apply gap-4;
+    }
+    
+    .section-box {
+      @apply p-5;
+    }
   }
 }
