@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, Link } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { adminService } from '@/services/adminService';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,14 +31,14 @@ const AdminLayout = () => {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
           <div className="mr-4 flex">
-            <a href="/admin" className="mr-6 flex items-center space-x-2">
+            <Link to="/admin" className="mr-6 flex items-center space-x-2">
               <span className="font-bold text-lg">Painel Admin</span>
-            </a>
+            </Link>
             <nav className="flex items-center space-x-6 text-sm font-medium">
-              <a href="/admin" className="transition-colors hover:text-foreground/80">Dashboard</a>
-              <a href="/admin/users" className="transition-colors hover:text-foreground/80">Usuários</a>
-              <a href="/admin/online" className="transition-colors hover:text-foreground/80">Online</a>
-              <a href="/admin/certificates" className="transition-colors hover:text-foreground/80">Certificados</a>
+              <Link to="/admin" className="transition-colors hover:text-foreground/80">Dashboard</Link>
+              <Link to="/admin/users" className="transition-colors hover:text-foreground/80">Usuários</Link>
+              <Link to="/admin/online" className="transition-colors hover:text-foreground/80">Online</Link>
+              <Link to="/admin/certificates" className="transition-colors hover:text-foreground/80">Certificados</Link>
             </nav>
           </div>
         </div>
