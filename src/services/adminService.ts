@@ -49,16 +49,14 @@ export const adminService = {
   // Check if current user is admin
   async checkAdminAccess(): Promise<boolean> {
     try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return false;
+      const { data, error } = await supabase.rpc('check_admin_access');
+      
+      if (error) {
+        console.error('Error checking admin access:', error);
+        return false;
+      }
 
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('id')
-        .eq('user_id', user.user.id)
-        .single();
-
-      return !error && !!data;
+      return data === true;
     } catch (error) {
       console.error('Error checking admin access:', error);
       return false;
