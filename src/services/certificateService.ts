@@ -57,23 +57,25 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
     const brazilFlag = await loadImageAsBase64('/lovable-uploads/b59e106c-f55f-44c4-9ac6-5f29494e1251.png');
     pdf.addImage(brazilFlag, 'PNG', 175, 85, 25, 18);
 
-    // Carregar e adicionar a waveform (posição inferior conforme template)
+    // Carregar e adicionar a waveform (posição no meio da página conforme template)
     const waveform = await loadImageAsBase64('/lovable-uploads/21de4260-b9fa-4fc8-aed5-f739a4758d0e.png');
-    pdf.addImage(waveform, 'PNG', 10, 240, 190, 40);
+    pdf.addImage(waveform, 'PNG', 5, 185, 200, 30);
   } catch (error) {
     console.error('Erro ao carregar imagens:', error);
     // Fallback para o método original se as imagens não carregarem
     pdf.setFillColor(240, 240, 240);
     pdf.rect(0, 0, 210, 297, 'F');
-    pdf.setTextColor(0, 0, 0);
-    pdf.setFontSize(16);
-    pdf.text('CERTIFICADO DE REGISTRO DE OBRA MUSICAL', 105, 30, { align: 'center' });
   }
 
-  // **DADOS CONFORME TEMPLATE** - Organização exata do template
+  // **TÍTULO PRINCIPAL** (posição fixa no topo)
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
+  pdf.setFontSize(16);
+  pdf.text('CERTIFICADO DE REGISTRO DE OBRA MUSICAL', 105, 30, { align: 'center' });
+
+  // **DADOS CONFORME TEMPLATE EXATO**
   let yPosition = 140; // Posição inicial após os selos
   
-  // **PRIMEIRA LINHA - Título, Gênero, Variação estilo, Versão**
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
   pdf.setFontSize(12);
@@ -81,29 +83,29 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   // Título
   pdf.text('Título:', 20, yPosition);
   pdf.setFont('helvetica', 'normal');
-  pdf.text(work.title, 47, yPosition);
+  pdf.text(work.title, 55, yPosition);
   
   // Gênero  
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Gênero:', 20, yPosition + 12);
+  pdf.text('Gênero:', 20, yPosition + 15);
   pdf.setFont('helvetica', 'normal');
-  pdf.text(work.genre || '', 52, yPosition + 12);
+  pdf.text(work.genre || '', 55, yPosition + 15);
   
   // Variação estilo
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Variação estilo:', 20, yPosition + 24);
+  pdf.text('Variação estilo:', 20, yPosition + 30);
   pdf.setFont('helvetica', 'normal');
-  pdf.text(work.style || '', 80, yPosition + 24);
+  pdf.text(work.style || '', 85, yPosition + 30);
   
   // Versão
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Versão:', 20, yPosition + 36);
+  pdf.text('Versão:', 20, yPosition + 45);
   pdf.setFont('helvetica', 'normal');
-  pdf.text(work.song_version || '', 52, yPosition + 36);
+  pdf.text(work.song_version || '', 55, yPosition + 45);
   
-  yPosition += 55;
+  yPosition += 70;
   
-  // **SEGUNDA SEÇÃO - Autor e dados pessoais**
+  // **AUTOR**
   pdf.setFont('helvetica', 'bold');
   pdf.text('Autor:', 20, yPosition);
   pdf.setFont('helvetica', 'normal');
@@ -112,27 +114,24 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   if (work.author_cpf) {
     authorText += ` | CPF: ${work.author_cpf}`;
   }
-  pdf.text(authorText, 50, yPosition);
+  pdf.text(authorText, 55, yPosition);
   
   // Endereço
   if (work.author_address) {
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Endereço:', 20, yPosition + 12);
+    pdf.text('Endereço:', 20, yPosition + 15);
     pdf.setFont('helvetica', 'normal');
-    const addressLines = pdf.splitTextToSize(work.author_address, 160);
-    pdf.text(addressLines, 65, yPosition + 12);
-    yPosition += 12 + (addressLines.length * 5);
-  } else {
-    yPosition += 12;
+    pdf.text(work.author_address, 70, yPosition + 15);
+    yPosition += 15;
   }
   
   // Co-autor
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Co-autor:', 20, yPosition + 5);
+  pdf.text('Co-autor:', 20, yPosition + 15);
   pdf.setFont('helvetica', 'normal');
-  pdf.text(work.other_authors || '', 60, yPosition + 5);
+  pdf.text(work.other_authors || '', 70, yPosition + 15);
   
-  yPosition += 20;
+  yPosition += 35;
   
   // **DATA DE REGISTRO**
   pdf.setFont('helvetica', 'bold');
@@ -148,66 +147,59 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
     timeZone: 'America/Sao_Paulo'
   }).replace(' às ', ' às ');
   
-  pdf.text(registrationDate, 95, yPosition);
+  pdf.text(registrationDate, 105, yPosition);
   
-  yPosition += 15;
+  yPosition += 25;
   
   // **HASH DE INTEGRIDADE**
   if (work.hash) {
     pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
     pdf.text('HASH DE INTEGRIDADE:', 20, yPosition);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(10);
-    pdf.setTextColor(0, 128, 0); // Verde como no template
+    pdf.setTextColor(0, 150, 0); // Verde como no template
     
     // Hash em duas linhas como no template
     const hashLine1 = work.hash.substring(0, 32);
     const hashLine2 = work.hash.substring(32);
     
-    pdf.text(hashLine1, 20, yPosition + 10);
-    pdf.text(hashLine2, 20, yPosition + 18);
+    pdf.text(hashLine1, 20, yPosition + 12);
+    pdf.text(hashLine2, 20, yPosition + 20);
     
-    yPosition += 30;
+    yPosition += 35;
   }
   
-  // Calcula se precisa de uma segunda página para a letra
+  // Posicionar a letra abaixo da waveform (posição 220)
+  const lyricsStartPosition = 220;
   const lyricsLines = pdf.splitTextToSize(work.lyrics, 170);
-  const availableSpace = 230 - yPosition; // Espaço até a waveform
+  const availableSpace = 280 - lyricsStartPosition; // Espaço disponível até o fim da página
   const maxLyricsLines = Math.floor(availableSpace / 5);
   const needsSecondPage = lyricsLines.length > maxLyricsLines;
   
-  // **LETRA DA MÚSICA** na primeira página
+  // **LETRA DA MÚSICA** 
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
+  pdf.setFontSize(14);
+  pdf.text('LETRA DA MÚSICA:', 20, lyricsStartPosition);
+  
+  // Conteúdo da letra
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(10);
+  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+  
   if (!needsSecondPage) {
     // Se cabe na primeira página, mostra a letra completa
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.setFontSize(12);
-    pdf.text('LETRA DA MÚSICA:', 20, yPosition);
-    
-    yPosition += 12;
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(10);
-    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-    
-    pdf.text(lyricsLines, 20, yPosition);
+    pdf.text(lyricsLines, 20, lyricsStartPosition + 15);
   } else {
-    // Se não cabe, mostra apenas o início e indica continuação
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.setFontSize(12);
-    pdf.text('LETRA DA MÚSICA:', 20, yPosition);
+    // Se não cabe, mostra apenas parte da letra
+    const previewLines = lyricsLines.slice(0, maxLyricsLines - 2);
+    pdf.text(previewLines, 20, lyricsStartPosition + 15);
     
-    yPosition += 12;
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(10);
-    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-    
-    const previewLines = lyricsLines.slice(0, maxLyricsLines - 1);
-    pdf.text(previewLines, 20, yPosition);
-    
-    // Adiciona indicação de continuação
+    // Indica que continua na próxima página
     pdf.setFont('helvetica', 'italic');
-    pdf.text('[A letra completa está na página seguinte]', 20, yPosition + ((previewLines.length + 1) * 5));
+    pdf.setFontSize(9);
+    pdf.text('(continua na próxima página)', 20, lyricsStartPosition + 15 + (previewLines.length * 5) + 5);
   }
   
   // **SEGUNDA PÁGINA** - Letra completa (se necessário)
