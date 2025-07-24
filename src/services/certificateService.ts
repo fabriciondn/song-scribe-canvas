@@ -19,52 +19,55 @@ interface RegisteredWork {
 export const generateCertificatePDF = async (work: RegisteredWork) => {
   const pdf = new jsPDF();
   
-  // Configurações de cores baseadas no template
+  // Configurações de cores
   const blackColor: [number, number, number] = [0, 0, 0];
   const whiteColor: [number, number, number] = [255, 255, 255];
   const grayColor: [number, number, number] = [64, 64, 64];
   const lightGrayColor: [number, number, number] = [128, 128, 128];
   const accentColor: [number, number, number] = [0, 100, 200];
+  
+  // Função para carregar imagem como base64
+  const loadImageAsBase64 = (imagePath: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx?.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = reject;
+      img.src = imagePath;
+    });
+  };
 
-  // **HEADER SECTION** - Tarja preta superior com logo e título
-  pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.rect(0, 0, 210, 45, 'F');
-  
-  // Logo "COMPUSE" no canto superior esquerdo
-  pdf.setTextColor(whiteColor[0], whiteColor[1], whiteColor[2]);
-  pdf.setFontSize(20);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('COMPUSE', 15, 20);
-  
-  // Subtítulo "Plataforma de Registro Musical"
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('Plataforma de Registro Musical', 15, 28);
-  
-  // Título principal centralizado
-  pdf.setFontSize(18);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('CERTIFICADO DE REGISTRO', 105, 25, { align: 'center' });
-  pdf.setFontSize(12);
-  pdf.text('DE OBRA MUSICAL', 105, 35, { align: 'center' });
+  try {
+    // Carregar o template de fundo
+    const templateImage = await loadImageAsBase64('/lovable-uploads/a10d0d4b-cf1d-4fbc-954c-cdb4fd0eeacc.png');
+    pdf.addImage(templateImage, 'PNG', 0, 0, 210, 297);
 
-  // **WAVEFORM SECTION** - Representação visual mais elaborada
-  pdf.setDrawColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.setLineWidth(0.5);
-  
-  const waveY = 55;
-  const waveWidth = 170;
-  const waveHeight = 12;
-  
-  // Waveform mais complexa com variações
-  for (let i = 0; i < waveWidth; i += 2) {
-    const baseHeight = Math.sin(i * 0.08) * waveHeight / 3;
-    const variation = Math.sin(i * 0.3) * waveHeight / 6;
-    const height = Math.abs(baseHeight + variation);
-    
-    pdf.setLineWidth(0.8);
-    pdf.line(20 + i, waveY, 20 + i, waveY + height);
-    pdf.line(20 + i, waveY, 20 + i, waveY - height);
+    // Carregar e adicionar o selo do Brasil (canto superior esquerdo)
+    const brazilFlag = await loadImageAsBase64('/lovable-uploads/b59e106c-f55f-44c4-9ac6-5f29494e1251.png');
+    pdf.addImage(brazilFlag, 'PNG', 15, 15, 20, 15);
+
+    // Carregar e adicionar o selo da Compuse (canto superior direito)
+    const compuseSeal = await loadImageAsBase64('/lovable-uploads/b2e99156-0e7f-46c8-8b49-eafea58416f9.png');
+    pdf.addImage(compuseSeal, 'PNG', 175, 10, 25, 25);
+
+    // Carregar e adicionar a waveform
+    const waveform = await loadImageAsBase64('/lovable-uploads/21de4260-b9fa-4fc8-aed5-f739a4758d0e.png');
+    pdf.addImage(waveform, 'PNG', 20, 50, 170, 15);
+  } catch (error) {
+    console.error('Erro ao carregar imagens:', error);
+    // Fallback para o método original se as imagens não carregarem
+    pdf.setFillColor(240, 240, 240);
+    pdf.rect(0, 0, 210, 297, 'F');
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(16);
+    pdf.text('CERTIFICADO DE REGISTRO DE OBRA MUSICAL', 105, 30, { align: 'center' });
   }
 
   // **DADOS PRINCIPAIS** - Layout em duas colunas
