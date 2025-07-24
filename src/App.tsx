@@ -19,6 +19,10 @@ import AuthorRegistration from "./pages/AuthorRegistration";
 import RegisteredWorks from "./pages/RegisteredWorks";
 import Trash from "./pages/Trash";
 import NotFound from "./pages/NotFound";
+import AdminLayout from "./pages/AdminLayout";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminOnlineUsers from "./pages/AdminOnlineUsers";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,6 +77,11 @@ const App = () => {
                 </Route>
                 <Route path="/partnerships" element={<Dashboard />}>
                   <Route index element={<Partnerships />} />
+                </Route>
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="online" element={<AdminOnlineUsers />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
