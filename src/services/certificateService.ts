@@ -49,17 +49,17 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
     const templateImage = await loadImageAsBase64('/lovable-uploads/a10d0d4b-cf1d-4fbc-954c-cdb4fd0eeacc.png');
     pdf.addImage(templateImage, 'PNG', 0, 0, 210, 297);
 
-    // Carregar e adicionar o selo do Brasil (canto superior esquerdo)
-    const brazilFlag = await loadImageAsBase64('/lovable-uploads/b59e106c-f55f-44c4-9ac6-5f29494e1251.png');
-    pdf.addImage(brazilFlag, 'PNG', 15, 15, 20, 15);
-
-    // Carregar e adicionar o selo da Compuse (canto superior direito)
+    // Carregar e adicionar o selo da Compuse (centro superior conforme template)
     const compuseSeal = await loadImageAsBase64('/lovable-uploads/b2e99156-0e7f-46c8-8b49-eafea58416f9.png');
-    pdf.addImage(compuseSeal, 'PNG', 175, 10, 25, 25);
+    pdf.addImage(compuseSeal, 'PNG', 87, 85, 36, 36);
 
-    // Carregar e adicionar a waveform
+    // Carregar e adicionar o selo do Brasil (canto superior direito conforme template)
+    const brazilFlag = await loadImageAsBase64('/lovable-uploads/b59e106c-f55f-44c4-9ac6-5f29494e1251.png');
+    pdf.addImage(brazilFlag, 'PNG', 175, 85, 25, 18);
+
+    // Carregar e adicionar a waveform (posição inferior conforme template)
     const waveform = await loadImageAsBase64('/lovable-uploads/21de4260-b9fa-4fc8-aed5-f739a4758d0e.png');
-    pdf.addImage(waveform, 'PNG', 20, 50, 170, 15);
+    pdf.addImage(waveform, 'PNG', 10, 240, 190, 40);
   } catch (error) {
     console.error('Erro ao carregar imagens:', error);
     // Fallback para o método original se as imagens não carregarem
@@ -70,224 +70,172 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
     pdf.text('CERTIFICADO DE REGISTRO DE OBRA MUSICAL', 105, 30, { align: 'center' });
   }
 
-  // **DADOS PRINCIPAIS** - Layout em duas colunas
-  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  let yPosition = 80;
+  // **DADOS CONFORME TEMPLATE** - Organização exata do template
+  let yPosition = 140; // Posição inicial após os selos
   
-  // Seção título
-  pdf.setFontSize(14);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('DADOS DA OBRA REGISTRADA', 20, yPosition);
-  
-  // Linha decorativa
-  pdf.setDrawColor(lightGrayColor[0], lightGrayColor[1], lightGrayColor[2]);
-  pdf.setLineWidth(0.5);
-  pdf.line(20, yPosition + 3, 190, yPosition + 3);
-  
-  yPosition += 15;
-  pdf.setFontSize(11);
-  
-  // **COLUNA ESQUERDA**
-  let leftColumnY = yPosition;
-  
-  // Título da obra - destacado
+  // **PRIMEIRA LINHA - Título, Gênero, Variação estilo, Versão**
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.text('TÍTULO:', 20, leftColumnY);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  const titleLines = pdf.splitTextToSize(work.title, 80);
-  pdf.text(titleLines, 20, leftColumnY + 8);
-  leftColumnY += 8 + (titleLines.length * 6);
+  pdf.setFontSize(12);
   
-  // Autor principal
+  // Título
+  pdf.text('Título:', 20, yPosition);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(work.title, 47, yPosition);
+  
+  // Gênero  
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.text('AUTOR PRINCIPAL:', 20, leftColumnY);
+  pdf.text('Gênero:', 20, yPosition + 12);
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  pdf.text(work.author, 20, leftColumnY + 8);
-  leftColumnY += 20;
+  pdf.text(work.genre || '', 52, yPosition + 12);
   
-  // CPF do autor
-  if (work.author_cpf) {
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.text('CPF:', 20, leftColumnY);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-    pdf.text(work.author_cpf, 20, leftColumnY + 8);
-    leftColumnY += 20;
-  }
-  
-  // Endereço do autor
-  if (work.author_address) {
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.text('ENDEREÇO:', 20, leftColumnY);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-    const addressLines = pdf.splitTextToSize(work.author_address, 80);
-    pdf.text(addressLines, 20, leftColumnY + 8);
-    leftColumnY += 8 + (addressLines.length * 6);
-  }
-  
-  // **COLUNA DIREITA**
-  let rightColumnY = yPosition;
-  
-  // Gênero e estilo
+  // Variação estilo
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.text('GÊNERO MUSICAL:', 110, rightColumnY);
+  pdf.text('Variação estilo:', 20, yPosition + 24);
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  pdf.text(work.genre, 110, rightColumnY + 8);
-  rightColumnY += 20;
-  
-  if (work.style) {
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.text('ESTILO:', 110, rightColumnY);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-    pdf.text(work.style, 110, rightColumnY + 8);
-    rightColumnY += 20;
-  }
+  pdf.text(work.style || '', 80, yPosition + 24);
   
   // Versão
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.text('VERSÃO:', 110, rightColumnY);
+  pdf.text('Versão:', 20, yPosition + 36);
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  pdf.text(work.song_version, 110, rightColumnY + 8);
-  rightColumnY += 20;
+  pdf.text(work.song_version || '', 52, yPosition + 36);
   
-  // Co-autores (se houver)
-  if (work.other_authors) {
+  yPosition += 55;
+  
+  // **SEGUNDA SEÇÃO - Autor e dados pessoais**
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Autor:', 20, yPosition);
+  pdf.setFont('helvetica', 'normal');
+  
+  let authorText = work.author;
+  if (work.author_cpf) {
+    authorText += ` | CPF: ${work.author_cpf}`;
+  }
+  pdf.text(authorText, 50, yPosition);
+  
+  // Endereço
+  if (work.author_address) {
     pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.text('CO-AUTORES:', 110, rightColumnY);
+    pdf.text('Endereço:', 20, yPosition + 12);
     pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-    const coAuthorsLines = pdf.splitTextToSize(work.other_authors, 80);
-    pdf.text(coAuthorsLines, 110, rightColumnY + 8);
-    rightColumnY += 8 + (coAuthorsLines.length * 6);
+    const addressLines = pdf.splitTextToSize(work.author_address, 160);
+    pdf.text(addressLines, 65, yPosition + 12);
+    yPosition += 12 + (addressLines.length * 5);
+  } else {
+    yPosition += 12;
   }
   
-  // **SEÇÃO DE REGISTRO**
-  yPosition = Math.max(leftColumnY, rightColumnY) + 15;
-  
-  // Data e hora de registro
+  // Co-autor
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.text('DATA DE REGISTRO:', 20, yPosition);
+  pdf.text('Co-autor:', 20, yPosition + 5);
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+  pdf.text(work.other_authors || '', 60, yPosition + 5);
+  
+  yPosition += 20;
+  
+  // **DATA DE REGISTRO**
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Data de Registro:', 20, yPosition);
+  pdf.setFont('helvetica', 'normal');
   
   const registrationDate = new Date(work.created_at).toLocaleDateString('pt-BR', {
-    year: 'numeric',
-    month: 'long',
     day: 'numeric',
+    month: 'long',
+    year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     timeZone: 'America/Sao_Paulo'
-  });
-  pdf.text(registrationDate, 20, yPosition + 8);
+  }).replace(' às ', ' às ');
   
-  // ID do documento
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.text('ID DO DOCUMENTO:', 110, yPosition);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  pdf.text(work.id.substring(0, 16) + '...', 110, yPosition + 8);
+  pdf.text(registrationDate, 95, yPosition);
   
-  yPosition += 25;
+  yPosition += 15;
   
   // **HASH DE INTEGRIDADE**
   if (work.hash) {
     pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.text('HASH DE INTEGRIDADE (SHA-256):', 20, yPosition);
-    
-    yPosition += 10;
-    pdf.setFontSize(8);
+    pdf.text('HASH DE INTEGRIDADE:', 20, yPosition);
     pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 128, 0); // Verde como no template
     
-    // Formatação do hash em blocos
-    const hashChunks = work.hash.match(/.{1,40}/g) || [];
-    hashChunks.forEach((chunk, index) => {
-      pdf.text(chunk, 20, yPosition + (index * 6));
-    });
+    // Hash em duas linhas como no template
+    const hashLine1 = work.hash.substring(0, 32);
+    const hashLine2 = work.hash.substring(32);
     
-    yPosition += (hashChunks.length * 6) + 10;
+    pdf.text(hashLine1, 20, yPosition + 10);
+    pdf.text(hashLine2, 20, yPosition + 18);
+    
+    yPosition += 30;
   }
   
-  // **LETRA DA MÚSICA**
-  pdf.setFontSize(11);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.text('LETRA DA MÚSICA:', 20, yPosition);
-  
-  yPosition += 10;
-  pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  
-  // Determina espaço disponível para letra
-  const remainingSpace = 250 - yPosition;
-  const maxLyricsLines = Math.floor(remainingSpace / 4);
-  
+  // Calcula se precisa de uma segunda página para a letra
   const lyricsLines = pdf.splitTextToSize(work.lyrics, 170);
-  const displayLyricsLines = lyricsLines.slice(0, maxLyricsLines);
+  const availableSpace = 230 - yPosition; // Espaço até a waveform
+  const maxLyricsLines = Math.floor(availableSpace / 5);
+  const needsSecondPage = lyricsLines.length > maxLyricsLines;
   
-  if (lyricsLines.length > maxLyricsLines) {
-    displayLyricsLines[displayLyricsLines.length - 1] = displayLyricsLines[displayLyricsLines.length - 1] + ' [continua...]';
+  // **LETRA DA MÚSICA** na primeira página
+  if (!needsSecondPage) {
+    // Se cabe na primeira página, mostra a letra completa
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
+    pdf.setFontSize(12);
+    pdf.text('LETRA DA MÚSICA:', 20, yPosition);
+    
+    yPosition += 12;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+    
+    pdf.text(lyricsLines, 20, yPosition);
+  } else {
+    // Se não cabe, mostra apenas o início e indica continuação
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
+    pdf.setFontSize(12);
+    pdf.text('LETRA DA MÚSICA:', 20, yPosition);
+    
+    yPosition += 12;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+    
+    const previewLines = lyricsLines.slice(0, maxLyricsLines - 1);
+    pdf.text(previewLines, 20, yPosition);
+    
+    // Adiciona indicação de continuação
+    pdf.setFont('helvetica', 'italic');
+    pdf.text('[A letra completa está na página seguinte]', 20, yPosition + ((previewLines.length + 1) * 5));
   }
-  
-  pdf.text(displayLyricsLines, 20, yPosition);
-  
-  // **FOOTER** - Tarja preta inferior
-  pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.rect(0, 275, 210, 22, 'F');
-  
-  pdf.setTextColor(whiteColor[0], whiteColor[1], whiteColor[2]);
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('Este certificado comprova o registro da obra musical na plataforma COMPUSE', 105, 285, { align: 'center' });
-  pdf.text(`compuse.com.br | Documento gerado em ${new Date().toLocaleDateString('pt-BR')}`, 105, 292, { align: 'center' });
   
   // **SEGUNDA PÁGINA** - Letra completa (se necessário)
-  if (lyricsLines.length > maxLyricsLines) {
+  if (needsSecondPage) {
     pdf.addPage();
     
-    // Header da segunda página
-    pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.rect(0, 0, 210, 35, 'F');
+    try {
+      // Usar apenas o template de fundo na segunda página (sem elementos)
+      const templateImage = await loadImageAsBase64('/lovable-uploads/a10d0d4b-cf1d-4fbc-954c-cdb4fd0eeacc.png');
+      pdf.addImage(templateImage, 'PNG', 0, 0, 210, 297);
+    } catch (error) {
+      console.error('Erro ao carregar template para segunda página:', error);
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(0, 0, 210, 297, 'F');
+    }
     
-    pdf.setTextColor(whiteColor[0], whiteColor[1], whiteColor[2]);
-    pdf.setFontSize(16);
+    // Título da segunda página
     pdf.setFont('helvetica', 'bold');
-    pdf.text('LETRA COMPLETA', 105, 22, { align: 'center' });
+    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
+    pdf.setFontSize(16);
+    pdf.text('CERTIFICADO DE REGISTRO DE OBRA MUSICAL', 105, 30, { align: 'center' });
     
     // Letra completa
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
     pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
     
-    const fullLyricsLines = pdf.splitTextToSize(work.lyrics, 170);
-    pdf.text(fullLyricsLines, 20, 50);
-    
-    // Footer da segunda página
-    pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.rect(0, 275, 210, 22, 'F');
-    
-    pdf.setTextColor(whiteColor[0], whiteColor[1], whiteColor[2]);
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('COMPUSE - Plataforma de Registro Musical', 105, 286, { align: 'center' });
+    pdf.text(lyricsLines, 20, 50);
   }
   
   // Download do PDF
