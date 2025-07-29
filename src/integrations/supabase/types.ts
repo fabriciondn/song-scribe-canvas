@@ -554,10 +554,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_admin_access: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
       cleanup_old_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -627,10 +623,6 @@ export type Database = {
           updated_at: string | null
           user_id: string | null
         }[]
-      }
-      is_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
       }
       update_draft: {
         Args: { draft_id: string; draft_updates: Json }
