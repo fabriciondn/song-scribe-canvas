@@ -393,25 +393,37 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
+          avatar_url: string | null
+          cpf: string | null
           created_at: string | null
           credits: number | null
           email: string | null
           id: string
           name: string | null
+          username: string | null
         }
         Insert: {
+          address?: string | null
+          avatar_url?: string | null
+          cpf?: string | null
           created_at?: string | null
           credits?: number | null
           email?: string | null
           id: string
           name?: string | null
+          username?: string | null
         }
         Update: {
+          address?: string | null
+          avatar_url?: string | null
+          cpf?: string | null
           created_at?: string | null
           credits?: number | null
           email?: string | null
           id?: string
           name?: string | null
+          username?: string | null
         }
         Relationships: []
       }
@@ -554,6 +566,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_admin_access: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       cleanup_old_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -623,6 +639,10 @@ export type Database = {
           updated_at: string | null
           user_id: string | null
         }[]
+      }
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       update_draft: {
         Args: { draft_id: string; draft_updates: Json }
