@@ -8,12 +8,13 @@ interface RegisteredWork {
   author_address?: string;
   other_authors: string | null;
   genre: string;
-  style?: string;
+  rhythm?: string;
   song_version: string;
   lyrics: string;
   hash: string | null;
   created_at: string;
   status: string;
+  user_id?: string;
 }
 
 export const generateCertificatePDF = async (work: RegisteredWork) => {
@@ -131,7 +132,7 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   // **COLUNA DIREITA**
   let rightColumnY = yPosition;
   
-  // Gênero e estilo
+  // Gênero e ritmo
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
   pdf.text('GÊNERO MUSICAL:', 110, rightColumnY);
@@ -140,13 +141,13 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   pdf.text(work.genre, 110, rightColumnY + 8);
   rightColumnY += 20;
   
-  if (work.style) {
+  if (work.rhythm) {
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.text('ESTILO:', 110, rightColumnY);
+    pdf.text('RITMO:', 110, rightColumnY);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-    pdf.text(work.style, 110, rightColumnY + 8);
+    pdf.text(work.rhythm, 110, rightColumnY + 8);
     rightColumnY += 20;
   }
   
@@ -160,45 +161,39 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   rightColumnY += 20;
   
   // Co-autores (somente se houver co-autores válidos)
-  if (work.other_authors && work.other_authors.trim() !== '' && !work.other_authors.includes('has_other_authors":false')) {
+  const parseCoAuthors = (otherAuthors: string | null): string => {
+    if (!otherAuthors || otherAuthors.trim() === '') return '';
+    
     try {
-      // Verifica se é um JSON malformado
-      if (work.other_authors.startsWith('{') || work.other_authors.startsWith('[')) {
-        const parsed = JSON.parse(work.other_authors);
-        if (parsed.has_other_authors === false || (Array.isArray(parsed.other_authors) && parsed.other_authors.length === 0)) {
-          // Não exibe co-autores se não há co-autores válidos
-        } else {
-          pdf.setFont('helvetica', 'bold');
-          pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-          pdf.text('CO-AUTORES:', 110, rightColumnY);
-          pdf.setFont('helvetica', 'normal');
-          pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-          const coAuthorsLines = pdf.splitTextToSize(work.other_authors, 80);
-          pdf.text(coAuthorsLines, 110, rightColumnY + 8);
-          rightColumnY += 8 + (coAuthorsLines.length * 6);
+      if (otherAuthors.startsWith('{') || otherAuthors.startsWith('[')) {
+        const parsed = JSON.parse(otherAuthors);
+        if (parsed.has_other_authors === false || 
+            (Array.isArray(parsed.other_authors) && parsed.other_authors.length === 0)) {
+          return '';
         }
-      } else {
-        // É texto simples, exibe normalmente
-        pdf.setFont('helvetica', 'bold');
-        pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-        pdf.text('CO-AUTORES:', 110, rightColumnY);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-        const coAuthorsLines = pdf.splitTextToSize(work.other_authors, 80);
-        pdf.text(coAuthorsLines, 110, rightColumnY + 8);
-        rightColumnY += 8 + (coAuthorsLines.length * 6);
+        if (Array.isArray(parsed.other_authors) && parsed.other_authors.length > 0) {
+          return parsed.other_authors
+            .map((author: any) => `${author.name} (CPF: ${author.cpf})`)
+            .join(', ');
+        }
+        return otherAuthors;
       }
-    } catch (error) {
-      // Se não conseguir fazer parse, exibe como texto simples
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-      pdf.text('CO-AUTORES:', 110, rightColumnY);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-      const coAuthorsLines = pdf.splitTextToSize(work.other_authors, 80);
-      pdf.text(coAuthorsLines, 110, rightColumnY + 8);
-      rightColumnY += 8 + (coAuthorsLines.length * 6);
+      return otherAuthors;
+    } catch {
+      return otherAuthors;
     }
+  };
+
+  const coAuthorsText = parseCoAuthors(work.other_authors);
+  if (coAuthorsText) {
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
+    pdf.text('CO-AUTORES:', 110, rightColumnY);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+    const coAuthorsLines = pdf.splitTextToSize(coAuthorsText, 80);
+    pdf.text(coAuthorsLines, 110, rightColumnY + 8);
+    rightColumnY += 8 + (coAuthorsLines.length * 6);
   }
   
   // **SEÇÃO DE REGISTRO**
