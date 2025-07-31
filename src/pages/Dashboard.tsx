@@ -7,9 +7,11 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { useMobileDetection } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 const Dashboard: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
   const { isMobile } = useMobileDetection();
   const navigate = useNavigate();
@@ -28,6 +30,10 @@ const Dashboard: React.FC = () => {
 
   const toggleSidebar = () => {
     setIsSidebarOpen(prev => !prev);
+  };
+
+  const toggleSidebarCollapse = () => {
+    setIsSidebarCollapsed(prev => !prev);
   };
 
   if (isLoading) {
@@ -59,9 +65,18 @@ const Dashboard: React.FC = () => {
       <Header toggleSidebar={toggleSidebar} />
       
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        <Sidebar 
+          isOpen={isSidebarOpen} 
+          toggleSidebar={toggleSidebar}
+          isCollapsed={isSidebarCollapsed}
+          toggleCollapse={toggleSidebarCollapse}
+        />
         
-        <main className={`flex-1 p-6 transition-all duration-200 overflow-y-auto ${isSidebarOpen ? 'lg:pl-64' : ''}`}>
+        <main className={cn(
+          "flex-1 p-6 transition-all duration-200 overflow-y-auto",
+          isSidebarOpen && !isSidebarCollapsed && "lg:pl-64",
+          isSidebarOpen && isSidebarCollapsed && "lg:pl-16"
+        )}>
           <Outlet />
         </main>
       </div>

@@ -8,11 +8,15 @@ import { Button } from '@/components/ui/button';
 interface SidebarProps {
   isOpen: boolean;
   toggleSidebar: () => void;
+  isCollapsed?: boolean;
+  toggleCollapse?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
-  toggleSidebar
+  toggleSidebar,
+  isCollapsed = false,
+  toggleCollapse
 }) => {
   const location = useLocation();
   const menuItems = [{
@@ -24,6 +28,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     icon: <Edit size={20} />,
     path: '/composer'
   }, {
+    label: 'Registro autoral',
+    icon: <Shield size={20} />,
+    path: '/dashboard/author-registration'
+  }, {
     label: 'Cifrador',
     icon: <FileMusic size={20} />,
     path: '/cifrador'
@@ -31,10 +39,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     label: 'Bases',
     icon: <FileMusic size={20} />,
     path: '/bases'
-  }, {
-    label: 'Modelos de DA',
-    icon: <FileText size={20} />,
-    path: '/templates'
   }, {
     label: 'Pastas',
     icon: <Folder size={20} />,
@@ -48,9 +52,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     icon: <Users size={20} />,
     path: '/partnerships'
   }, {
-    label: 'Registro autoral',
-    icon: <Shield size={20} />,
-    path: '/dashboard/author-registration'
+    label: 'Tutoriais',
+    icon: <ListMusic size={20} />,
+    path: '/dashboard/tutorials'
   }, {
     label: 'Meu Perfil',
     icon: <User size={20} />,
@@ -69,16 +73,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       <div className={cn("fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-200", isOpen ? "opacity-100" : "opacity-0 pointer-events-none")} onClick={toggleSidebar} />
 
-      <aside className={cn("fixed left-0 top-0 bottom-0 w-64 bg-black z-50 p-5 flex flex-col border-r border-sidebar-border transition-transform duration-300 md:translate-x-0", isOpen ? "translate-x-0" : "-translate-x-full")}>
+      <aside className={cn(
+        "fixed left-0 top-0 bottom-0 bg-black z-50 p-5 flex flex-col border-r border-sidebar-border transition-all duration-300 md:translate-x-0", 
+        isOpen ? "translate-x-0" : "-translate-x-full",
+        isCollapsed ? "w-16" : "w-64"
+      )}>
         <div className="flex items-center justify-between mb-8">
-          <img 
-            src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
-            alt="Logo" 
-            className="h-10"
-          />
-          <Button variant="ghost" size="icon" className="md:hidden text-white" onClick={toggleSidebar}>
-            <X size={20} />
-          </Button>
+          {!isCollapsed && (
+            <img 
+              src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+              alt="Logo" 
+              className="h-10"
+            />
+          )}
+          <div className="flex gap-2">
+            {toggleCollapse && (
+              <Button variant="ghost" size="icon" className="hidden md:flex text-white" onClick={toggleCollapse}>
+                <Menu size={20} />
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" className="md:hidden text-white" onClick={toggleSidebar}>
+              <X size={20} />
+            </Button>
+          </div>
         </div>
 
         <nav className="space-y-2 flex-1">
@@ -87,7 +104,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               key={item.path} 
               to={item.path} 
               className={cn(
-                "nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-colors", 
+                "nav-link flex items-center rounded-lg text-white transition-colors", 
+                isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3",
                 location.pathname === item.path || location.pathname.startsWith(`${item.path}/`) 
                   ? "bg-[#111111] text-[#00bd4b]" 
                   : "hover:bg-[#111111]"
@@ -97,9 +115,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   toggleSidebar();
                 }
               }}
+              title={isCollapsed ? item.label : undefined}
             >
               {item.icon}
-              <span>{item.label}</span>
+              {!isCollapsed && <span>{item.label}</span>}
             </Link>
           ))}
         </nav>

@@ -19,6 +19,7 @@ import AuthorRegistration from "./pages/AuthorRegistration";
 import RegisteredWorks from "./pages/RegisteredWorks";
 import Trash from "./pages/Trash";
 import Profile from "./pages/Profile";
+import Tutorials from "./pages/Tutorials";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -52,6 +53,7 @@ const App = () => {
                   <Route path="partnerships" element={<Partnerships />} />
                   <Route path="author-registration" element={<AuthorRegistration />} />
                   <Route path="registered-works" element={<RegisteredWorks />} />
+                  <Route path="tutorials" element={<Tutorials />} />
                   <Route path="profile" element={<Profile />} />
                   <Route path="trash" element={<Trash />} />
                 </Route>
