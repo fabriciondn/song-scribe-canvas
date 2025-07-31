@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import FeatureCarousel from '@/components/dashboard/FeatureCarousel';
 import { 
   Edit, 
   DollarSign, 
@@ -66,16 +67,13 @@ const DashboardHome: React.FC = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Visão geral da sua atividade musical</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => toggleSection('all')}>
-            {expandedSections.includes('all') ? 'Recolher Tudo' : 'Expandir Tudo'}
-          </Button>
-        </div>
+      {/* Banner Carousel Moderno */}
+      <FeatureCarousel />
+      
+      <div className="flex items-center justify-end">
+        <Button variant="outline" size="sm" onClick={() => toggleSection('all')}>
+          {expandedSections.includes('all') ? 'Recolher Tudo' : 'Expandir Tudo'}
+        </Button>
       </div>
 
       {/* Resumo de Composições */}
