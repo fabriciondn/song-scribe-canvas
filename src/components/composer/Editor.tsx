@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { SaveModal } from './SaveModal';
 import { RegisterWorkModal } from './RegisterWorkModal';
 import { SaveDraftModal } from './SaveDraftModal';
+import { DAModal } from './DAModal';
 import { useToast } from '@/components/ui/use-toast';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -17,6 +18,7 @@ export const Editor: React.FC = () => {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isRegisterWorkModalOpen, setIsRegisterWorkModalOpen] = useState(false);
   const [isSaveDraftModalOpen, setIsSaveDraftModalOpen] = useState(false);
+  const [isDAModalOpen, setIsDAModalOpen] = useState(false);
   const [isNewLyricConfirmOpen, setIsNewLyricConfirmOpen] = useState(false);
   const [processing, setProcessing] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -78,6 +80,14 @@ export const Editor: React.FC = () => {
 
   const closeRegisterWorkModal = () => {
     setIsRegisterWorkModalOpen(false);
+  };
+
+  const openDAModal = () => {
+    setIsDAModalOpen(true);
+  };
+
+  const closeDAModal = () => {
+    setIsDAModalOpen(false);
   };
 
   const handleNewClick = () => {
@@ -232,6 +242,13 @@ export const Editor: React.FC = () => {
         onSave={handleSaveDraft}
         currentTitle={title}
         currentContent={content}
+      />
+
+      <DAModal
+        isOpen={isDAModalOpen}
+        onClose={closeDAModal}
+        songContent={content}
+        songTitle={title}
       />
 
       {/* New Lyric Confirmation Dialog */}
