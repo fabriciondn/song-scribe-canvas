@@ -6,46 +6,46 @@ import { Link } from 'react-router-dom';
 import { Music, Users, Shield, FileText, Mic, Folder } from 'lucide-react';
 
 const FeatureCarousel: React.FC = () => {
-  const slides = [
+  const banners = [
     {
       id: 1,
       title: "Componha suas músicas",
-      description: "Crie letras incríveis com nossa ferramenta de composição intuitiva",
-      image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop",
+      subtitle: "Crie letras incríveis com nossa ferramenta de composição intuitiva",
+      image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=300&fit=crop",
       icon: Music,
       action: "Começar Compondo",
       link: "/composer",
-      gradient: "from-blue-500 to-purple-600"
+      gradient: "from-blue-600/80 to-purple-600/80"
     },
     {
       id: 2,
       title: "Colabore com outros artistas",
-      description: "Trabalhe em parceria e crie músicas em colaboração",
-      image: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=800&h=400&fit=crop",
+      subtitle: "Trabalhe em parceria e crie músicas em colaboração",
+      image: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=1200&h=300&fit=crop",
       icon: Users,
       action: "Ver Parcerias",
       link: "/partnerships",
-      gradient: "from-purple-500 to-pink-600"
+      gradient: "from-purple-600/80 to-pink-600/80"
     },
     {
       id: 3,
       title: "Proteja suas criações",
-      description: "Registre suas obras e obtenha certificados de autoria",
-      image: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?w=800&h=400&fit=crop",
+      subtitle: "Registre suas obras e obtenha certificados de autoria",
+      image: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?w=1200&h=300&fit=crop",
       icon: Shield,
       action: "Registrar Obra",
       link: "/dashboard/registered-works",
-      gradient: "from-green-500 to-teal-600"
+      gradient: "from-green-600/80 to-teal-600/80"
     },
     {
       id: 4,
       title: "Organize seus projetos",
-      description: "Mantenha suas composições organizadas em pastas inteligentes",
-      image: "https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?w=800&h=400&fit=crop",
+      subtitle: "Mantenha suas composições organizadas em pastas inteligentes",
+      image: "https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?w=1200&h=300&fit=crop",
       icon: Folder,
       action: "Gerenciar Pastas",
       link: "/folders",
-      gradient: "from-orange-500 to-red-600"
+      gradient: "from-orange-600/80 to-red-600/80"
     }
   ];
 
@@ -59,40 +59,44 @@ const FeatureCarousel: React.FC = () => {
         className="w-full"
       >
         <CarouselContent>
-          {slides.map((slide) => {
-            const IconComponent = slide.icon;
+          {banners.map((banner) => {
+            const IconComponent = banner.icon;
             return (
-              <CarouselItem key={slide.id} className="md:basis-1/2 lg:basis-1/3">
-                <Card className="h-full overflow-hidden group hover:shadow-xl transition-all duration-300">
-                  <div className="relative h-48 overflow-hidden">
-                    <div className={`absolute inset-0 bg-gradient-to-br ${slide.gradient} opacity-90`} />
-                    <img 
-                      src={slide.image} 
-                      alt={slide.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <IconComponent className="h-16 w-16 text-white opacity-80" />
+              <CarouselItem key={banner.id}>
+                <div className="relative h-64 w-full overflow-hidden rounded-lg group cursor-pointer">
+                  <img 
+                    src={banner.image} 
+                    alt={banner.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className={`absolute inset-0 bg-gradient-to-r ${banner.gradient}`} />
+                  <div className="absolute inset-0 flex items-center justify-between p-8">
+                    <div className="flex items-center space-x-6">
+                      <div className="p-4 bg-white/10 backdrop-blur-sm rounded-full">
+                        <IconComponent className="h-12 w-12 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-3xl font-bold text-white mb-2">{banner.title}</h2>
+                        <p className="text-white/90 text-lg max-w-md">{banner.subtitle}</p>
+                      </div>
                     </div>
-                  </div>
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-bold mb-2 text-foreground">{slide.title}</h3>
-                    <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
-                      {slide.description}
-                    </p>
-                    <Button asChild className="w-full group-hover:scale-105 transition-transform duration-200">
-                      <Link to={slide.link}>
-                        {slide.action}
+                    <Button 
+                      asChild 
+                      size="lg"
+                      className="bg-white text-gray-900 hover:bg-white/90 shadow-lg"
+                    >
+                      <Link to={banner.link}>
+                        {banner.action}
                       </Link>
                     </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </CarouselItem>
             );
           })}
         </CarouselContent>
-        <CarouselPrevious className="hidden md:flex" />
-        <CarouselNext className="hidden md:flex" />
+        <CarouselPrevious className="left-4" />
+        <CarouselNext className="right-4" />
       </Carousel>
     </div>
   );
