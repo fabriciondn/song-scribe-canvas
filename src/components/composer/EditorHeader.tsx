@@ -8,7 +8,7 @@ interface EditorHeaderProps {
   partnershipId: string | null;
   onNewClick: () => void;
   openSaveModal: () => void;
-  openDAModal: () => void;
+  openRegisterWorkModal: () => void;
   selectedTool?: ToolType;
   onToolSelect?: (tool: ToolType) => void;
 }
@@ -17,21 +17,15 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   partnershipId,
   onNewClick,
   openSaveModal,
-  openDAModal,
+  openRegisterWorkModal,
   selectedTool,
   onToolSelect
 }) => {
   return (
     <div className="flex justify-between items-center mb-2 bg-white py-2 px-3 rounded-lg shadow-sm sticky top-0">
       <div className="flex items-center">
-        <img 
-          src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" 
-          alt="Logo" 
-          className="h-8" 
-        />
-        <span className="ml-2 font-semibold text-lg">Compuse</span>
         {partnershipId && (
-          <div className="ml-3 flex items-center bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs">
+          <div className="flex items-center bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs">
             <Users className="h-3 w-3 mr-1" />
             Modo Colaborativo
           </div>
@@ -39,13 +33,6 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
       </div>
       
       <div className="flex gap-2">
-        {selectedTool !== undefined && onToolSelect && (
-          <ToolSelector 
-            selectedTool={selectedTool}
-            onToolSelect={onToolSelect}
-          />
-        )}
-        
         <Button 
           variant="default" 
           className="bg-orange-500 hover:bg-orange-600" 
@@ -53,7 +40,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
           size="sm"
           disabled={!!partnershipId}
         >
-          Nova
+          Nova letra
         </Button>
         
         <Button 
@@ -68,12 +55,19 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
         
         <Button 
           variant="default"
-          className="bg-purple-600 hover:bg-purple-700"
-          onClick={openDAModal}
+          className="bg-green-600 hover:bg-green-700"
+          onClick={openRegisterWorkModal}
           size="sm"
         >
-          Gerar DA
+          Registrar obra
         </Button>
+        
+        {selectedTool !== undefined && onToolSelect && (
+          <ToolSelector 
+            selectedTool={selectedTool}
+            onToolSelect={onToolSelect}
+          />
+        )}
       </div>
     </div>
   );

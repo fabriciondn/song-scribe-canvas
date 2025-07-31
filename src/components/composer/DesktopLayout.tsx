@@ -17,7 +17,7 @@ interface DesktopLayoutProps {
   textareaRef: React.RefObject<HTMLTextAreaElement>;
   onNewClick: () => void;
   openSaveModal: () => void;
-  openDAModal: () => void;
+  openRegisterWorkModal: () => void;
   onInsertBase: (baseInfo: { title: string; genre: string }) => void;
 }
 
@@ -32,7 +32,7 @@ export const DesktopLayout: React.FC<DesktopLayoutProps> = ({
   textareaRef,
   onNewClick,
   openSaveModal,
-  openDAModal,
+  openRegisterWorkModal,
   onInsertBase
 }) => {
   const [selectedTool, setSelectedTool] = useState<ToolType>(null);
@@ -45,7 +45,7 @@ export const DesktopLayout: React.FC<DesktopLayoutProps> = ({
           partnershipId={partnershipId}
           onNewClick={onNewClick}
           openSaveModal={openSaveModal}
-          openDAModal={openDAModal}
+          openRegisterWorkModal={openRegisterWorkModal}
           selectedTool={selectedTool}
           onToolSelect={setSelectedTool}
         />

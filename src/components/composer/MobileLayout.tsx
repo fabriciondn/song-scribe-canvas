@@ -19,7 +19,7 @@ interface MobileLayoutProps {
   textareaRef: React.RefObject<HTMLTextAreaElement>;
   onNewClick: () => void;
   openSaveModal: () => void;
-  openDAModal: () => void;
+  openRegisterWorkModal: () => void;
   onInsertBase: (baseInfo: { title: string; genre: string }) => void;
 }
 
@@ -34,7 +34,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   textareaRef,
   onNewClick,
   openSaveModal,
-  openDAModal,
+  openRegisterWorkModal,
   onInsertBase
 }) => {
   return (
@@ -44,7 +44,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
           partnershipId={partnershipId}
           onNewClick={onNewClick}
           openSaveModal={openSaveModal}
-          openDAModal={openDAModal}
+          openRegisterWorkModal={openRegisterWorkModal}
         />
         
         {partnershipId ? (

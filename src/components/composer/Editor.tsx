@@ -1,23 +1,29 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { DAModal } from './DAModal';
 import { SaveModal } from './SaveModal';
+import { RegisterWorkModal } from './RegisterWorkModal';
+import { SaveDraftModal } from './SaveDraftModal';
 import { useToast } from '@/components/ui/use-toast';
 import { useMobileDetection } from '@/hooks/use-mobile';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DesktopLayout } from './DesktopLayout';
 import { MobileLayout } from './MobileLayout';
+import * as folderService from '@/services/folderService';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 export const Editor: React.FC = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [isDAModalOpen, setIsDAModalOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isRegisterWorkModalOpen, setIsRegisterWorkModalOpen] = useState(false);
+  const [isSaveDraftModalOpen, setIsSaveDraftModalOpen] = useState(false);
+  const [isNewLyricConfirmOpen, setIsNewLyricConfirmOpen] = useState(false);
   const [processing, setProcessing] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const { isMobile } = useMobileDetection();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const partnershipId = searchParams.get('partnership');
   
   // Load saved content from localStorage (only for non-collaborative mode)
@@ -47,7 +53,6 @@ export const Editor: React.FC = () => {
   }, [title, content, partnershipId]);
 
   const handleSectionClick = (sectionText: string) => {
-    // Insert the section at cursor position or at the end
     setContent(prev => prev + sectionText);
   };
 
@@ -59,14 +64,6 @@ export const Editor: React.FC = () => {
     setContent(e.target.value);
   };
 
-  const openDAModal = () => {
-    setIsDAModalOpen(true);
-  };
-
-  const closeDAModal = () => {
-    setIsDAModalOpen(false);
-  };
-
   const openSaveModal = () => {
     setIsSaveModalOpen(true);
   };
@@ -75,46 +72,74 @@ export const Editor: React.FC = () => {
     setIsSaveModalOpen(false);
   };
 
+  const openRegisterWorkModal = () => {
+    setIsRegisterWorkModalOpen(true);
+  };
+
+  const closeRegisterWorkModal = () => {
+    setIsRegisterWorkModalOpen(false);
+  };
+
   const handleNewClick = () => {
+    // Check if there's unsaved content
+    if (title.trim() || content.trim()) {
+      setIsNewLyricConfirmOpen(true);
+    } else {
+      // No content, proceed with new composition
+      clearEditor();
+    }
+  };
+
+  const clearEditor = () => {
     setTitle('');
     setContent('');
     localStorage.removeItem('songscribe_current_title');
     localStorage.removeItem('songscribe_current_content');
-  };
-
-  // This function is now a no-op but kept for compatibility
-  const handleBackup = async () => {
-    if (!title.trim()) {
-      toast({
-        title: 'Título necessário',
-        description: 'Por favor, adicione um título antes de criar um backup.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setProcessing('backup');
-    try {
-      // The createBackup function is now a no-op
-      console.log('Backup creation skipped (feature disabled)');
-      toast({
-        title: 'Recurso de backup desativado',
-        description: 'A função de backup automático foi desativada.',
-      });
-    } catch (error) {
-      console.error('Error with backup feature:', error);
-    } finally {
-      setProcessing(null);
-    }
   };
 
   const handleSaveComplete = () => {
-    // Clear the form fields after saving
-    setTitle('');
-    setContent('');
-    // Also clear localStorage for current song
-    localStorage.removeItem('songscribe_current_title');
-    localStorage.removeItem('songscribe_current_content');
+    clearEditor();
+  };
+
+  const handleSaveDraft = async (draftTitle: string, folderId: string) => {
+    try {
+      await folderService.createSong({
+        title: draftTitle,
+        content: content,
+        folder_id: folderId
+      });
+
+      toast({
+        title: "Rascunho salvo",
+        description: "A letra foi salva como rascunho com sucesso.",
+      });
+
+      clearEditor();
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      throw error;
+    }
+  };
+
+  const handleRegisterWorkReview = () => {
+    closeRegisterWorkModal();
+    // User wants to review, just close the modal and stay on current page
+  };
+
+  const handleRegisterWorkProceed = () => {
+    closeRegisterWorkModal();
+    // Navigate to author registration page
+    navigate('/author-registration');
+  };
+
+  const handleNewLyricSaveDraft = () => {
+    setIsNewLyricConfirmOpen(false);
+    setIsSaveDraftModalOpen(true);
+  };
+
+  const handleNewLyricProceed = () => {
+    setIsNewLyricConfirmOpen(false);
+    clearEditor();
   };
 
   const handleTextAreaDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
@@ -131,21 +156,18 @@ export const Editor: React.FC = () => {
       const newContent = `${textBeforeCursor}${chord} ${textAfterCursor}`;
       setContent(newContent);
       
-      // Set focus back to textarea
       setTimeout(() => {
         textarea.focus();
-        const newCursorPos = cursorPosition + chord.length + 1; // +1 for the space
+        const newCursorPos = cursorPosition + chord.length + 1;
         textarea.setSelectionRange(newCursorPos, newCursorPos);
       }, 0);
     }
   };
 
   const handleInsertBase = (baseInfo: { title: string; genre: string }) => {
-    // Inserir informações da base na composição
     const baseInfoText = `\n\n[Base Musical: ${baseInfo.title} - Gênero: ${baseInfo.genre}]\n\n`;
     setContent(prev => prev + baseInfoText);
     
-    // Mover o cursor para o final do texto inserido
     setTimeout(() => {
       if (textareaRef.current) {
         const newPosition = content.length + baseInfoText.length;
@@ -169,7 +191,7 @@ export const Editor: React.FC = () => {
           textareaRef={textareaRef}
           onNewClick={handleNewClick}
           openSaveModal={openSaveModal}
-          openDAModal={openDAModal}
+          openRegisterWorkModal={openRegisterWorkModal}
           onInsertBase={handleInsertBase}
         />
       ) : (
@@ -184,17 +206,11 @@ export const Editor: React.FC = () => {
           textareaRef={textareaRef}
           onNewClick={handleNewClick}
           openSaveModal={openSaveModal}
-          openDAModal={openDAModal}
+          openRegisterWorkModal={openRegisterWorkModal}
           onInsertBase={handleInsertBase}
         />
       )}
       
-      <DAModal 
-        isOpen={isDAModalOpen} 
-        onClose={closeDAModal} 
-        songContent={partnershipId ? '' : content} 
-        songTitle={partnershipId ? '' : title} 
-      />
       <SaveModal 
         isOpen={isSaveModalOpen} 
         onClose={closeSaveModal} 
@@ -202,6 +218,49 @@ export const Editor: React.FC = () => {
         songTitle={title}
         onSaveComplete={handleSaveComplete}
       />
+
+      <RegisterWorkModal
+        isOpen={isRegisterWorkModalOpen}
+        onClose={closeRegisterWorkModal}
+        onReview={handleRegisterWorkReview}
+        onProceed={handleRegisterWorkProceed}
+      />
+
+      <SaveDraftModal
+        isOpen={isSaveDraftModalOpen}
+        onClose={() => setIsSaveDraftModalOpen(false)}
+        onSave={handleSaveDraft}
+        currentTitle={title}
+        currentContent={content}
+      />
+
+      {/* New Lyric Confirmation Dialog */}
+      <Dialog open={isNewLyricConfirmOpen} onOpenChange={setIsNewLyricConfirmOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nova Letra</DialogTitle>
+            <DialogDescription>
+              Você tem conteúdo não salvo. Deseja salvar a letra atual como rascunho?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleNewLyricProceed}
+              className="w-full sm:w-auto"
+            >
+              Não
+            </Button>
+            <Button 
+              onClick={handleNewLyricSaveDraft}
+              className="w-full sm:w-auto"
+            >
+              Sim
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
