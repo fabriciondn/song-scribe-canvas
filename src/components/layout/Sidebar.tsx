@@ -56,9 +56,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     icon: <ListMusic size={20} />,
     path: '/dashboard/tutorials'
   }, {
-    label: 'Meu Perfil',
+    label: 'Configurações',
     icon: <User size={20} />,
-    path: '/dashboard/profile'
+    path: '/dashboard/settings'
   }, {
     label: 'Lixeira',
     icon: <Trash2 size={20} />,
@@ -104,8 +104,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               key={item.path} 
               to={item.path} 
               className={cn(
-                "nav-link flex items-center rounded-lg text-white transition-colors", 
-                isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3",
+        "nav-link flex items-center rounded-lg text-white transition-colors", 
+        isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3",
                 location.pathname === item.path || location.pathname.startsWith(`${item.path}/`) 
                   ? "bg-[#111111] text-[#00bd4b]" 
                   : "hover:bg-[#111111]"
@@ -117,7 +117,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }}
               title={isCollapsed ? item.label : undefined}
             >
-              {item.icon}
+              <span className={isCollapsed ? "text-xl" : ""}>{item.icon}</span>
               {!isCollapsed && <span>{item.label}</span>}
             </Link>
           ))}

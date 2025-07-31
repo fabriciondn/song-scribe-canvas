@@ -12,6 +12,14 @@ export interface UserProfile {
   avatar_url?: string;
   credits?: number;
   created_at?: string;
+  artistic_name?: string;
+  birth_date?: string;
+  cep?: string;
+  street?: string;
+  number?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
 }
 
 export const useProfile = () => {

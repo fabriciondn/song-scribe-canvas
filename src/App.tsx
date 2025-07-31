@@ -18,7 +18,7 @@ import Partnerships from "./pages/Partnerships";
 import AuthorRegistration from "./pages/AuthorRegistration";
 import RegisteredWorks from "./pages/RegisteredWorks";
 import Trash from "./pages/Trash";
-import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import Tutorials from "./pages/Tutorials";
 import NotFound from "./pages/NotFound";
 
@@ -54,7 +54,7 @@ const App = () => {
                   <Route path="author-registration" element={<AuthorRegistration />} />
                   <Route path="registered-works" element={<RegisteredWorks />} />
                   <Route path="tutorials" element={<Tutorials />} />
-                  <Route path="profile" element={<Profile />} />
+                  <Route path="settings" element={<Settings />} />
                   <Route path="trash" element={<Trash />} />
                 </Route>
                 <Route path="/composer" element={<Dashboard />}>

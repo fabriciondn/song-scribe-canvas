@@ -5,9 +5,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { useUserCredits } from '@/hooks/useUserCredits';
+import { useTheme } from '@/hooks/useTheme';
 import { Link } from 'react-router-dom';
-import { Menu, LogOut, Music, Home, CreditCard, Plus } from 'lucide-react';
+import { Menu, LogOut, Music, Home, CreditCard, Plus, Moon, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
 export const Header = ({
   toggleSidebar
@@ -18,7 +20,9 @@ export const Header = ({
     user,
     logout
   } = useAuth();
+  const { profile } = useProfile();
   const { credits } = useUserCredits();
+  const { theme, toggleTheme } = useTheme();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -30,7 +34,7 @@ export const Header = ({
       setIsLoggingOut(false);
     }
   };
-  return <header className="bg-white border-b border-gray-200 py-3 px-6 flex items-center justify-between">
+  return <header className="bg-background border-b border-border py-3 px-6 flex items-center justify-between">
       <div className="flex items-center flex-1">
         <Button variant="ghost" size="icon" className="mr-2 lg:hidden" onClick={toggleSidebar}>
           <Menu className="h-5 w-5" />
@@ -43,6 +47,20 @@ export const Header = ({
       
       {user ? (
         <div className="flex items-center gap-3">
+          {/* Theme toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="mr-2"
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </Button>
+
           {/* Exibição dos créditos */}
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="flex items-center gap-1">
@@ -67,9 +85,12 @@ export const Header = ({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src="" alt={user.email || "User"} />
+                  <AvatarImage src={profile?.avatar_url || ""} alt={profile?.name || user.email || "User"} />
                   <AvatarFallback>
-                    {user.email ? user.email.charAt(0).toUpperCase() : "U"}
+                    {profile?.name 
+                      ? profile.name.charAt(0).toUpperCase() 
+                      : (user.email ? user.email.charAt(0).toUpperCase() : "U")
+                    }
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -77,7 +98,9 @@ export const Header = ({
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user.email}</p>
+                  <p className="text-sm font-medium leading-none">
+                    {profile?.name || profile?.artistic_name || user.email}
+                  </p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {credits || 0} créditos disponíveis
                   </p>
