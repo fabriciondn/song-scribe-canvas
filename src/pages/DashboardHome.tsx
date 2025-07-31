@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import FeatureCarousel from '@/components/dashboard/FeatureCarousel';
+import { CardSelector } from '@/components/dashboard/CardSelector';
 import { 
   Edit, 
   DollarSign, 
@@ -71,9 +72,14 @@ const DashboardHome: React.FC = () => {
       <FeatureCarousel />
       
       <div className="flex items-center justify-end">
-        <Button variant="outline" size="sm" onClick={() => toggleSection('all')}>
-          {expandedSections.includes('all') ? 'Recolher Tudo' : 'Expandir Tudo'}
-        </Button>
+        <CardSelector 
+          expandedSections={expandedSections}
+          onToggleSection={toggleSection}
+        >
+          <Button variant="outline" size="sm">
+            {expandedSections.includes('all') ? 'Recolher Tudo' : 'Configurar Cards'}
+          </Button>
+        </CardSelector>
       </div>
 
       {/* Resumo de Composições */}
@@ -88,24 +94,24 @@ const DashboardHome: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <div className="text-center p-4 bg-muted rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">{stats.compositions.total}</div>
-                <div className="text-sm text-gray-600">Total de Letras</div>
+                <div className="text-sm text-muted-foreground">Total de Letras</div>
               </div>
-              <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-center p-4 bg-muted rounded-lg">
                 <div className="text-2xl font-bold text-green-600">{stats.compositions.finished}</div>
-                <div className="text-sm text-gray-600">Finalizadas</div>
+                <div className="text-sm text-muted-foreground">Finalizadas</div>
               </div>
-              <div className="text-center p-4 bg-orange-50 rounded-lg">
+              <div className="text-center p-4 bg-muted rounded-lg">
                 <div className="text-2xl font-bold text-orange-600">{stats.compositions.drafts}</div>
-                <div className="text-sm text-gray-600">Rascunhos</div>
+                <div className="text-sm text-muted-foreground">Rascunhos</div>
               </div>
-              <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <div className="text-center p-4 bg-muted rounded-lg">
                 {stats.compositions.lastEdited ? (
                   <>
                     <div className="text-lg font-semibold text-purple-600">{stats.compositions.lastEdited.title}</div>
-                    <div className="text-sm text-gray-600">Última Editada</div>
-                    <div className="text-xs text-gray-500">{stats.compositions.lastEdited.date}</div>
+                    <div className="text-sm text-muted-foreground">Última Editada</div>
+                    <div className="text-xs text-muted-foreground">{stats.compositions.lastEdited.date}</div>
                     <Button variant="outline" size="sm" className="mt-2" asChild>
                       <Link to="/composer">
                         <Eye className="h-4 w-4 mr-1" />
@@ -115,8 +121,8 @@ const DashboardHome: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <div className="text-lg font-semibold text-gray-400">Nenhuma composição</div>
-                    <div className="text-sm text-gray-600">Crie sua primeira música</div>
+                    <div className="text-lg font-semibold text-muted-foreground">Nenhuma composição</div>
+                    <div className="text-sm text-muted-foreground">Crie sua primeira música</div>
                     <Button variant="outline" size="sm" className="mt-2" asChild>
                       <Link to="/composer">
                         <Edit className="h-4 w-4 mr-1" />
@@ -145,9 +151,9 @@ const DashboardHome: React.FC = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg mb-4">
+                <div className="text-center p-4 bg-muted rounded-lg mb-4">
                   <div className="text-2xl font-bold text-purple-600">{stats.partnerships.active}</div>
-                  <div className="text-sm text-gray-600">Colaborações Ativas</div>
+                  <div className="text-sm text-muted-foreground">Colaborações Ativas</div>
                 </div>
                 <Button className="w-full" asChild>
                   <Link to="/partnerships">
@@ -162,10 +168,10 @@ const DashboardHome: React.FC = () => {
                     <h4 className="font-semibold mb-3">Últimos Colaboradores</h4>
                     <div className="space-y-2">
                       {stats.partnerships.recent.map((partner, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                           <div>
-                            <div className="font-medium">{partner.name}</div>
-                            <div className="text-sm text-gray-600">{partner.role}</div>
+                            <div className="font-medium text-foreground">{partner.name}</div>
+                            <div className="text-sm text-muted-foreground">{partner.role}</div>
                           </div>
                           <Button variant="ghost" size="sm">
                             <Eye className="h-4 w-4" />
@@ -175,9 +181,9 @@ const DashboardHome: React.FC = () => {
                     </div>
                   </>
                 ) : (
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <Users className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                    <p className="text-gray-500">Nenhuma parceria criada ainda</p>
+                  <div className="text-center p-4 bg-muted rounded-lg">
+                    <Users className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-muted-foreground">Nenhuma parceria criada ainda</p>
                   </div>
                 )}
               </div>
@@ -197,14 +203,14 @@ const DashboardHome: React.FC = () => {
             <CardDescription>Registros de autoria das suas criações</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center p-4 bg-green-50 rounded-lg mb-4">
+            <div className="text-center p-4 bg-muted rounded-lg mb-4">
               <div className="text-2xl font-bold text-green-600">{stats.registeredWorks.total}</div>
-              <div className="text-sm text-gray-600">Obras Protegidas</div>
+              <div className="text-sm text-muted-foreground">Obras Protegidas</div>
             </div>
             {stats.registeredWorks.lastRegistered ? (
-              <div className="p-4 bg-gray-50 rounded-lg mb-4">
-                <div className="font-medium">{stats.registeredWorks.lastRegistered.title}</div>
-                <div className="text-sm text-gray-600 mb-2">Registrada em {stats.registeredWorks.lastRegistered.date}</div>
+              <div className="p-4 bg-muted rounded-lg mb-4">
+                <div className="font-medium text-foreground">{stats.registeredWorks.lastRegistered.title}</div>
+                <div className="text-sm text-muted-foreground mb-2">Registrada em {stats.registeredWorks.lastRegistered.date}</div>
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/dashboard/registered-works">
                     <Eye className="h-4 w-4 mr-1" />
@@ -213,9 +219,9 @@ const DashboardHome: React.FC = () => {
                 </Button>
               </div>
             ) : (
-              <div className="text-center p-4 bg-gray-50 rounded-lg mb-4">
-                <Shield className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                <p className="text-gray-500">Nenhuma obra registrada ainda</p>
+              <div className="text-center p-4 bg-muted rounded-lg mb-4">
+                <Shield className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-muted-foreground">Nenhuma obra registrada ainda</p>
               </div>
             )}
             <Button variant="outline" className="w-full" asChild>
@@ -241,23 +247,23 @@ const DashboardHome: React.FC = () => {
               <CardDescription>Estrutura dos seus projetos</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center p-4 bg-yellow-50 rounded-lg mb-4">
+              <div className="text-center p-4 bg-muted rounded-lg mb-4">
                 <div className="text-2xl font-bold text-yellow-600">{stats.folders.total}</div>
-                <div className="text-sm text-gray-600">Total de Pastas</div>
+                <div className="text-sm text-muted-foreground">Total de Pastas</div>
               </div>
               {stats.folders.breakdown.length > 0 ? (
                 <div className="space-y-2 mb-4">
                   {stats.folders.breakdown.map((folder, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span className="font-medium">{folder.name}</span>
+                    <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <span className="font-medium text-foreground">{folder.name}</span>
                       <Badge variant="secondary">{folder.count}</Badge>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center p-4 bg-gray-50 rounded-lg mb-4">
-                  <Folder className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-gray-500">Nenhuma pasta criada ainda</p>
+                <div className="text-center p-4 bg-muted rounded-lg mb-4">
+                  <Folder className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-muted-foreground">Nenhuma pasta criada ainda</p>
                 </div>
               )}
               <Button variant="outline" className="w-full" asChild>
@@ -279,28 +285,28 @@ const DashboardHome: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center p-4 bg-indigo-50 rounded-lg">
+                <div className="text-center p-4 bg-muted rounded-lg">
                   <div className="text-2xl font-bold text-indigo-600">{stats.templates.created}</div>
-                  <div className="text-sm text-gray-600">Modelos Criados</div>
+                  <div className="text-sm text-muted-foreground">Modelos Criados</div>
                 </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-center p-4 bg-muted rounded-lg">
                   <div className="text-2xl font-bold text-green-600">{stats.templates.generated}</div>
-                  <div className="text-sm text-gray-600">DAs Gerados</div>
+                  <div className="text-sm text-muted-foreground">DAs Gerados</div>
                 </div>
               </div>
               {stats.templates.lastDA ? (
-                <div className="p-4 bg-gray-50 rounded-lg mb-4">
-                  <div className="font-medium">{stats.templates.lastDA.title}</div>
-                  <div className="text-sm text-gray-600 mb-2">{stats.templates.lastDA.date}</div>
+                <div className="p-4 bg-muted rounded-lg mb-4">
+                  <div className="font-medium text-foreground">{stats.templates.lastDA.title}</div>
+                  <div className="text-sm text-muted-foreground mb-2">{stats.templates.lastDA.date}</div>
                   <Button variant="outline" size="sm">
                     <Eye className="h-4 w-4 mr-1" />
                     Visualizar PDF
                   </Button>
                 </div>
               ) : (
-                <div className="text-center p-4 bg-gray-50 rounded-lg mb-4">
-                  <FileText className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-gray-500">Nenhum modelo criado ainda</p>
+                <div className="text-center p-4 bg-muted rounded-lg mb-4">
+                  <FileText className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-muted-foreground">Nenhum modelo criado ainda</p>
                 </div>
               )}
               <Button variant="outline" className="w-full" asChild>
@@ -312,13 +318,13 @@ const DashboardHome: React.FC = () => {
       </div>
 
       {/* Mensagem sobre dados em tempo real */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="bg-muted border-border">
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
             <Bell className="h-5 w-5 text-blue-600" />
             <div>
-              <p className="text-blue-800 font-medium">Dashboard em tempo real</p>
-              <p className="text-blue-600 text-sm">Os dados são atualizados automaticamente conforme você usa a plataforma.</p>
+              <p className="text-foreground font-medium">Dashboard em tempo real</p>
+              <p className="text-muted-foreground text-sm">Os dados são atualizados automaticamente conforme você usa a plataforma.</p>
             </div>
           </div>
         </CardContent>

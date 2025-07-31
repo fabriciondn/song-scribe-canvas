@@ -83,7 +83,7 @@ const FeatureCarousel: React.FC = () => {
                     <Button 
                       asChild 
                       size="lg"
-                      className="bg-white text-gray-900 hover:bg-white/90 shadow-lg"
+                      className="bg-white text-gray-900 hover:bg-white/90 shadow-lg mr-8"
                     >
                       <Link to={banner.link}>
                         {banner.action}
