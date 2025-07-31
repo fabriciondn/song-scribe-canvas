@@ -47,7 +47,7 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
 
   try {
     // Carregar o template de fundo
-    const templateImage = await loadImageAsBase64('/lovable-uploads/a10d0d4b-cf1d-4fbc-954c-cdb4fd0eeacc.png');
+    const templateImage = await loadImageAsBase64('/lovable-uploads/76c16cc8-275f-41f4-b678-ce3151f744bc.png');
     pdf.addImage(templateImage, 'PNG', 0, 0, 210, 297);
 
     // Carregar e adicionar o selo da Compuse (centralizado, 1,5cm da barra cinza)
