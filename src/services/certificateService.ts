@@ -69,7 +69,7 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
 
   // **DADOS PRINCIPAIS** - Layout em duas colunas
   pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  let yPosition = 130; // Ajustado para baixo devido à nova posição da waveform
+  let yPosition = 100; // 1cm abaixo da waveform (que termina em Y 90)
   
   // Seção título
   pdf.setFontSize(14);
@@ -87,78 +87,83 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   // **COLUNA ESQUERDA**
   let leftColumnY = yPosition;
   
-  // Título da obra - destacado
+  // Título da obra - em linha única
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.text('TÍTULO:', 20, leftColumnY);
+  pdf.text('TÍTULO: ', 20, leftColumnY);
   pdf.setFont('helvetica', 'normal');
   pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  const titleLines = pdf.splitTextToSize(work.title, 80);
-  pdf.text(titleLines, 20, leftColumnY + 8);
-  leftColumnY += 8 + (titleLines.length * 6);
+  // Título truncado se muito longo para caber na linha
+  const maxTitleWidth = 70;
+  const titleText = pdf.getTextWidth(work.title) > maxTitleWidth 
+    ? work.title.substring(0, 35) + '...' 
+    : work.title;
+  pdf.text(titleText, 45, leftColumnY);
+  leftColumnY += 12;
   
-  // Autor principal
+  // Autor principal - em linha única
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.text('AUTOR PRINCIPAL:', 20, leftColumnY);
+  pdf.text('AUTOR PRINCIPAL: ', 20, leftColumnY);
   pdf.setFont('helvetica', 'normal');
   pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  pdf.text(work.author, 20, leftColumnY + 8);
-  leftColumnY += 20;
+  pdf.text(work.author, 60, leftColumnY);
+  leftColumnY += 12;
   
-  // CPF do autor
+  // CPF do autor - em linha única
   if (work.author_cpf) {
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.text('CPF:', 20, leftColumnY);
+    pdf.text('CPF: ', 20, leftColumnY);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-    pdf.text(work.author_cpf, 20, leftColumnY + 8);
-    leftColumnY += 20;
+    pdf.text(work.author_cpf, 35, leftColumnY);
+    leftColumnY += 12;
   }
   
-  // Endereço do autor
+  // Endereço do autor - pode precisar de múltiplas linhas
   if (work.author_address) {
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.text('ENDEREÇO:', 20, leftColumnY);
+    pdf.text('ENDEREÇO: ', 20, leftColumnY);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-    const addressLines = pdf.splitTextToSize(work.author_address, 80);
-    pdf.text(addressLines, 20, leftColumnY + 8);
-    leftColumnY += 8 + (addressLines.length * 6);
+    const addressLines = pdf.splitTextToSize(work.author_address, 65);
+    pdf.text(addressLines, 50, leftColumnY);
+    leftColumnY += 6 + (addressLines.length * 6);
   }
   
   // **COLUNA DIREITA**
   let rightColumnY = yPosition;
   
-  // Gênero e ritmo
+  // Gênero musical - em linha única
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.text('GÊNERO MUSICAL:', 110, rightColumnY);
+  pdf.text('GÊNERO MUSICAL: ', 110, rightColumnY);
   pdf.setFont('helvetica', 'normal');
   pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  pdf.text(work.genre, 110, rightColumnY + 8);
-  rightColumnY += 20;
+  pdf.text(work.genre, 155, rightColumnY);
+  rightColumnY += 12;
   
+  // Ritmo - em linha única
   if (work.rhythm) {
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.text('RITMO:', 110, rightColumnY);
+    pdf.text('RITMO: ', 110, rightColumnY);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-    pdf.text(work.rhythm, 110, rightColumnY + 8);
-    rightColumnY += 20;
+    pdf.text(work.rhythm, 130, rightColumnY);
+    rightColumnY += 12;
   }
   
-  // Versão
+  // Versão - em linha única
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.text('VERSÃO:', 110, rightColumnY);
+  pdf.text('VERSÃO: ', 110, rightColumnY);
   pdf.setFont('helvetica', 'normal');
   pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  pdf.text(work.song_version, 110, rightColumnY + 8);
-  rightColumnY += 20;
+  pdf.text(work.song_version, 135, rightColumnY);
+  rightColumnY += 12;
   
   // Co-autores (somente se houver co-autores válidos)
   const parseCoAuthors = (otherAuthors: string | null): string => {
@@ -188,12 +193,12 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   if (coAuthorsText) {
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.text('CO-AUTORES:', 110, rightColumnY);
+    pdf.text('CO-AUTORES: ', 110, rightColumnY);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-    const coAuthorsLines = pdf.splitTextToSize(coAuthorsText, 80);
-    pdf.text(coAuthorsLines, 110, rightColumnY + 8);
-    rightColumnY += 8 + (coAuthorsLines.length * 6);
+    const coAuthorsLines = pdf.splitTextToSize(coAuthorsText, 75);
+    pdf.text(coAuthorsLines, 155, rightColumnY);
+    rightColumnY += 6 + (coAuthorsLines.length * 6);
   }
   
   // **SEÇÃO DE REGISTRO**
