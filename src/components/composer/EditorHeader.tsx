@@ -2,19 +2,24 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Users } from 'lucide-react';
+import { ToolSelector, ToolType } from './ToolSelector';
 
 interface EditorHeaderProps {
   partnershipId: string | null;
   onNewClick: () => void;
   openSaveModal: () => void;
   openDAModal: () => void;
+  selectedTool?: ToolType;
+  onToolSelect?: (tool: ToolType) => void;
 }
 
 export const EditorHeader: React.FC<EditorHeaderProps> = ({
   partnershipId,
   onNewClick,
   openSaveModal,
-  openDAModal
+  openDAModal,
+  selectedTool,
+  onToolSelect
 }) => {
   return (
     <div className="flex justify-between items-center mb-2 bg-white py-2 px-3 rounded-lg shadow-sm sticky top-0">
@@ -34,6 +39,13 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
       </div>
       
       <div className="flex gap-2">
+        {selectedTool !== undefined && onToolSelect && (
+          <ToolSelector 
+            selectedTool={selectedTool}
+            onToolSelect={onToolSelect}
+          />
+        )}
+        
         <Button 
           variant="default" 
           className="bg-orange-500 hover:bg-orange-600" 

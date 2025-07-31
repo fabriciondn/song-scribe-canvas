@@ -1,12 +1,10 @@
 
-import React from 'react';
-import { MusicBases } from './MusicBases';
-import { ThemeGenerator } from './ThemeGenerator';
-import { RhymeAssistant } from './RhymeAssistant';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import React, { useState } from 'react';
 import { EditorHeader } from './EditorHeader';
 import { SoloEditor } from './SoloEditor';
 import { CollaborativeEditor } from './CollaborativeEditor';
+import { ToolPanel } from './ToolPanel';
+import { ToolType } from './ToolSelector';
 
 interface DesktopLayoutProps {
   partnershipId: string | null;
@@ -37,21 +35,19 @@ export const DesktopLayout: React.FC<DesktopLayoutProps> = ({
   openDAModal,
   onInsertBase
 }) => {
+  const [selectedTool, setSelectedTool] = useState<ToolType>(null);
+
   return (
-    <div className="container-editor">
-      {/* Coluna Esquerda: Bases Musicais */}
-      <div className="section-box">
-        <h3 className="text-lg font-medium mb-3">Bases Musicais</h3>
-        <MusicBases onInsertBase={onInsertBase} />
-      </div>
-      
-      {/* Coluna Central: Editor - agora com mais espaço */}
+    <div className={selectedTool ? "container-editor" : "container-editor-centered"}>
+      {/* Coluna Central: Editor */}
       <div className="section-box flex flex-col">
         <EditorHeader 
           partnershipId={partnershipId}
           onNewClick={onNewClick}
           openSaveModal={openSaveModal}
           openDAModal={openDAModal}
+          selectedTool={selectedTool}
+          onToolSelect={setSelectedTool}
         />
         
         {partnershipId ? (
@@ -69,15 +65,11 @@ export const DesktopLayout: React.FC<DesktopLayoutProps> = ({
         )}
       </div>
       
-      {/* Coluna Direita: Ferramentas de IA */}
-      <div className="section-box">
-        <ScrollArea className="h-full">
-          <div className="flex flex-col space-y-6">
-            <ThemeGenerator />
-            <RhymeAssistant />
-          </div>
-        </ScrollArea>
-      </div>
+      {/* Painel de Ferramentas - só aparece quando uma ferramenta está selecionada */}
+      <ToolPanel 
+        selectedTool={selectedTool}
+        onInsertBase={onInsertBase}
+      />
     </div>
   );
 };

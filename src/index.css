@@ -122,7 +122,15 @@
   /* Nova estrutura de grid para o editor */
   .container-editor {
     @apply grid gap-6;
-    grid-template-columns: 2.5fr 4fr 2.5fr;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Layout centralizado quando não há ferramentas ativas */
+  .container-editor-centered {
+    @apply flex justify-center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 2rem;
   }
 
   /* Nova classe para as seções do editor */
@@ -167,6 +175,11 @@
       grid-template-columns: none;
     }
     
+    .container-editor-centered {
+      @apply p-4;
+      max-width: 100%;
+    }
+    
     .section-box {
       @apply p-4;
       max-height: 70vh;
@@ -199,8 +212,13 @@
   /* Tablet optimizations */
   @media (min-width: 768px) and (max-width: 1024px) {
     .container-editor {
-      grid-template-columns: 1fr 2fr 1fr;
+      grid-template-columns: 1fr 1fr;
       @apply gap-4;
+    }
+    
+    .container-editor-centered {
+      @apply px-8;
+      max-width: 700px;
     }
     
     .section-box {
