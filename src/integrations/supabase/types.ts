@@ -394,35 +394,59 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          artistic_name: string | null
           avatar_url: string | null
+          birth_date: string | null
+          cep: string | null
+          city: string | null
           cpf: string | null
           created_at: string | null
           credits: number | null
           email: string | null
           id: string
           name: string | null
+          neighborhood: string | null
+          number: string | null
+          state: string | null
+          street: string | null
           username: string | null
         }
         Insert: {
           address?: string | null
+          artistic_name?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          cep?: string | null
+          city?: string | null
           cpf?: string | null
           created_at?: string | null
           credits?: number | null
           email?: string | null
           id: string
           name?: string | null
+          neighborhood?: string | null
+          number?: string | null
+          state?: string | null
+          street?: string | null
           username?: string | null
         }
         Update: {
           address?: string | null
+          artistic_name?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          cep?: string | null
+          city?: string | null
           cpf?: string | null
           created_at?: string | null
           credits?: number | null
           email?: string | null
           id?: string
           name?: string | null
+          neighborhood?: string | null
+          number?: string | null
+          state?: string | null
+          street?: string | null
           username?: string | null
         }
         Relationships: []

@@ -1,0 +1,10 @@
+-- Add new profile fields for complete user settings
+ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS artistic_name TEXT,
+ADD COLUMN IF NOT EXISTS birth_date DATE,
+ADD COLUMN IF NOT EXISTS cep TEXT,
+ADD COLUMN IF NOT EXISTS street TEXT,
+ADD COLUMN IF NOT EXISTS number TEXT,
+ADD COLUMN IF NOT EXISTS neighborhood TEXT,
+ADD COLUMN IF NOT EXISTS city TEXT,
+ADD COLUMN IF NOT EXISTS state TEXT;
