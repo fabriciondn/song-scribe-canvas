@@ -53,9 +53,9 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
     const compuseSeal = await loadImageAsBase64('/lovable-uploads/b2e99156-0e7f-46c8-8b49-eafea58416f9.png');
     pdf.addImage(compuseSeal, 'PNG', 80, 15, 50, 50); // 1,5cm = ~15mm de afastamento
 
-    // Carregar e adicionar a nova waveform (4cm de espaçamento do selo)
+    // Carregar e adicionar a nova waveform (1cm de espaçamento do selo)
     const waveform = await loadImageAsBase64('/lovable-uploads/0302ac51-1c0b-4276-8fa8-6411e9a18597.png');
-    pdf.addImage(waveform, 'PNG', 20, 105, 170, 15); // 4cm = ~40mm + altura do selo
+    pdf.addImage(waveform, 'PNG', 20, 75, 170, 15); // 1cm = ~10mm + altura do selo
   } catch (error) {
     console.error('Erro ao carregar imagens:', error);
     // Fallback para o método original se as imagens não carregarem
