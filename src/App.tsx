@@ -21,6 +21,7 @@ import Trash from "./pages/Trash";
 import Settings from "./pages/Settings";
 import Tutorials from "./pages/Tutorials";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +79,7 @@ const App = () => {
                 <Route path="/partnerships" element={<Dashboard />}>
                   <Route index element={<Partnerships />} />
                 </Route>
+                <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
