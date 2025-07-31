@@ -49,13 +49,13 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
     const templateImage = await loadImageAsBase64('/lovable-uploads/a10d0d4b-cf1d-4fbc-954c-cdb4fd0eeacc.png');
     pdf.addImage(templateImage, 'PNG', 0, 0, 210, 297);
 
-    // Carregar e adicionar o selo da Compuse (centralizado e maior)
+    // Carregar e adicionar o selo da Compuse (centralizado, 1,5cm da barra cinza)
     const compuseSeal = await loadImageAsBase64('/lovable-uploads/b2e99156-0e7f-46c8-8b49-eafea58416f9.png');
-    pdf.addImage(compuseSeal, 'PNG', 80, 10, 50, 50);
+    pdf.addImage(compuseSeal, 'PNG', 80, 15, 50, 50); // 1,5cm = ~15mm de afastamento
 
-    // Carregar e adicionar a waveform
-    const waveform = await loadImageAsBase64('/lovable-uploads/21de4260-b9fa-4fc8-aed5-f739a4758d0e.png');
-    pdf.addImage(waveform, 'PNG', 20, 50, 170, 15);
+    // Carregar e adicionar a nova waveform (4cm de espaçamento do selo)
+    const waveform = await loadImageAsBase64('/lovable-uploads/0302ac51-1c0b-4276-8fa8-6411e9a18597.png');
+    pdf.addImage(waveform, 'PNG', 20, 105, 170, 15); // 4cm = ~40mm + altura do selo
   } catch (error) {
     console.error('Erro ao carregar imagens:', error);
     // Fallback para o método original se as imagens não carregarem
@@ -68,7 +68,7 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
 
   // **DADOS PRINCIPAIS** - Layout em duas colunas
   pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  let yPosition = 80;
+  let yPosition = 130; // Ajustado para baixo devido à nova posição da waveform
   
   // Seção título
   pdf.setFontSize(14);
@@ -251,31 +251,7 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
     yPosition += (hashChunks.length * 6) + 10;
   }
   
-  // **LETRA DA MÚSICA**
-  pdf.setFontSize(11);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.text('LETRA DA MÚSICA:', 20, yPosition);
-  
-  yPosition += 10;
-  pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  
-  // Determina espaço disponível para letra
-  const remainingSpace = 250 - yPosition;
-  const maxLyricsLines = Math.floor(remainingSpace / 4);
-  
-  const lyricsLines = pdf.splitTextToSize(work.lyrics, 170);
-  const displayLyricsLines = lyricsLines.slice(0, maxLyricsLines);
-  
-  if (lyricsLines.length > maxLyricsLines) {
-    displayLyricsLines[displayLyricsLines.length - 1] = displayLyricsLines[displayLyricsLines.length - 1] + ' [continua...]';
-  }
-  
-  pdf.text(displayLyricsLines, 20, yPosition);
-  
-  // **FOOTER** - Tarja preta inferior
+  // **FOOTER** - Tarja preta inferior da primeira página
   pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
   pdf.rect(0, 275, 210, 22, 'F');
   
@@ -285,36 +261,34 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   pdf.text('Este certificado comprova o registro da obra musical na plataforma COMPUSE', 105, 285, { align: 'center' });
   pdf.text(`compuse.com.br | Documento gerado em ${new Date().toLocaleDateString('pt-BR')}`, 105, 292, { align: 'center' });
   
-  // **SEGUNDA PÁGINA** - Letra completa (se necessário)
-  if (lyricsLines.length > maxLyricsLines) {
-    pdf.addPage();
-    
-    // Header da segunda página
-    pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.rect(0, 0, 210, 35, 'F');
-    
-    pdf.setTextColor(whiteColor[0], whiteColor[1], whiteColor[2]);
-    pdf.setFontSize(16);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('LETRA COMPLETA', 105, 22, { align: 'center' });
-    
-    // Letra completa
-    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    
-    const fullLyricsLines = pdf.splitTextToSize(work.lyrics, 170);
-    pdf.text(fullLyricsLines, 20, 50);
-    
-    // Footer da segunda página
-    pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
-    pdf.rect(0, 275, 210, 22, 'F');
-    
-    pdf.setTextColor(whiteColor[0], whiteColor[1], whiteColor[2]);
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('COMPUSE - Plataforma de Registro Musical', 105, 286, { align: 'center' });
-  }
+  // **SEGUNDA PÁGINA** - Letra completa (sempre criada)
+  pdf.addPage();
+  
+  // Header da segunda página
+  pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
+  pdf.rect(0, 0, 210, 35, 'F');
+  
+  pdf.setTextColor(whiteColor[0], whiteColor[1], whiteColor[2]);
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('LETRA COMPLETA', 105, 22, { align: 'center' });
+  
+  // Letra completa
+  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  
+  const fullLyricsLines = pdf.splitTextToSize(work.lyrics, 170);
+  pdf.text(fullLyricsLines, 20, 50);
+  
+  // Footer da segunda página
+  pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
+  pdf.rect(0, 275, 210, 22, 'F');
+  
+  pdf.setTextColor(whiteColor[0], whiteColor[1], whiteColor[2]);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('COMPUSE - Plataforma de Registro Musical', 105, 286, { align: 'center' });
   
   // Download do PDF
   const fileName = `certificado_${work.title.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getTime()}.pdf`;
