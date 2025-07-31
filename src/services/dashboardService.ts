@@ -34,14 +34,6 @@ export interface DashboardStats {
       count: number;
     }>;
   };
-  templates: {
-    created: number;
-    generated: number;
-    lastDA?: {
-      title: string;
-      date: string;
-    };
-  };
   registeredWorks: {
     total: number;
     lastRegistered?: {
@@ -65,12 +57,11 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     console.log('👤 User ID:', userId);
 
     // Fetch all data in parallel for better performance
-    const [songsResult, draftsResult, partnershipsResult, foldersResult, templatesResult, registeredWorksResult] = await Promise.allSettled([
+    const [songsResult, draftsResult, partnershipsResult, foldersResult, registeredWorksResult] = await Promise.allSettled([
       supabase.from('songs').select('*').eq('user_id', userId),
       supabase.from('drafts').select('*').eq('user_id', userId),
       supabase.from('partnerships').select('*').eq('user_id', userId),
       supabase.from('folders').select('*').eq('user_id', userId),
-      supabase.from('templates').select('*').eq('user_id', userId),
       supabase.from('author_registrations').select('*').eq('user_id', userId).eq('status', 'registered')
     ]);
 
@@ -79,7 +70,6 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       drafts: draftsResult.status,
       partnerships: partnershipsResult.status,
       folders: foldersResult.status,
-      templates: templatesResult.status,
       registeredWorks: registeredWorksResult.status
     });
 
@@ -88,13 +78,12 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     const drafts = draftsResult.status === 'fulfilled' ? draftsResult.value.data || [] : [];
     const partnerships = partnershipsResult.status === 'fulfilled' ? partnershipsResult.value.data || [] : [];
     const folders = foldersResult.status === 'fulfilled' ? foldersResult.value.data || [] : [];
-    const templates = templatesResult.status === 'fulfilled' ? templatesResult.value.data || [] : [];
     const registeredWorks = registeredWorksResult.status === 'fulfilled' ? registeredWorksResult.value.data || [] : [];
 
     // Log any errors
-    [songsResult, draftsResult, partnershipsResult, foldersResult, templatesResult, registeredWorksResult].forEach((result, index) => {
+    [songsResult, draftsResult, partnershipsResult, foldersResult, registeredWorksResult].forEach((result, index) => {
       if (result.status === 'rejected') {
-        const tables = ['songs', 'drafts', 'partnerships', 'folders', 'templates', 'author_registrations'];
+        const tables = ['songs', 'drafts', 'partnerships', 'folders', 'author_registrations'];
         console.error(`❌ Erro ao carregar ${tables[index]}:`, result.reason);
       }
     });
@@ -104,7 +93,6 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       drafts: drafts.length,
       partnerships: partnerships.length,
       folders: folders.length,
-      templates: templates.length,
       registeredWorks: registeredWorks.length
     });
 
@@ -149,9 +137,6 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       });
     }
 
-    const lastTemplate = templates.sort((a, b) => 
-      new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()
-    )[0];
 
     const lastRegisteredWork = registeredWorks.sort((a, b) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -177,14 +162,6 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       folders: {
         total: folders.length,
         breakdown: folderBreakdown
-      },
-      templates: {
-        created: templates.length,
-        generated: 0, // Would need to track DA generations
-        lastDA: lastTemplate ? {
-          title: `DA - ${lastTemplate.name}`,
-          date: new Date(lastTemplate.updated_at || lastTemplate.created_at).toLocaleDateString('pt-BR')
-        } : undefined
       },
       registeredWorks: {
         total: registeredWorks.length,

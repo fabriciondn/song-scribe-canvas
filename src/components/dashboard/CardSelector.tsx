@@ -22,7 +22,6 @@ const cardOptions = [
   { id: 'partnerships', name: 'Parcerias', icon: Users, color: 'text-purple-600' },
   { id: 'registeredWorks', name: 'Obras Registradas', icon: Shield, color: 'text-green-600' },
   { id: 'folders', name: 'Pastas', icon: Folder, color: 'text-yellow-600' },
-  { id: 'templates', name: 'Modelos de DA', icon: FileText, color: 'text-indigo-600' },
 ];
 
 export const CardSelector: React.FC<CardSelectorProps> = ({ 

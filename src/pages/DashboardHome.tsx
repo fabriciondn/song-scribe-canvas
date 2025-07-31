@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,6 @@ import {
   DollarSign, 
   Users, 
   Folder, 
-  FileText, 
   Bell, 
   Eye,
   UserPlus,
@@ -27,21 +26,12 @@ import {
 } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useMobileDetection } from '@/hooks/use-mobile';
+import { useDashboardCardSelection } from '@/hooks/useDashboardCardSelection';
 
 const DashboardHome: React.FC = () => {
-  const [expandedSections, setExpandedSections] = useState<string[]>(['all']);
   const { stats, isLoading, error } = useDashboardStats();
   const isMobile = useMobileDetection();
-
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => 
-      prev.includes(section) 
-        ? prev.filter(s => s !== section)
-        : [...prev, section]
-    );
-  };
-
-  const isExpanded = (section: string) => expandedSections.includes('all') || expandedSections.includes(section);
+  const { expandedSections, toggleSection, isExpanded } = useDashboardCardSelection();
 
   if (isLoading) {
     return (
@@ -273,48 +263,6 @@ const DashboardHome: React.FC = () => {
           </Card>
         )}
 
-        {/* Modelos de DA */}
-        {isExpanded('templates') && (
-          <Card className="hover:shadow-lg transition-all duration-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-indigo-600" />
-                Modelos de DA
-              </CardTitle>
-              <CardDescription>Declarações de autoria</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center p-4 bg-muted rounded-lg">
-                  <div className="text-2xl font-bold text-indigo-600">{stats.templates.created}</div>
-                  <div className="text-sm text-muted-foreground">Modelos Criados</div>
-                </div>
-                <div className="text-center p-4 bg-muted rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{stats.templates.generated}</div>
-                  <div className="text-sm text-muted-foreground">DAs Gerados</div>
-                </div>
-              </div>
-              {stats.templates.lastDA ? (
-                <div className="p-4 bg-muted rounded-lg mb-4">
-                  <div className="font-medium text-foreground">{stats.templates.lastDA.title}</div>
-                  <div className="text-sm text-muted-foreground mb-2">{stats.templates.lastDA.date}</div>
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4 mr-1" />
-                    Visualizar PDF
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center p-4 bg-muted rounded-lg mb-4">
-                  <FileText className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-muted-foreground">Nenhum modelo criado ainda</p>
-                </div>
-              )}
-              <Button variant="outline" className="w-full" asChild>
-                <Link to="/templates">{stats.templates.created === 0 ? 'Criar Primeiro Modelo' : 'Gerenciar Modelos'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       {/* Mensagem sobre dados em tempo real */}

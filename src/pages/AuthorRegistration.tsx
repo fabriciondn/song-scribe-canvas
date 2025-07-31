@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { CreditCard, ArrowLeft } from 'lucide-react';
 import { AuthorRegistrationForm } from '@/components/author-registration/AuthorRegistrationForm';
 import { AuthorRegistrationReview } from '@/components/author-registration/AuthorRegistrationReview';
+import { ProfileCompletionCheck } from '@/components/author-registration/ProfileCompletionCheck';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { useMobileDetection } from '@/hooks/use-mobile';
@@ -139,6 +140,10 @@ const AuthorRegistration: React.FC = () => {
             Registre suas músicas e proteja seus direitos autorais
           </p>
         </div>
+
+        <ProfileCompletionCheck 
+          onContinue={() => setStep('form')} 
+        />
 
         {step === 'form' && (
           <AuthorRegistrationForm 
