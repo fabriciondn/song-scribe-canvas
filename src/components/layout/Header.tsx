@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useTheme } from '@/hooks/useTheme';
+import { logUserActivity } from '@/services/userActivityService';
 import { Link } from 'react-router-dom';
 import { Menu, LogOut, Music, Home, CreditCard, Plus, Moon, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ export const Header = ({
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
+      await logUserActivity('user_logout');
       await logout();
     } catch (error) {
       console.error('Error logging out:', error);

@@ -37,6 +37,10 @@ export const AdminUsers: React.FC = () => {
       // Invalidar múltiplas queries relacionadas
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['online-users-count'] });
+      
+      // Também forçar atualização em outros componentes que podem usar créditos
+      queryClient.refetchQueries({ queryKey: ['user-credits'] });
       
       setIsEditModalOpen(false);
       setSelectedUser(null);

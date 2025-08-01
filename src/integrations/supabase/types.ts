@@ -639,6 +639,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity_logs: {
+        Row: {
+          action: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          timestamp: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          timestamp?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           assigned_by: string | null
@@ -671,6 +701,7 @@ export type Database = {
           created_at: string
           id: string
           ip_address: string | null
+          is_active: boolean | null
           last_activity: string
           session_id: string
           user_agent: string | null
@@ -680,6 +711,7 @@ export type Database = {
           created_at?: string
           id?: string
           ip_address?: string | null
+          is_active?: boolean | null
           last_activity?: string
           session_id: string
           user_agent?: string | null
@@ -689,6 +721,7 @@ export type Database = {
           created_at?: string
           id?: string
           ip_address?: string | null
+          is_active?: boolean | null
           last_activity?: string
           session_id?: string
           user_agent?: string | null
@@ -775,6 +808,10 @@ export type Database = {
           user_id: string | null
         }[]
       }
+      get_online_users_count: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -782,6 +819,10 @@ export type Database = {
       is_user_admin: {
         Args: { check_user_id: string }
         Returns: boolean
+      }
+      log_user_activity: {
+        Args: { p_action: string; p_metadata?: Json }
+        Returns: undefined
       }
       update_draft: {
         Args: { draft_id: string; draft_updates: Json }

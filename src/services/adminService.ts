@@ -134,6 +134,22 @@ export const getRecentActivity = async (): Promise<RecentActivity[]> => {
   }
 };
 
+export const getOnlineUsersCount = async (): Promise<number> => {
+  try {
+    const { data, error } = await supabase.rpc('get_online_users_count');
+    
+    if (error) {
+      console.error('Erro ao buscar usuários online:', error);
+      return 0;
+    }
+
+    return data || 0;
+  } catch (error) {
+    console.error('Erro ao buscar usuários online:', error);
+    return 0;
+  }
+};
+
 export const updateUserCredits = async (userId: string, credits: number) => {
   try {
     const { error } = await supabase
