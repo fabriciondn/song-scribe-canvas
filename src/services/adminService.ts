@@ -152,10 +152,10 @@ export const getOnlineUsersCount = async (): Promise<number> => {
 
 export const updateUserCredits = async (userId: string, credits: number) => {
   try {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ credits })
-      .eq('id', userId);
+    const { error } = await supabase.rpc('admin_update_user_credits', {
+      target_user_id: userId,
+      new_credits: credits
+    });
 
     if (error) {
       throw new Error(`Erro ao atualizar créditos: ${error.message}`);

@@ -734,6 +734,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_user_credits: {
+        Args: { target_user_id: string; new_credits: number }
+        Returns: undefined
+      }
       check_admin_access: {
         Args: Record<PropertyKey, never>
         Returns: boolean
