@@ -34,9 +34,29 @@ const adminMenuItems = [
     id: "users",
   },
   {
+    title: "Gerenciar Funções",
+    icon: Shield,
+    id: "roles",
+  },
+  {
     title: "Conteúdo",
     icon: FileText,
     id: "content",
+  },
+  {
+    title: "Tutoriais",
+    icon: ScrollText,
+    id: "tutorials",
+  },
+  {
+    title: "Banners",
+    icon: FileText,
+    id: "banners",
+  },
+  {
+    title: "Certificados",
+    icon: Settings,
+    id: "certificates",
   },
   {
     title: "Analytics",

@@ -6,7 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AdminOverview } from '@/components/admin/AdminOverview';
 import { AdminUsers } from '@/components/admin/AdminUsers';
+import { AdminRoles } from '@/components/admin/AdminRoles';
 import { AdminContent } from '@/components/admin/AdminContent';
+import { AdminTutorials } from '@/components/admin/AdminTutorials';
+import { AdminBanners } from '@/components/admin/AdminBanners';
+import { AdminCertificates } from '@/components/admin/AdminCertificates';
 import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
 import { AdminSettings } from '@/components/admin/AdminSettings';
 import { AdminLogs } from '@/components/admin/AdminLogs';
@@ -122,8 +126,16 @@ const AdminDashboard: React.FC = () => {
         return <AdminOverview />;
       case 'users':
         return <AdminUsers />;
+      case 'roles':
+        return <AdminRoles />;
       case 'content':
         return <AdminContent />;
+      case 'tutorials':
+        return <AdminTutorials />;
+      case 'banners':
+        return <AdminBanners />;
+      case 'certificates':
+        return <AdminCertificates />;
       case 'analytics':
         return <AdminAnalytics />;
       case 'logs':
