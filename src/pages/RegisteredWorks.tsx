@@ -94,16 +94,23 @@ const RegisteredWorks: React.FC = () => {
     }
 
     try {
-      // Parar áudio atual se estiver tocando
+      // Se já está tocando este áudio, pausar/retomar
+      if (playingAudio === work.id && currentAudio) {
+        if (currentAudio.paused) {
+          await currentAudio.play();
+          setPlayingAudio(work.id);
+        } else {
+          currentAudio.pause();
+          setPlayingAudio(null);
+        }
+        return;
+      }
+
+      // Parar áudio atual se estiver tocando outro
       if (currentAudio) {
         currentAudio.pause();
         setCurrentAudio(null);
         setPlayingAudio(null);
-      }
-
-      if (playingAudio === work.id) {
-        setPlayingAudio(null);
-        return;
       }
 
       // Obter URL pública do arquivo
@@ -139,6 +146,44 @@ const RegisteredWorks: React.FC = () => {
       });
       setPlayingAudio(null);
       setCurrentAudio(null);
+    }
+  };
+
+  const handleDownloadAudio = async (work: RegisteredWork) => {
+    if (!work.audio_file_path) {
+      toast({
+        title: "Áudio não disponível",
+        description: "Esta obra não possui arquivo de áudio.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Obter URL pública do arquivo
+      const { data } = supabase.storage
+        .from('author-registrations')
+        .getPublicUrl(work.audio_file_path);
+
+      // Criar link de download
+      const link = document.createElement('a');
+      link.href = data.publicUrl;
+      link.download = `${work.title.replace(/[^a-zA-Z0-9]/g, '_')}.mp3`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Download iniciado",
+        description: `O download do áudio de "${work.title}" foi iniciado.`,
+      });
+    } catch (error) {
+      console.error('Erro ao baixar áudio:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível baixar o áudio.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -318,39 +363,52 @@ const RegisteredWorks: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col gap-4">
+                  {/* Controles de Áudio */}
                   {work.audio_file_path ? (
-                    <Button 
-                      variant="outline"
-                      onClick={() => handlePlayAudio(work)}
-                      className="flex items-center gap-2"
-                      disabled={playingAudio === work.id}
-                    >
-                      {playingAudio === work.id ? (
-                        <Pause className="h-4 w-4" />
-                      ) : (
-                        <Play className="h-4 w-4" />
-                      )}
-                      {playingAudio === work.id ? 'Pausar Áudio' : 'Reproduzir Áudio'}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline"
+                        onClick={() => handlePlayAudio(work)}
+                        className="flex items-center gap-2"
+                      >
+                        {playingAudio === work.id ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
+                        {playingAudio === work.id ? 'Pausar Áudio' : 'Reproduzir Áudio'}
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleDownloadAudio(work)}
+                        className="flex items-center gap-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        Baixar Áudio MP3
+                      </Button>
+                    </div>
                   ) : (
                     <div className="text-sm text-muted-foreground">
                       Áudio não disponível
                     </div>
                   )}
                   
-                  <Button 
-                    onClick={() => handleDownloadCertificate(work)}
-                    className="flex items-center gap-2"
-                    disabled={downloadingWork === work.id}
-                  >
-                    {downloadingWork === work.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="h-4 w-4" />
-                    )}
-                    {downloadingWork === work.id ? 'Gerando PDF...' : 'Baixar Certificado PDF'}
-                  </Button>
+                  {/* Botão de Certificado */}
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={() => handleDownloadCertificate(work)}
+                      className="flex items-center gap-2"
+                      disabled={downloadingWork === work.id}
+                    >
+                      {downloadingWork === work.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
+                      {downloadingWork === work.id ? 'Gerando PDF...' : 'Baixar Certificado PDF'}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
