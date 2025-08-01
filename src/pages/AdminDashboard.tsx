@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AdminOverview } from '@/components/admin/AdminOverview';
@@ -11,11 +10,14 @@ import { AdminContent } from '@/components/admin/AdminContent';
 import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
 import { AdminSettings } from '@/components/admin/AdminSettings';
 import { AdminLogs } from '@/components/admin/AdminLogs';
-import { Shield, Users, FileText, BarChart3, Settings, AlertTriangle, CheckCircle, Clock, Activity, ScrollText } from 'lucide-react';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
+import { Shield, Users, BarChart3, AlertTriangle, CheckCircle, Clock, Activity } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
   const [systemHealth, setSystemHealth] = useState({
     status: 'healthy',
     uptime: '99.9%',
@@ -114,13 +116,35 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case 'overview':
+        return <AdminOverview />;
+      case 'users':
+        return <AdminUsers />;
+      case 'content':
+        return <AdminContent />;
+      case 'analytics':
+        return <AdminAnalytics />;
+      case 'logs':
+        return <AdminLogs />;
+      case 'settings':
+        return <AdminSettings />;
+      default:
+        return <AdminOverview />;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-      {/* Header Premium */}
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container max-w-screen-2xl mx-auto">
-          <div className="flex h-16 items-center justify-between px-6">
-            <div className="flex items-center space-x-4">
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        
+        <SidebarInset className="flex-1">
+          {/* Header */}
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger className="-ml-1" />
+            <div className="flex items-center space-x-4 flex-1">
               <div className="flex items-center space-x-2">
                 <Shield className="h-8 w-8 text-primary" />
                 <div>
@@ -152,128 +176,73 @@ const AdminDashboard: React.FC = () => {
                 Uptime: {systemHealth.uptime}
               </Button>
             </div>
-          </div>
-        </div>
+          </header>
+
+          {/* Conteúdo Principal */}
+          <main className="flex-1 p-6 bg-gradient-to-br from-background to-secondary/20">
+            <div className="space-y-6">
+              {/* Métricas Rápidas */}
+              <div className="grid gap-4 md:grid-cols-4">
+                <Card className="bg-gradient-to-r from-blue-500/10 to-blue-600/10 border-blue-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-blue-700">Resposta Média</p>
+                        <p className="text-2xl font-bold text-blue-900">{systemHealth.responseTime}</p>
+                      </div>
+                      <BarChart3 className="h-8 w-8 text-blue-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-gradient-to-r from-green-500/10 to-green-600/10 border-green-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-700">Uptime</p>
+                        <p className="text-2xl font-bold text-green-900">{systemHealth.uptime}</p>
+                      </div>
+                      <CheckCircle className="h-8 w-8 text-green-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-gradient-to-r from-purple-500/10 to-purple-600/10 border-purple-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-purple-700">Usuários Online</p>
+                        <p className="text-2xl font-bold text-purple-900">{systemHealth.activeUsers}</p>
+                      </div>
+                      <Users className="h-8 w-8 text-purple-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-orange-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-orange-700">Status</p>
+                        <p className="text-xl font-bold text-orange-900">Operacional</p>
+                      </div>
+                      <Shield className="h-8 w-8 text-orange-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Conteúdo da Aba Ativa */}
+              <Card className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <CardContent className="p-6">
+                  {renderActiveTab()}
+                </CardContent>
+              </Card>
+            </div>
+          </main>
+        </SidebarInset>
       </div>
-
-      {/* Conteúdo Principal */}
-      <div className="container max-w-screen-2xl mx-auto p-6">
-        <div className="space-y-6">
-          {/* Métricas Rápidas */}
-          <div className="grid gap-4 md:grid-cols-4">
-            <Card className="bg-gradient-to-r from-blue-500/10 to-blue-600/10 border-blue-200">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-blue-700">Resposta Média</p>
-                    <p className="text-2xl font-bold text-blue-900">{systemHealth.responseTime}</p>
-                  </div>
-                  <BarChart3 className="h-8 w-8 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-r from-green-500/10 to-green-600/10 border-green-200">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-green-700">Uptime</p>
-                    <p className="text-2xl font-bold text-green-900">{systemHealth.uptime}</p>
-                  </div>
-                  <CheckCircle className="h-8 w-8 text-green-600" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-r from-purple-500/10 to-purple-600/10 border-purple-200">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-purple-700">Usuários Online</p>
-                    <p className="text-2xl font-bold text-purple-900">{systemHealth.activeUsers}</p>
-                  </div>
-                  <Users className="h-8 w-8 text-purple-600" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-orange-200">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-orange-700">Status</p>
-                    <p className="text-xl font-bold text-orange-900">Operacional</p>
-                  </div>
-                  <Shield className="h-8 w-8 text-orange-600" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Painel de Navegação */}
-          <Card className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <CardContent className="p-0">
-              <Tabs defaultValue="overview" className="w-full">
-                <div className="border-b">
-                  <TabsList className="grid w-full grid-cols-6 bg-transparent">
-                    <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
-                      <BarChart3 className="h-4 w-4" />
-                      <span className="hidden sm:inline">Visão Geral</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="users" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
-                      <Users className="h-4 w-4" />
-                      <span className="hidden sm:inline">Usuários</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="content" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
-                      <FileText className="h-4 w-4" />
-                      <span className="hidden sm:inline">Conteúdo</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="analytics" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
-                      <BarChart3 className="h-4 w-4" />
-                      <span className="hidden sm:inline">Analytics</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="logs" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
-                      <ScrollText className="h-4 w-4" />
-                      <span className="hidden sm:inline">Logs</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="settings" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
-                      <Settings className="h-4 w-4" />
-                      <span className="hidden sm:inline">Configurações</span>
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-
-                <div className="p-6">
-                  <TabsContent value="overview" className="mt-0">
-                    <AdminOverview />
-                  </TabsContent>
-
-                  <TabsContent value="users" className="mt-0">
-                    <AdminUsers />
-                  </TabsContent>
-
-                  <TabsContent value="content" className="mt-0">
-                    <AdminContent />
-                  </TabsContent>
-
-                  <TabsContent value="analytics" className="mt-0">
-                    <AdminAnalytics />
-                  </TabsContent>
-
-                  <TabsContent value="logs" className="mt-0">
-                    <AdminLogs />
-                  </TabsContent>
-
-                  <TabsContent value="settings" className="mt-0">
-                    <AdminSettings />
-                  </TabsContent>
-                </div>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
