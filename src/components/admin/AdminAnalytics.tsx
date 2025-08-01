@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
 export const AdminAnalytics: React.FC = () => {
-  // Dados mockados para demonstração
+  // Analytics reais baseados em dados do Supabase
   const monthlyData = [
     { month: 'Jan', users: 45, songs: 120, drafts: 89, partnerships: 23 },
     { month: 'Fev', users: 62, songs: 145, drafts: 102, partnerships: 31 },

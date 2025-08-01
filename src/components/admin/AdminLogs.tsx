@@ -39,49 +39,12 @@ export const AdminLogs: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  // Gerar logs simulados para demonstração
-  const generateMockLogs = (): LogEntry[] => {
-    const actions = [
-      'User login',
-      'User logout', 
-      'Song created',
-      'Draft saved',
-      'Partnership created',
-      'Registration submitted',
-      'Template created',
-      'Folder created',
-      'Credits updated',
-      'Profile updated'
-    ];
-
-    const levels: LogEntry['level'][] = ['info', 'warning', 'error', 'success'];
-    const mockLogs: LogEntry[] = [];
-
-    for (let i = 0; i < 50; i++) {
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - i * 5);
-      
-      mockLogs.push({
-        id: `log-${i}`,
-        timestamp: now.toISOString(),
-        level: levels[Math.floor(Math.random() * levels.length)],
-        message: `${actions[Math.floor(Math.random() * actions.length)]} completed ${i > 30 ? 'with issues' : 'successfully'}`,
-        user_id: `user-${Math.floor(Math.random() * 100)}`,
-        action: actions[Math.floor(Math.random() * actions.length)],
-        ip_address: `192.168.1.${Math.floor(Math.random() * 255)}`,
-        user_agent: 'Mozilla/5.0 Chrome/91.0'
-      });
-    }
-
-    return mockLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  };
-
   useEffect(() => {
     const loadLogs = () => {
-      // Em uma implementação real, você buscaria os logs do Supabase
-      const mockLogs = generateMockLogs();
-      setLogs(mockLogs);
-      setFilteredLogs(mockLogs);
+      // Em um sistema real, aqui buscaríamos os logs do Supabase
+      // Por enquanto, retornamos array vazio para mostrar apenas dados reais
+      setLogs([]);
+      setFilteredLogs([]);
       setIsLoading(false);
     };
 
