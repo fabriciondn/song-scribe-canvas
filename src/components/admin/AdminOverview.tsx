@@ -22,19 +22,19 @@ export const AdminOverview: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['admin-dashboard-stats'],
     queryFn: getAdminDashboardStats,
-    refetchInterval: 30000, // Atualizar a cada 30 segundos
+    refetchInterval: 5000, // Atualizar a cada 5 segundos
   });
 
   const { data: recentActivity, isLoading: activityLoading } = useQuery({
     queryKey: ['admin-recent-activity'],
     queryFn: getRecentActivity,
-    refetchInterval: 60000, // Atualizar a cada minuto
+    refetchInterval: 3000, // Atualizar a cada 3 segundos para tempo real
   });
 
   const { data: onlineUsers, isLoading: onlineUsersLoading } = useQuery({
     queryKey: ['online-users-count'],
     queryFn: getOnlineUsersCount,
-    refetchInterval: 30000, // Atualizar a cada 30 segundos
+    refetchInterval: 5000, // Atualizar a cada 5 segundos
   });
 
   if (statsLoading) {
@@ -47,20 +47,20 @@ export const AdminOverview: React.FC = () => {
 
   // Calcular métricas em tempo real baseadas em dados reais
   const uptime = 99.9; // Em produção, seria calculado baseado em logs do sistema
-  const responseTime = 121; // ms - em produção viria de monitoramento APM
+  const responseTime = Math.floor(Math.random() * 50) + 100; // Simulação mais realista
 
   return (
     <div className="space-y-6">
-      {/* Métricas Principais - Baseadas na imagem */}
+      {/* Métricas Principais - Apenas 4 cards com dados reais */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-700">Resposta Média</p>
-                <p className="text-2xl font-bold text-blue-900">{responseTime}ms</p>
+                <p className="text-sm font-medium text-blue-700">Total Usuários</p>
+                <p className="text-2xl font-bold text-blue-900">{stats?.totalUsers || 0}</p>
               </div>
-              <BarChart3 className="h-8 w-8 text-blue-600" />
+              <Users className="h-8 w-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
@@ -69,10 +69,10 @@ export const AdminOverview: React.FC = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-700">Uptime</p>
-                <p className="text-2xl font-bold text-green-900">{uptime}%</p>
+                <p className="text-sm font-medium text-green-700">Usuários Ativos</p>
+                <p className="text-2xl font-bold text-green-900">{stats?.activeUsers || 0}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-600" />
+              <TrendingUp className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
@@ -84,7 +84,7 @@ export const AdminOverview: React.FC = () => {
                 <p className="text-sm font-medium text-purple-700">Usuários Online</p>
                 <p className="text-2xl font-bold text-purple-900">{onlineUsers || 0}</p>
               </div>
-              <Users className="h-8 w-8 text-purple-600" />
+              <Activity className="h-8 w-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
@@ -93,117 +93,10 @@ export const AdminOverview: React.FC = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-orange-700">Status</p>
-                <p className="text-lg font-bold text-orange-900">Operacional</p>
+                <p className="text-sm font-medium text-orange-700">Total Músicas</p>
+                <p className="text-2xl font-bold text-orange-900">{stats?.totalSongs || 0}</p>
               </div>
-              <Shield className="h-8 w-8 text-orange-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Estatísticas Detalhadas */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <Users className="h-5 w-5 text-blue-600" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total de Usuários</p>
-                <p className="text-2xl font-bold">{stats?.totalUsers || 0}</p>
-                <p className="text-xs text-muted-foreground">Usuários registrados na plataforma</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-green-600" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Usuários Ativos</p>
-                <p className="text-2xl font-bold">{stats?.activeUsers || 0}</p>
-                <p className="text-xs text-muted-foreground">Últimas 24 horas</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <Music className="h-5 w-5 text-purple-600" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total de Músicas</p>
-                <p className="text-2xl font-bold">{stats?.totalSongs || 0}</p>
-                <p className="text-xs text-muted-foreground">Composições finalizadas</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <FileText className="h-5 w-5 text-orange-600" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Rascunhos</p>
-                <p className="text-2xl font-bold">{stats?.totalDrafts || 0}</p>
-                <p className="text-xs text-muted-foreground">Trabalhos em progresso</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <Briefcase className="h-5 w-5 text-indigo-600" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Parcerias</p>
-                <p className="text-2xl font-bold">{stats?.totalPartnerships || 0}</p>
-                <p className="text-xs text-muted-foreground">Colaborações ativas</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <Award className="h-5 w-5 text-yellow-600" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Obras Registradas</p>
-                <p className="text-2xl font-bold">{stats?.totalRegisteredWorks || 0}</p>
-                <p className="text-xs text-muted-foreground">Registros de autoria</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <File className="h-5 w-5 text-teal-600" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Templates</p>
-                <p className="text-2xl font-bold">{stats?.totalTemplates || 0}</p>
-                <p className="text-xs text-muted-foreground">Modelos salvos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <FolderOpen className="h-5 w-5 text-cyan-600" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Pastas</p>
-                <p className="text-2xl font-bold">{stats?.totalFolders || 0}</p>
-                <p className="text-xs text-muted-foreground">Organização de conteúdo</p>
-              </div>
+              <Music className="h-8 w-8 text-orange-600" />
             </div>
           </CardContent>
         </Card>
@@ -225,17 +118,26 @@ export const AdminOverview: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {recentActivity?.slice(0, 10).map((activity, index) => (
-                <div key={index} className="flex items-center space-x-4 text-sm">
+                <div key={index} className="flex items-center space-x-4 text-sm border-b border-gray-100 last:border-0 pb-3 last:pb-0">
                   <div className="flex-shrink-0">
                     {activity.type === 'song' && <Music className="h-4 w-4 text-purple-600" />}
                     {activity.type === 'draft' && <FileText className="h-4 w-4 text-orange-600" />}
                     {activity.type === 'partnership' && <Briefcase className="h-4 w-4 text-indigo-600" />}
+                    {activity.type === 'registration' && <Award className="h-4 w-4 text-yellow-600" />}
+                    {activity.type === 'user' && <Users className="h-4 w-4 text-blue-600" />}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{activity.description}</p>
                     <p className="text-xs text-muted-foreground">
-                      por {activity.user_name} • {new Date(activity.created_at).toLocaleDateString('pt-BR')}
+                      por {activity.user_name} • {new Date(activity.created_at).toLocaleString('pt-BR')}
                     </p>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3 inline mr-1" />
+                    {new Date(activity.created_at).toLocaleTimeString('pt-BR', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
                   </div>
                 </div>
               ))}
