@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Edit, FileText, Folder, BookText, Users, Menu, X, FileMusic, ListMusic, DollarSign, BarChart3, Trash2, Shield, User } from 'lucide-react';
+import { Edit, FileText, Folder, BookText, Users, Menu, X, FileMusic, ListMusic, DollarSign, BarChart3, Trash2, Shield, User, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -19,6 +20,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
   toggleCollapse
 }) => {
   const location = useLocation();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Verificar se o usuário é admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data } = await supabase
+            .from('admin_users')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single();
+          
+          setIsAdmin(!!data);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar status admin:', error);
+      }
+    };
+
+    checkAdminStatus();
+  }, []);
+
   const menuItems = [{
     label: 'Dashboard',
     icon: <BarChart3 size={20} />,
@@ -64,6 +89,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     icon: <Trash2 size={20} />,
     path: '/dashboard/trash'
   }];
+
+  // Adicionar item de administração se o usuário for admin
+  if (isAdmin) {
+    menuItems.push({
+      label: 'Administração',
+      icon: <Settings size={20} />,
+      path: '/admin'
+    });
+  }
 
   return (
     <>
