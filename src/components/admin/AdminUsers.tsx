@@ -33,7 +33,11 @@ export const AdminUsers: React.FC = () => {
         title: 'Sucesso',
         description: 'Créditos atualizados com sucesso!',
       });
+      
+      // Invalidar múltiplas queries relacionadas
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] });
+      
       setIsEditModalOpen(false);
       setSelectedUser(null);
       setNewCredits('');

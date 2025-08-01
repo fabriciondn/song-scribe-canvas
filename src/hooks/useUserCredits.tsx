@@ -8,60 +8,67 @@ export const useUserCredits = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchCredits = async () => {
-      if (!user) {
-        setCredits(0);
-        setIsLoading(false);
-        return;
-      }
+  const fetchCredits = async () => {
+    if (!user) {
+      setCredits(0);
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('credits')
-          .eq('id', user.id)
-          .single();
-
-        if (error) {
-          console.error('Error fetching credits:', error);
-          setError('Erro ao carregar créditos');
-          setCredits(0);
-        } else {
-          setCredits(data?.credits || 0);
-        }
-      } catch (err) {
-        console.error('Error:', err);
-        setError('Erro ao carregar créditos');
-        setCredits(0);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCredits();
-  }, [user]);
-
-  const refreshCredits = () => {
-    setIsLoading(true);
-    setError(null);
-    // Re-trigger the effect
-    if (user) {
-      supabase
+    try {
+      const { data, error } = await supabase
         .from('profiles')
         .select('credits')
         .eq('id', user.id)
-        .single()
-        .then(({ data, error }) => {
-          if (error) {
-            setError('Erro ao carregar créditos');
-            setCredits(0);
-          } else {
-            setCredits(data?.credits || 0);
-          }
-          setIsLoading(false);
-        });
+        .single();
+
+      if (error) {
+        console.error('Error fetching credits:', error);
+        setError('Erro ao carregar créditos');
+        setCredits(0);
+      } else {
+        setCredits(data?.credits || 0);
+        setError(null);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Erro ao carregar créditos');
+      setCredits(0);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchCredits();
+
+    // Configurar listener para mudanças em tempo real
+    const channel = supabase
+      .channel('credits-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user?.id}`,
+        },
+        (payload) => {
+          console.log('Créditos atualizados em tempo real:', payload);
+          setCredits(payload.new.credits || 0);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const refreshCredits = async () => {
+    setIsLoading(true);
+    setError(null);
+    await fetchCredits();
   };
 
   return {
