@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAdminAccess } from '@/hooks/useAdminAccess';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminOverview } from '@/components/admin/AdminOverview';
@@ -11,7 +11,54 @@ import { AdminSettings } from '@/components/admin/AdminSettings';
 import { Shield, Users, FileText, BarChart3, Settings } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
-  const { isAdmin, isLoading } = useAdminAccess();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      console.log('🔍 AdminDashboard: Verificando status de admin...');
+      
+      try {
+        // Verificar se há usuário autenticado
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('📊 Sessão atual:', { session: !!session, user: session?.user?.id });
+        
+        if (sessionError || !session?.user) {
+          console.log('❌ Nenhuma sessão ativa encontrada');
+          setIsAdmin(false);
+          setIsLoading(false);
+          return;
+        }
+
+        // Verificar se o usuário é admin
+        const { data, error } = await supabase
+          .from('admin_users')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        console.log('📋 Resultado da verificação admin:', { data, error });
+        
+        if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
+          console.error('❌ Erro ao verificar admin:', error);
+          setIsAdmin(false);
+        } else if (data) {
+          console.log('✅ Usuário é admin com role:', data.role);
+          setIsAdmin(true);
+        } else {
+          console.log('❌ Usuário não é admin');
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error('❌ Erro na verificação:', error);
+        setIsAdmin(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, []);
 
   if (isLoading) {
     return (
