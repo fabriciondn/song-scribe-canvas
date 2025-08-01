@@ -429,7 +429,7 @@ export const AdminCertificates: React.FC = () => {
                       fontWeight: currentDesign.songTitle.bold ? 'bold' : 'normal'
                     }}
                   >
-                    "Exemplo de Música"
+                    "[Nome da Música]"
                   </div>
 
                   {/* Label do autor */}
@@ -457,7 +457,7 @@ export const AdminCertificates: React.FC = () => {
                       color: currentDesign.authorName.color,
                     }}
                   >
-                    João Silva
+                    [Nome do Autor]
                   </div>
 
                   {/* Logo */}

@@ -319,7 +319,7 @@ const RegisteredWorks: React.FC = () => {
                 </div>
 
                 <div className="flex justify-between items-center">
-                  {work.audio_file_path && (
+                  {work.audio_file_path ? (
                     <Button 
                       variant="outline"
                       onClick={() => handlePlayAudio(work)}
@@ -333,6 +333,10 @@ const RegisteredWorks: React.FC = () => {
                       )}
                       {playingAudio === work.id ? 'Pausar Áudio' : 'Reproduzir Áudio'}
                     </Button>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      Áudio não disponível
+                    </div>
                   )}
                   
                   <Button 
