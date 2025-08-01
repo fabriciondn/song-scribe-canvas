@@ -42,10 +42,10 @@ export const AdminSettings: React.FC = () => {
   };
 
   const systemInfo = [
-    { label: 'Versão da Plataforma', value: '2.1.0' },
-    { label: 'Banco de Dados', value: 'PostgreSQL 15.3' },
-    { label: 'Última Atualização', value: '15/12/2024' },
-    { label: 'Último Backup', value: '14/12/2024 23:00' },
+    { label: 'Versão da Plataforma', value: '1.0.0' },
+    { label: 'Banco de Dados', value: 'Supabase PostgreSQL' },
+    { label: 'Ambiente', value: 'Produção' },
+    { label: 'Backup', value: 'Automático - Supabase' },
   ];
 
   return (

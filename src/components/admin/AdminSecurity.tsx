@@ -38,70 +38,17 @@ interface SuspiciousActivity {
 }
 
 export const AdminSecurity: React.FC = () => {
+  // Em produção, estes dados viriam de sistemas de monitoramento reais
   const [securityMetrics, setSecurityMetrics] = useState({
-    totalLogins: 1247,
-    failedLogins: 23,
-    activeBlocks: 5,
-    securityScore: 92,
-    lastScan: '2025-01-31 14:30:00'
+    totalLogins: 0,
+    failedLogins: 0,
+    activeBlocks: 0,
+    securityScore: 100,
+    lastScan: new Date().toISOString()
   });
 
-  const [securityAlerts, setSecurityAlerts] = useState<SecurityAlert[]>([
-    {
-      id: '1',
-      type: 'critical',
-      title: 'Múltiplas tentativas de login falharam',
-      description: 'IP 192.168.1.100 tentou fazer login com 5 usuários diferentes em 2 minutos',
-      timestamp: '2025-01-31 15:45:00',
-      resolved: false
-    },
-    {
-      id: '2',
-      type: 'warning',
-      title: 'Acesso de localização incomum',
-      description: 'Usuário admin@example.com fez login de um país diferente',
-      timestamp: '2025-01-31 14:20:00',
-      resolved: false
-    },
-    {
-      id: '3',
-      type: 'info',
-      title: 'Atualização de segurança aplicada',
-      description: 'Sistema atualizado com patches de segurança mais recentes',
-      timestamp: '2025-01-31 12:00:00',
-      resolved: true
-    }
-  ]);
-
-  const [suspiciousActivities, setSuspiciousActivities] = useState<SuspiciousActivity[]>([
-    {
-      id: '1',
-      user_id: 'user-123',
-      activity: 'Múltiplas tentativas de acesso a dados de outros usuários',
-      ip_address: '203.45.67.89',
-      timestamp: '2025-01-31 16:30:00',
-      risk_level: 'high',
-      location: 'São Paulo, Brasil'
-    },
-    {
-      id: '2',
-      user_id: 'user-456',
-      activity: 'Download em massa de arquivos',
-      ip_address: '192.168.1.50',
-      timestamp: '2025-01-31 15:15:00',
-      risk_level: 'medium',
-      location: 'Rio de Janeiro, Brasil'
-    },
-    {
-      id: '3',
-      user_id: 'user-789',
-      activity: 'Login fora do horário habitual',
-      ip_address: '10.0.0.25',
-      timestamp: '2025-01-31 03:22:00',
-      risk_level: 'low',
-      location: 'Brasília, Brasil'
-    }
-  ]);
+  const [securityAlerts, setSecurityAlerts] = useState<SecurityAlert[]>([]);
+  const [suspiciousActivities, setSuspiciousActivities] = useState<SuspiciousActivity[]>([]);
 
   const getAlertIcon = (type: string) => {
     switch (type) {
@@ -268,7 +215,9 @@ export const AdminSecurity: React.FC = () => {
           {securityAlerts.filter(alert => !alert.resolved).length === 0 && (
             <div className="text-center py-8">
               <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
-              <p className="text-muted-foreground">Nenhum alerta de segurança ativo</p>
+              <p className="text-muted-foreground">
+                Sistema de segurança em desenvolvimento - Nenhum alerta no momento
+              </p>
             </div>
           )}
         </CardContent>
@@ -299,40 +248,50 @@ export const AdminSecurity: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {suspiciousActivities.map((activity) => (
-                <TableRow key={activity.id}>
-                  <TableCell className="font-medium">{activity.user_id}</TableCell>
-                  <TableCell className="max-w-xs truncate">{activity.activity}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Globe className="h-3 w-3" />
-                      {activity.location}
-                    </div>
-                  </TableCell>
-                  <TableCell>{activity.ip_address}</TableCell>
-                  <TableCell>{getRiskBadge(activity.risk_level)}</TableCell>
-                  <TableCell>
-                    {new Date(activity.timestamp).toLocaleString('pt-BR')}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => blockUser(activity.user_id)}
-                      >
-                        Bloquear
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                      >
-                        Investigar
-                      </Button>
-                    </div>
+              {suspiciousActivities.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    <p className="text-muted-foreground">
+                      Sistema de monitoramento em desenvolvimento - Nenhuma atividade suspeita detectada
+                    </p>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                suspiciousActivities.map((activity) => (
+                  <TableRow key={activity.id}>
+                    <TableCell className="font-medium">{activity.user_id}</TableCell>
+                    <TableCell className="max-w-xs truncate">{activity.activity}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Globe className="h-3 w-3" />
+                        {activity.location}
+                      </div>
+                    </TableCell>
+                    <TableCell>{activity.ip_address}</TableCell>
+                    <TableCell>{getRiskBadge(activity.risk_level)}</TableCell>
+                    <TableCell>
+                      {new Date(activity.timestamp).toLocaleString('pt-BR')}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => blockUser(activity.user_id)}
+                        >
+                          Bloquear
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                        >
+                          Investigar
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -377,22 +336,22 @@ export const AdminSecurity: React.FC = () => {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span>Último backup</span>
-              <Badge variant="outline">31/01/2025 02:00</Badge>
+              <Badge variant="outline">Automático - Supabase</Badge>
             </div>
             <div className="flex items-center justify-between">
               <span>Frequência</span>
-              <Badge variant="outline">Diário</Badge>
+              <Badge variant="outline">Contínuo</Badge>
             </div>
             <div className="flex items-center justify-between">
               <span>Status</span>
               <div className="flex items-center gap-1">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="text-sm">Sucesso</span>
+                <span className="text-sm">Ativo</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span>Próximo backup</span>
-              <Badge variant="outline">01/02/2025 02:00</Badge>
+              <span>Provedor</span>
+              <Badge variant="outline">Supabase Cloud</Badge>
             </div>
           </CardContent>
         </Card>
