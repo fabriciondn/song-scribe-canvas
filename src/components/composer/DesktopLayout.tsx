@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { EditorHeader } from './EditorHeader';
 import { SoloEditor } from './SoloEditor';
 import { CollaborativeEditor } from './CollaborativeEditor';
-import { ToolPanel } from './ToolPanel';
+import { MultiToolPanel } from './MultiToolPanel';
 import { ToolType } from './ToolSelector';
 
 interface DesktopLayoutProps {
@@ -35,10 +35,24 @@ export const DesktopLayout: React.FC<DesktopLayoutProps> = ({
   openRegisterWorkModal,
   onInsertBase
 }) => {
-  const [selectedTool, setSelectedTool] = useState<ToolType>(null);
+  const [activeTools, setActiveTools] = useState<ToolType[]>([]);
+
+  const handleAddTool = (tool: ToolType) => {
+    if (tool && !activeTools.includes(tool)) {
+      setActiveTools(prev => [...prev, tool]);
+    }
+  };
+
+  const handleRemoveTool = (tool: ToolType) => {
+    setActiveTools(prev => prev.filter(t => t !== tool));
+  };
+
+  const handleReorderTools = (newOrder: ToolType[]) => {
+    setActiveTools(newOrder);
+  };
 
   return (
-    <div className={selectedTool ? "container-editor" : "container-editor-centered"}>
+    <div className={activeTools.length > 0 ? "container-editor" : "container-editor-centered"}>
       {/* Coluna Central: Editor */}
       <div className="section-box flex flex-col">
         <EditorHeader 
@@ -46,8 +60,8 @@ export const DesktopLayout: React.FC<DesktopLayoutProps> = ({
           onNewClick={onNewClick}
           openSaveModal={openSaveModal}
           openRegisterWorkModal={openRegisterWorkModal}
-          selectedTool={selectedTool}
-          onToolSelect={setSelectedTool}
+          activeTools={activeTools}
+          onAddTool={handleAddTool}
         />
         
         {partnershipId ? (
@@ -65,11 +79,15 @@ export const DesktopLayout: React.FC<DesktopLayoutProps> = ({
         )}
       </div>
       
-      {/* Painel de Ferramentas - só aparece quando uma ferramenta está selecionada */}
-      <ToolPanel 
-        selectedTool={selectedTool}
-        onInsertBase={onInsertBase}
-      />
+      {/* Painel de Múltiplas Ferramentas */}
+      {activeTools.length > 0 && (
+        <MultiToolPanel 
+          activeTools={activeTools}
+          onRemoveTool={handleRemoveTool}
+          onReorderTools={handleReorderTools}
+          onInsertBase={onInsertBase}
+        />
+      )}
     </div>
   );
 };

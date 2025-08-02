@@ -120,10 +120,10 @@ export const MusicBases: React.FC<MusicBasesProps> = ({
   
   return <div className="h-full">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="font-medium text-sm text-violet-950">Escolha sua base aqui!</h3>
+        <h3 className="font-medium text-sm text-foreground">Escolha sua base aqui!</h3>
         <Link to="/bases">
-          <Button variant="ghost" size="sm" className="text-xs">
-            <Plus size={14} className="mr-1" /> Gerenciar
+          <Button variant="ghost" size="sm" className="text-xs gap-1">
+            <Plus size={14} /> Gerenciar
           </Button>
         </Link>
       </div>
@@ -138,8 +138,8 @@ export const MusicBases: React.FC<MusicBasesProps> = ({
             <div className="text-center p-4">
               <p className="text-sm text-muted-foreground mb-2">Nenhuma base musical encontrada.</p>
               <Link to="/bases">
-                <Button variant="outline" size="sm">
-                  <Plus size={14} className="mr-1" /> Adicionar Base
+                <Button variant="outline" size="sm" className="gap-1">
+                  <Plus size={14} /> Adicionar Base
                 </Button>
               </Link>
             </div>
@@ -147,20 +147,30 @@ export const MusicBases: React.FC<MusicBasesProps> = ({
             <Accordion type="single" collapsible className="w-full">
               {Object.entries(basesByGenre).map(([genre, bases]) => (
                 <AccordionItem value={genre} key={genre}>
-                  <AccordionTrigger className="text-md font-medium">{genre}</AccordionTrigger>
+                  <AccordionTrigger className="text-sm font-medium text-foreground">{genre}</AccordionTrigger>
                   <AccordionContent>
                     <div className="flex flex-col space-y-2">
                       {bases.map(base => (
-                        <div key={base.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{base.title}</p>
+                        <div key={base.id} className="flex items-center justify-between p-3 bg-card border border-border rounded-md">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{base.title}</p>
                           </div>
-                          <div className="flex space-x-2">
-                            <Button variant="ghost" size="icon" onClick={() => handlePlay(base)} className="h-8 w-8">
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handlePlay(base)} 
+                              className="h-8 w-8 p-0"
+                            >
                               {playingId === base.id ? <Pause size={16} /> : <Play size={16} />}
                             </Button>
-                            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => handleInsert(base)}>
-                              <Plus size={14} className="mr-1" /> Inserir
+                            <Button 
+                              variant="default" 
+                              size="sm" 
+                              className="h-8 text-xs gap-1" 
+                              onClick={() => handleInsert(base)}
+                            >
+                              <Plus size={14} /> Inserir
                             </Button>
                           </div>
                         </div>

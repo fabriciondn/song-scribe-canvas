@@ -122,7 +122,7 @@
   /* Nova estrutura de grid para o editor */
   .container-editor {
     @apply grid gap-6;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 380px;
   }
 
   /* Layout centralizado quando não há ferramentas ativas */
@@ -135,7 +135,7 @@
 
   /* Nova classe para as seções do editor */
   .section-box {
-    @apply w-full p-6 bg-card rounded-lg shadow-sm;
+    @apply w-full p-6 bg-card rounded-lg shadow-sm border border-border;
     max-height: calc(100vh - 160px);
     overflow-y: auto;
   }
@@ -212,7 +212,7 @@
   /* Tablet optimizations */
   @media (min-width: 768px) and (max-width: 1024px) {
     .container-editor {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 350px;
       @apply gap-4;
     }
     
@@ -224,5 +224,26 @@
     .section-box {
       @apply p-5;
     }
+  }
+
+  /* Tool panel specific styles */
+  .tool-panel-container {
+    @apply space-y-4;
+  }
+
+  .tool-card {
+    @apply bg-card border border-border rounded-lg shadow-sm transition-all duration-200;
+  }
+
+  .tool-card:hover {
+    @apply shadow-md border-primary/20;
+  }
+
+  .tool-header {
+    @apply flex items-center justify-between p-4 pb-3 border-b border-border/50;
+  }
+
+  .tool-content {
+    @apply p-4;
   }
 }

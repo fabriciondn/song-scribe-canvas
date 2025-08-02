@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,8 @@ import { SectionButtons } from './SectionButtons';
 import { EditorHeader } from './EditorHeader';
 import { MobileControls } from './MobileControls';
 import { CollaborativeEditor } from './CollaborativeEditor';
+import { MultiToolPanel } from './MultiToolPanel';
+import { ToolType } from './ToolSelector';
 
 interface MobileLayoutProps {
   partnershipId: string | null;
@@ -37,6 +39,21 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   openRegisterWorkModal,
   onInsertBase
 }) => {
+  const [activeTools, setActiveTools] = useState<ToolType[]>([]);
+
+  const handleAddTool = (tool: ToolType) => {
+    if (tool && !activeTools.includes(tool)) {
+      setActiveTools(prev => [...prev, tool]);
+    }
+  };
+
+  const handleRemoveTool = (tool: ToolType) => {
+    setActiveTools(prev => prev.filter(t => t !== tool));
+  };
+
+  const handleReorderTools = (newOrder: ToolType[]) => {
+    setActiveTools(newOrder);
+  };
   return (
     <div className="flex flex-col gap-2 p-2 safe-area-inset">
       <div className="bg-card rounded-lg shadow-sm p-3 border border-border">
@@ -45,6 +62,8 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
           onNewClick={onNewClick}
           openSaveModal={openSaveModal}
           openRegisterWorkModal={openRegisterWorkModal}
+          activeTools={activeTools}
+          onAddTool={handleAddTool}
         />
         
         {partnershipId ? (
@@ -83,6 +102,18 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
           </>
         )}
       </div>
+      
+      {/* Painel de ferramentas móvel */}
+      {activeTools.length > 0 && (
+        <div className="safe-area-inset px-2">
+          <MultiToolPanel 
+            activeTools={activeTools}
+            onRemoveTool={handleRemoveTool}
+            onReorderTools={handleReorderTools}
+            onInsertBase={onInsertBase}
+          />
+        </div>
+      )}
     </div>
   );
 };
