@@ -44,6 +44,8 @@ export type Database = {
       author_registrations: {
         Row: {
           additional_info: string | null
+          analysis_completed_at: string | null
+          analysis_started_at: string | null
           audio_file_path: string | null
           author: string
           created_at: string
@@ -62,6 +64,8 @@ export type Database = {
         }
         Insert: {
           additional_info?: string | null
+          analysis_completed_at?: string | null
+          analysis_started_at?: string | null
           audio_file_path?: string | null
           author: string
           created_at?: string
@@ -80,6 +84,8 @@ export type Database = {
         }
         Update: {
           additional_info?: string | null
+          analysis_completed_at?: string | null
+          analysis_started_at?: string | null
           audio_file_path?: string | null
           author?: string
           created_at?: string

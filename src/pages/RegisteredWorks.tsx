@@ -3,12 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Download, FileText, Calendar, User, Hash, Play, Pause, Loader2, MapPin, Phone, Globe } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Calendar, User, Hash, Play, Pause, Loader2, MapPin, Phone, Globe, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { generateCertificatePDF } from '@/services/certificateService';
 import { toast } from '@/hooks/use-toast';
 import { useProfile } from '@/hooks/useProfile';
+import { useRegistrationStatus } from '@/hooks/useRegistrationStatus';
 
 interface RegisteredWork {
   id: string;
@@ -32,6 +33,7 @@ const RegisteredWorks: React.FC = () => {
   const [downloadingWork, setDownloadingWork] = useState<string | null>(null);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const { getStatusText, getStatusVariant } = useRegistrationStatus();
 
   const { data: works, isLoading, error } = useQuery({
     queryKey: ['registered-works'],
@@ -39,7 +41,7 @@ const RegisteredWorks: React.FC = () => {
       const { data, error } = await supabase
         .from('author_registrations')
         .select('*')
-        .eq('status', 'registered')
+        .in('status', ['registered', 'em análise'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -250,8 +252,8 @@ const RegisteredWorks: React.FC = () => {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Obras Registradas</h1>
-          <p className="text-gray-600 mt-1">Visualize e baixe certificados das suas obras registradas</p>
+          <h1 className="text-3xl font-bold text-foreground">Obras Registradas</h1>
+          <p className="text-muted-foreground mt-1">Visualize e baixe certificados das suas obras registradas</p>
         </div>
       </div>
 
@@ -261,46 +263,49 @@ const RegisteredWorks: React.FC = () => {
             <Card key={work.id} className="hover:shadow-lg transition-all duration-200">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-blue-600" />
+                  <CardTitle className="flex items-center gap-2 text-foreground">
+                    <FileText className="h-5 w-5 text-primary" />
                     {work.title}
                   </CardTitle>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    Registrada
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {work.status === 'em análise' && <Clock className="h-4 w-4 text-muted-foreground" />}
+                    <Badge variant={getStatusVariant(work.status)}>
+                      {getStatusText(work.status)}
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Dados do Compositor */}
-                <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                  <h4 className="font-semibold mb-3 text-blue-900 flex items-center gap-2">
+                <div className="bg-secondary p-4 rounded-lg mb-4">
+                  <h4 className="font-semibold mb-3 text-secondary-foreground flex items-center gap-2">
                     <User className="h-4 w-4" />
                     Dados do Compositor
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="text-sm">
-                      <span className="font-medium text-gray-700">Nome Completo:</span>
-                      <p className="text-gray-600">{profile?.name || work.author}</p>
+                      <span className="font-medium text-foreground">Nome Completo:</span>
+                      <p className="text-muted-foreground">{profile?.name || work.author}</p>
                     </div>
                     {profile?.cpf && (
                       <div className="text-sm">
-                        <span className="font-medium text-gray-700">CPF:</span>
-                        <p className="text-gray-600">{profile.cpf}</p>
+                        <span className="font-medium text-foreground">CPF:</span>
+                        <p className="text-muted-foreground">{profile.cpf}</p>
                       </div>
                     )}
                     {profile?.artistic_name && (
                       <div className="text-sm">
-                        <span className="font-medium text-gray-700">Nome Artístico:</span>
-                        <p className="text-gray-600">{profile.artistic_name}</p>
+                        <span className="font-medium text-foreground">Nome Artístico:</span>
+                        <p className="text-muted-foreground">{profile.artistic_name}</p>
                       </div>
                     )}
                     {(profile?.street || profile?.city) && (
                       <div className="text-sm md:col-span-2">
-                        <span className="font-medium text-gray-700 flex items-center gap-1">
+                        <span className="font-medium text-foreground flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
                           Endereço:
                         </span>
-                        <p className="text-gray-600">
+                        <p className="text-muted-foreground">
                           {[profile?.street, profile?.number, profile?.neighborhood, profile?.city, profile?.state, profile?.cep]
                             .filter(Boolean)
                             .join(', ')}
@@ -311,51 +316,51 @@ const RegisteredWorks: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <FileText className="h-4 w-4" />
-                    <span><strong>Título:</strong> {work.title}</span>
+                    <span><strong className="text-foreground">Título:</strong> {work.title}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <User className="h-4 w-4" />
-                    <span><strong>Autor:</strong> {work.author}</span>
+                    <span><strong className="text-foreground">Autor:</strong> {work.author}</span>
                   </div>
                   {parseOtherAuthors(work.other_authors) && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <User className="h-4 w-4" />
-                      <span><strong>Co-autores:</strong> {parseOtherAuthors(work.other_authors)}</span>
+                      <span><strong className="text-foreground">Co-autores:</strong> {parseOtherAuthors(work.other_authors)}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span><strong>Gênero:</strong> {work.genre}</span>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span><strong className="text-foreground">Gênero:</strong> {work.genre}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span><strong>Ritmo:</strong> {work.rhythm}</span>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span><strong className="text-foreground">Ritmo:</strong> {work.rhythm}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span><strong>Versão:</strong> {work.song_version}</span>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span><strong className="text-foreground">Versão:</strong> {work.song_version}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    <span><strong>Registrado em:</strong> {new Date(work.created_at).toLocaleDateString('pt-BR')}</span>
+                    <span><strong className="text-foreground">Registrado em:</strong> {new Date(work.created_at).toLocaleDateString('pt-BR')}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Hash className="h-4 w-4" />
-                    <span><strong>ID:</strong> {work.id.substring(0, 8)}...</span>
+                    <span><strong className="text-foreground">ID:</strong> {work.id.substring(0, 8)}...</span>
                   </div>
                   {work.hash && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 md:col-span-2 lg:col-span-3">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground md:col-span-2 lg:col-span-3">
                       <Hash className="h-4 w-4" />
-                      <span><strong>Hash de Integridade:</strong></span>
-                      <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded break-all">
+                      <span><strong className="text-foreground">Hash de Integridade:</strong></span>
+                      <span className="font-mono text-xs bg-muted px-2 py-1 rounded break-all text-foreground">
                         {work.hash}
                       </span>
                     </div>
                   )}
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">Letra da Música:</h4>
-                  <div className="text-sm text-gray-700 max-h-32 overflow-y-auto whitespace-pre-wrap">
+                <div className="bg-muted p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2 text-foreground">Letra da Música:</h4>
+                  <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto whitespace-pre-wrap">
                     {work.lyrics.length > 200 
                       ? `${work.lyrics.substring(0, 200)}...` 
                       : work.lyrics

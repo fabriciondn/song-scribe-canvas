@@ -10,6 +10,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserCredits } from '@/hooks/useUserCredits';
+import { useNotification } from '@/components/ui/notification';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthorRegistrationReviewProps {
   data: AuthorRegistrationData;
@@ -24,6 +26,8 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   const { toast } = useToast();
   const { user } = useAuth();
   const { refreshCredits } = useUserCredits();
+  const { addNotification } = useNotification();
+  const navigate = useNavigate();
 
   // Função para gerar hash SHA-256
   const gerarHash = async (texto: string): Promise<string> => {
@@ -68,8 +72,28 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         audioFilePath = uploadData.path;
       }
 
-      // Criar registro no banco de dados
-      const { error: insertError } = await supabase
+      // Decrementar crédito do usuário IMEDIATAMENTE
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', user.id)
+        .single();
+
+      if (profileData) {
+        const newCredits = Math.max((profileData.credits || 0) - 1, 0);
+        await supabase
+          .from('profiles')
+          .update({ credits: newCredits })
+          .eq('id', user.id);
+      }
+
+      // Refresh dos créditos para mostrar a atualização em tempo real
+      refreshCredits();
+
+      // Criar registro no banco de dados com status "em análise"
+      const analysisStartedAt = new Date().toISOString();
+      
+      const { data: registrationData, error: insertError } = await supabase
         .from('author_registrations')
         .insert({
           user_id: user.id,
@@ -87,36 +111,30 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
           audio_file_path: audioFilePath,
           additional_info: data.additionalInfo || null,
           terms_accepted: data.termsAccepted,
-          status: 'registered',
+          status: 'em análise',
           hash: hash,
-        });
+          analysis_started_at: analysisStartedAt,
+        })
+        .select()
+        .single();
 
       if (insertError) {
         throw new Error('Erro ao registrar a música');
       }
 
-      // Decrementar crédito do usuário
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', user.id)
-        .single();
-
-      if (profileData) {
-        const newCredits = Math.max((profileData.credits || 0) - 1, 0);
-        await supabase
-          .from('profiles')
-          .update({ credits: newCredits })
-          .eq('id', user.id);
-      }
-
+      // Mostrar mensagem de sucesso e redirecionar
       toast({
-        title: 'Sucesso!',
-        description: 'Sua música foi registrada com sucesso!',
+        title: 'Registro enviado para análise!',
+        description: 'Recebemos seu pedido de registro, em breve notificaremos sobre seu pedido de registro.',
       });
 
-      // Refresh dos créditos para mostrar a atualização
-      refreshCredits();
+      // Simular análise inteligente em segundo plano
+      startAnalysisSimulation(registrationData.id, data.title);
+
+      // Redirecionar para dashboard após 3 segundos
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 3000);
 
       onRegister();
     } catch (error) {
@@ -131,15 +149,54 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
     }
   };
 
+  const startAnalysisSimulation = async (registrationId: string, title: string) => {
+    // Tempo aleatório entre 1 e 5 minutos (em milissegundos)
+    const analysisTime = Math.random() * (5 * 60 * 1000 - 1 * 60 * 1000) + 1 * 60 * 1000;
+    
+    setTimeout(async () => {
+      try {
+        // Atualizar status para "registrada" e definir data de conclusão
+        const analysisCompletedAt = new Date().toISOString();
+        
+        const { error: updateError } = await supabase
+          .from('author_registrations')
+          .update({ 
+            status: 'registered',
+            analysis_completed_at: analysisCompletedAt
+          })
+          .eq('id', registrationId);
+
+        if (updateError) {
+          console.error('Erro ao atualizar status do registro:', updateError);
+          return;
+        }
+
+        // Mostrar notificação de sucesso
+        addNotification({
+          title: 'Parabéns, sua obra está protegida!',
+          message: `O registro de "${title}" foi concluído com sucesso.`,
+          type: 'success',
+          duration: 0, // Não expirar automaticamente
+          onClick: () => {
+            navigate('/dashboard/registered-works');
+          }
+        });
+
+      } catch (error) {
+        console.error('Erro na simulação de análise:', error);
+      }
+    }, analysisTime);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <Shield className="h-5 w-5" />
             Revisão do Registro Autoral
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground">
             Revise todas as informações antes de finalizar o registro. 
             Esta ação consumirá 1 crédito da sua conta.
           </CardDescription>
@@ -147,7 +204,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         <CardContent className="space-y-6">
           {/* Informações básicas */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-lg font-semibold">
+            <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
               <Music className="h-5 w-5" />
               Informações da Música
             </div>
@@ -155,17 +212,17 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Título</label>
-                <p className="text-base">{data.title}</p>
+                <p className="text-base text-foreground">{data.title}</p>
               </div>
               
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Autor Principal</label>
-                <p className="text-base">{data.author}</p>
+                <p className="text-base text-foreground">{data.author}</p>
               </div>
               
               <div>
                 <label className="text-sm font-medium text-muted-foreground">CPF do Autor</label>
-                <p className="text-base">{data.authorCpf}</p>
+                <p className="text-base text-foreground">{data.authorCpf}</p>
               </div>
               
               {data.hasOtherAuthors && data.otherAuthors.length > 0 && (
@@ -174,7 +231,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
                   <div className="space-y-2 mt-1">
                     {data.otherAuthors.map((author, index) => (
                       <div key={index} className="flex justify-between items-center p-2 bg-muted rounded">
-                        <span>{author.name}</span>
+                        <span className="text-foreground">{author.name}</span>
                         <span className="text-sm text-muted-foreground">{author.cpf}</span>
                       </div>
                     ))}
@@ -194,7 +251,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
               
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Versão</label>
-                <p className="text-base">{data.songVersion}</p>
+                <p className="text-base text-foreground">{data.songVersion}</p>
               </div>
             </div>
           </div>
@@ -203,12 +260,12 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
 
           {/* Letra */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2 font-medium">
+            <div className="flex items-center gap-2 font-medium text-foreground">
               <FileText className="h-4 w-4" />
               Letra
             </div>
             <div className="bg-muted p-4 rounded-lg">
-              <pre className="whitespace-pre-wrap text-sm">{data.lyrics}</pre>
+              <pre className="whitespace-pre-wrap text-sm text-foreground">{data.lyrics}</pre>
             </div>
           </div>
 
@@ -217,14 +274,14 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
           {/* Arquivo de áudio */}
           {data.audioFile && (
             <div className="space-y-2">
-              <div className="flex items-center gap-2 font-medium">
+              <div className="flex items-center gap-2 font-medium text-foreground">
                 <FileAudio className="h-4 w-4" />
                 Arquivo de Áudio
               </div>
               <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                 <FileAudio className="h-8 w-8 text-primary" />
                 <div>
-                  <p className="font-medium">{data.audioFile.name}</p>
+                  <p className="font-medium text-foreground">{data.audioFile.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {(data.audioFile.size / 1024 / 1024).toFixed(2)} MB
                   </p>
@@ -238,12 +295,12 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
             <>
               <Separator />
               <div className="space-y-2">
-                <div className="flex items-center gap-2 font-medium">
+                <div className="flex items-center gap-2 font-medium text-foreground">
                   <Info className="h-4 w-4" />
                   Informações Adicionais
                 </div>
                 <div className="bg-muted p-4 rounded-lg">
-                  <p className="text-sm">{data.additionalInfo}</p>
+                  <p className="text-sm text-foreground">{data.additionalInfo}</p>
                 </div>
               </div>
             </>
@@ -253,7 +310,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
 
           {/* Confirmações */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2 font-medium">
+            <div className="flex items-center gap-2 font-medium text-foreground">
               <Shield className="h-4 w-4" />
               Confirmações
             </div>
@@ -261,7 +318,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
               <Badge variant={data.termsAccepted ? "default" : "destructive"}>
                 {data.termsAccepted ? "✓" : "✗"}
               </Badge>
-              <span className="text-sm">
+              <span className="text-sm text-foreground">
                 Termos e condições aceitos
               </span>
             </div>
@@ -274,23 +331,26 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button size="lg" disabled={isRegistering}>
-              {isRegistering ? 'Registrando...' : 'Confirmar Registro'}
+              {isRegistering ? 'Enviando para análise...' : 'Confirmar Registro'}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Confirmar Registro Autoral</AlertDialogTitle>
-              <AlertDialogDescription>
-                Você está prestes a registrar "{data.title}" como obra autoral. 
-                Esta ação consumirá 1 crédito da sua conta e não pode ser desfeita.
-                
+              <AlertDialogTitle className="text-foreground">Confirmar Registro Autoral</AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                Você está prestes a enviar "{data.title}" para análise e registro autoral. 
+                <br /><br />
+                Nosso sistema inteligente irá analisar as informações enviadas, verificando se não há conteúdo de plágio e validando a autenticidade da obra. Nossa tecnologia avançada realizará essa análise e, se tudo estiver correto, o registro será concluído em até 5 minutos.
+                <br /><br />
+                Esta ação consumirá 1 crédito da sua conta imediatamente.
+                <br /><br />
                 Deseja continuar?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
               <AlertDialogAction onClick={handleRegister} disabled={isRegistering}>
-                {isRegistering ? 'Registrando...' : 'Sim, Registrar'}
+                {isRegistering ? 'Enviando...' : 'Sim, Enviar para Análise'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
