@@ -21,9 +21,16 @@ export const Header = ({
     user,
     logout
   } = useAuth();
-  const { profile } = useProfile();
-  const { credits } = useUserCredits();
-  const { theme, toggleTheme } = useTheme();
+  const {
+    profile
+  } = useProfile();
+  const {
+    credits
+  } = useUserCredits();
+  const {
+    theme,
+    toggleTheme
+  } = useTheme();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -37,7 +44,7 @@ export const Header = ({
     }
   };
   return <header className="bg-background border-b border-border py-3 px-6 flex items-center justify-between">
-      <div className="flex items-center flex-1">
+      <div className="flex items-center flex-1 mx-[68px]">
         <Button variant="ghost" size="icon" className="mr-2 lg:hidden" onClick={toggleSidebar}>
           <Menu className="h-5 w-5" />
         </Button>
@@ -47,20 +54,10 @@ export const Header = ({
         
       </div>
       
-      {user ? (
-        <div className="flex items-center gap-3">
+      {user ? <div className="flex items-center gap-3">
           {/* Theme toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="mr-2"
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
+          <Button variant="ghost" size="icon" onClick={toggleTheme} className="mr-2">
+            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
 
           {/* Exibição dos créditos */}
@@ -69,15 +66,10 @@ export const Header = ({
               <CreditCard className="h-3 w-3" />
               {credits || 0} créditos
             </Badge>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="h-8 px-2"
-              onClick={() => {
-                // TODO: Implementar modal para adicionar créditos
-                console.log('Adicionar créditos via Pix');
-              }}
-            >
+            <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => {
+          // TODO: Implementar modal para adicionar créditos
+          console.log('Adicionar créditos via Pix');
+        }}>
               <Plus className="h-3 w-3 mr-1" />
               Adicionar
             </Button>
@@ -89,10 +81,7 @@ export const Header = ({
                 <Avatar className="h-9 w-9">
                   <AvatarImage src={profile?.avatar_url || ""} alt={profile?.name || user.email || "User"} />
                   <AvatarFallback>
-                    {profile?.name 
-                      ? profile.name.charAt(0).toUpperCase() 
-                      : (user.email ? user.email.charAt(0).toUpperCase() : "U")
-                    }
+                    {profile?.name ? profile.name.charAt(0).toUpperCase() : user.email ? user.email.charAt(0).toUpperCase() : "U"}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -109,12 +98,10 @@ export const Header = ({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => {
-                  // TODO: Implementar modal para adicionar créditos
-                  console.log('Adicionar créditos via Pix');
-                }}
-              >
+              <DropdownMenuItem onClick={() => {
+            // TODO: Implementar modal para adicionar créditos
+            console.log('Adicionar créditos via Pix');
+          }}>
                 <CreditCard className="mr-2 h-4 w-4" />
                 <span>Adicionar Créditos</span>
               </DropdownMenuItem>
@@ -125,11 +112,8 @@ export const Header = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      ) : (
-        <Link to="/">
+        </div> : <Link to="/">
           <Button size="sm">Entrar</Button>
-        </Link>
-      )}
+        </Link>}
     </header>;
 };
