@@ -302,7 +302,7 @@ const Bases: React.FC = () => {
                   <Folder className="text-purple-500" />
                   <CardTitle className="text-zinc-950">{folder.name}</CardTitle>
                 </div>
-                <CardDescription>{folder.description}</CardDescription>
+                <CardDescription className="text-gray-800">{folder.description}</CardDescription>
               </CardHeader>
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-2">
