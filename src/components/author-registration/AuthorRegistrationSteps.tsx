@@ -184,7 +184,10 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
     setCurrentStep(1);
   };
 
-  const toggleAudioPlayback = () => {
+  const toggleAudioPlayback = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!audioFile) return;
 
     if (audioElement) {
@@ -456,7 +459,9 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                         placeholder="Digite a letra completa da música"
                         className={isMobile ? "min-h-24 text-sm" : "min-h-32"}
                         value={field.value || ''}
-                        onChange={field.onChange}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        onBlur={field.onBlur}
+                        name={field.name}
                       />
                     </FormControl>
                     <FormMessage />
@@ -467,7 +472,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
               {/* Upload de áudio */}
               <div className="space-y-2">
                 <Label className={isMobile ? "text-sm" : ""}>Upload do áudio (MP3) *</Label>
-                <div className={`border-2 border-dashed border-muted-foreground/25 rounded-lg relative cursor-pointer hover:border-muted-foreground/50 transition-colors ${isMobile ? 'p-4' : 'p-6'}`}>
+                <div className={`border-2 border-dashed border-muted-foreground/25 rounded-lg relative ${isMobile ? 'p-4' : 'p-6'}`}>
                   <div className="flex flex-col items-center justify-center space-y-2">
                     {audioFile ? (
                       <>
@@ -476,13 +481,12 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                         <p className="text-xs text-muted-foreground">
                           {(audioFile.size / 1024 / 1024).toFixed(2)} MB
                         </p>
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-2 mt-2 z-10 relative">
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={toggleAudioPlayback}
-                            className="pointer-events-auto"
                           >
                             {isPlaying ? (
                               <>
@@ -497,10 +501,10 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                             )}
                           </Button>
                         </div>
-                        <p className="text-xs text-primary pointer-events-none">Clique para alterar o arquivo</p>
+                        <p className="text-xs text-primary">Clique na área para alterar o arquivo</p>
                       </>
                     ) : (
-                      <div className="pointer-events-none">
+                      <>
                         <Upload className={isMobile ? "h-6 w-6 text-muted-foreground" : "h-8 w-8 text-muted-foreground"} />
                         <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
                           Clique para selecionar o arquivo MP3
@@ -510,7 +514,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                             Ou arraste e solte aqui
                           </p>
                         )}
-                      </div>
+                      </>
                     )}
                   </div>
                   <input
@@ -518,6 +522,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                     accept=".mp3,audio/mpeg,audio/mp3"
                     onChange={handleAudioFileChange}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ zIndex: audioFile ? 1 : 10 }}
                   />
                 </div>
                 {audioError && (
