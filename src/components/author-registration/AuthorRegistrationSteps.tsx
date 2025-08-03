@@ -91,11 +91,11 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   const step2Form = useForm<Step2Data>({
     resolver: zodResolver(step2Schema),
     defaultValues: {
-      genre: initialData.genre || '',
-      styleVariation: initialData.styleVariation || '',
-      songVersion: initialData.songVersion || '',
-      lyrics: initialData.lyrics || '',
-      additionalInfo: initialData.additionalInfo || '',
+      genre: '',
+      styleVariation: '',
+      songVersion: '',
+      lyrics: '',
+      additionalInfo: '',
       termsAccepted: false,
     },
   });
