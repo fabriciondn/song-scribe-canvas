@@ -91,12 +91,12 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   const step2Form = useForm<Step2Data>({
     resolver: zodResolver(step2Schema),
     defaultValues: {
-      genre: initialData.genre,
-      styleVariation: initialData.styleVariation,
-      songVersion: initialData.songVersion,
-      lyrics: initialData.lyrics,
-      additionalInfo: initialData.additionalInfo,
-      termsAccepted: initialData.termsAccepted,
+      genre: initialData.genre || '',
+      styleVariation: initialData.styleVariation || '',
+      songVersion: initialData.songVersion || '',
+      lyrics: initialData.lyrics || '',
+      additionalInfo: initialData.additionalInfo || '',
+      termsAccepted: false,
     },
   });
 
@@ -458,7 +458,12 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                       <Textarea 
                         placeholder="Digite a letra completa da música"
                         className={isMobile ? "min-h-24 text-sm" : "min-h-32"}
-                        {...field}
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          field.onChange(e.target.value);
+                        }}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
                       />
                     </FormControl>
                     <FormMessage />
