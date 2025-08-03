@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Upload, FileAudio, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Upload, FileAudio, ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import { AuthorRegistrationData } from '@/pages/AuthorRegistration';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -80,6 +80,8 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   });
   const [audioFile, setAudioFile] = useState<File | null>(initialData.audioFile);
   const [audioError, setAudioError] = useState<string>('');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
   const step1Form = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
@@ -123,6 +125,13 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
     }
 
     setAudioFile(file);
+    
+    // Limpa o áudio anterior se existir
+    if (audioElement) {
+      audioElement.pause();
+      setIsPlaying(false);
+      setAudioElement(null);
+    }
   };
 
   const handleStep1Submit = (data: Step1Data) => {
@@ -173,6 +182,33 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
 
   const goBack = () => {
     setCurrentStep(1);
+  };
+
+  const toggleAudioPlayback = () => {
+    if (!audioFile) return;
+
+    if (audioElement) {
+      if (isPlaying) {
+        audioElement.pause();
+        setIsPlaying(false);
+      } else {
+        audioElement.play();
+        setIsPlaying(true);
+      }
+    } else {
+      const audio = new Audio(URL.createObjectURL(audioFile));
+      audio.addEventListener('ended', () => {
+        setIsPlaying(false);
+      });
+      audio.addEventListener('error', () => {
+        setAudioError('Erro ao reproduzir o arquivo de áudio');
+        setIsPlaying(false);
+      });
+      
+      setAudioElement(audio);
+      audio.play();
+      setIsPlaying(true);
+    }
   };
 
   return (
@@ -419,7 +455,8 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                       <Textarea 
                         placeholder="Digite a letra completa da música"
                         className={isMobile ? "min-h-24 text-sm" : "min-h-32"}
-                        {...field}
+                        value={field.value || ''}
+                        onChange={field.onChange}
                       />
                     </FormControl>
                     <FormMessage />
@@ -431,7 +468,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
               <div className="space-y-2">
                 <Label className={isMobile ? "text-sm" : ""}>Upload do áudio (MP3) *</Label>
                 <div className={`border-2 border-dashed border-muted-foreground/25 rounded-lg relative cursor-pointer hover:border-muted-foreground/50 transition-colors ${isMobile ? 'p-4' : 'p-6'}`}>
-                  <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
+                  <div className="flex flex-col items-center justify-center space-y-2">
                     {audioFile ? (
                       <>
                         <FileAudio className={isMobile ? "h-6 w-6 text-primary" : "h-8 w-8 text-primary"} />
@@ -439,10 +476,31 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                         <p className="text-xs text-muted-foreground">
                           {(audioFile.size / 1024 / 1024).toFixed(2)} MB
                         </p>
-                        <p className="text-xs text-primary">Clique para alterar o arquivo</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={toggleAudioPlayback}
+                            className="pointer-events-auto"
+                          >
+                            {isPlaying ? (
+                              <>
+                                <Pause className="h-3 w-3 mr-1" />
+                                Pausar
+                              </>
+                            ) : (
+                              <>
+                                <Play className="h-3 w-3 mr-1" />
+                                Reproduzir
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-primary pointer-events-none">Clique para alterar o arquivo</p>
                       </>
                     ) : (
-                      <>
+                      <div className="pointer-events-none">
                         <Upload className={isMobile ? "h-6 w-6 text-muted-foreground" : "h-8 w-8 text-muted-foreground"} />
                         <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
                           Clique para selecionar o arquivo MP3
@@ -452,7 +510,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                             Ou arraste e solte aqui
                           </p>
                         )}
-                      </>
+                      </div>
                     )}
                   </div>
                   <input
