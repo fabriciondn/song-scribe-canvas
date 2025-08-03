@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Upload, Settings as SettingsIcon, Save, Loader2, Search } from 'lucide-react';
+import { Upload, Settings as SettingsIcon, Save, Loader2, Search, Guitar, Piano, Mic, Drum, Music } from 'lucide-react';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -18,13 +18,13 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-// Avatar options da plataforma
+// Avatar options da plataforma com ícones de instrumentos
 const platformAvatars = [
-  { id: '1', url: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=200', name: 'Robot' },
-  { id: '2', url: 'https://images.unsplash.com/photo-1535268647677-300b6085e219?w=200', name: 'Cat' },
-  { id: '3', url: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=200', name: 'Orange Cat' },
-  { id: '4', url: 'https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b?w=200', name: 'Light Bulb' },
-  { id: '5', url: 'https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=200', name: 'Professional' },
+  { id: '1', icon: 'guitar', name: 'Guitarra' },
+  { id: '2', icon: 'piano', name: 'Piano' },
+  { id: '3', icon: 'microphone', name: 'Microfone' },
+  { id: '4', icon: 'drum', name: 'Bateria' },
+  { id: '5', icon: 'violin', name: 'Violino' },
 ];
 
 const settingsSchema = z.object({
@@ -135,15 +135,26 @@ export default function Settings() {
     }
   };
 
-  const selectPlatformAvatar = async (avatarUrl: string) => {
+  const selectPlatformAvatar = async (avatarIcon: string) => {
     try {
-      setSelectedAvatar(avatarUrl);
-      setAvatarUrl(avatarUrl);
-      await updateProfile({ avatar_url: avatarUrl });
+      setSelectedAvatar(avatarIcon);
+      setAvatarUrl(avatarIcon);
+      await updateProfile({ avatar_url: avatarIcon });
       toast.success('Avatar selecionado com sucesso!');
     } catch (error) {
       toast.error('Erro ao selecionar avatar');
     }
+  };
+
+  const getIconComponent = (iconName: string) => {
+    const icons = {
+      guitar: Guitar,
+      piano: Piano,
+      microphone: Mic,
+      drum: Drum,
+      violin: Music
+    };
+    return icons[iconName as keyof typeof icons] || Music;
   };
 
   const onSubmit = async (data: SettingsForm) => {
@@ -203,12 +214,25 @@ export default function Settings() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Foto de Perfil</h3>
               <div className="flex flex-col items-center space-y-4">
-                <Avatar className="w-24 h-24">
-                  <AvatarImage src={avatarUrl} />
-                  <AvatarFallback className="text-xl">
-                    {form.watch('name')?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="w-24 h-24 rounded-full border-2 border-border bg-card flex items-center justify-center">
+                  {avatarUrl && platformAvatars.find(a => a.icon === avatarUrl) ? (
+                    (() => {
+                      const IconComponent = getIconComponent(avatarUrl);
+                      return <IconComponent className="w-12 h-12 text-primary" />;
+                    })()
+                  ) : avatarUrl ? (
+                    <Avatar className="w-24 h-24">
+                      <AvatarImage src={avatarUrl} />
+                      <AvatarFallback className="text-xl">
+                        {form.watch('name')?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <div className="text-xl font-semibold text-muted-foreground">
+                      {form.watch('name')?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
+                    </div>
+                  )}
+                </div>
                 
                 <div className="flex gap-3">
                   <div className="relative">
@@ -240,26 +264,27 @@ export default function Settings() {
 
               {/* Platform Avatars */}
               <div className="space-y-2">
-                <h4 className="text-sm font-medium">Ou escolha um avatar:</h4>
+                <h4 className="text-sm font-medium">Ou escolha um ícone de instrumento:</h4>
                 <div className="grid grid-cols-5 gap-3">
-                  {platformAvatars.map((avatar) => (
-                    <button
-                      key={avatar.id}
-                      type="button"
-                      onClick={() => selectPlatformAvatar(avatar.url)}
-                      className={cn(
-                        "relative rounded-full overflow-hidden border-2 transition-colors",
-                        selectedAvatar === avatar.url || avatarUrl === avatar.url
-                          ? "border-primary"
-                          : "border-border hover:border-primary/50"
-                      )}
-                    >
-                      <Avatar className="w-16 h-16">
-                        <AvatarImage src={avatar.url} alt={avatar.name} />
-                        <AvatarFallback>{avatar.name[0]}</AvatarFallback>
-                      </Avatar>
-                    </button>
-                  ))}
+                  {platformAvatars.map((avatar) => {
+                    const IconComponent = getIconComponent(avatar.icon);
+                    return (
+                      <button
+                        key={avatar.id}
+                        type="button"
+                        onClick={() => selectPlatformAvatar(avatar.icon)}
+                        className={cn(
+                          "relative rounded-full border-2 transition-colors p-4 flex items-center justify-center bg-card hover:bg-accent",
+                          selectedAvatar === avatar.icon || avatarUrl === avatar.icon
+                            ? "border-primary"
+                            : "border-border hover:border-primary/50"
+                        )}
+                        title={avatar.name}
+                      >
+                        <IconComponent className="w-8 h-8 text-primary" />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -341,45 +366,35 @@ export default function Settings() {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Data de Nascimento</FormLabel>
-                      <div className="flex gap-2">
-                        <Input
-                          type="date"
-                          value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                          onChange={(e) => {
-                            const date = e.target.value ? new Date(e.target.value) : undefined;
-                            field.onChange(date);
-                          }}
-                          className="flex-1"
-                          max={format(new Date(), "yyyy-MM-dd")}
-                          min="1900-01-01"
-                        />
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              type="button"
-                            >
-                              <CalendarIcon className="h-4 w-4" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date > new Date() || date < new Date("1900-01-01")
-                              }
-                              initialFocus
-                              captionLayout="dropdown-buttons"
-                              fromYear={1900}
-                              toYear={new Date().getFullYear()}
-                              className="p-3 pointer-events-auto"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? format(field.value, "dd/MM/yyyy") : "Selecione uma data"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                            captionLayout="dropdown-buttons"
+                            fromYear={1900}
+                            toYear={new Date().getFullYear()}
+                            className="p-3 pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}

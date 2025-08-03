@@ -404,14 +404,16 @@ const RegisteredWorks: React.FC = () => {
                     <Button 
                       onClick={() => handleDownloadCertificate(work)}
                       className="flex items-center gap-2"
-                      disabled={downloadingWork === work.id}
+                      disabled={downloadingWork === work.id || work.status !== 'registered'}
                     >
                       {downloadingWork === work.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <Download className="h-4 w-4" />
                       )}
-                      {downloadingWork === work.id ? 'Gerando PDF...' : 'Baixar Certificado PDF'}
+                      {downloadingWork === work.id ? 'Gerando PDF...' : 
+                       work.status !== 'registered' ? 'Certificado disponível após registro' : 
+                       'Baixar Certificado PDF'}
                     </Button>
                   </div>
                 </div>

@@ -102,8 +102,9 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   
   pdf.setFont('helvetica', 'normal');
   pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-  const authorText = work.author.length > 25 ? work.author.substring(0, 22) + '...' : work.author;
-  pdf.text(authorText, 20, yPosition + 8);
+  // Nome completo do autor sem abreviação
+  const authorLines = pdf.splitTextToSize(work.author, 85);
+  pdf.text(authorLines, 20, yPosition + 8);
   pdf.text(work.genre, 110, yPosition + 8);
   yPosition += 20;
   

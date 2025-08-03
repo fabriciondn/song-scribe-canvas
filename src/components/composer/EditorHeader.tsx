@@ -22,19 +22,17 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   onAddTool
 }) => {
   return (
-    <div className="flex justify-between items-center mb-2 bg-card py-2 px-3 rounded-lg shadow-sm sticky top-0 border border-border">
-      <div className="flex items-center">
-        {partnershipId && (
-          <div className="flex items-center bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded-full text-xs">
-            <Users className="h-3 w-3 mr-1" />
-            Modo Colaborativo
-          </div>
-        )}
-      </div>
+    <div className="flex justify-center items-center mb-2 bg-card py-2 px-4 rounded-lg shadow-sm sticky top-0 border border-border">
+      {partnershipId && (
+        <div className="flex items-center bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded-full text-xs absolute left-4">
+          <Users className="h-3 w-3 mr-1" />
+          Modo Colaborativo
+        </div>
+      )}
       
       <div className="flex gap-2">
         <Button 
-          variant="secondary"
+          variant="outline"
           onClick={onNewClick}
           size="sm"
           disabled={!!partnershipId}
@@ -43,6 +41,13 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
           <FileText className="h-4 w-4" />
           Nova letra
         </Button>
+        
+        {onAddTool && (
+          <ToolSelector 
+            activeTools={activeTools}
+            onAddTool={onAddTool}
+          />
+        )}
         
         <Button 
           variant="default"
@@ -56,21 +61,14 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
         </Button>
         
         <Button 
-          variant="outline"
+          variant="default"
           onClick={openRegisterWorkModal}
           size="sm"
-          className="gap-2 text-primary border-primary hover:bg-primary hover:text-primary-foreground"
+          className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
         >
           <Award className="h-4 w-4" />
           Registrar obra
         </Button>
-        
-        {onAddTool && (
-          <ToolSelector 
-            activeTools={activeTools}
-            onAddTool={onAddTool}
-          />
-        )}
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CreditCard, ArrowLeft } from 'lucide-react';
-import { AuthorRegistrationForm } from '@/components/author-registration/AuthorRegistrationForm';
+import { AuthorRegistrationSteps } from '@/components/author-registration/AuthorRegistrationSteps';
 import { AuthorRegistrationReview } from '@/components/author-registration/AuthorRegistrationReview';
 import { ProfileCompletionCheck } from '@/components/author-registration/ProfileCompletionCheck';
 import { useUserCredits } from '@/hooks/useUserCredits';
@@ -146,7 +146,7 @@ const AuthorRegistration: React.FC = () => {
         />
 
         {step === 'form' && (
-          <AuthorRegistrationForm 
+          <AuthorRegistrationSteps 
             initialData={formData}
             onSubmit={handleFormSubmit}
             userCredits={credits}
