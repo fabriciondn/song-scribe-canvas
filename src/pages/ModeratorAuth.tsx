@@ -121,7 +121,12 @@ const ModeratorAuth = () => {
           await markTokenAsUsed(token, data.user.id);
 
           toast.success('Conta de moderador criada com sucesso!');
-          navigate('/moderator');
+          // Evitar redirecionamento automático imediato após cadastro
+          sessionStorage.setItem('skipModeratorRedirect', 'true');
+          setTimeout(() => {
+            sessionStorage.removeItem('skipModeratorRedirect');
+            navigate('/moderator', { replace: true });
+          }, 100);
         }
       } else {
         // Login
@@ -147,7 +152,12 @@ const ModeratorAuth = () => {
           }
 
           toast.success('Login realizado com sucesso!');
-          navigate('/moderator');
+          // Evitar redirecionamento automático imediato após login
+          sessionStorage.setItem('skipModeratorRedirect', 'true');
+          setTimeout(() => {
+            sessionStorage.removeItem('skipModeratorRedirect');
+            navigate('/moderator', { replace: true });
+          }, 100);
         }
       }
     } catch (error: any) {

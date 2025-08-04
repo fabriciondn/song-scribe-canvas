@@ -101,7 +101,8 @@ export const useRoleBasedNavigation = () => {
     }
 
     // Se moderador está tentando acessar área de usuário comum quando deveria ir para área de moderador
-    if (userRole.role === 'moderator' && (currentPath === '/dashboard' || currentPath === '/')) {
+    // APENAS redirecionar se vier de uma página específica, não sempre
+    if (userRole.role === 'moderator' && currentPath === '/dashboard' && !sessionStorage.getItem('skipModeratorRedirect')) {
       console.log('🔄 Redirecionando moderador para área específica...');
       navigate('/moderator', { replace: true });
       return;
