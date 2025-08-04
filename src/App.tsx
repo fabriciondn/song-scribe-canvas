@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, LoginMessageProvider } from "./context/AuthContext";
 import { ImpersonationProvider } from "./context/ImpersonationContext";
 import { NotificationProvider } from "@/components/ui/notification";
+import { RoleRedirect } from "@/components/layout/RoleRedirect";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import DashboardHome from "./pages/DashboardHome";
@@ -47,6 +48,7 @@ const App = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter>
+              <RoleRedirect />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/dashboard" element={<Dashboard />}>

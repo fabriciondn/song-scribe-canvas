@@ -886,6 +886,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      get_user_role: {
+        Args: { user_id?: string }
+        Returns: string
+      }
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -905,6 +909,15 @@ export type Database = {
       moderator_update_user_credits: {
         Args: { target_user_id: string; new_credits: number }
         Returns: undefined
+      }
+      register_moderator_with_token: {
+        Args: {
+          p_token: string
+          p_user_id: string
+          p_name: string
+          p_email: string
+        }
+        Returns: boolean
       }
       update_draft: {
         Args: { draft_id: string; draft_updates: Json }

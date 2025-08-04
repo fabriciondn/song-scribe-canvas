@@ -90,43 +90,29 @@ const ModeratorAuth = () => {
         if (error) throw error;
 
         if (data.user) {
-          // Criar perfil
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .upsert({
-              id: data.user.id,
-              name: formData.name,
-              email: formData.email,
-              credits: 0
-            });
+          console.log('🔧 Registrando moderador com token:', token);
+          
+          // Usar função de banco de dados para registrar moderador com token
+          const { error: registerError } = await supabase.rpc('register_moderator_with_token', {
+            p_token: token,
+            p_user_id: data.user.id,
+            p_name: formData.name,
+            p_email: formData.email
+          });
 
-          if (profileError) {
-            console.error('Erro ao criar perfil:', profileError);
+          if (registerError) {
+            console.error('Erro ao registrar moderador:', registerError);
+            await supabase.auth.signOut(); // Desfazer cadastro se houver erro
+            throw new Error('Erro ao criar conta de moderador: ' + registerError.message);
           }
 
-          // Adicionar como moderador
-          const { error: moderatorError } = await supabase
-            .from('admin_users')
-            .insert({
-              user_id: data.user.id,
-              role: 'moderator',
-              permissions: ['manage_user_credits', 'create_users']
-            });
-
-          if (moderatorError) {
-            console.error('Erro ao adicionar como moderador:', moderatorError);
-          }
-
-          // Marcar token como usado
-          await markTokenAsUsed(token, data.user.id);
-
+          console.log('✅ Moderador registrado com sucesso!');
           toast.success('Conta de moderador criada com sucesso!');
-          // Evitar redirecionamento automático imediato após cadastro
-          sessionStorage.setItem('skipModeratorRedirect', 'true');
+          
+          // Aguardar um pouco para garantir que tudo foi processado
           setTimeout(() => {
-            sessionStorage.removeItem('skipModeratorRedirect');
             navigate('/moderator', { replace: true });
-          }, 100);
+          }, 1000);
         }
       } else {
         // Login

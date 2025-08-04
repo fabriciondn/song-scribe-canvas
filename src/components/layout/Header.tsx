@@ -8,15 +8,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useTheme } from '@/hooks/useTheme';
+import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
 import { logUserActivity } from '@/services/userActivityService';
-import { Link } from 'react-router-dom';
-import { Menu, LogOut, Music, Home, CreditCard, Plus, Moon, Sun } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, LogOut, Music, Home, CreditCard, Plus, Moon, Sun, Shield, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 export const Header = ({
   toggleSidebar
 }: {
   toggleSidebar: () => void;
 }) => {
+  const navigate = useNavigate();
   const {
     user,
     logout
@@ -31,7 +33,9 @@ export const Header = ({
     theme,
     toggleTheme
   } = useTheme();
+  const { userRole, getDefaultDashboard } = useRoleBasedNavigation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
@@ -42,6 +46,11 @@ export const Header = ({
     } finally {
       setIsLoggingOut(false);
     }
+  };
+
+  const handleDashboardClick = () => {
+    const defaultDashboard = getDefaultDashboard();
+    navigate(defaultDashboard);
   };
   return <header className="bg-background border-b border-border py-3 px-6 flex items-center justify-between">
       <div className="flex items-center flex-1 mx-[68px]">
@@ -98,6 +107,27 @@ export const Header = ({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              
+              {/* Dashboard navigation based on role */}
+              <DropdownMenuItem onClick={handleDashboardClick}>
+                {userRole?.role === 'admin' ? (
+                  <>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Painel Admin</span>
+                  </>
+                ) : userRole?.role === 'moderator' ? (
+                  <>
+                    <Shield className="mr-2 h-4 w-4" />
+                    <span>Painel Moderador</span>
+                  </>
+                ) : (
+                  <>
+                    <Home className="mr-2 h-4 w-4" />
+                    <span>Dashboard</span>
+                  </>
+                )}
+              </DropdownMenuItem>
+              
               <DropdownMenuItem onClick={() => {
             // TODO: Implementar modal para adicionar créditos
             console.log('Adicionar créditos via Pix');

@@ -27,42 +27,56 @@ export const useRoleBasedNavigation = () => {
       try {
         console.log('🔍 Verificando role do usuário:', user.id);
 
-        // Verificar se é admin ou super_admin
-        const { data: adminData } = await supabase
-          .from('admin_users')
-          .select('role, permissions')
-          .eq('user_id', user.id)
-          .in('role', ['admin', 'super_admin'])
-          .single();
+        // Usar a nova função para obter o role do usuário
+        const { data: roleData, error } = await supabase.rpc('get_user_role', {
+          user_id: user.id
+        });
 
-        if (adminData) {
+        if (error) {
+          console.error('Erro ao buscar role:', error);
+          setUserRole({ role: 'user' });
+          setIsRoleLoading(false);
+          return;
+        }
+
+        console.log('📋 Role encontrado:', roleData);
+
+        // Definir o role baseado no retorno
+        const userRole = roleData || 'user';
+        let permissions: string[] = [];
+
+        if (userRole === 'admin' || userRole === 'super_admin') {
+          // Buscar permissões específicas para admins
+          const { data: adminData } = await supabase
+            .from('admin_users')
+            .select('permissions')
+            .eq('user_id', user.id)
+            .single();
+          
+          permissions = Array.isArray(adminData?.permissions) ? adminData.permissions as string[] : [];
+          
           setUserRole({
             role: 'admin', // Mapear super_admin para admin no frontend
-            permissions: Array.isArray(adminData.permissions) ? adminData.permissions as string[] : []
+            permissions
           });
-          setIsRoleLoading(false);
-          return;
-        }
-
-        // Verificar se é moderador
-        const { data: moderatorData } = await supabase
-          .from('admin_users')
-          .select('role, permissions')
-          .eq('user_id', user.id)
-          .eq('role', 'moderator')
-          .single();
-
-        if (moderatorData) {
+        } else if (userRole === 'moderator') {
+          // Buscar permissões específicas para moderadores
+          const { data: moderatorData } = await supabase
+            .from('admin_users')
+            .select('permissions')
+            .eq('user_id', user.id)
+            .single();
+          
+          permissions = Array.isArray(moderatorData?.permissions) ? moderatorData.permissions as string[] : [];
+          
           setUserRole({
             role: 'moderator',
-            permissions: Array.isArray(moderatorData.permissions) ? moderatorData.permissions as string[] : []
+            permissions
           });
-          setIsRoleLoading(false);
-          return;
+        } else {
+          setUserRole({ role: 'user' });
         }
 
-        // Se não é admin nem moderador, é usuário comum
-        setUserRole({ role: 'user' });
         setIsRoleLoading(false);
 
       } catch (error) {
@@ -100,9 +114,8 @@ export const useRoleBasedNavigation = () => {
       return;
     }
 
-    // Se moderador está tentando acessar área de usuário comum quando deveria ir para área de moderador
-    // APENAS redirecionar se vier de uma página específica, não sempre
-    if (userRole.role === 'moderator' && currentPath === '/dashboard' && !sessionStorage.getItem('skipModeratorRedirect')) {
+    // Se moderador está tentando acessar área de usuário comum
+    if (userRole.role === 'moderator' && currentPath === '/dashboard') {
       console.log('🔄 Redirecionando moderador para área específica...');
       navigate('/moderator', { replace: true });
       return;
