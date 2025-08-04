@@ -18,7 +18,7 @@ export interface AuthorRegistrationData {
   otherAuthors: Array<{ name: string; cpf: string; }>;
   genre: string;
   styleVariation: string;
-  songVersion: string;
+  songVersion?: string;
   lyrics: string;
   audioFile: File | null;
   additionalInfo: string;

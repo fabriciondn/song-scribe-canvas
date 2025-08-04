@@ -8,6 +8,7 @@ import { ModeratorSidebar } from '@/components/moderator/ModeratorSidebar';
 import { ModeratorOverview } from '@/components/moderator/ModeratorOverview';
 import { ModeratorUsers } from '@/components/moderator/ModeratorUsers';
 import { ModeratorProfile } from '@/components/moderator/ModeratorProfile';
+import { ModeratorTransactions } from '@/components/moderator/ModeratorTransactions';
 import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { ImpersonationBanner } from '@/components/ui/impersonation-banner';
@@ -37,6 +38,8 @@ const ModeratorDashboard = () => {
     const path = window.location.pathname;
     if (path.includes('/users')) {
       setActiveTab('users');
+    } else if (path.includes('/transactions')) {
+      setActiveTab('transactions');
     } else if (path.includes('/profile')) {
       setActiveTab('profile');
     } else {
@@ -94,6 +97,8 @@ const ModeratorDashboard = () => {
     switch (activeTab) {
       case 'users':
         return <ModeratorUsers />;
+      case 'transactions':
+        return <ModeratorTransactions />;
       case 'profile':
         return <ModeratorProfile />;
       default:

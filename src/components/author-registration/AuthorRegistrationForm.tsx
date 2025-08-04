@@ -35,7 +35,7 @@ const formSchema = z.object({
   })).default([]),
   genre: z.string().min(1, 'Gênero é obrigatório'),
   styleVariation: z.string().min(1, 'Variação do estilo é obrigatória'),
-  songVersion: z.string().min(1, 'Versão da música é obrigatória'),
+  songVersion: z.string().optional(),
   lyrics: z.string().min(1, 'Letra é obrigatória'),
   additionalInfo: z.string().optional(),
   termsAccepted: z.boolean().refine((val) => val === true, {
@@ -365,9 +365,9 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
               name="songVersion"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Versão da música *</FormLabel>
+                  <FormLabel>Versão da música</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Original, Remix, Acústica" {...field} />
+                    <Input placeholder="Ex: Original, Remix, Acústica (opcional)" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
