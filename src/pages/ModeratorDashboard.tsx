@@ -7,12 +7,12 @@ import { Activity, CheckCircle, AlertTriangle } from 'lucide-react';
 import { ModeratorSidebar } from '@/components/moderator/ModeratorSidebar';
 import { ModeratorOverview } from '@/components/moderator/ModeratorOverview';
 import { ModeratorUsers } from '@/components/moderator/ModeratorUsers';
-import { useModeratorAccess } from '@/hooks/useModeratorAccess';
+import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
 import { useUserCredits } from '@/hooks/useUserCredits';
-
+import { ImpersonationBanner } from '@/components/ui/impersonation-banner';
 const ModeratorDashboard = () => {
   const navigate = useNavigate();
-  const { isModerator, isLoading } = useModeratorAccess();
+  const { canAccess, isRoleLoading } = useRoleBasedNavigation();
   const { credits } = useUserCredits();
   const [activeTab, setActiveTab] = useState('overview');
   const [systemHealth] = useState({
@@ -23,13 +23,13 @@ const ModeratorDashboard = () => {
 
   useEffect(() => {
     console.log('🔍 ModeratorDashboard - Verificando acesso...');
-    console.log('📊 Estado:', { isModerator, isLoading });
+    console.log('📊 Estado:', { canAccess: canAccess('moderator'), isRoleLoading });
     
-    if (!isLoading && !isModerator) {
-      console.log('❌ Usuário não é moderador, redirecionando...');
+    if (!isRoleLoading && !canAccess('moderator')) {
+      console.log('❌ Usuário não tem acesso de moderador, redirecionando...');
       navigate('/dashboard');
     }
-  }, [isModerator, isLoading, navigate]);
+  }, [canAccess, isRoleLoading, navigate]);
 
   // Determinar qual tab mostrar baseado na URL
   useEffect(() => {
@@ -41,7 +41,7 @@ const ModeratorDashboard = () => {
     }
   }, []);
 
-  if (isLoading) {
+  if (isRoleLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -54,7 +54,7 @@ const ModeratorDashboard = () => {
     );
   }
 
-  if (!isModerator) {
+  if (!canAccess('moderator')) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -137,6 +137,7 @@ const ModeratorDashboard = () => {
           </header>
 
           <main className="flex-1 space-y-4 p-4 md:p-8">
+            <ImpersonationBanner />
             {renderActiveTab()}
           </main>
         </SidebarInset>

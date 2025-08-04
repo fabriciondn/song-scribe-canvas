@@ -15,6 +15,7 @@ import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
 import { AdminSettings } from '@/components/admin/AdminSettings';
 import { AdminLogs } from '@/components/admin/AdminLogs';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { AdminModerators } from '@/components/admin/AdminModerators';
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { Shield, Users, BarChart3, AlertTriangle, CheckCircle, Clock, Activity } from 'lucide-react';
 
@@ -126,6 +127,8 @@ const AdminDashboard: React.FC = () => {
         return <AdminOverview />;
       case 'users':
         return <AdminUsers />;
+      case 'moderators':
+        return <AdminModerators />;
       case 'roles':
         return <AdminRoles />;
       case 'content':

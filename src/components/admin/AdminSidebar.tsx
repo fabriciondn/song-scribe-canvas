@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield, Users, FileText, BarChart3, Settings, ScrollText, Moon, Sun } from "lucide-react";
+import { Shield, Users, FileText, BarChart3, Settings, ScrollText, Moon, Sun, UserCheck } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -32,6 +32,11 @@ const adminMenuItems = [
     title: "Usuários",
     icon: Users,
     id: "users",
+  },
+  {
+    title: "Moderadores",
+    icon: UserCheck,
+    id: "moderators",
   },
   {
     title: "Gerenciar Funções",

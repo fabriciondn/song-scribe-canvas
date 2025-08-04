@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { getAllUsers, updateUserCredits } from '@/services/adminService';
+import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { useToast } from '@/components/ui/use-toast';
 import { Edit, Search, Coins } from 'lucide-react';
 
@@ -154,14 +155,20 @@ export const AdminUsers: React.FC = () => {
                       {new Date(user.created_at).toLocaleDateString('pt-BR')}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditCredits(user)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Editar Créditos
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditCredits(user)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Editar Créditos
+                        </Button>
+                        <ImpersonateButton 
+                          targetUser={user} 
+                          targetRole="user" 
+                        />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

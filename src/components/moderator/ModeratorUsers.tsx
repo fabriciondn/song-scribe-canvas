@@ -11,6 +11,7 @@ import { Plus, Edit, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { getManagedUsers, updateManagedUserCredits, createUserForModerator, registerUserCreatedByModerator } from '@/services/moderatorService';
 import { useUserCredits } from '@/hooks/useUserCredits';
+import { ImpersonateButton } from '@/components/ui/impersonate-button';
 
 export const ModeratorUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -239,14 +240,20 @@ export const ModeratorUsers = () => {
                       {new Date(user.created_at).toLocaleDateString('pt-BR')}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditCredits(user)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Editar Créditos
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditCredits(user)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Editar Créditos
+                        </Button>
+                        <ImpersonateButton 
+                          targetUser={user} 
+                          targetRole="user" 
+                        />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
