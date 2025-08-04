@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileLayout } from '@/components/layout/MobileLayout';
+import { ImpersonationBanner } from '@/components/ui/impersonation-banner';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
@@ -57,6 +58,7 @@ const Dashboard: React.FC = () => {
     return (
       <MobileLayout toggleSidebar={toggleSidebar}>
         <div className="p-4">
+          <ImpersonationBanner />
           <Outlet />
         </div>
       </MobileLayout>
@@ -81,6 +83,7 @@ const Dashboard: React.FC = () => {
           isSidebarOpen && !isSidebarCollapsed && "lg:pl-64",
           isSidebarOpen && isSidebarCollapsed && "lg:pl-16"
         )}>
+          <ImpersonationBanner />
           <Outlet />
         </main>
       </div>

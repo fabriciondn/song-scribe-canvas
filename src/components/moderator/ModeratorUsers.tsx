@@ -7,12 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Search, Copy, RefreshCw, Eye, EyeOff, DollarSign, User } from 'lucide-react';
+import { Plus, Edit, Search, Copy, RefreshCw, Eye, EyeOff, DollarSign, User, Receipt } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getManagedUsers, updateManagedUserCredits, createUserForModerator, registerUserCreatedByModerator } from '@/services/moderatorService';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
+import { TransactionForm } from './TransactionForm';
+import { UserTransactionsList } from './UserTransactionsList';
 
 export const ModeratorUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,6 +32,9 @@ export const ModeratorUsers = () => {
     email: '',
     artistic_name: ''
   });
+  const [selectedUserForTransaction, setSelectedUserForTransaction] = useState<any>(null);
+  const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
+  const [transactionRefreshTrigger, setTransactionRefreshTrigger] = useState(0);
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
@@ -160,6 +165,15 @@ export const ModeratorUsers = () => {
     } catch (error: any) {
       toast.error(error.message || 'Erro ao atualizar dados do usuário');
     }
+  };
+
+  const handleOpenTransactionDialog = (user: any) => {
+    setSelectedUserForTransaction(user);
+    setIsTransactionDialogOpen(true);
+  };
+
+  const handleTransactionCreated = () => {
+    setTransactionRefreshTrigger(prev => prev + 1);
   };
 
   if (isLoading) {
@@ -334,7 +348,7 @@ export const ModeratorUsers = () => {
                       {new Date(user.created_at).toLocaleDateString('pt-BR')}
                     </TableCell>
                      <TableCell>
-                       <div className="flex space-x-2">
+                       <div className="flex flex-wrap gap-2">
                          <Button
                            variant="outline"
                            size="sm"
@@ -350,6 +364,14 @@ export const ModeratorUsers = () => {
                          >
                            <DollarSign className="h-4 w-4 mr-1" />
                            Editar Créditos
+                         </Button>
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => handleOpenTransactionDialog(user)}
+                         >
+                           <Receipt className="h-4 w-4 mr-1" />
+                           Lançar Valor
                          </Button>
                          <ImpersonateButton 
                            targetUser={user} 
@@ -535,6 +557,29 @@ export const ModeratorUsers = () => {
                   Entendido
                 </Button>
               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo para lançamento de valores */}
+      <Dialog open={isTransactionDialogOpen} onOpenChange={setIsTransactionDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Lançar Valores - {selectedUserForTransaction?.name}</DialogTitle>
+          </DialogHeader>
+          {selectedUserForTransaction && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <TransactionForm
+                userId={selectedUserForTransaction.id}
+                userName={selectedUserForTransaction.name || selectedUserForTransaction.email}
+                onTransactionCreated={handleTransactionCreated}
+              />
+              <UserTransactionsList
+                userId={selectedUserForTransaction.id}
+                userName={selectedUserForTransaction.name || selectedUserForTransaction.email}
+                refreshTrigger={transactionRefreshTrigger}
+              />
             </div>
           )}
         </DialogContent>

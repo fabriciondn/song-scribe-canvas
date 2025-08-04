@@ -290,6 +290,36 @@ export type Database = {
         }
         Relationships: []
       }
+      moderator_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          moderator_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description: string
+          id?: string
+          moderator_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          moderator_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       moderator_users: {
         Row: {
           created_at: string

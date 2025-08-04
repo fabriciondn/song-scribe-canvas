@@ -47,20 +47,16 @@ export const ImpersonationBanner = () => {
             </Avatar>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-medium">
-                  Você está operando como: {impersonatedUser.name || impersonatedUser.email}
+                <span className="font-medium text-warning-foreground">
+                  Operando para o cliente: {impersonatedUser.name || impersonatedUser.email}
                 </span>
-                <Badge variant={getRoleBadgeVariant(impersonatedUser.role)} className="text-xs">
+                <Badge variant="outline" className="text-xs border-warning text-warning-foreground">
                   {getRoleIcon(impersonatedUser.role)}
-                  {impersonatedUser.role === 'moderator' ? 'Moderador' : 'Usuário'}
+                  Cliente
                 </Badge>
               </div>
               <div className="text-xs text-muted-foreground">
-                Usuário original: {originalUser.name || originalUser.email}
-                <Badge variant="outline" className="ml-2 text-xs">
-                  {getRoleIcon(originalUser.role)}
-                  {originalUser.role === 'moderator' ? 'Moderador' : 'Usuário'}
-                </Badge>
+                Moderador: {originalUser.name || originalUser.email}
               </div>
             </div>
           </div>
@@ -69,11 +65,14 @@ export const ImpersonationBanner = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={stopImpersonation}
-          className="flex items-center space-x-2"
+          onClick={() => {
+            stopImpersonation();
+            window.location.href = '/moderator';
+          }}
+          className="flex items-center space-x-2 border-warning text-warning-foreground hover:bg-warning/20"
         >
           <UserX className="h-4 w-4" />
-          <span>Sair da Impersonação</span>
+          <span>Voltar para Moderação</span>
         </Button>
       </CardContent>
     </Card>
