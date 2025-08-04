@@ -842,6 +842,10 @@ export type Database = {
           user_id: string | null
         }[]
       }
+      get_moderator_dashboard_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_online_users_count: {
         Args: Record<PropertyKey, never>
         Returns: number
