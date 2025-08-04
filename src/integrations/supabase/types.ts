@@ -866,6 +866,10 @@ export type Database = {
         Args: { p_action: string; p_metadata?: Json }
         Returns: undefined
       }
+      moderator_update_user_credits: {
+        Args: { target_user_id: string; new_credits: number }
+        Returns: undefined
+      }
       update_draft: {
         Args: { draft_id: string; draft_updates: Json }
         Returns: {

@@ -23,6 +23,7 @@ import Settings from "./pages/Settings";
 import Tutorials from "./pages/Tutorials";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
+import ModeratorDashboard from "./pages/ModeratorDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,6 +83,8 @@ const App = () => {
                   <Route index element={<Partnerships />} />
                 </Route>
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/moderator" element={<ModeratorDashboard />} />
+                <Route path="/moderator/users" element={<ModeratorDashboard />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
