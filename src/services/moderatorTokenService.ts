@@ -33,7 +33,7 @@ export const generateModeratorRegistrationToken = async (daysValid: number = 7):
 
   if (error) {
     console.error('Error generating moderator token:', error);
-    throw new Error('Erro ao gerar token de cadastro');
+    throw new Error('Erro ao gerar token de cadastro: ' + error.message);
   }
 
   return token;

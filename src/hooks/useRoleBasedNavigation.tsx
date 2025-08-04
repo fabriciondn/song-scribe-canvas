@@ -101,14 +101,14 @@ export const useRoleBasedNavigation = () => {
     }
 
     // Se moderador está tentando acessar área de usuário comum quando deveria ir para área de moderador
-    if (userRole.role === 'moderator' && currentPath === '/dashboard') {
+    if (userRole.role === 'moderator' && (currentPath === '/dashboard' || currentPath === '/')) {
       console.log('🔄 Redirecionando moderador para área específica...');
       navigate('/moderator', { replace: true });
       return;
     }
 
     // Se admin está tentando acessar dashboard comum quando deveria ter acesso completo
-    if (userRole.role === 'admin' && (currentPath === '/dashboard' || currentPath === '/moderator')) {
+    if (userRole.role === 'admin' && (currentPath === '/dashboard' || currentPath === '/')) {
       console.log('👑 Admin detectado, permitindo acesso mas sugerindo admin dashboard...');
       // Admins podem acessar qualquer área, não forçamos redirecionamento
     }
