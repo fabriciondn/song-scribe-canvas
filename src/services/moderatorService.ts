@@ -102,37 +102,29 @@ export const createUserForModerator = async (userData: {
   password: string;
   artistic_name?: string;
 }): Promise<{ userId: string }> => {
-  // Esta função precisará ser implementada via Edge Function
-  // pois criar usuários requer privilégios administrativos
+  console.log('🔧 Criando usuário via edge function:', userData.email);
+  
   const { data, error } = await supabase.functions.invoke('create-user-by-moderator', {
     body: userData
   });
 
   if (error) {
-    console.error('Error creating user:', error);
-    throw new Error('Erro ao criar usuário');
+    console.error('❌ Erro na edge function:', error);
+    throw new Error(error.message || 'Erro ao criar usuário');
   }
 
+  if (!data?.userId) {
+    console.error('❌ Resposta inválida da edge function:', data);
+    throw new Error('Resposta inválida do servidor');
+  }
+
+  console.log('✅ Usuário criado via edge function:', data.userId);
   return data;
 };
 
-// Registrar que um usuário foi criado por um moderador
+// Esta função não é mais necessária pois a edge function já faz o registro
 export const registerUserCreatedByModerator = async (userId: string): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error('Usuário não autenticado');
-  }
-
-  const { error } = await supabase
-    .from('moderator_users')
-    .insert({
-      moderator_id: user.id,
-      user_id: userId
-    });
-
-  if (error) {
-    console.error('Error registering user creation:', error);
-    throw new Error('Erro ao registrar criação de usuário');
-  }
+  // A edge function create-user-by-moderator já registra automaticamente 
+  // na tabela moderator_users, então esta função é apenas um placeholder
+  console.log('📝 Registro de criação de usuário já foi feito pela edge function:', userId);
 };

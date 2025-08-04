@@ -36,6 +36,9 @@ export const ImpersonateButton = ({
       artistic_name: targetUser.artistic_name,
       role: targetRole
     });
+    
+    // Redirecionar para o dashboard do usuário após impersonar
+    window.location.href = '/dashboard';
   };
 
   return (

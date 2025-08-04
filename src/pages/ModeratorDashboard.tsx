@@ -42,7 +42,7 @@ const ModeratorDashboard = () => {
     } else {
       setActiveTab('overview');
     }
-  }, []);
+  }, [window.location.pathname]);
 
   if (isRoleLoading) {
     return (

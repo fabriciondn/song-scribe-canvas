@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Search, Copy, RefreshCw, Eye, EyeOff, DollarSign } from 'lucide-react';
+import { Plus, Edit, Search, Copy, RefreshCw, Eye, EyeOff, DollarSign, User } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getManagedUsers, updateManagedUserCredits, createUserForModerator, registerUserCreatedByModerator } from '@/services/moderatorService';
 import { useUserCredits } from '@/hooks/useUserCredits';
@@ -22,10 +23,13 @@ export const ModeratorUsers = () => {
   const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [createdUserCredentials, setCreatedUserCredentials] = useState<{email: string, password: string} | null>(null);
-  const [editingUserBilling, setEditingUserBilling] = useState<any>(null);
-  const [isBillingDialogOpen, setIsBillingDialogOpen] = useState(false);
-  const [serviceAmount, setServiceAmount] = useState<number>(0);
-  const [serviceDescription, setServiceDescription] = useState('');
+  const [editingUserData, setEditingUserData] = useState<any>(null);
+  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+  const [editUserForm, setEditUserForm] = useState({
+    name: '',
+    email: '',
+    artistic_name: ''
+  });
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
@@ -77,8 +81,8 @@ export const ModeratorUsers = () => {
 
   const createUserMutation = useMutation({
     mutationFn: createUserForModerator,
-    onSuccess: async (data) => {
-      await registerUserCreatedByModerator(data.userId);
+    onSuccess: (data) => {
+      console.log('✅ Usuário criado com sucesso:', data);
       
       // Guardar credenciais para mostrar ao moderador
       setCreatedUserCredentials({
@@ -94,6 +98,7 @@ export const ModeratorUsers = () => {
       setNewUser({ name: '', email: '', password: '', artistic_name: '' });
     },
     onError: (error: any) => {
+      console.error('❌ Erro ao criar usuário:', error);
       toast.error(error.message || 'Erro ao criar usuário');
     },
   });
@@ -121,6 +126,40 @@ export const ModeratorUsers = () => {
 
   const handleCreateUser = () => {
     createUserMutation.mutate(newUser);
+  };
+
+  const handleEditUserData = (user: any) => {
+    setEditingUserData(user);
+    setEditUserForm({
+      name: user.name || '',
+      email: user.email || '',
+      artistic_name: user.artistic_name || ''
+    });
+    setIsEditUserDialogOpen(true);
+  };
+
+  const handleUpdateUserData = async () => {
+    if (!editingUserData) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: editUserForm.name,
+          email: editUserForm.email,
+          artistic_name: editUserForm.artistic_name || null
+        })
+        .eq('id', editingUserData.id);
+
+      if (error) throw error;
+
+      toast.success('Dados do usuário atualizados com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['managed-users'] });
+      setIsEditUserDialogOpen(false);
+      setEditingUserData(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao atualizar dados do usuário');
+    }
   };
 
   if (isLoading) {
@@ -294,22 +333,30 @@ export const ModeratorUsers = () => {
                     <TableCell>
                       {new Date(user.created_at).toLocaleDateString('pt-BR')}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditCredits(user)}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Editar Créditos
-                        </Button>
-                        <ImpersonateButton 
-                          targetUser={user} 
-                          targetRole="user" 
-                        />
-                      </div>
-                    </TableCell>
+                     <TableCell>
+                       <div className="flex space-x-2">
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => handleEditUserData(user)}
+                         >
+                           <User className="h-4 w-4 mr-1" />
+                           Editar Cadastro
+                         </Button>
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => handleEditCredits(user)}
+                         >
+                           <DollarSign className="h-4 w-4 mr-1" />
+                           Editar Créditos
+                         </Button>
+                         <ImpersonateButton 
+                           targetUser={user} 
+                           targetRole="user" 
+                         />
+                       </div>
+                     </TableCell>
                   </TableRow>
                 ))
               )}
@@ -356,6 +403,60 @@ export const ModeratorUsers = () => {
                   disabled={updateCreditsMutation.isPending}
                 >
                   {updateCreditsMutation.isPending ? 'Salvando...' : 'Salvar'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo para editar dados do usuário */}
+      <Dialog open={isEditUserDialogOpen} onOpenChange={setIsEditUserDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Dados do Usuário</DialogTitle>
+          </DialogHeader>
+          {editingUserData && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name">Nome Completo</Label>
+                <Input
+                  id="edit-name"
+                  value={editUserForm.name}
+                  onChange={(e) => setEditUserForm({ ...editUserForm, name: e.target.value })}
+                  placeholder="Nome do usuário"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editUserForm.email}
+                  onChange={(e) => setEditUserForm({ ...editUserForm, email: e.target.value })}
+                  placeholder="email@exemplo.com"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-artistic-name">Nome Artístico</Label>
+                <Input
+                  id="edit-artistic-name"
+                  value={editUserForm.artistic_name}
+                  onChange={(e) => setEditUserForm({ ...editUserForm, artistic_name: e.target.value })}
+                  placeholder="Nome artístico"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditUserDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleUpdateUserData}
+                >
+                  Salvar Alterações
                 </Button>
               </div>
             </div>
