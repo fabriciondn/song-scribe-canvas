@@ -920,7 +920,7 @@ export type Database = {
         Returns: number
       }
       get_user_role: {
-        Args: { user_id?: string }
+        Args: { user_id: string }
         Returns: string
       }
       is_admin_user: {
@@ -966,6 +966,14 @@ export type Database = {
           updated_at: string | null
           user_id: string | null
         }
+      }
+      update_user_credits: {
+        Args: {
+          target_user_id: string
+          credit_amount: number
+          transaction_description?: string
+        }
+        Returns: boolean
       }
     }
     Enums: {
