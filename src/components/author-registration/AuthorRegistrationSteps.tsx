@@ -458,7 +458,10 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                       <Textarea 
                         placeholder="Digite a letra completa da música"
                         className={isMobile ? "min-h-24 text-sm" : "min-h-32"}
-                        {...field}
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
                       />
                     </FormControl>
                     <FormMessage />
