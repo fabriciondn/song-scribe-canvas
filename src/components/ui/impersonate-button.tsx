@@ -28,8 +28,10 @@ export const ImpersonateButton = ({
     return null;
   }
 
-  const handleImpersonate = () => {
-    startImpersonation({
+  const handleImpersonate = async () => {
+    console.log('🔘 Botão impersonar clicado:', targetUser);
+    
+    await startImpersonation({
       id: targetUser.id,
       name: targetUser.name,
       email: targetUser.email,
@@ -37,8 +39,11 @@ export const ImpersonateButton = ({
       role: targetRole
     });
     
-    // Redirecionar para o dashboard do usuário após impersonar
-    window.location.href = '/dashboard';
+    console.log('🚀 Redirecionando para dashboard após impersonação');
+    // Usar um pequeno delay para garantir que o estado foi atualizado
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 100);
   };
 
   return (

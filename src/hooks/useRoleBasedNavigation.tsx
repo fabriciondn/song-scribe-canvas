@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useImpersonation } from '@/context/ImpersonationContext';
 
 interface UserRole {
   role: 'admin' | 'moderator' | 'user';
@@ -10,6 +11,7 @@ interface UserRole {
 
 export const useRoleBasedNavigation = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { isImpersonating } = useImpersonation();
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
   const navigate = useNavigate();
@@ -92,21 +94,23 @@ export const useRoleBasedNavigation = () => {
   }, [isAuthenticated, user, isLoading]);
 
   // Redirecionamento automático baseado no role
-  useEffect(() => {
-    if (isLoading || isRoleLoading || !isAuthenticated || !userRole) {
+  const redirectBasedOnRole = (currentUserRole: UserRole, currentPath: string, isImpersonating: boolean = false) => {
+    console.log('🧭 Navegação baseada em role:', { 
+      userRole: currentUserRole.role, 
+      currentPath,
+      isImpersonating
+    });
+
+    // Se está impersonando, não fazer redirecionamentos automáticos
+    if (isImpersonating) {
+      console.log('🎭 Impersonação ativa, não redirecionando automaticamente');
       return;
     }
 
-    const currentPath = location.pathname;
-    console.log('🧭 Navegação baseada em role:', { 
-      userRole: userRole.role, 
-      currentPath 
-    });
-
     // Se o usuário está tentando acessar uma área restrita
-    if (currentPath.startsWith('/admin') && userRole.role !== 'admin') {
+    if (currentPath.startsWith('/admin') && currentUserRole.role !== 'admin') {
       console.log('❌ Acesso negado ao admin, redirecionando...');
-      if (userRole.role === 'moderator') {
+      if (currentUserRole.role === 'moderator') {
         navigate('/moderator', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
@@ -114,20 +118,28 @@ export const useRoleBasedNavigation = () => {
       return;
     }
 
-    // Se moderador está tentando acessar área de usuário comum
-    if (userRole.role === 'moderator' && currentPath === '/dashboard') {
-      console.log('🔄 Redirecionando moderador para área específica...');
+    // Se moderador está tentando acessar área de usuário comum (SEM IMPERSONAÇÃO)
+    if (currentUserRole.role === 'moderator' && currentPath === '/dashboard' && !isImpersonating) {
+      console.log('🔄 Redirecionando moderador para área específica (sem impersonação)...');
       navigate('/moderator', { replace: true });
       return;
     }
 
     // Se admin está tentando acessar dashboard comum quando deveria ter acesso completo
-    if (userRole.role === 'admin' && (currentPath === '/dashboard' || currentPath === '/')) {
+    if (currentUserRole.role === 'admin' && (currentPath === '/dashboard' || currentPath === '/')) {
       console.log('👑 Admin detectado, permitindo acesso mas sugerindo admin dashboard...');
       // Admins podem acessar qualquer área, não forçamos redirecionamento
     }
+  };
 
-  }, [userRole, isRoleLoading, isAuthenticated, isLoading, location.pathname, navigate]);
+  // useEffect para chamar a função de redirecionamento
+  useEffect(() => {
+    if (isLoading || isRoleLoading || !isAuthenticated || !userRole) {
+      return;
+    }
+
+    redirectBasedOnRole(userRole, location.pathname, isImpersonating);
+  }, [userRole, isRoleLoading, isAuthenticated, isLoading, location.pathname, isImpersonating, navigate]);
 
   const getDefaultDashboard = () => {
     if (!userRole) return '/dashboard';

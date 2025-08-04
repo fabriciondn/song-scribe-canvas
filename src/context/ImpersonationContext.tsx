@@ -122,6 +122,7 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsImpersonating(true);
 
     console.log('🎭 Impersonação iniciada:', targetUser);
+    console.log('🎭 Estado da impersonação:', { isImpersonating: true, targetUser });
   };
 
   // Parar impersonação
