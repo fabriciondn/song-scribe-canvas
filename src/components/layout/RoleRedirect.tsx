@@ -2,15 +2,22 @@ import { useEffect } from 'react';
 import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useImpersonation } from '@/context/ImpersonationContext';
 
 export const RoleRedirect = () => {
   const { userRole, isRoleLoading } = useRoleBasedNavigation();
   const { isAuthenticated } = useAuth();
+  const { isImpersonating } = useImpersonation();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     if (!isAuthenticated || isRoleLoading || !userRole) {
+      return;
+    }
+
+    // Se está impersonando, não redirecionar automaticamente
+    if (isImpersonating) {
       return;
     }
 
@@ -26,7 +33,7 @@ export const RoleRedirect = () => {
         navigate('/admin', { replace: true });
       }
     }
-  }, [userRole, isRoleLoading, isAuthenticated, location.pathname, navigate]);
+  }, [userRole, isRoleLoading, isAuthenticated, isImpersonating, location.pathname, navigate]);
 
   return null; // Este componente não renderiza nada
 };
