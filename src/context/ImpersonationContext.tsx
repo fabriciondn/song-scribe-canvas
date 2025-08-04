@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { AuthContext } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ImpersonationUser {
@@ -19,10 +19,11 @@ interface ImpersonationContextType {
   canImpersonate: (targetRole: 'user' | 'moderator') => boolean;
 }
 
-const ImpersonationContext = createContext<ImpersonationContextType | undefined>(undefined);
+export const ImpersonationContext = createContext<ImpersonationContextType | undefined>(undefined);
 
 export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user;
   const [isImpersonating, setIsImpersonating] = useState(false);
   const [impersonatedUser, setImpersonatedUser] = useState<ImpersonationUser | null>(null);
   const [originalUser, setOriginalUser] = useState<ImpersonationUser | null>(null);

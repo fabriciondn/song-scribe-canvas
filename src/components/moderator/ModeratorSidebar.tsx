@@ -118,7 +118,7 @@ export function ModeratorSidebar() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 w-full justify-start">
                     <Avatar className="h-6 w-6">
-                      <AvatarImage src={user?.user_metadata?.avatar_url} />
+                      <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
                       <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start text-xs">
@@ -156,7 +156,7 @@ export function ModeratorSidebar() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
                     <Avatar className="h-6 w-6">
-                      <AvatarImage src={user?.user_metadata?.avatar_url} />
+                      <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
                       <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
                     </Avatar>
                   </Button>
