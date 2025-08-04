@@ -27,17 +27,17 @@ export const useRoleBasedNavigation = () => {
       try {
         console.log('🔍 Verificando role do usuário:', user.id);
 
-        // Verificar se é admin
+        // Verificar se é admin ou super_admin
         const { data: adminData } = await supabase
           .from('admin_users')
           .select('role, permissions')
           .eq('user_id', user.id)
-          .eq('role', 'admin')
+          .in('role', ['admin', 'super_admin'])
           .single();
 
         if (adminData) {
           setUserRole({
-            role: 'admin',
+            role: 'admin', // Mapear super_admin para admin no frontend
             permissions: Array.isArray(adminData.permissions) ? adminData.permissions as string[] : []
           });
           setIsRoleLoading(false);
@@ -136,6 +136,9 @@ export const useRoleBasedNavigation = () => {
       moderator: 2,
       user: 1
     };
+
+    // Admin pode acessar tudo, incluindo painel moderador
+    if (userRole.role === 'admin') return true;
 
     return roleHierarchy[userRole.role] >= roleHierarchy[requiredRole];
   };

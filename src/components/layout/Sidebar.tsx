@@ -32,6 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             .from('admin_users')
             .select('role')
             .eq('user_id', session.user.id)
+            .in('role', ['admin', 'super_admin'])
             .single();
           
           setIsAdmin(!!data);
@@ -90,12 +91,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     path: '/dashboard/trash'
   }];
 
-  // Adicionar item de administração se o usuário for admin
+  // Adicionar itens administrativos se o usuário for admin
   if (isAdmin) {
     menuItems.push({
       label: 'Administração',
       icon: <Settings size={20} />,
       path: '/admin'
+    });
+    menuItems.push({
+      label: 'Moderação',
+      icon: <Shield size={20} />,
+      path: '/moderator'
     });
   }
 
