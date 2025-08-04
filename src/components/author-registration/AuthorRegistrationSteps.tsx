@@ -48,7 +48,6 @@ const step2Schema = z.object({
   genre: z.string().min(1, 'Gênero é obrigatório'),
   styleVariation: z.string().min(1, 'Variação do estilo é obrigatória'),
   songVersion: z.string().min(1, 'Versão da música é obrigatória'),
-  lyrics: z.string().min(1, 'Letra é obrigatória'),
   additionalInfo: z.string().optional(),
   termsAccepted: z.boolean().refine((val) => val === true, {
     message: 'Você deve aceitar os termos para continuar',
@@ -95,7 +94,6 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
       genre: '',
       styleVariation: '',
       songVersion: '',
-      lyrics: '',
       additionalInfo: '',
       termsAccepted: false,
     },
