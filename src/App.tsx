@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, LoginMessageProvider } from "./context/AuthContext";
 import { ImpersonationProvider } from "./context/ImpersonationContext";
+import { useImpersonationSync } from "./hooks/useImpersonationSync";
 import { NotificationProvider } from "@/components/ui/notification";
 import { RoleRedirect } from "@/components/layout/RoleRedirect";
 import Index from "./pages/Index";
@@ -37,6 +37,62 @@ const queryClient = new QueryClient({
   },
 });
 
+const AppContent = () => {
+  useImpersonationSync();
+  
+  return (
+    <>
+      <RoleRedirect />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/dashboard" element={<Dashboard />}>
+          <Route index element={<DashboardHome />} />
+          <Route path="composer" element={<Composer />} />
+          <Route path="cifrador" element={<Cifrador />} />
+          <Route path="bases" element={<Bases />} />
+          <Route path="templates" element={<Templates />} />
+          <Route path="folders/*" element={<Folders />} />
+          <Route path="drafts" element={<Drafts />} />
+          <Route path="partnerships" element={<Partnerships />} />
+          <Route path="author-registration" element={<AuthorRegistration />} />
+          <Route path="registered-works" element={<RegisteredWorks />} />
+          <Route path="tutorials" element={<Tutorials />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="trash" element={<Trash />} />
+        </Route>
+        <Route path="/composer" element={<Dashboard />}>
+          <Route index element={<Composer />} />
+        </Route>
+        <Route path="/cifrador" element={<Dashboard />}>
+          <Route index element={<Cifrador />} />
+        </Route>
+        <Route path="/bases" element={<Dashboard />}>
+          <Route index element={<Bases />} />
+        </Route>
+        <Route path="/templates" element={<Dashboard />}>
+          <Route index element={<Templates />} />
+        </Route>
+        <Route path="/folders/*" element={<Dashboard />}>
+          <Route path="*" element={<Folders />} />
+        </Route>
+        <Route path="/drafts" element={<Dashboard />}>
+          <Route index element={<Drafts />} />
+        </Route>
+        <Route path="/partnerships" element={<Dashboard />}>
+          <Route index element={<Partnerships />} />
+        </Route>
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/moderator" element={<ModeratorDashboard />} />
+        <Route path="/moderator/users" element={<ModeratorDashboard />} />
+        <Route path="/moderator/transactions" element={<ModeratorDashboard />} />
+        <Route path="/moderator/profile" element={<ModeratorDashboard />} />
+        <Route path="/moderator-auth" element={<ModeratorAuth />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
+  );
+};
+
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -48,51 +104,7 @@ const App = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter>
-              <RoleRedirect />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/dashboard" element={<Dashboard />}>
-                  <Route index element={<DashboardHome />} />
-                  <Route path="composer" element={<Composer />} />
-                  <Route path="cifrador" element={<Cifrador />} />
-                  <Route path="bases" element={<Bases />} />
-                  <Route path="templates" element={<Templates />} />
-                  <Route path="folders/*" element={<Folders />} />
-                  <Route path="drafts" element={<Drafts />} />
-                  <Route path="partnerships" element={<Partnerships />} />
-                  <Route path="author-registration" element={<AuthorRegistration />} />
-                  <Route path="registered-works" element={<RegisteredWorks />} />
-                  <Route path="tutorials" element={<Tutorials />} />
-                  <Route path="settings" element={<Settings />} />
-                  <Route path="trash" element={<Trash />} />
-                </Route>
-                <Route path="/composer" element={<Dashboard />}>
-                  <Route index element={<Composer />} />
-                </Route>
-                <Route path="/cifrador" element={<Dashboard />}>
-                  <Route index element={<Cifrador />} />
-                </Route>
-                <Route path="/bases" element={<Dashboard />}>
-                  <Route index element={<Bases />} />
-                </Route>
-                <Route path="/templates" element={<Dashboard />}>
-                  <Route index element={<Templates />} />
-                </Route>
-                <Route path="/folders/*" element={<Dashboard />}>
-                  <Route path="*" element={<Folders />} />
-                </Route>
-                <Route path="/drafts" element={<Dashboard />}>
-                  <Route index element={<Drafts />} />
-                </Route>
-                <Route path="/partnerships" element={<Dashboard />}>
-                  <Route index element={<Partnerships />} />
-                </Route>
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/moderator" element={<ModeratorDashboard />} />
-                <Route path="/moderator/users" element={<ModeratorDashboard />} />
-                <Route path="/moderator-auth" element={<ModeratorAuth />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <AppContent />
             </BrowserRouter>
           </TooltipProvider>
         </NotificationProvider>

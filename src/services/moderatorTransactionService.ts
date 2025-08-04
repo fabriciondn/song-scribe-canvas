@@ -11,26 +11,17 @@ export interface ModeratorTransaction {
 }
 
 export const moderatorTransactionService = {
-  // Criar nova transação
-  async createTransaction(userId: string, amount: number, description: string): Promise<ModeratorTransaction> {
-    // Buscar o ID do moderador atual
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Usuário não autenticado');
-
-    const { data, error } = await supabase
-      .from('moderator_transactions')
-      .insert({
-        moderator_id: user.id,
-        user_id: userId,
-        amount,
-        description
-      })
-      .select()
-      .single();
+  // Criar nova transação usando a função RPC
+  async createTransaction(userId: string, amount: number, description: string): Promise<boolean> {
+    const { data, error } = await supabase.rpc('update_user_credits', {
+      target_user_id: userId,
+      credit_amount: amount,
+      transaction_description: description
+    });
 
     if (error) {
       console.error('Erro ao criar transação:', error);
-      throw new Error('Erro ao criar transação');
+      throw new Error(error.message || 'Erro ao criar transação');
     }
 
     return data;
