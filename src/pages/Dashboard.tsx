@@ -5,7 +5,8 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileLayout } from '@/components/layout/MobileLayout';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/components/ui/use-toast';
+import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
+import { useToast } from '@/hooks/use-toast';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
@@ -13,9 +14,12 @@ const Dashboard: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
+  const { userRole, isRoleLoading } = useRoleBasedNavigation();
   const { isMobile } = useMobileDetection();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  console.log('🏠 Dashboard - Role check:', { userRole, isRoleLoading });
   
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
