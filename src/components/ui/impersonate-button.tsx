@@ -39,11 +39,15 @@ export const ImpersonateButton = ({
       role: targetRole
     });
     
-    console.log('🚀 Redirecionando para dashboard após impersonação');
-    // Usar um pequeno delay para garantir que o estado foi atualizado
-    setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 100);
+    console.log('🚀 Abrindo nova aba para operar como usuário');
+    // Abrir em nova aba para melhor funcionamento
+    const newWindow = window.open('/dashboard', '_blank');
+    if (newWindow) {
+      newWindow.focus();
+    } else {
+      // Fallback se popup foi bloqueado
+      window.open('/dashboard', '_blank');
+    }
   };
 
   return (

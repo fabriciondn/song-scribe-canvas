@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Search, Copy, RefreshCw, Eye, EyeOff, DollarSign, User, Receipt } from 'lucide-react';
+import { Plus, Edit, Search, Copy, RefreshCw, Eye, EyeOff, DollarSign, User, Receipt, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getManagedUsers, updateManagedUserCredits, createUserForModerator, registerUserCreatedByModerator } from '@/services/moderatorService';
@@ -15,6 +15,7 @@ import { useUserCredits } from '@/hooks/useUserCredits';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { TransactionForm } from './TransactionForm';
 import { UserTransactionsList } from './UserTransactionsList';
+import { UserNotesModal } from './UserNotesModal';
 
 export const ModeratorUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,6 +36,8 @@ export const ModeratorUsers = () => {
   const [selectedUserForTransaction, setSelectedUserForTransaction] = useState<any>(null);
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
   const [transactionRefreshTrigger, setTransactionRefreshTrigger] = useState(0);
+  const [selectedTransactionUser, setSelectedTransactionUser] = useState<any>(null);
+  const [selectedNotesUser, setSelectedNotesUser] = useState<any>(null);
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
@@ -348,36 +351,44 @@ export const ModeratorUsers = () => {
                       {new Date(user.created_at).toLocaleDateString('pt-BR')}
                     </TableCell>
                      <TableCell>
-                       <div className="flex flex-wrap gap-2">
-                         <Button
-                           variant="outline"
-                           size="sm"
-                           onClick={() => handleEditUserData(user)}
-                         >
-                           <User className="h-4 w-4 mr-1" />
-                           Editar Cadastro
-                         </Button>
-                         <Button
-                           variant="outline"
-                           size="sm"
-                           onClick={() => handleEditCredits(user)}
-                         >
-                           <DollarSign className="h-4 w-4 mr-1" />
-                           Editar Créditos
-                         </Button>
-                         <Button
-                           variant="outline"
-                           size="sm"
-                           onClick={() => handleOpenTransactionDialog(user)}
-                         >
-                           <Receipt className="h-4 w-4 mr-1" />
-                           Lançar Valor
-                         </Button>
-                         <ImpersonateButton 
-                           targetUser={user} 
-                           targetRole="user" 
-                         />
-                       </div>
+                        <div className="flex flex-wrap gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditUserData(user)}
+                          >
+                            <User className="h-4 w-4 mr-1" />
+                            Editar Cadastro
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedNotesUser(user)}
+                          >
+                            <FileText className="h-4 w-4 mr-1" />
+                            Notas
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditCredits(user)}
+                          >
+                            <DollarSign className="h-4 w-4 mr-1" />
+                            Editar Créditos
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenTransactionDialog(user)}
+                          >
+                            <Receipt className="h-4 w-4 mr-1" />
+                            Lançar Valor
+                          </Button>
+                          <ImpersonateButton 
+                            targetUser={user} 
+                            targetRole="user" 
+                          />
+                        </div>
                      </TableCell>
                   </TableRow>
                 ))
@@ -584,6 +595,13 @@ export const ModeratorUsers = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Notas */}
+      <UserNotesModal
+        isOpen={!!selectedNotesUser}
+        onClose={() => setSelectedNotesUser(null)}
+        user={selectedNotesUser || { id: '', name: '', email: '' }}
+      />
     </div>
   );
 };

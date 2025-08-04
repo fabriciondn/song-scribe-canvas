@@ -542,6 +542,7 @@ export type Database = {
           credits: number | null
           email: string | null
           id: string
+          moderator_notes: string | null
           name: string | null
           neighborhood: string | null
           number: string | null
@@ -561,6 +562,7 @@ export type Database = {
           credits?: number | null
           email?: string | null
           id: string
+          moderator_notes?: string | null
           name?: string | null
           neighborhood?: string | null
           number?: string | null
@@ -580,6 +582,7 @@ export type Database = {
           credits?: number | null
           email?: string | null
           id?: string
+          moderator_notes?: string | null
           name?: string | null
           neighborhood?: string | null
           number?: string | null

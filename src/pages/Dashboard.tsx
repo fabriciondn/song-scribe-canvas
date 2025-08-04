@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
 import { useToast } from '@/hooks/use-toast';
 import { useMobileDetection } from '@/hooks/use-mobile';
+import { useImpersonationSync } from '@/hooks/useImpersonationSync';
 import { cn } from '@/lib/utils';
 
 const Dashboard: React.FC = () => {
@@ -19,6 +20,9 @@ const Dashboard: React.FC = () => {
   const { isMobile } = useMobileDetection();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Usar o hook para sincronizar impersonação entre abas
+  useImpersonationSync();
 
   console.log('🏠 Dashboard - Role check:', { userRole, isRoleLoading });
   

@@ -121,6 +121,9 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
     setImpersonatedUser(targetUser);
     setIsImpersonating(true);
 
+    // Salvar no localStorage para sincronizar entre abas
+    localStorage.setItem('impersonation_data', JSON.stringify(targetUser));
+
     console.log('🎭 Impersonação iniciada:', targetUser);
     console.log('🎭 Estado da impersonação:', { isImpersonating: true, targetUser });
   };
@@ -129,6 +132,10 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
   const stopImpersonation = () => {
     setImpersonatedUser(null);
     setIsImpersonating(false);
+    
+    // Remover do localStorage
+    localStorage.removeItem('impersonation_data');
+    
     console.log('🎭 Impersonação finalizada');
   };
 

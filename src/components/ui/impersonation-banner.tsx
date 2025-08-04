@@ -4,9 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { UserX, User, Crown, Shield } from 'lucide-react';
 import { useImpersonation } from '@/context/ImpersonationContext';
+import { useImpersonationSync } from '@/hooks/useImpersonationSync';
 
 export const ImpersonationBanner = () => {
-  const { isImpersonating, impersonatedUser, originalUser, stopImpersonation } = useImpersonation();
+  const { isImpersonating, impersonatedUser, originalUser } = useImpersonation();
+  const { stopImpersonationGlobally } = useImpersonationSync();
 
   if (!isImpersonating || !impersonatedUser || !originalUser) {
     return null;
@@ -66,7 +68,7 @@ export const ImpersonationBanner = () => {
           variant="outline"
           size="sm"
           onClick={() => {
-            stopImpersonation();
+            stopImpersonationGlobally();
             window.location.href = '/moderator';
           }}
           className="flex items-center space-x-2 border-warning text-warning-foreground hover:bg-warning/20"
