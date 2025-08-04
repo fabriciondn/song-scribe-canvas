@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Search } from 'lucide-react';
+import { Plus, Edit, Search, Copy, RefreshCw, Eye, EyeOff, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { getManagedUsers, updateManagedUserCredits, createUserForModerator, registerUserCreatedByModerator } from '@/services/moderatorService';
 import { useUserCredits } from '@/hooks/useUserCredits';
@@ -19,12 +19,37 @@ export const ModeratorUsers = () => {
   const [newCredits, setNewCredits] = useState<number>(0);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [createdUserCredentials, setCreatedUserCredentials] = useState<{email: string, password: string} | null>(null);
+  const [editingUserBilling, setEditingUserBilling] = useState<any>(null);
+  const [isBillingDialogOpen, setIsBillingDialogOpen] = useState(false);
+  const [serviceAmount, setServiceAmount] = useState<number>(0);
+  const [serviceDescription, setServiceDescription] = useState('');
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
     password: '',
     artistic_name: ''
   });
+
+  // Função para gerar senha forte aleatória
+  const generateStrongPassword = () => {
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let password = "";
+    for (let i = 0; i < 12; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return password;
+  };
+
+  // Gerar senha automaticamente quando o diálogo abrir
+  useEffect(() => {
+    if (isCreateDialogOpen) {
+      const autoPassword = generateStrongPassword();
+      setNewUser(prev => ({ ...prev, password: autoPassword }));
+    }
+  }, [isCreateDialogOpen]);
 
   const { credits: moderatorCredits } = useUserCredits();
   const queryClient = useQueryClient();
@@ -54,10 +79,18 @@ export const ModeratorUsers = () => {
     mutationFn: createUserForModerator,
     onSuccess: async (data) => {
       await registerUserCreatedByModerator(data.userId);
+      
+      // Guardar credenciais para mostrar ao moderador
+      setCreatedUserCredentials({
+        email: newUser.email,
+        password: newUser.password
+      });
+      
       toast.success('Usuário criado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['managed-users'] });
       queryClient.invalidateQueries({ queryKey: ['moderator-dashboard-stats'] });
       setIsCreateDialogOpen(false);
+      setIsCredentialsDialogOpen(true);
       setNewUser({ name: '', email: '', password: '', artistic_name: '' });
     },
     onError: (error: any) => {
@@ -145,14 +178,36 @@ export const ModeratorUsers = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={newUser.password}
-                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                  placeholder="Senha do usuário"
-                />
+                <Label htmlFor="password">Senha (Gerada Automaticamente)</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    placeholder="Senha do usuário"
+                    readOnly
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setNewUser({ ...newUser, password: generateStrongPassword() })}
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Uma senha forte foi gerada automaticamente. Use os botões para visualizar ou gerar uma nova.
+                </p>
               </div>
               <div>
                 <Label htmlFor="artistic_name">Nome Artístico (Opcional)</Label>
@@ -301,6 +356,82 @@ export const ModeratorUsers = () => {
                   disabled={updateCreditsMutation.isPending}
                 >
                   {updateCreditsMutation.isPending ? 'Salvando...' : 'Salvar'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo para mostrar credenciais do usuário criado */}
+      <Dialog open={isCredentialsDialogOpen} onOpenChange={setIsCredentialsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Usuário Criado com Sucesso!</DialogTitle>
+          </DialogHeader>
+          {createdUserCredentials && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                As credenciais do usuário foram geradas. Anote essas informações em local seguro:
+              </p>
+              
+              <div className="space-y-3 p-4 bg-muted rounded-lg">
+                <div>
+                  <Label className="text-sm font-medium">Email:</Label>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Input
+                      value={createdUserCredentials.email}
+                      readOnly
+                      className="bg-background"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(createdUserCredentials.email);
+                        toast.success('Email copiado!');
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">Senha:</Label>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Input
+                      value={createdUserCredentials.password}
+                      readOnly
+                      className="bg-background font-mono"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(createdUserCredentials.password);
+                        toast.success('Senha copiada!');
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-xs text-yellow-800">
+                  <strong>Importante:</strong> Guarde essas credenciais em local seguro. 
+                  Você pode agora usar o botão "Operar como" para acessar a conta deste usuário.
+                </p>
+              </div>
+              
+              <div className="flex justify-end">
+                <Button onClick={() => {
+                  setIsCredentialsDialogOpen(false);
+                  setCreatedUserCredentials(null);
+                }}>
+                  Entendido
                 </Button>
               </div>
             </div>

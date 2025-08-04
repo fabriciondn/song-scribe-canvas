@@ -7,6 +7,7 @@ import { Activity, CheckCircle, AlertTriangle } from 'lucide-react';
 import { ModeratorSidebar } from '@/components/moderator/ModeratorSidebar';
 import { ModeratorOverview } from '@/components/moderator/ModeratorOverview';
 import { ModeratorUsers } from '@/components/moderator/ModeratorUsers';
+import { ModeratorProfile } from '@/components/moderator/ModeratorProfile';
 import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { ImpersonationBanner } from '@/components/ui/impersonation-banner';
@@ -36,6 +37,8 @@ const ModeratorDashboard = () => {
     const path = window.location.pathname;
     if (path.includes('/users')) {
       setActiveTab('users');
+    } else if (path.includes('/profile')) {
+      setActiveTab('profile');
     } else {
       setActiveTab('overview');
     }
@@ -91,6 +94,8 @@ const ModeratorDashboard = () => {
     switch (activeTab) {
       case 'users':
         return <ModeratorUsers />;
+      case 'profile':
+        return <ModeratorProfile />;
       default:
         return <ModeratorOverview />;
     }

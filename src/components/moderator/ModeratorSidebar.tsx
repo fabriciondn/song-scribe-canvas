@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Users, BarChart3, User, Moon, Sun } from 'lucide-react';
+import { Users, BarChart3, User, Moon, Sun, LogOut, UserCircle } from 'lucide-react';
 import { 
   Sidebar, 
   SidebarContent, 
@@ -18,10 +18,14 @@ import { useTheme } from '@/hooks/useTheme';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const moderatorNavItems = [
   { title: 'Visão Geral', url: '/moderator', icon: BarChart3 },
   { title: 'Usuários', url: '/moderator/users', icon: Users },
+  { title: 'Perfil', url: '/moderator/profile', icon: UserCircle },
 ];
 
 export function ModeratorSidebar() {
@@ -31,6 +35,17 @@ export function ModeratorSidebar() {
   const collapsed = state === 'collapsed';
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success('Logout realizado com sucesso');
+      navigate('/');
+    } catch (error) {
+      toast.error('Erro ao fazer logout');
+    }
+  };
 
   const isActive = (path: string) => currentPath === path;
 
@@ -107,9 +122,13 @@ export function ModeratorSidebar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={() => window.open('/profile', '_blank')}>
+                  <DropdownMenuItem onClick={() => navigate('/moderator/profile')}>
                     <User className="mr-2 h-4 w-4" />
                     Perfil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sair
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -135,9 +154,13 @@ export function ModeratorSidebar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={() => window.open('/profile', '_blank')}>
+                  <DropdownMenuItem onClick={() => navigate('/moderator/profile')}>
                     <User className="mr-2 h-4 w-4" />
                     Perfil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sair
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
