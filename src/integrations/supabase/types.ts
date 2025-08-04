@@ -854,6 +854,10 @@ export type Database = {
         Args: { check_user_id: string }
         Returns: boolean
       }
+      is_user_moderator: {
+        Args: { check_user_id: string }
+        Returns: boolean
+      }
       log_user_activity: {
         Args: { p_action: string; p_metadata?: Json }
         Returns: undefined
