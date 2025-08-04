@@ -82,6 +82,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   const [audioError, setAudioError] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [lyrics, setLyrics] = useState<string>('');
 
   const step1Form = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
@@ -145,6 +146,10 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
       return;
     }
 
+    if (!lyrics.trim()) {
+      return;
+    }
+
     onSubmit({
       title: step1Data.title,
       author: step1Data.author,
@@ -154,7 +159,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
       genre: data.genre,
       styleVariation: data.styleVariation,
       songVersion: data.songVersion,
-      lyrics: data.lyrics,
+      lyrics: lyrics,
       additionalInfo: data.additionalInfo || '',
       termsAccepted: data.termsAccepted,
       audioFile,
@@ -448,26 +453,18 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
               />
 
               {/* Letra */}
-              <FormField
-                control={step2Form.control}
-                name="lyrics"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Letra da Música *</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Digite a letra completa da música"
-                        className={isMobile ? "min-h-24 text-sm" : "min-h-32"}
-                        value={field.value || ''}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              <div className="space-y-2">
+                <Label>Letra da Música *</Label>
+                <Textarea 
+                  placeholder="Digite a letra completa da música"
+                  className={isMobile ? "min-h-24 text-sm" : "min-h-32"}
+                  value={lyrics}
+                  onChange={(e) => setLyrics(e.target.value)}
+                />
+                {!lyrics.trim() && (
+                  <p className="text-sm text-red-500">Letra é obrigatória</p>
                 )}
-              />
+              </div>
 
               {/* Upload de áudio */}
               <div className="space-y-2">
