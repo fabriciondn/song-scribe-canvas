@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, LoginMessageProvider } from "./context/AuthContext";
+import { ImpersonationProvider } from "./context/ImpersonationContext";
 import { NotificationProvider } from "@/components/ui/notification";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -24,6 +25,7 @@ import Tutorials from "./pages/Tutorials";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import ModeratorDashboard from "./pages/ModeratorDashboard";
+import ModeratorAuth from "./pages/ModeratorAuth";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,8 +40,9 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <LoginMessageProvider>
-          <NotificationProvider>
+        <ImpersonationProvider>
+          <LoginMessageProvider>
+            <NotificationProvider>
             <TooltipProvider>
               <Toaster />
               <Sonner />
@@ -85,13 +88,15 @@ const App = () => {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/moderator" element={<ModeratorDashboard />} />
                 <Route path="/moderator/users" element={<ModeratorDashboard />} />
+                <Route path="/moderator-auth" element={<ModeratorAuth />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
         </NotificationProvider>
       </LoginMessageProvider>
-    </AuthProvider>
+    </ImpersonationProvider>
+  </AuthProvider>
   </QueryClientProvider>
 );
 };
