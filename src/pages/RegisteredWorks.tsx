@@ -167,17 +167,27 @@ const RegisteredWorks: React.FC = () => {
         .from('author-registrations')
         .getPublicUrl(work.audio_file_path);
 
-      // Criar link de download
+      // Fazer fetch do arquivo para baixar
+      const response = await fetch(data.publicUrl);
+      const blob = await response.blob();
+      
+      // Criar URL do blob e link de download
+      const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = data.publicUrl;
-      link.download = `${work.title.replace(/[^a-zA-Z0-9]/g, '_')}.mp3`;
+      link.href = blobUrl;
+      link.download = `${work.title.replace(/[^a-zA-Z0-9\s]/g, '_')}.mp3`;
+      link.style.display = 'none';
+      
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      // Limpeza do URL do blob
+      URL.revokeObjectURL(blobUrl);
 
       toast({
-        title: "Download iniciado",
-        description: `O download do áudio de "${work.title}" foi iniciado.`,
+        title: "Download concluído",
+        description: `O áudio de "${work.title}" foi baixado com sucesso.`,
       });
     } catch (error) {
       console.error('Erro ao baixar áudio:', error);

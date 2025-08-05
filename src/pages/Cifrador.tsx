@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Select,
   SelectContent,
@@ -12,10 +13,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from '@/components/ui/use-toast';
+import { ChordPositioner } from '@/components/cifrador/ChordPositioner';
 
 const Cifrador: React.FC = () => {
   const [inputText, setInputText] = useState<string>('');
   const [outputText, setOutputText] = useState<string>('');
+  const [textWithChords, setTextWithChords] = useState<string>('');
   const [tonalidade, setTonalidade] = useState<string>('C');
   const [novaTonalidadeValue, setNovaTonalidadeValue] = useState<string>('C');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -62,7 +65,9 @@ const Cifrador: React.FC = () => {
   };
 
   const handleTranspose = () => {
-    if (!inputText.trim()) {
+    const textToTranspose = textWithChords || inputText;
+    
+    if (!textToTranspose.trim()) {
       toast({
         title: "Texto vazio",
         description: "Por favor, insira algum texto com acordes para cifrar.",
@@ -71,7 +76,7 @@ const Cifrador: React.FC = () => {
       return;
     }
 
-    const resultado = tranposerAcordes(tonalidade, novaTonalidadeValue, inputText);
+    const resultado = tranposerAcordes(tonalidade, novaTonalidadeValue, textToTranspose);
     setOutputText(resultado);
     
     toast({
@@ -101,29 +106,66 @@ const Cifrador: React.FC = () => {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Cifrador de Músicas</h1>
       
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <Label htmlFor="input-text" className="mb-2 block">Texto com acordes</Label>
-          <Textarea 
-            id="input-text"
-            ref={textareaRef}
-            className="min-h-[300px] font-mono"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder="Cole aqui a letra da música com acordes..."
-          />
-        </div>
+      <Tabs defaultValue="simple" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="simple">Modo Simples</TabsTrigger>
+          <TabsTrigger value="advanced">Posicionamento Visual</TabsTrigger>
+        </TabsList>
         
-        <div>
-          <Label htmlFor="output-text" className="mb-2 block">Texto transposto</Label>
-          <Textarea 
-            id="output-text"
-            className="min-h-[300px] font-mono"
-            value={outputText}
-            readOnly
+        <TabsContent value="simple" className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="input-text" className="mb-2 block">Texto com acordes</Label>
+              <Textarea 
+                id="input-text"
+                ref={textareaRef}
+                className="min-h-[300px] font-mono"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder="Cole aqui a letra da música com acordes..."
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="output-text" className="mb-2 block">Texto transposto</Label>
+              <Textarea 
+                id="output-text"
+                className="min-h-[300px] font-mono"
+                value={outputText}
+                readOnly
+              />
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="advanced" className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="base-text" className="mb-2 block">Letra da música (sem acordes)</Label>
+              <Textarea 
+                className="min-h-[200px] font-mono"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder="Digite a letra da música aqui..."
+              />
+            </div>
+            
+            <div>
+              <Label className="mb-2 block">Resultado final</Label>
+              <Textarea 
+                className="min-h-[200px] font-mono"
+                value={outputText || textWithChords}
+                readOnly
+              />
+            </div>
+          </div>
+          
+          <ChordPositioner 
+            text={inputText} 
+            onTextWithChordsChange={setTextWithChords}
           />
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
       
       <div className="mt-6 p-4 bg-muted/40 rounded-md">
         <div className="flex flex-wrap gap-4 items-end">

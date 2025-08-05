@@ -7,6 +7,7 @@ import * as z from 'zod';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -360,45 +361,65 @@ export default function Settings() {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="birth_date"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Data de Nascimento</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {field.value ? format(field.value, "dd/MM/yyyy") : "Selecione uma data"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
-                            }
-                            initialFocus
-                            captionLayout="dropdown-buttons"
-                            fromYear={1900}
-                            toYear={new Date().getFullYear()}
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
+                <div className="space-y-2">
+                  <FormLabel>Data de Nascimento</FormLabel>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Dia</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="31"
+                        placeholder="DD"
+                        value={form.watch('birth_date') ? new Date(form.watch('birth_date')!).getDate() : ''}
+                        onChange={(e) => {
+                          const day = parseInt(e.target.value);
+                          const currentDate = form.watch('birth_date') || new Date();
+                          const newDate = new Date(currentDate);
+                          newDate.setDate(day);
+                          form.setValue('birth_date', newDate);
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Mês</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="12"
+                        placeholder="MM"
+                        value={form.watch('birth_date') ? new Date(form.watch('birth_date')!).getMonth() + 1 : ''}
+                        onChange={(e) => {
+                          const month = parseInt(e.target.value) - 1;
+                          const currentDate = form.watch('birth_date') || new Date();
+                          const newDate = new Date(currentDate);
+                          newDate.setMonth(month);
+                          form.setValue('birth_date', newDate);
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Ano</Label>
+                      <Input
+                        type="number"
+                        min="1900"
+                        max={new Date().getFullYear()}
+                        placeholder="AAAA"
+                        value={form.watch('birth_date') ? new Date(form.watch('birth_date')!).getFullYear() : ''}
+                        onChange={(e) => {
+                          const year = parseInt(e.target.value);
+                          const currentDate = form.watch('birth_date') || new Date();
+                          const newDate = new Date(currentDate);
+                          newDate.setFullYear(year);
+                          form.setValue('birth_date', newDate);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {form.formState.errors.birth_date && (
+                    <p className="text-sm text-destructive">{form.formState.errors.birth_date.message}</p>
                   )}
-                />
+                </div>
 
                 {/* Address Section */}
                 <div className="space-y-4">
