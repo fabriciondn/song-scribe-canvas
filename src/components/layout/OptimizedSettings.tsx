@@ -30,15 +30,14 @@ const platformAvatars = [
 ];
 
 const settingsSchema = z.object({
-  artistic_name: z.string().min(2, 'Nome artístico deve ter pelo menos 2 caracteres').optional(),
-  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').optional(),
+  artistic_name: z.string().optional(),
+  name: z.string().optional(),
   email: z.string().email('Email inválido'),
-  cpf: z.string().min(11, 'CPF deve ter 11 dígitos').optional(),
+  cpf: z.string().optional(),
   birth_day: z.string().optional(),
   birth_month: z.string().optional(),
   birth_year: z.string().optional(),
-  birth_date: z.date().optional(),
-  cep: z.string().min(8, 'CEP deve ter 8 dígitos').optional(),
+  cep: z.string().optional(),
   street: z.string().optional(),
   number: z.string().optional(),
   neighborhood: z.string().optional(),
@@ -67,7 +66,6 @@ export default function OptimizedSettings() {
       birth_day: '',
       birth_month: '',
       birth_year: '',
-      birth_date: undefined,
       cep: '',
       street: '',
       number: '',
@@ -136,7 +134,6 @@ export default function OptimizedSettings() {
         birth_day: birthDate ? String(birthDate.getDate()).padStart(2, '0') : '',
         birth_month: birthDate ? String(birthDate.getMonth() + 1).padStart(2, '0') : '',
         birth_year: birthDate ? String(birthDate.getFullYear()) : '',
-        birth_date: birthDate || undefined,
         cep: (profile as any).cep || '',
         street: (profile as any).street || '',
         number: (profile as any).number || '',
@@ -204,7 +201,7 @@ export default function OptimizedSettings() {
       setLoading(true);
 
       // Combinar campos de data em uma data válida
-      let birthDate = data.birth_date;
+      let birthDate: Date | undefined;
       if (data.birth_day && data.birth_month && data.birth_year) {
         const day = parseInt(data.birth_day);
         const month = parseInt(data.birth_month) - 1; // Month is 0-indexed
@@ -216,7 +213,16 @@ export default function OptimizedSettings() {
       }
 
       const updateData = {
-        ...data,
+        artistic_name: data.artistic_name,
+        name: data.name,
+        email: data.email,
+        cpf: data.cpf,
+        cep: data.cep,
+        street: data.street,
+        number: data.number,
+        neighborhood: data.neighborhood,
+        city: data.city,
+        state: data.state,
         avatar_url: avatarUrl,
         birth_date: birthDate?.toISOString(),
       };
@@ -477,10 +483,7 @@ export default function OptimizedSettings() {
                               maxLength={4}
                               onChange={(e) => {
                                 const value = e.target.value.replace(/\D/g, '');
-                                const year = parseInt(value);
-                                if (!value || (year >= 1900 && year <= new Date().getFullYear())) {
-                                  field.onChange(value);
-                                }
+                                field.onChange(value);
                               }}
                             />
                           </FormControl>
