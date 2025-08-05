@@ -80,32 +80,37 @@ export const useUserCredits = () => {
 
     if (!currentUserId) return;
 
-    // Configurar realtime listener E polling como fallback
+    // Configurar polling mais agressivo para garantir atualizações em tempo real
+    pollingIntervalRef.current = setInterval(() => {
+      if (lastUserIdRef.current === currentUserId) {
+        console.log('🔄 Polling: verificando créditos automaticamente...');
+        fetchCredits();
+      }
+    }, 2000); // Verificar a cada 2 segundos para ser mais responsivo
+
+    // Configurar realtime listener como adicional
     const channel = supabase
-      .channel(`user-credits-realtime-${currentUserId}`)
+      .channel(`credits-live-${currentUserId}`)
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'profiles',
           filter: `id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log('💳 Créditos atualizados em tempo real via realtime:', payload.new.credits);
-          setCredits(payload.new.credits || 0);
-          setError(null);
+          console.log('💳 Mudança detectada na tabela profiles:', payload);
+          if (payload.new && 'credits' in payload.new) {
+            console.log('💰 Atualizando créditos via realtime:', payload.new.credits);
+            setCredits(payload.new.credits || 0);
+            setError(null);
+          }
         }
       )
-      .subscribe();
-
-    // Polling como backup para garantir atualizações
-    pollingIntervalRef.current = setInterval(() => {
-      if (lastUserIdRef.current === currentUserId) {
-        console.log('🔄 Polling: verificando créditos...');
-        fetchCredits();
-      }
-    }, 3000); // Verificar a cada 3 segundos
+      .subscribe((status) => {
+        console.log('📡 Status do canal realtime:', status);
+      });
 
     return () => {
       if (pollingIntervalRef.current) {
