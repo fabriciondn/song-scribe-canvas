@@ -43,6 +43,11 @@ export const AdminUsers: React.FC = () => {
       // Também forçar atualização em outros componentes que podem usar créditos
       queryClient.refetchQueries({ queryKey: ['user-credits'] });
       
+      // Disparar evento customizado para atualizar créditos em tempo real
+      window.dispatchEvent(new CustomEvent('credits-updated', { 
+        detail: { userId: selectedUser?.id, newCredits } 
+      }));
+      
       setIsEditModalOpen(false);
       setSelectedUser(null);
       setNewCredits('');

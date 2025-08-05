@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,8 +28,20 @@ export const Header = ({
     profile
   } = useProfile();
   const {
-    credits
+    credits,
+    refreshCredits
   } = useUserCredits();
+  
+  // Adicionar listener para mudanças nos créditos via window events
+  useEffect(() => {
+    const handleCreditsUpdate = () => {
+      console.log('🔄 Evento de atualização de créditos detectado');
+      refreshCredits();
+    };
+    
+    window.addEventListener('credits-updated', handleCreditsUpdate);
+    return () => window.removeEventListener('credits-updated', handleCreditsUpdate);
+  }, [refreshCredits]);
   const {
     theme,
     toggleTheme
