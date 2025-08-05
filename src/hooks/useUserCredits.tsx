@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { useImpersonation } from '@/context/ImpersonationContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +12,7 @@ export const useUserCredits = () => {
 
   const currentUserId = isImpersonating && impersonatedUser ? impersonatedUser.id : user?.id;
 
-  const fetchCredits = async () => {
+  const fetchCredits = useCallback(async () => {
     if (!currentUserId) {
       setCredits(0);
       setIsLoading(false);
@@ -41,7 +41,7 @@ export const useUserCredits = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentUserId]);
 
   useEffect(() => {
     fetchCredits();
@@ -66,10 +66,32 @@ export const useUserCredits = () => {
       )
       .subscribe();
 
+    // Também escutar mudanças de transações de moderador que podem afetar créditos
+    const transactionChannel = supabase
+      .channel(`moderator-transactions-${currentUserId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'moderator_transactions',
+          filter: `user_id=eq.${currentUserId}`,
+        },
+        (payload) => {
+          console.log('Transação de moderador detectada, atualizando créditos:', payload);
+          // Aguardar um pouco e refrescar os créditos
+          setTimeout(() => {
+            fetchCredits();
+          }, 500);
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(transactionChannel);
     };
-  }, [currentUserId]);
+  }, [currentUserId, fetchCredits]);
 
   const refreshCredits = async () => {
     setIsLoading(true);

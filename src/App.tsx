@@ -7,6 +7,7 @@ import { AuthProvider, LoginMessageProvider } from "./context/AuthContext";
 import { ImpersonationProvider } from "./context/ImpersonationContext";
 import { useImpersonationSync } from "./hooks/useImpersonationSync";
 import { NotificationProvider } from "@/components/ui/notification";
+import { ImpersonationBanner } from "@/components/ui/impersonation-banner";
 import { RoleRedirect } from "@/components/layout/RoleRedirect";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -42,6 +43,7 @@ const AppContent = () => {
   
   return (
     <>
+      <ImpersonationBanner />
       <RoleRedirect />
       <Routes>
         <Route path="/" element={<Index />} />

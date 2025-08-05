@@ -16,10 +16,11 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
 
-  // Registrar login quando o usuário se autentica
+  // Registrar login quando o usuário se autentica (desabilitado temporariamente)
   useEffect(() => {
     if (context.user) {
-      logUserActivity('user_session_active');
+      console.log('🔍 Usuário autenticado:', context.user.id);
+      // logUserActivity('user_session_active'); // Desabilitado para evitar lentidão
     }
   }, [context.user]);
 

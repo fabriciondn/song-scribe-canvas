@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useNotification } from '@/components/ui/notification';
 import { useNavigate } from 'react-router-dom';
+import { useImpersonation } from '@/context/ImpersonationContext';
 
 interface AuthorRegistrationReviewProps {
   data: AuthorRegistrationData;
@@ -28,6 +29,10 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   const { refreshCredits } = useUserCredits();
   const { addNotification } = useNotification();
   const navigate = useNavigate();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
+  
+  // Usar o ID do usuário correto (impersonado ou real)
+  const currentUserId = isImpersonating && impersonatedUser ? impersonatedUser.id : user?.id;
 
   // Função para gerar hash SHA-256
   const gerarHash = async (texto: string): Promise<string> => {
@@ -39,7 +44,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   };
 
   const handleRegister = async () => {
-    if (!user) {
+    if (!currentUserId) {
       toast({
         title: 'Erro',
         description: 'Usuário não autenticado',
@@ -59,7 +64,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       
       if (data.audioFile) {
         const fileExt = data.audioFile.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('author-registrations')
@@ -76,7 +81,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       const { data: profileData } = await supabase
         .from('profiles')
         .select('credits')
-        .eq('id', user.id)
+        .eq('id', currentUserId)
         .single();
 
       if (profileData) {
@@ -84,7 +89,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         await supabase
           .from('profiles')
           .update({ credits: newCredits })
-          .eq('id', user.id);
+          .eq('id', currentUserId);
       }
 
       // Refresh dos créditos para mostrar a atualização em tempo real
@@ -96,7 +101,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       const { data: registrationData, error: insertError } = await supabase
         .from('author_registrations')
         .insert({
-          user_id: user.id,
+          user_id: currentUserId,
           title: data.title,
           author: data.author,
           other_authors: JSON.stringify({

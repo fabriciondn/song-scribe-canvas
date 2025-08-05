@@ -53,7 +53,7 @@ const AuthorRegistration: React.FC = () => {
     );
   }
 
-  if (!credits || credits === 0) {
+  if (credits === null || credits === 0) {
     return (
       <ResponsiveContainer
         mobileClassName="px-4 py-2"

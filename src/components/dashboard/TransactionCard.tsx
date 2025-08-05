@@ -4,12 +4,13 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, TrendingUp } from 'lucide-react';
 import { moderatorTransactionService, ModeratorTransaction } from '@/services/moderatorTransactionService';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserCredits } from '@/hooks/useUserCredits';
 
 export const TransactionCard = () => {
   const [transactions, setTransactions] = useState<ModeratorTransaction[]>([]);
-  const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const { credits, refreshCredits } = useUserCredits();
 
   useEffect(() => {
     const loadUserTransactions = async () => {
@@ -18,10 +19,10 @@ export const TransactionCard = () => {
       try {
         setIsLoading(true);
         const userTransactions = await moderatorTransactionService.getUserTransactions(user.id);
-        const transactionTotal = await moderatorTransactionService.getUserTransactionTotal(user.id);
-        
         setTransactions(userTransactions.slice(0, 3)); // Mostrar apenas as 3 mais recentes
-        setTotal(transactionTotal);
+        
+        // Forçar refresh dos créditos para sincronizar
+        await refreshCredits();
       } catch (error) {
         console.error('Erro ao carregar transações:', error);
       } finally {
@@ -30,7 +31,7 @@ export const TransactionCard = () => {
     };
 
     loadUserTransactions();
-  }, [user]);
+  }, [user, refreshCredits]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -72,10 +73,10 @@ export const TransactionCard = () => {
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold text-green-600">
-          {formatCurrency(total)}
+          {formatCurrency(credits || 0)}
         </div>
         <p className="text-xs text-muted-foreground mb-4">
-          Total de {transactions.length > 0 ? transactions.length : 'nenhum'} lançamento{transactions.length !== 1 ? 's' : ''}
+          {credits || 0} crédito{(credits || 0) !== 1 ? 's' : ''} disponível{(credits || 0) !== 1 ? 'is' : ''}
         </p>
         
         {transactions.length > 0 && (

@@ -39,15 +39,9 @@ export const ImpersonateButton = ({
       role: targetRole
     });
     
-    console.log('🚀 Abrindo nova aba para operar como usuário');
-    // Abrir em nova aba para melhor funcionamento
-    const newWindow = window.open('/dashboard', '_blank');
-    if (newWindow) {
-      newWindow.focus();
-    } else {
-      // Fallback se popup foi bloqueado
-      window.open('/dashboard', '_blank');
-    }
+    console.log('🚀 Redirecionando para dashboard como usuário');
+    // Usar navigate em vez de window.open para evitar duas guias
+    window.location.href = '/dashboard';
   };
 
   return (
