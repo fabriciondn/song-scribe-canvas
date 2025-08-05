@@ -433,12 +433,7 @@ export default function OptimizedSettings() {
                               placeholder="DD" 
                               {...field} 
                               maxLength={2}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, '');
-                                if (parseInt(value) <= 31) {
-                                  field.onChange(value);
-                                }
-                              }}
+                              type="text"
                             />
                           </FormControl>
                           <FormMessage />
@@ -457,12 +452,7 @@ export default function OptimizedSettings() {
                               placeholder="MM" 
                               {...field} 
                               maxLength={2}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, '');
-                                if (parseInt(value) <= 12) {
-                                  field.onChange(value);
-                                }
-                              }}
+                              type="text"
                             />
                           </FormControl>
                           <FormMessage />
@@ -481,10 +471,7 @@ export default function OptimizedSettings() {
                               placeholder="AAAA" 
                               {...field} 
                               maxLength={4}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, '');
-                                field.onChange(value);
-                              }}
+                              type="text"
                             />
                           </FormControl>
                           <FormMessage />
