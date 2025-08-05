@@ -136,7 +136,6 @@
     padding-bottom: calc(env(safe-area-inset-bottom) + 4rem);
   }
 }
-}
 
 @layer base {
   * {
