@@ -9,7 +9,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useTheme } from '@/hooks/useTheme';
 import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
-import { logUserActivity } from '@/services/userActivityService';
+// import { logUserActivity } from '@/services/userActivityService'; // Removido para melhorar performance
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, LogOut, Music, Home, CreditCard, Plus, Moon, Sun, Shield, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -40,7 +40,7 @@ export const Header = ({
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await logUserActivity('user_logout');
+      // Removido logUserActivity para melhorar performance
       await logout();
     } catch (error) {
       console.error('Error logging out:', error);

@@ -20,6 +20,8 @@ export const useUserCredits = () => {
     }
 
     try {
+      console.log('🔍 Buscando créditos para usuário:', currentUserId, isImpersonating ? '(impersonado)' : '(real)');
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('credits')
@@ -27,23 +29,31 @@ export const useUserCredits = () => {
         .single();
 
       if (error) {
-        console.error('Error fetching credits:', error);
+        console.error('❌ Erro ao buscar créditos:', error);
         setError('Erro ao carregar créditos');
         setCredits(0);
       } else {
+        console.log('✅ Créditos encontrados:', data?.credits || 0);
         setCredits(data?.credits || 0);
         setError(null);
       }
     } catch (err) {
-      console.error('Error:', err);
+      console.error('❌ Erro inesperado:', err);
       setError('Erro ao carregar créditos');
       setCredits(0);
     } finally {
       setIsLoading(false);
     }
-  }, [currentUserId]);
+  }, [currentUserId, isImpersonating]);
 
   useEffect(() => {
+    console.log('🔄 useUserCredits: currentUserId mudou:', currentUserId, 'isImpersonating:', isImpersonating);
+    
+    // Reset credits when switching users
+    setCredits(null);
+    setIsLoading(true);
+    setError(null);
+    
     fetchCredits();
 
     if (!currentUserId) return;
@@ -60,7 +70,7 @@ export const useUserCredits = () => {
           filter: `id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log('Créditos atualizados em tempo real:', payload);
+          console.log('💳 Créditos atualizados em tempo real:', payload.new.credits);
           setCredits(payload.new.credits || 0);
         }
       )
@@ -78,7 +88,7 @@ export const useUserCredits = () => {
           filter: `user_id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log('Transação de moderador detectada, atualizando créditos:', payload);
+          console.log('💰 Transação de moderador detectada, atualizando créditos:', payload);
           // Aguardar um pouco e refrescar os créditos
           setTimeout(() => {
             fetchCredits();
@@ -91,7 +101,7 @@ export const useUserCredits = () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(transactionChannel);
     };
-  }, [currentUserId, fetchCredits]);
+  }, [currentUserId, fetchCredits, isImpersonating]);
 
   const refreshCredits = async () => {
     setIsLoading(true);

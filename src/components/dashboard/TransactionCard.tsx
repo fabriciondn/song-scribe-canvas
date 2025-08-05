@@ -21,8 +21,8 @@ export const TransactionCard = () => {
         const userTransactions = await moderatorTransactionService.getUserTransactions(user.id);
         setTransactions(userTransactions.slice(0, 3)); // Mostrar apenas as 3 mais recentes
         
-        // Forçar refresh dos créditos para sincronizar
-        await refreshCredits();
+        // Não forçar refresh dos créditos aqui para melhorar performance
+        // O useUserCredits já cuida disso via realtime
       } catch (error) {
         console.error('Erro ao carregar transações:', error);
       } finally {
@@ -31,7 +31,7 @@ export const TransactionCard = () => {
     };
 
     loadUserTransactions();
-  }, [user, refreshCredits]);
+  }, [user]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {

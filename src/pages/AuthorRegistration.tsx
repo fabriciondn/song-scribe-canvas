@@ -53,6 +53,9 @@ const AuthorRegistration: React.FC = () => {
     );
   }
 
+  // Log para debug
+  console.log('💳 Estado dos créditos:', { credits, creditsLoading, currentUser: user?.id });
+
   if (credits === null || credits === 0) {
     return (
       <ResponsiveContainer

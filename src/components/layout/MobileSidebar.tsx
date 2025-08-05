@@ -24,7 +24,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
-import { logUserActivity } from '@/services/userActivityService';
+// import { logUserActivity } from '@/services/userActivityService'; // Removido para melhorar performance
 import { cn } from '@/lib/utils';
 
 interface MobileSidebarProps {
@@ -89,7 +89,7 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
 
   const handleLogout = async () => {
     try {
-      await logUserActivity('user_logout');
+      // Removido logUserActivity para melhorar performance
       await logout();
       onClose();
     } catch (error) {
