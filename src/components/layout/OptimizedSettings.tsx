@@ -34,6 +34,9 @@ const settingsSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').optional(),
   email: z.string().email('Email inválido'),
   cpf: z.string().min(11, 'CPF deve ter 11 dígitos').optional(),
+  birth_day: z.string().optional(),
+  birth_month: z.string().optional(),
+  birth_year: z.string().optional(),
   birth_date: z.date().optional(),
   cep: z.string().min(8, 'CEP deve ter 8 dígitos').optional(),
   street: z.string().optional(),
@@ -61,6 +64,9 @@ export default function OptimizedSettings() {
       name: '',
       email: '',
       cpf: '',
+      birth_day: '',
+      birth_month: '',
+      birth_year: '',
       birth_date: undefined,
       cep: '',
       street: '',
@@ -120,12 +126,17 @@ export default function OptimizedSettings() {
   // Atualizar form quando o profile carrega
   useEffect(() => {
     if (profile && userData.id) {
+      const birthDate = (profile as any).birth_date ? new Date((profile as any).birth_date) : null;
+      
       form.reset({
         artistic_name: (profile as any).artistic_name || '',
         name: profile.name || '',
         email: profile.email || userData.email || '',
         cpf: profile.cpf || '',
-        birth_date: (profile as any).birth_date ? new Date((profile as any).birth_date) : undefined,
+        birth_day: birthDate ? String(birthDate.getDate()).padStart(2, '0') : '',
+        birth_month: birthDate ? String(birthDate.getMonth() + 1).padStart(2, '0') : '',
+        birth_year: birthDate ? String(birthDate.getFullYear()) : '',
+        birth_date: birthDate || undefined,
         cep: (profile as any).cep || '',
         street: (profile as any).street || '',
         number: (profile as any).number || '',
@@ -192,10 +203,22 @@ export default function OptimizedSettings() {
     try {
       setLoading(true);
 
+      // Combinar campos de data em uma data válida
+      let birthDate = data.birth_date;
+      if (data.birth_day && data.birth_month && data.birth_year) {
+        const day = parseInt(data.birth_day);
+        const month = parseInt(data.birth_month) - 1; // Month is 0-indexed
+        const year = parseInt(data.birth_year);
+        
+        if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+          birthDate = new Date(year, month, day);
+        }
+      }
+
       const updateData = {
         ...data,
         avatar_url: avatarUrl,
-        birth_date: data.birth_date?.toISOString(),
+        birth_date: birthDate?.toISOString(),
       };
 
       await updateProfile(updateData);
@@ -387,6 +410,85 @@ export default function OptimizedSettings() {
                       </FormItem>
                     )}
                   />
+                </div>
+
+                {/* Data de Nascimento */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Data de Nascimento</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="birth_day"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Dia</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="DD" 
+                              {...field} 
+                              maxLength={2}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '');
+                                if (parseInt(value) <= 31) {
+                                  field.onChange(value);
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="birth_month"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Mês</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="MM" 
+                              {...field} 
+                              maxLength={2}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '');
+                                if (parseInt(value) <= 12) {
+                                  field.onChange(value);
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="birth_year"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ano</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="AAAA" 
+                              {...field} 
+                              maxLength={4}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '');
+                                const year = parseInt(value);
+                                if (!value || (year >= 1900 && year <= new Date().getFullYear())) {
+                                  field.onChange(value);
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
                 {/* Address Section com lazy loading */}
