@@ -1,5 +1,5 @@
 import React from 'react';
-import { Header } from './Header';
+import { MobileHeader } from './MobileHeader';
 import { MobileNavigation } from './MobileNavigation';
 import { PWAManager } from '@/components/pwa/PWAManager';
 import { useMobileDetection } from '@/hooks/use-mobile';
@@ -20,13 +20,13 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-hidden">
-      {/* Header fixo */}
-      <Header toggleSidebar={toggleSidebar} />
+    <div className="min-h-screen bg-background flex flex-col overflow-hidden touch-manipulation">
+      {/* Header móvel otimizado */}
+      <MobileHeader toggleSidebar={toggleSidebar} />
       
-      {/* Conteúdo principal com scroll */}
-      <main className="flex-1 overflow-y-auto pb-16">
-        <div className="safe-area-inset">
+      {/* Conteúdo principal com scroll otimizado */}
+      <main className="flex-1 overflow-y-auto pb-16 overscroll-contain">
+        <div className="safe-area-inset px-4 py-2">
           {children}
         </div>
       </main>

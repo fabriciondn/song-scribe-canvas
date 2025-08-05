@@ -27,11 +27,6 @@ const navigationItems = [
     icon: FolderOpen,
   },
   {
-    title: 'Modelos',
-    href: '/dashboard/templates',
-    icon: FileText,
-  },
-  {
     title: 'Registro',
     href: '/dashboard/author-registration',
     icon: ShieldCheck,
