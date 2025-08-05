@@ -90,9 +90,9 @@ export const useUserCredits = () => {
 
     if (!currentUserId) return;
 
-    // Configurar listener para mudanças em tempo real (apenas um canal)
+    // Configurar listener para mudanças em tempo real
     const channel = supabase
-      .channel(`user-updates-${currentUserId}`)
+      .channel(`user-credits-${currentUserId}`)
       .on(
         'postgres_changes',
         {
@@ -104,6 +104,7 @@ export const useUserCredits = () => {
         (payload) => {
           console.log('💳 Créditos atualizados em tempo real:', payload.new.credits);
           setCredits(payload.new.credits || 0);
+          setError(null);
         }
       )
       .on(
@@ -115,13 +116,13 @@ export const useUserCredits = () => {
           filter: `user_id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log('💰 Transação de moderador detectada, atualizando créditos:', payload);
-          // Debounce da atualização
+          console.log('💰 Transação de moderador detectada, refrescando créditos:', payload);
+          // Recarregar créditos imediatamente após transação
           setTimeout(() => {
             if (lastUserIdRef.current === currentUserId) {
               fetchCredits();
             }
-          }, 500);
+          }, 100); // Reduzir delay para atualização mais rápida
         }
       )
       .subscribe();
