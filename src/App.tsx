@@ -42,10 +42,11 @@ const AppContent = () => {
   useImpersonationSync();
   
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <ImpersonationBanner />
-      <RoleRedirect />
-      <Routes>
+      <div className="flex-1" style={{ paddingTop: 'var(--impersonation-banner-height, 0px)' }}>
+        <RoleRedirect />
+        <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/dashboard" element={<Dashboard />}>
           <Route index element={<DashboardHome />} />
@@ -90,8 +91,9 @@ const AppContent = () => {
         <Route path="/moderator/profile" element={<ModeratorDashboard />} />
         <Route path="/moderator-auth" element={<ModeratorAuth />} />
         <Route path="*" element={<NotFound />} />
-      </Routes>
-    </>
+        </Routes>
+      </div>
+    </div>
   );
 };
 

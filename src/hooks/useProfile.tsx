@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -28,17 +28,12 @@ export const useProfile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      loadProfile();
-    } else {
-      setProfile(null);
-      setIsLoading(false);
-    }
-  }, [user]);
+  // Memoizar o user ID para evitar re-renders desnecessários
+  const userId = useMemo(() => user?.id, [user?.id]);
 
-  const loadProfile = async () => {
-    if (!user) return;
+  // Memoizar a função loadProfile para evitar re-criações desnecessárias
+  const loadProfile = useCallback(async () => {
+    if (!userId) return;
 
     try {
       setIsLoading(true);
@@ -47,7 +42,7 @@ export const useProfile = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', userId)
         .maybeSingle();
 
       if (error) {
@@ -61,16 +56,25 @@ export const useProfile = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
 
-  const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!user) throw new Error('Usuário não autenticado');
+  useEffect(() => {
+    if (userId) {
+      loadProfile();
+    } else {
+      setProfile(null);
+      setIsLoading(false);
+    }
+  }, [userId, loadProfile]);
+
+  const updateProfile = useCallback(async (updates: Partial<UserProfile>) => {
+    if (!userId) throw new Error('Usuário não autenticado');
 
     try {
       const { error } = await supabase
         .from('profiles')
         .upsert({ 
-          id: user.id, 
+          id: userId, 
           ...updates 
         });
 
@@ -84,15 +88,15 @@ export const useProfile = () => {
       console.error('Erro ao atualizar perfil:', err);
       throw err;
     }
-  };
+  }, [userId]);
 
-  const uploadAvatar = async (file: File) => {
-    if (!user) throw new Error('Usuário não autenticado');
+  const uploadAvatar = useCallback(async (file: File) => {
+    if (!userId) throw new Error('Usuário não autenticado');
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      const fileName = `${userId}-${Math.random()}.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -114,7 +118,7 @@ export const useProfile = () => {
       console.error('Erro ao fazer upload do avatar:', err);
       throw err;
     }
-  };
+  }, [userId, updateProfile]);
 
   return {
     profile,

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { useImpersonation } from '@/context/ImpersonationContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,8 +9,51 @@ export const useUserCredits = () => {
   const [credits, setCredits] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Memoizar o user ID para evitar re-renders desnecessários
+  const currentUserId = useMemo(() => 
+    isImpersonating && impersonatedUser ? impersonatedUser.id : user?.id,
+    [isImpersonating, impersonatedUser?.id, user?.id]
+  );
 
-  const currentUserId = isImpersonating && impersonatedUser ? impersonatedUser.id : user?.id;
+  // Usar ref para rastrear o último userId para evitar requests desnecessários
+  const lastUserIdRef = useRef<string | undefined>();
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Função de debounce para evitar requisições excessivas
+  const debouncedFetchCredits = useCallback((userId: string) => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    debounceTimeoutRef.current = setTimeout(async () => {
+      try {
+        console.log('🔍 Buscando créditos para usuário:', userId, isImpersonating ? '(impersonado)' : '(real)');
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('credits')
+          .eq('id', userId)
+          .single();
+
+        if (error) {
+          console.error('❌ Erro ao buscar créditos:', error);
+          setError('Erro ao carregar créditos');
+          setCredits(0);
+        } else {
+          console.log('✅ Créditos encontrados:', data?.credits || 0);
+          setCredits(data?.credits || 0);
+          setError(null);
+        }
+      } catch (err) {
+        console.error('❌ Erro inesperado:', err);
+        setError('Erro ao carregar créditos');
+        setCredits(0);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300); // 300ms de debounce
+  }, [isImpersonating]);
 
   const fetchCredits = useCallback(async () => {
     if (!currentUserId) {
@@ -19,35 +62,24 @@ export const useUserCredits = () => {
       return;
     }
 
-    try {
-      console.log('🔍 Buscando créditos para usuário:', currentUserId, isImpersonating ? '(impersonado)' : '(real)');
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', currentUserId)
-        .single();
-
-      if (error) {
-        console.error('❌ Erro ao buscar créditos:', error);
-        setError('Erro ao carregar créditos');
-        setCredits(0);
-      } else {
-        console.log('✅ Créditos encontrados:', data?.credits || 0);
-        setCredits(data?.credits || 0);
-        setError(null);
-      }
-    } catch (err) {
-      console.error('❌ Erro inesperado:', err);
-      setError('Erro ao carregar créditos');
-      setCredits(0);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentUserId, isImpersonating]);
+    debouncedFetchCredits(currentUserId);
+  }, [currentUserId, debouncedFetchCredits]);
 
   useEffect(() => {
+    // Evitar requisições desnecessárias se o userId não mudou
+    if (lastUserIdRef.current === currentUserId) {
+      return;
+    }
+
     console.log('🔄 useUserCredits: currentUserId mudou:', currentUserId, 'isImpersonating:', isImpersonating);
+    
+    // Limpar timeout anterior se existir
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // Atualizar ref com novo userId
+    lastUserIdRef.current = currentUserId;
     
     // Reset credits when switching users
     setCredits(null);
@@ -58,9 +90,9 @@ export const useUserCredits = () => {
 
     if (!currentUserId) return;
 
-    // Configurar listener para mudanças em tempo real
+    // Configurar listener para mudanças em tempo real (apenas um canal)
     const channel = supabase
-      .channel(`credits-changes-${currentUserId}`)
+      .channel(`user-updates-${currentUserId}`)
       .on(
         'postgres_changes',
         {
@@ -74,11 +106,6 @@ export const useUserCredits = () => {
           setCredits(payload.new.credits || 0);
         }
       )
-      .subscribe();
-
-    // Também escutar mudanças de transações de moderador que podem afetar créditos
-    const transactionChannel = supabase
-      .channel(`moderator-transactions-${currentUserId}`)
       .on(
         'postgres_changes',
         {
@@ -89,9 +116,11 @@ export const useUserCredits = () => {
         },
         (payload) => {
           console.log('💰 Transação de moderador detectada, atualizando créditos:', payload);
-          // Aguardar um pouco e refrescar os créditos
+          // Debounce da atualização
           setTimeout(() => {
-            fetchCredits();
+            if (lastUserIdRef.current === currentUserId) {
+              fetchCredits();
+            }
           }, 500);
         }
       )
@@ -99,9 +128,17 @@ export const useUserCredits = () => {
 
     return () => {
       supabase.removeChannel(channel);
-      supabase.removeChannel(transactionChannel);
     };
   }, [currentUserId, fetchCredits, isImpersonating]);
+
+  // Cleanup nos timeouts quando o componente for desmontado
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const refreshCredits = async () => {
     setIsLoading(true);

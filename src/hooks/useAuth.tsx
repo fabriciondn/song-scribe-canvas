@@ -1,5 +1,5 @@
 
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
 import { AuthContext } from '@/context/AuthContext';
 import { ImpersonationContext } from '@/context/ImpersonationContext';
 import { logUserActivity } from '@/services/userActivityService';
@@ -16,32 +16,43 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
 
+  // Memoizar o user ID para evitar re-renders desnecessários
+  const userId = useMemo(() => context.user?.id, [context.user?.id]);
+
   // Registrar login quando o usuário se autentica (desabilitado temporariamente)
   useEffect(() => {
-    if (context.user) {
-      console.log('🔍 Usuário autenticado:', context.user.id);
+    if (userId) {
+      console.log('🔍 Usuário autenticado:', userId);
       // logUserActivity('user_session_active'); // Desabilitado para evitar lentidão
     }
-  }, [context.user]);
+  }, [userId]);
+
+  // Memoizar dados de impersonação para evitar re-renders desnecessários
+  const impersonatedUserData = useMemo(() => {
+    if (isImpersonating && impersonatedUser) {
+      return {
+        ...context,
+        user: {
+          id: impersonatedUser.id,
+          email: impersonatedUser.email || '',
+          app_metadata: {},
+          user_metadata: {
+            name: impersonatedUser.name,
+            artistic_name: impersonatedUser.artistic_name,
+            avatar_url: ''
+          },
+          aud: '',
+          created_at: '',
+          role: impersonatedUser.role
+        }
+      };
+    }
+    return null;
+  }, [isImpersonating, impersonatedUser, context]);
 
   // Se está impersonando, retornar dados do usuário impersonado
-  if (isImpersonating && impersonatedUser) {
-    return {
-      ...context,
-      user: {
-        id: impersonatedUser.id,
-        email: impersonatedUser.email || '',
-        app_metadata: {},
-        user_metadata: {
-          name: impersonatedUser.name,
-          artistic_name: impersonatedUser.artistic_name,
-          avatar_url: ''
-        },
-        aud: '',
-        created_at: '',
-        role: impersonatedUser.role
-      }
-    };
+  if (impersonatedUserData) {
+    return impersonatedUserData;
   }
 
   return context;
