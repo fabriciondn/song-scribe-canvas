@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,39 +7,17 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
 import { Settings, Database, Mail, Shield, Users, Bell } from 'lucide-react';
+import { useAdminSettings } from '@/hooks/useAdminSettings';
 
 export const AdminSettings: React.FC = () => {
-  const [settings, setSettings] = useState({
-    siteName: 'Compuse',
-    siteDescription: 'Plataforma de composição musical colaborativa',
-    maxCreditsPerUser: 100,
-    enableRegistrations: true,
-    enablePartnerships: true,
-    enableEmailNotifications: true,
-    maintenanceMode: false,
-    backupFrequency: 'daily',
-    maxFileSize: 50, // MB
-  });
-
-  const { toast } = useToast();
-
-  const handleSaveSettings = () => {
-    // Aqui você implementaria a lógica para salvar as configurações
-    toast({
-      title: 'Configurações salvas',
-      description: 'As configurações foram atualizadas com sucesso!',
-    });
-  };
-
-  const handleBackupDatabase = () => {
-    // Aqui você implementaria a lógica para fazer backup
-    toast({
-      title: 'Backup iniciado',
-      description: 'O backup do banco de dados foi iniciado e será processado em background.',
-    });
-  };
+  const {
+    settings,
+    setSettings,
+    isLoading,
+    handleSaveSettings,
+    handleBackupDatabase,
+  } = useAdminSettings();
 
   const systemInfo = [
     { label: 'Versão da Plataforma', value: '1.0.0' },
@@ -203,12 +181,19 @@ export const AdminSettings: React.FC = () => {
           </div>
 
           <div className="flex gap-4">
-            <Button onClick={handleBackupDatabase} variant="outline">
+            <Button 
+              onClick={handleBackupDatabase} 
+              variant="outline"
+              disabled={isLoading}
+            >
               <Database className="h-4 w-4 mr-2" />
-              Fazer Backup Agora
+              {isLoading ? 'Processando...' : 'Fazer Backup Agora'}
             </Button>
-            <Button onClick={handleSaveSettings}>
-              Salvar Configurações
+            <Button 
+              onClick={handleSaveSettings}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Salvando...' : 'Salvar Configurações'}
             </Button>
           </div>
         </CardContent>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useForm } from 'react-hook-form';
+import { formatCpf, validateCpf, getCpfErrorMessage } from '@/utils/cpfValidation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
@@ -33,7 +34,12 @@ const settingsSchema = z.object({
   artistic_name: z.string().optional(),
   name: z.string().optional(),
   email: z.string().email('Email inválido'),
-  cpf: z.string().optional(),
+  cpf: z.string().optional().refine((val) => {
+    if (!val) return true; // CPF é opcional
+    return validateCpf(val);
+  }, {
+    message: 'CPF inválido'
+  }),
   birth_day: z.string().optional(),
   birth_month: z.string().optional(),
   birth_year: z.string().optional(),
@@ -410,6 +416,10 @@ export default function OptimizedSettings() {
                             placeholder="000.000.000-00" 
                             {...field} 
                             maxLength={14}
+                            onChange={(e) => {
+                              const formatted = formatCpf(e.target.value);
+                              field.onChange(formatted);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />

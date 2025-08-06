@@ -384,7 +384,11 @@ const RegisteredWorks: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <Button 
                         variant="outline"
-                        onClick={() => handlePlayAudio(work)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handlePlayAudio(work);
+                        }}
                         className="flex items-center gap-2"
                       >
                         {playingAudio === work.id ? (

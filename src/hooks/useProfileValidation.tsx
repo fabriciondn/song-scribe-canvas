@@ -19,7 +19,6 @@ export const useProfileValidation = (): ProfileCompletionStatus => {
 
   const requiredFields = [
     { field: 'name', label: 'Nome completo' },
-    { field: 'artistic_name', label: 'Nome artístico' },
     { field: 'cpf', label: 'CPF' },
     { field: 'birth_date', label: 'Data de nascimento' },
     { field: 'cep', label: 'CEP' },
