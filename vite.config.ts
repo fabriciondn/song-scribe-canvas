@@ -47,25 +47,25 @@ export default defineConfig(({ mode }) => ({
         categories: ['music', 'productivity', 'entertainment'],
         icons: [
           {
-            src: '/icons/icon-192x192.png',
+            src: '/lovable-uploads/4c99f507-bfdd-40d3-905a-dfe8af213cb3.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: '/icons/icon-512x512.png',
+            src: '/lovable-uploads/4c99f507-bfdd-40d3-905a-dfe8af213cb3.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: '/icons/icon-180x180.png',
+            src: '/lovable-uploads/4c99f507-bfdd-40d3-905a-dfe8af213cb3.png',
             sizes: '180x180',
             type: 'image/png',
             purpose: 'apple touch icon'
           },
           {
-            src: '/icons/icon-152x152.png',
+            src: '/lovable-uploads/4c99f507-bfdd-40d3-905a-dfe8af213cb3.png',
             sizes: '152x152',
             type: 'image/png'
           }

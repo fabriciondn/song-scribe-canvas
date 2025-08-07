@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useForm } from 'react-hook-form';
 import { formatCpf, validateCpf, getCpfErrorMessage } from '@/utils/cpfValidation';
+import { validateCpfOwnership } from '@/utils/cpfValidator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
@@ -215,6 +216,25 @@ export default function OptimizedSettings() {
         
         if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
           birthDate = new Date(year, month, day);
+        }
+      }
+
+      // Validar CPF se foi fornecido
+      if (data.cpf && data.cpf.trim()) {
+        if (!data.name || !data.name.trim()) {
+          toast.error('Nome completo é obrigatório para validação do CPF');
+          return;
+        }
+
+        if (!birthDate) {
+          toast.error('Data de nascimento é obrigatória para validação do CPF');
+          return;
+        }
+
+        const cpfValidation = await validateCpfOwnership(data.cpf, data.name, birthDate);
+        if (!cpfValidation.isValid) {
+          toast.error(cpfValidation.message || 'CPF inválido');
+          return;
         }
       }
 

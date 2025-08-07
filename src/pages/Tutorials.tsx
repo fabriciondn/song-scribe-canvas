@@ -28,68 +28,8 @@ interface Comment {
   type: 'suggestion' | 'doubt';
 }
 
-const mockTutorials: Tutorial[] = [
-  {
-    id: '1',
-    title: 'Como Compor Sua Primeira Música',
-    description: 'Aprenda os fundamentos da composição musical e crie sua primeira música do zero.',
-    thumbnail: '/lovable-uploads/913b0b45-af0f-4a18-9433-06da553e8273.png',
-    duration: '15:30',
-    views: 1234,
-    category: 'Composição',
-    videoUrl: '#'
-  },
-  {
-    id: '2',
-    title: 'Técnicas de Harmonia Avançada',
-    description: 'Domine técnicas avançadas de harmonia para enriquecer suas composições.',
-    thumbnail: '/lovable-uploads/87b8e4b6-6bc8-4091-b080-aa4d3f63dfaa.png',
-    duration: '22:15',
-    views: 892,
-    category: 'Harmonia',
-    videoUrl: '#'
-  },
-  {
-    id: '3',
-    title: 'Criando Melodias Marcantes',
-    description: 'Aprenda a criar melodias que ficam na cabeça e conectam com o público.',
-    thumbnail: '/lovable-uploads/b59e106c-f55f-44c4-9ac6-5f29494e1251.png',
-    duration: '18:45',
-    views: 567,
-    category: 'Melodia',
-    videoUrl: '#'
-  },
-  {
-    id: '4',
-    title: 'Arranjos e Produção Musical',
-    description: 'Transforme suas ideias musicais em arranjos completos e produzidos.',
-    thumbnail: '/lovable-uploads/34f3e3cb-f162-46fc-bd7b-472265904f88.png',
-    duration: '25:00',
-    views: 1456,
-    category: 'Produção',
-    videoUrl: '#'
-  },
-  {
-    id: '5',
-    title: 'Letra e Poesia na Música',
-    description: 'Desenvolva suas habilidades de escrita e crie letras impactantes.',
-    thumbnail: '/lovable-uploads/a10d0d4b-cf1d-4fbc-954c-cdb4fd0eeacc.png',
-    duration: '20:30',
-    views: 789,
-    category: 'Letra',
-    videoUrl: '#'
-  },
-  {
-    id: '6',
-    title: 'Colaboração Musical Online',
-    description: 'Aprenda a colaborar com outros músicos usando ferramentas digitais.',
-    thumbnail: '/lovable-uploads/b2e99156-0e7f-46c8-8b49-eafea58416f9.png',
-    duration: '12:20',
-    views: 345,
-    category: 'Colaboração',
-    videoUrl: '#'
-  }
-];
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const mockComments: Comment[] = [
   {
@@ -112,17 +52,58 @@ const mockComments: Comment[] = [
 
 export const Tutorials: React.FC = () => {
   const [selectedTutorial, setSelectedTutorial] = useState<Tutorial | null>(null);
+  const [tutorials, setTutorials] = useState<Tutorial[]>([]);
+  const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState<Comment[]>(mockComments);
   const [newComment, setNewComment] = useState('');
   const [commentType, setCommentType] = useState<'suggestion' | 'doubt'>('suggestion');
   const { toast } = useToast();
 
+  const fetchTutorials = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('tutorials')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index', { ascending: true });
+      
+      if (error) throw error;
+      
+      const formattedTutorials = data.map(tutorial => ({
+        id: tutorial.id,
+        title: tutorial.title,
+        description: tutorial.description,
+        thumbnail: tutorial.thumbnail_url || '/lovable-uploads/913b0b45-af0f-4a18-9433-06da553e8273.png',
+        duration: '15:30', // Default duration
+        views: Math.floor(Math.random() * 2000) + 100, // Random views for now
+        category: tutorial.category,
+        videoUrl: tutorial.video_url
+      }));
+      
+      setTutorials(formattedTutorials);
+    } catch (error) {
+      console.error('Erro ao buscar tutoriais:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os tutoriais.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTutorials();
+  }, []);
+
   const categories = ['Todos', 'Composição', 'Harmonia', 'Melodia', 'Produção', 'Letra', 'Colaboração'];
   const [selectedCategory, setSelectedCategory] = useState('Todos');
 
   const filteredTutorials = selectedCategory === 'Todos' 
-    ? mockTutorials 
-    : mockTutorials.filter(tutorial => tutorial.category === selectedCategory);
+    ? tutorials 
+    : tutorials.filter(tutorial => tutorial.category === selectedCategory);
 
   const handleWatchTutorial = (tutorial: Tutorial) => {
     setSelectedTutorial(tutorial);
@@ -279,7 +260,7 @@ export const Tutorials: React.FC = () => {
             <div>
               <h3 className="font-semibold mb-4">Tutoriais Relacionados</h3>
               <div className="space-y-3">
-                {mockTutorials
+                {tutorials
                   .filter(t => t.id !== selectedTutorial.id)
                   .slice(0, 3)
                   .map((tutorial) => (
@@ -310,6 +291,33 @@ export const Tutorials: React.FC = () => {
                   ))}
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (tutorials.length === 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6">
+          <div className="text-center py-12">
+            <h1 className="text-4xl font-bold mb-2">Tutoriais</h1>
+            <p className="text-muted-foreground">
+              Nenhum tutorial disponível no momento. Volte em breve!
+            </p>
           </div>
         </div>
       </div>
