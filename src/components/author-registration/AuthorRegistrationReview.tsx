@@ -155,42 +155,20 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   };
 
   const startAnalysisSimulation = async (registrationId: string, title: string) => {
-    // Tempo aleatório entre 1 e 5 minutos (em milissegundos)
-    const analysisTime = Math.random() * (5 * 60 * 1000 - 1 * 60 * 1000) + 1 * 60 * 1000;
-    
-    setTimeout(async () => {
-      try {
-        // Atualizar status para "registrada" e definir data de conclusão
-        const analysisCompletedAt = new Date().toISOString();
-        
-        const { error: updateError } = await supabase
-          .from('author_registrations')
-          .update({ 
-            status: 'registered',
-            analysis_completed_at: analysisCompletedAt
-          })
-          .eq('id', registrationId);
-
-        if (updateError) {
-          console.error('Erro ao atualizar status do registro:', updateError);
-          return;
-        }
-
-        // Mostrar notificação de sucesso
-        addNotification({
-          title: 'Parabéns, sua obra está protegida!',
-          message: `O registro de "${title}" foi concluído com sucesso.`,
-          type: 'success',
-          duration: 0, // Não expirar automaticamente
-          onClick: () => {
-            navigate('/dashboard/registered-works');
-          }
-        });
-
-      } catch (error) {
-        console.error('Erro na simulação de análise:', error);
+    try {
+      // Trigger the edge function to process registrations in the background
+      const { error } = await supabase.functions.invoke('process-registrations');
+      
+      if (error) {
+        console.error('Erro ao iniciar análise via edge function:', error);
       }
-    }, analysisTime);
+      
+      console.log('Edge function triggered for registration analysis');
+      
+      // The real-time subscription will handle status updates automatically
+    } catch (error) {
+      console.error('Erro na chamada da edge function:', error);
+    }
   };
 
   return (

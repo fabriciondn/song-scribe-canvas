@@ -9,6 +9,7 @@ import { useImpersonationSync } from "./hooks/useImpersonationSync";
 import { NotificationProvider } from "@/components/ui/notification";
 import { ImpersonationBanner } from "@/components/ui/impersonation-banner";
 import { RoleRedirect } from "@/components/layout/RoleRedirect";
+import { UpdateNotification } from "@/components/ui/update-notification";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import DashboardHome from "./pages/DashboardHome";
@@ -44,6 +45,7 @@ const AppContent = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <ImpersonationBanner />
+      <UpdateNotification />
       <div className="flex-1" style={{ paddingTop: 'var(--impersonation-banner-height, 0px)' }}>
         <RoleRedirect />
         <Routes>

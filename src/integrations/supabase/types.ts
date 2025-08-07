@@ -943,6 +943,10 @@ export type Database = {
         Args: { target_user_id: string; new_credits: number }
         Returns: undefined
       }
+      process_pending_registrations: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       register_moderator_with_token: {
         Args: {
           p_token: string

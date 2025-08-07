@@ -2,3 +2,6 @@ project_id = "hnencfkdsyiwtvktdvzy"
 
 [functions.create-user-by-moderator]
 verify_jwt = false
+
+[functions.process-registrations]
+verify_jwt = false

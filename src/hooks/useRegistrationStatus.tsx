@@ -18,18 +18,29 @@ export const useRegistrationStatus = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Fetch initial data
-    const fetchRegistrations = async () => {
-      const { data, error } = await supabase
-        .from('author_registrations')
-        .select('id, status, title, analysis_started_at, analysis_completed_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+    // Fetch initial data with retry logic
+    const fetchRegistrations = async (retries = 3) => {
+      try {
+        const { data, error } = await supabase
+          .from('author_registrations')
+          .select('id, status, title, analysis_started_at, analysis_completed_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
 
-      if (!error && data) {
-        setRegistrations(data);
+        if (error && retries > 0) {
+          console.warn('Error fetching registrations, retrying...', error);
+          setTimeout(() => fetchRegistrations(retries - 1), 2000);
+          return;
+        }
+
+        if (!error && data) {
+          setRegistrations(data);
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Failed to fetch registrations:', error);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     fetchRegistrations();
