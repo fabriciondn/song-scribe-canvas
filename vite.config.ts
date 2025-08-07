@@ -38,8 +38,7 @@ export default defineConfig(({ mode }) => ({
             urlPattern: /^https:\/\/.*\.supabase\.co\/realtime/,
             handler: 'NetworkOnly',
             options: {
-              cacheName: 'supabase-realtime',
-              networkTimeoutSeconds: 3
+              cacheName: 'supabase-realtime'
             }
           },
           {
