@@ -90,14 +90,15 @@ export default function OptimizedSettings() {
 
   // Debounce para busca de CEP
   const searchCep = useCallback(async (cep: string) => {
-    if (cep.length !== 8) return;
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
     
     setSearchingCep(true);
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
-      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`, {
         signal: controller.signal
       });
       clearTimeout(timeoutId);
@@ -111,12 +112,13 @@ export default function OptimizedSettings() {
         return;
       }
       
+      // Atualizar todos os campos do endereço automaticamente
       form.setValue('street', data.logradouro || '');
       form.setValue('neighborhood', data.bairro || '');
       form.setValue('city', data.localidade || '');
       form.setValue('state', data.uf || '');
       
-      toast.success('Endereço encontrado!');
+      toast.success('Endereço encontrado e preenchido automaticamente!');
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         toast.error('Timeout na busca do CEP');

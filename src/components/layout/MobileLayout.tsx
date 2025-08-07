@@ -1,7 +1,7 @@
 import React from 'react';
 import { MobileHeader } from './MobileHeader';
 import { MobileNavigation } from './MobileNavigation';
-import { PWAManager } from '@/components/pwa/PWAManager';
+
 import { useMobileDetection } from '@/hooks/use-mobile';
 
 interface MobileLayoutProps {
@@ -34,8 +34,6 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
       {/* Navegação inferior */}
       <MobileNavigation />
       
-      {/* PWA Manager */}
-      <PWAManager />
     </div>
   );
 };

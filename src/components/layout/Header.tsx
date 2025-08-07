@@ -13,7 +13,7 @@ import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, LogOut, Music, Home, CreditCard, Plus, Moon, Sun, Shield, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { InstallButton } from '@/components/pwa/InstallButton';
+
 export const Header = ({
   toggleSidebar
 }: {
@@ -77,8 +77,6 @@ export const Header = ({
       </div>
       
       {user ? <div className="flex items-center gap-3">
-          {/* PWA Install Button - Only on mobile */}
-          <InstallButton variant="outline" size="sm" className="mr-2" />
           
           {/* Theme toggle */}
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="mr-2">

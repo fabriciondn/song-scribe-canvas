@@ -269,13 +269,53 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   pdf.setFont('helvetica', 'bold');
   pdf.text('LETRA COMPLETA', 105, 22, { align: 'center' });
   
-  // Letra completa
+  // Letra completa com sistema de duas colunas
   pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'normal');
   
-  const fullLyricsLines = pdf.splitTextToSize(work.lyrics, 170);
-  pdf.text(fullLyricsLines, 20, 50);
+  // Configurações para layout em duas colunas
+  const pageHeight = 297; // A4 height in mm
+  const footerHeight = 22; // Footer height
+  const headerHeight = 35; // Header height
+  const availableHeight = pageHeight - headerHeight - footerHeight - 10; // 10mm margin
+  const startY = 50;
+  const lineHeight = 5;
+  const maxLinesPerColumn = Math.floor(availableHeight / lineHeight);
+  
+  // Largura das colunas
+  const columnWidth = 80; // 80mm each column
+  const leftColumnX = 20;
+  const rightColumnX = 110;
+  const gapBetweenColumns = 10;
+  
+  // Quebrar a letra em linhas que cabem na largura da coluna
+  const fullLyricsLines = pdf.splitTextToSize(work.lyrics, columnWidth);
+  
+  // Se a letra cabe em uma coluna, usar layout simples
+  if (fullLyricsLines.length <= maxLinesPerColumn) {
+    pdf.text(fullLyricsLines, leftColumnX, startY);
+  } else {
+    // Layout de duas colunas para letras longas
+    const firstColumnLines = fullLyricsLines.slice(0, maxLinesPerColumn);
+    const secondColumnLines = fullLyricsLines.slice(maxLinesPerColumn);
+    
+    // Primeira coluna (esquerda)
+    pdf.text(firstColumnLines, leftColumnX, startY);
+    
+    // Segunda coluna (direita)
+    if (secondColumnLines.length > 0) {
+      pdf.text(secondColumnLines, rightColumnX, startY);
+    }
+    
+    // Se ainda houver mais texto, adicionar uma nota
+    if (secondColumnLines.length > maxLinesPerColumn) {
+      const remainingLines = secondColumnLines.length - maxLinesPerColumn;
+      pdf.setFontSize(8);
+      pdf.setTextColor(lightGrayColor[0], lightGrayColor[1], lightGrayColor[2]);
+      pdf.text(`[+${remainingLines} linhas adicionais da letra]`, rightColumnX, startY + (maxLinesPerColumn * lineHeight) + 10);
+    }
+  }
   
   // Footer da segunda página
   pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
