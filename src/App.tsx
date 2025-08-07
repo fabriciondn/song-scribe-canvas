@@ -10,6 +10,7 @@ import { NotificationProvider } from "@/components/ui/notification";
 import { ImpersonationBanner } from "@/components/ui/impersonation-banner";
 import { RoleRedirect } from "@/components/layout/RoleRedirect";
 import { UpdateNotification } from "@/components/ui/update-notification";
+import { PageFunctionStatusWrapper } from "@/components/layout/FunctionStatusWrapper";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import DashboardHome from "./pages/DashboardHome";
@@ -48,7 +49,8 @@ const AppContent = () => {
       <UpdateNotification />
       <div className="flex-1" style={{ paddingTop: 'var(--impersonation-banner-height, 0px)' }}>
         <RoleRedirect />
-        <Routes>
+        <PageFunctionStatusWrapper>
+          <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/dashboard" element={<Dashboard />}>
           <Route index element={<DashboardHome />} />
@@ -93,7 +95,8 @@ const AppContent = () => {
         <Route path="/moderator/profile" element={<ModeratorDashboard />} />
         <Route path="/moderator-auth" element={<ModeratorAuth />} />
         <Route path="*" element={<NotFound />} />
-        </Routes>
+          </Routes>
+        </PageFunctionStatusWrapper>
       </div>
     </div>
   );

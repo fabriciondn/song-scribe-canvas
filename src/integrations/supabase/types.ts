@@ -254,6 +254,45 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_functions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          function_key: string
+          icon: string | null
+          id: string
+          name: string
+          route: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          function_key: string
+          icon?: string | null
+          id?: string
+          name: string
+          route?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          function_key?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          route?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       moderator_registration_tokens: {
         Row: {
           created_at: string
@@ -911,6 +950,10 @@ export type Database = {
           user_id: string | null
         }[]
       }
+      get_function_status: {
+        Args: { p_function_key: string }
+        Returns: string
+      }
       get_moderator_dashboard_stats: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -941,6 +984,10 @@ export type Database = {
       }
       moderator_update_user_credits: {
         Args: { target_user_id: string; new_credits: number }
+        Returns: undefined
+      }
+      populate_menu_functions: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
       process_pending_registrations: {

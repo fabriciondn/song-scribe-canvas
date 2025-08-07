@@ -44,6 +44,11 @@ const adminMenuItems = [
     id: "roles",
   },
   {
+    title: "Funções do Menu",
+    icon: Settings,
+    id: "menu-functions",
+  },
+  {
     title: "Conteúdo",
     icon: FileText,
     id: "content",
