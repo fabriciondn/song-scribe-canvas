@@ -21,25 +21,7 @@ export function FunctionStatusWrapper({
     return <>{children}</>;
   }
 
-  // Se a função está em "coming soon", mostrar mensagem ao invés do conteúdo
-  if (status === 'coming_soon') {
-    return (
-      <div className="min-h-[400px] flex items-center justify-center p-8">
-        <div className="text-center space-y-4">
-          <Construction className="h-16 w-16 mx-auto text-muted-foreground" />
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Função em Desenvolvimento</h3>
-            <p className="text-muted-foreground max-w-md">
-              Esta funcionalidade está sendo desenvolvida e estará disponível em breve. 
-              Acompanhe as atualizações!
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Se a função está em beta, mostrar o conteúdo com aviso
+  // Se a função está em beta, mostrar o conteúdo com aviso discreto
   if (status === 'beta') {
     return (
       <div className="space-y-4">
@@ -51,9 +33,9 @@ export function FunctionStatusWrapper({
             </Badge>
           </div>
         )}
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
+        <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+          <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <AlertDescription className="text-blue-800 dark:text-blue-200">
             Esta funcionalidade está em fase beta. Algumas características podem estar 
             incompletas ou sofrer alterações.
           </AlertDescription>

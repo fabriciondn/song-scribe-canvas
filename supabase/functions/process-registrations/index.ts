@@ -17,9 +17,9 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    console.log('Processing pending registrations...')
+    console.log('Processing pending registrations with improved random timing...')
 
-    // Call the database function to process pending registrations
+    // Call the updated database function to process pending registrations
     const { error } = await supabase.rpc('process_pending_registrations')
 
     if (error) {
@@ -32,7 +32,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Pending registrations processed successfully' 
+        message: 'Pending registrations processed successfully with random timing',
+        timestamp: new Date().toISOString()
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -46,7 +47,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: error.message,
+        timestamp: new Date().toISOString()
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

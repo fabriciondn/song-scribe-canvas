@@ -45,9 +45,14 @@ export const usePWA = () => {
       setDeferredPrompt(null);
     };
 
-    // Service Worker para updates
+    // Service Worker para updates com timeout reduzido
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(registration => {
+        // Verificar updates mais frequentemente
+        setInterval(() => {
+          registration.update();
+        }, 60000); // Verificar a cada minuto
+
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
@@ -58,6 +63,13 @@ export const usePWA = () => {
             });
           }
         });
+      });
+
+      // Escutar mensagens do service worker
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data.type === 'SW_UPDATED') {
+          setNeedsUpdate(true);
+        }
       });
     }
 
@@ -87,13 +99,23 @@ export const usePWA = () => {
     }
   };
 
-  const updateApp = () => {
+  const updateApp = async () => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(registration => {
+      try {
+        const registration = await navigator.serviceWorker.ready;
         if (registration.waiting) {
           registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          
+          // Aguardar um pouco antes de recarregar
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
         }
-      });
+      } catch (error) {
+        console.error('Erro ao atualizar app:', error);
+        // Forçar reload em caso de erro
+        window.location.reload();
+      }
     }
   };
 

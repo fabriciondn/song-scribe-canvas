@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3MB limit
         cleanupOutdatedCaches: true,
-        skipWaiting: false,
-        clientsClaim: false,
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\./,
@@ -31,6 +31,25 @@ export default defineConfig(({ mode }) => ({
               networkTimeoutSeconds: 5,
               cacheableResponse: {
                 statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/realtime/,
+            handler: 'NetworkOnly',
+            options: {
+              cacheName: 'supabase-realtime',
+              networkTimeoutSeconds: 3
+            }
+          },
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-api',
+              networkTimeoutSeconds: 5,
+              cacheableResponse: {
+                statuses: [0, 200, 204]
               }
             }
           }
