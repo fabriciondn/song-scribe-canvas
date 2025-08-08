@@ -30,6 +30,7 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import ModeratorDashboard from "./pages/ModeratorDashboard";
 import ModeratorAuth from "./pages/ModeratorAuth";
+import PublicRegistrationForm from "./pages/PublicRegistrationForm";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,6 +96,7 @@ const AppContent = () => {
         <Route path="/moderator/transactions" element={<ModeratorDashboard />} />
         <Route path="/moderator/profile" element={<ModeratorDashboard />} />
         <Route path="/moderator-auth" element={<ModeratorAuth />} />
+        <Route path="/formulario" element={<PublicRegistrationForm />} />
         <Route path="*" element={<NotFound />} />
           </Routes>
         </PageFunctionStatusWrapper>

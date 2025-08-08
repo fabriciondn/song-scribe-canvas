@@ -69,6 +69,11 @@ const adminMenuItems = [
     id: "certificates",
   },
   {
+    title: "Formulários",
+    icon: FileText,
+    id: "forms",
+  },
+  {
     title: "Analytics",
     icon: BarChart3,
     id: "analytics",

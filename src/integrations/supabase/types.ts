@@ -631,6 +631,57 @@ export type Database = {
         }
         Relationships: []
       }
+      public_registration_forms: {
+        Row: {
+          artistic_name: string | null
+          birth_date: string
+          cep: string
+          city: string
+          cpf: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          neighborhood: string
+          number: string
+          state: string
+          street: string
+          updated_at: string
+        }
+        Insert: {
+          artistic_name?: string | null
+          birth_date: string
+          cep: string
+          city: string
+          cpf: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          neighborhood: string
+          number: string
+          state: string
+          street: string
+          updated_at?: string
+        }
+        Update: {
+          artistic_name?: string | null
+          birth_date?: string
+          cep?: string
+          city?: string
+          cpf?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          neighborhood?: string
+          number?: string
+          state?: string
+          street?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       songs: {
         Row: {
           content: string

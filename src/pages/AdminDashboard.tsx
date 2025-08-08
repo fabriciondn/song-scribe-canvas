@@ -17,6 +17,7 @@ import { AdminLogs } from '@/components/admin/AdminLogs';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminModerators } from '@/components/admin/AdminModerators';
 import { AdminMenuFunctions } from '@/components/admin/AdminMenuFunctions';
+import { AdminForms } from '@/components/admin/AdminForms';
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { Shield, Users, BarChart3, AlertTriangle, CheckCircle, Clock, Activity } from 'lucide-react';
 
@@ -140,6 +141,8 @@ const AdminDashboard: React.FC = () => {
         return <AdminBanners />;
       case 'certificates':
         return <AdminCertificates />;
+      case 'forms':
+        return <AdminForms />;
       case 'analytics':
         return <AdminAnalytics />;
       case 'logs':
