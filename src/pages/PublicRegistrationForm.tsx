@@ -28,6 +28,7 @@ const formSchema = z.object({
 export default function PublicRegistrationForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingCep, setIsLoadingCep] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -100,6 +101,7 @@ export default function PublicRegistrationForm() {
       if (error) throw error;
 
       toast.success('Formulário enviado com sucesso!');
+      setIsSubmitted(true);
       form.reset();
     } catch (error) {
       console.error('Erro ao enviar formulário:', error);
@@ -108,6 +110,30 @@ export default function PublicRegistrationForm() {
       setIsLoading(false);
     }
   };
+
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center space-y-6">
+          <div className="flex justify-center">
+            <img 
+              src="/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"
+              alt="Compuse Logo" 
+              className="h-16"
+            />
+          </div>
+          <div className="space-y-4">
+            <h1 className="text-3xl font-bold text-foreground">
+              Obrigado pelo seu interesse!
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-md mx-auto">
+              Recebemos suas informações com sucesso. Em breve, alguém da equipe Compuse entrará em contato para a conclusão do seu registro.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
