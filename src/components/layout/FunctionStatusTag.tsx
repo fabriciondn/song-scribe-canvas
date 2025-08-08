@@ -42,7 +42,7 @@ export const FunctionStatusTag: React.FC<FunctionStatusTagProps> = ({ functionKe
   return (
     <Badge 
       variant={getTagVariant()}
-      className="ml-2 text-xs"
+      className="ml-2 text-xs px-1.5 py-0.5 text-[10px] font-medium"
     >
       {getTagText()}
     </Badge>

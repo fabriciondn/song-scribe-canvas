@@ -45,13 +45,20 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         const { new: updatedRegistration } = payload;
         console.log('Atualização de registro em tempo real:', updatedRegistration);
         
-        // Se o status mudou para 'protegida' ou 'registered', mostrar notificação
-        if (updatedRegistration.status === 'protegida' || updatedRegistration.status === 'registered') {
+        // Se o status mudou para 'registered', mostrar notificação
+        if (updatedRegistration.status === 'registered') {
+          console.log('🎉 Música registrada com sucesso! Mostrando notificação...');
           addNotification({
             title: 'Parabéns sua obra está protegida!',
             message: `A música "${updatedRegistration.title}" foi analisada e registrada com sucesso. Seus direitos autorais estão agora protegidos.`,
             type: 'success',
             duration: 8000
+          });
+          
+          // Também mostrar toast para garantir que o usuário veja
+          toast({
+            title: 'Parabéns sua obra está protegida!',
+            description: `A música "${updatedRegistration.title}" foi analisada e registrada com sucesso.`,
           });
         }
       }
