@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useImpersonation } from '@/context/ImpersonationContext';
+import { withRateLimit, debounce } from '@/lib/authUtils';
 
 interface UserRole {
   role: 'admin' | 'moderator' | 'user';
@@ -17,81 +18,123 @@ export const useRoleBasedNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Buscar role do usuário
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      if (!isAuthenticated || !user) {
-        setUserRole(null);
+  // Debounced role fetcher to prevent excessive calls
+  const debouncedFetchUserRole = debounce(async (userId: string) => {
+    try {
+      console.log('🔍 Verificando role do usuário:', userId);
+
+      // Use rate limiting for role fetching
+      const roleResult = await withRateLimit(
+        `get_user_role_${userId}`,
+        async () => {
+          const result = await supabase.rpc('get_user_role', { user_id: userId });
+          return result;
+        },
+        3, // Max 3 calls per minute
+        60000
+      );
+
+      if (!roleResult) {
+        console.warn('Role fetch rate limited, using default');
+        setUserRole({ role: 'user' });
         setIsRoleLoading(false);
         return;
       }
 
-      try {
-        console.log('🔍 Verificando role do usuário:', user.id);
+      const { data: roleData, error } = roleResult as any;
 
-        // Usar a nova função para obter o role do usuário
-        const { data: roleData, error } = await supabase.rpc('get_user_role', {
-          user_id: user.id
-        });
-
-        if (error) {
-          console.error('Erro ao buscar role:', error);
-          setUserRole({ role: 'user' });
-          setIsRoleLoading(false);
-          return;
-        }
-
-        console.log('📋 Role encontrado:', roleData);
-
-        // Definir o role baseado no retorno
-        const userRole = roleData || 'user';
-        let permissions: string[] = [];
-
-        if (userRole === 'admin' || userRole === 'super_admin') {
-          // Buscar permissões específicas para admins
-          const { data: adminData } = await supabase
-            .from('admin_users')
-            .select('permissions')
-            .eq('user_id', user.id)
-            .single();
-          
-          permissions = Array.isArray(adminData?.permissions) ? adminData.permissions as string[] : [];
-          
-          setUserRole({
-            role: 'admin', // Mapear super_admin para admin no frontend
-            permissions
-          });
-        } else if (userRole === 'moderator') {
-          // Buscar permissões específicas para moderadores
-          const { data: moderatorData } = await supabase
-            .from('admin_users')
-            .select('permissions')
-            .eq('user_id', user.id)
-            .single();
-          
-          permissions = Array.isArray(moderatorData?.permissions) ? moderatorData.permissions as string[] : [];
-          
-          setUserRole({
-            role: 'moderator',
-            permissions
-          });
-        } else {
-          setUserRole({ role: 'user' });
-        }
-
-        setIsRoleLoading(false);
-
-      } catch (error) {
-        console.error('Erro ao buscar role do usuário:', error);
+      if (error) {
+        console.error('Erro ao buscar role:', error);
         setUserRole({ role: 'user' });
         setIsRoleLoading(false);
+        return;
       }
-    };
 
-    if (!isLoading) {
-      fetchUserRole();
+      console.log('📋 Role encontrado:', roleData);
+
+      // Definir o role baseado no retorno
+      const userRole = roleData || 'user';
+      let permissions: string[] = [];
+
+      if (userRole === 'admin' || userRole === 'super_admin') {
+        // Buscar permissões específicas para admins com rate limiting
+        const permissionsResult = await withRateLimit(
+          `admin_permissions_${userId}`,
+          async () => {
+            const result = await supabase
+              .from('admin_users')
+              .select('permissions')
+              .eq('user_id', userId)
+              .single();
+            return result;
+          },
+          2, // Max 2 calls per minute
+          60000
+        );
+        
+        if (permissionsResult && (permissionsResult as any)?.data) {
+          permissions = Array.isArray((permissionsResult as any).data.permissions) 
+            ? (permissionsResult as any).data.permissions as string[] 
+            : [];
+        }
+        
+        setUserRole({
+          role: 'admin', // Mapear super_admin para admin no frontend
+          permissions
+        });
+      } else if (userRole === 'moderator') {
+        // Buscar permissões específicas para moderadores com rate limiting
+        const permissionsResult = await withRateLimit(
+          `moderator_permissions_${userId}`,
+          async () => {
+            const result = await supabase
+              .from('admin_users')
+              .select('permissions')
+              .eq('user_id', userId)
+              .single();
+            return result;
+          },
+          2, // Max 2 calls per minute
+          60000
+        );
+        
+        if (permissionsResult && (permissionsResult as any)?.data) {
+          permissions = Array.isArray((permissionsResult as any).data.permissions) 
+            ? (permissionsResult as any).data.permissions as string[] 
+            : [];
+        }
+        
+        setUserRole({
+          role: 'moderator',
+          permissions
+        });
+      } else {
+        setUserRole({ role: 'user' });
+      }
+
+      setIsRoleLoading(false);
+
+    } catch (error) {
+      console.error('Erro ao buscar role do usuário:', error);
+      setUserRole({ role: 'user' });
+      setIsRoleLoading(false);
     }
-  }, [isAuthenticated, user, isLoading]);
+  }, 1000); // 1 second debounce
+
+  // Buscar role do usuário
+  useEffect(() => {
+    if (!isAuthenticated || !user || isLoading) {
+      setUserRole(null);
+      setIsRoleLoading(false);
+      return;
+    }
+
+    debouncedFetchUserRole(user.id);
+
+    return () => {
+      debouncedFetchUserRole.cancel();
+    };
+  }, [isAuthenticated, user?.id, isLoading]);
 
   // Redirecionamento automático baseado no role
   const redirectBasedOnRole = (currentUserRole: UserRole, currentPath: string, isImpersonating: boolean = false) => {

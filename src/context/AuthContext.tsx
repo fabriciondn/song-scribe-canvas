@@ -2,6 +2,12 @@
 import React, { createContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
+import { 
+  cleanupAuthState, 
+  safeSupabaseCall, 
+  ensureSingleAuthListener,
+  debounce 
+} from '@/lib/authUtils';
 
 // Auth context interfaces
 interface AuthContextType {
@@ -33,67 +39,82 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Clean up auth state helper
-  const cleanupAuthState = () => {
-    // Remove standard auth tokens
-    localStorage.removeItem('supabase.auth.token');
-    // Remove all Supabase auth keys from localStorage
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        localStorage.removeItem(key);
-      }
-    });
-    // Clear session storage keys too
-    Object.keys(sessionStorage || {}).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        sessionStorage.removeItem(key);
-      }
-    });
-  };
+  // Debounced session handler to prevent excessive calls
+  const debouncedSessionHandler = debounce((event: string, newSession: Session | null) => {
+    console.log('🔐 Auth event:', event, newSession?.user?.id);
+    setSession(newSession);
+    setUser(newSession?.user || null);
+    
+    // Defer any heavy operations to prevent blocking
+    if (event === 'SIGNED_IN' && newSession) {
+      setTimeout(() => {
+        console.log('✅ User signed in successfully');
+      }, 0);
+    }
+    
+    setIsLoading(false);
+  }, 300); // 300ms debounce
 
-  // Initialize auth state
+  // Initialize auth state (singleton pattern)
   useEffect(() => {
-    // Set up auth state change listener first
+    if (!ensureSingleAuthListener()) {
+      return; // Already initialized elsewhere
+    }
+
+    console.log('🚀 Initializing auth listener');
+
+    // Set up auth state change listener with debouncing
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user || null);
-        setIsLoading(false);
-      }
+      debouncedSessionHandler
     );
 
-    // Get current session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user || null);
+    // Get current session with rate limiting
+    const initSession = async () => {
+      const result = await safeSupabaseCall(
+        () => supabase.auth.getSession(),
+        1, // Only 1 retry for initial session
+        500 // 500ms delay
+      );
+      
+      if (result?.data?.session) {
+        setSession(result.data.session);
+        setUser(result.data.session.user);
+      }
       setIsLoading(false);
-    });
+    };
+
+    initSession();
 
     return () => {
+      console.log('🛑 Cleaning up auth listener');
       subscription.unsubscribe();
+      debouncedSessionHandler.cancel();
     };
   }, []);
 
-  // Login function
+  // Login function with rate limiting
   const login = async (email: string, password: string) => {
     try {
       // Clean up existing state first for a fresh login
       cleanupAuthState();
       
-      // Try to sign out globally (ignore errors)
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continue even if this fails
-      }
+      // Try to sign out globally with safe call
+      await safeSupabaseCall(
+        () => supabase.auth.signOut({ scope: 'global' }),
+        1, // Only 1 retry
+        1000
+      );
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      // Login with rate limiting
+      const result = await safeSupabaseCall(
+        () => supabase.auth.signInWithPassword({ email, password }),
+        2, // 2 retries for login
+        2000
+      );
 
-      if (error) throw error;
+      if (result?.error) throw result.error;
     } catch (error: any) {
+      console.error('Login error:', error);
       throw error;
     }
   };
@@ -139,20 +160,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Logout function
+  // Logout function with safe cleanup
   const logout = async () => {
     try {
-      // Clean up auth state
+      // Clean up auth state first
       cleanupAuthState();
       
-      // Attempt global sign out
-      await supabase.auth.signOut({ scope: 'global' });
+      // Attempt global sign out with safe call
+      await safeSupabaseCall(
+        () => supabase.auth.signOut({ scope: 'global' }),
+        1, // Only 1 retry for logout
+        1000
+      );
       
-      // Clear state
+      // Clear state immediately
       setUser(null);
       setSession(null);
+      
+      console.log('👋 User logged out successfully');
     } catch (error: any) {
       console.error('Logout error:', error);
+      // Still clear local state even if remote logout fails
+      setUser(null);
+      setSession(null);
       throw error;
     }
   };
