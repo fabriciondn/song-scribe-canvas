@@ -13,6 +13,7 @@ import { useUserCredits } from '@/hooks/useUserCredits';
 import { useNotification } from '@/components/ui/notification';
 import { useNavigate } from 'react-router-dom';
 import { useImpersonation } from '@/context/ImpersonationContext';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 interface AuthorRegistrationReviewProps {
   data: AuthorRegistrationData;
@@ -33,6 +34,29 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   
   // Usar o ID do usuário correto (impersonado ou real)
   const currentUserId = isImpersonating && impersonatedUser ? impersonatedUser.id : user?.id;
+
+  // Configurar realtime updates para author_registrations
+  useRealtimeUpdates([
+    {
+      table: 'author_registrations',
+      event: 'UPDATE',
+      filter: currentUserId ? `user_id=eq.${currentUserId}` : undefined,
+      onUpdate: (payload) => {
+        const { new: updatedRegistration } = payload;
+        console.log('Atualização de registro em tempo real:', updatedRegistration);
+        
+        // Se o status mudou para 'protegida' ou 'registered', mostrar notificação
+        if (updatedRegistration.status === 'protegida' || updatedRegistration.status === 'registered') {
+          addNotification({
+            title: 'Parabéns sua obra está protegida!',
+            message: `A música "${updatedRegistration.title}" foi analisada e registrada com sucesso. Seus direitos autorais estão agora protegidos.`,
+            type: 'success',
+            duration: 8000
+          });
+        }
+      }
+    }
+  ]);
 
   // Função para gerar hash SHA-256
   const gerarHash = async (texto: string): Promise<string> => {
@@ -180,12 +204,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
             return;
           }
 
-          // Mostrar notificação de sucesso
-          addNotification({
-            title: 'Parabéns sua obra está protegida!',
-            message: `A música "${title}" foi analisada e registrada com sucesso. Seus direitos autorais estão agora protegidos.`,
-            type: 'success'
-          });
+          console.log(`Registro ${registrationId} atualizado para 'protegida' em:`, analysisCompletedAt);
 
         } catch (error) {
           console.error('Erro ao finalizar análise:', error);
