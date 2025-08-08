@@ -39,23 +39,13 @@ export const ProfileCompletionCheck: React.FC<ProfileCompletionCheckProps> = ({
           </ul>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex justify-center">
           <Button asChild variant="default" size="sm">
             <Link to="/dashboard/settings">
               <User className="h-4 w-4 mr-2" />
               Completar Perfil
             </Link>
           </Button>
-          {onContinue && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onContinue}
-            >
-              Continuar Mesmo Assim
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          )}
         </div>
       </AlertDescription>
     </Alert>

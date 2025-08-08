@@ -227,10 +227,12 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
                 <Badge variant="secondary">{data.genre}</Badge>
               </div>
               
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Variação do Estilo</label>
-                <Badge variant="secondary">{data.styleVariation}</Badge>
-              </div>
+              {data.styleVariation && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Variação do Estilo</label>
+                  <Badge variant="secondary">{data.styleVariation}</Badge>
+                </div>
+              )}
               
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Versão</label>
@@ -247,8 +249,8 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
               <FileText className="h-4 w-4" />
               Letra
             </div>
-            <div className="bg-muted p-4 rounded-lg">
-              <pre className="whitespace-pre-wrap text-sm text-foreground">{data.lyrics}</pre>
+            <div className="bg-muted p-4 rounded-lg max-h-80 overflow-y-auto">
+              <pre className="whitespace-pre-wrap text-sm text-foreground break-words max-w-full">{data.lyrics}</pre>
             </div>
           </div>
 

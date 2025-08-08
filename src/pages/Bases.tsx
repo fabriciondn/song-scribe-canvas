@@ -10,6 +10,7 @@ import { Folder, Music, Plus, Trash2, Upload } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { BaseMusical, BaseMusicalInput, getBases, getBasesByFolder, createBaseMusical, removeBaseMusical, ensureMusicBasesBucketExists } from '@/services/basesMusicais/basesService';
+import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
 
 // Interfaces para pastas e arquivos de base
 interface BaseFile extends BaseMusical {}
@@ -250,7 +251,9 @@ const Bases: React.FC = () => {
       }));
     }
   };
-  return <div className="container mx-auto px-4 py-8">
+  return (
+    <ProOnlyWrapper featureName="Bases Musicais">
+      <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Minhas Bases Musicais</h1>
         
@@ -413,6 +416,8 @@ const Bases: React.FC = () => {
             <Plus className="mr-2 h-4 w-4" /> Criar Primeira Pasta
           </Button>
         </div>}
-    </div>;
+      </div>
+    </ProOnlyWrapper>
+  );
 };
 export default Bases;

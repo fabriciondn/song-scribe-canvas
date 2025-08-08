@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from '@/components/ui/use-toast';
 import { ChordPositioner } from '@/components/cifrador/ChordPositioner';
+import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
 
 const Cifrador: React.FC = () => {
   const [inputText, setInputText] = useState<string>('');
@@ -103,8 +104,9 @@ const Cifrador: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Cifrador de Músicas</h1>
+    <ProOnlyWrapper featureName="Cifrador">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-6">Cifrador de Músicas</h1>
       
       <Tabs defaultValue="simple" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
@@ -205,8 +207,9 @@ const Cifrador: React.FC = () => {
             Copiar Resultado
           </Button>
         </div>
+        </div>
       </div>
-    </div>
+    </ProOnlyWrapper>
   );
 };
 

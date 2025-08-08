@@ -9,6 +9,7 @@ import { ProfileCompletionCheck } from '@/components/author-registration/Profile
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { useMobileDetection } from '@/hooks/use-mobile';
+import { useProfileValidation } from '@/hooks/useProfileValidation';
 
 export interface AuthorRegistrationData {
   title: string;
@@ -29,6 +30,7 @@ const AuthorRegistration: React.FC = () => {
   const { user } = useAuth();
   const { credits, isLoading: creditsLoading } = useUserCredits();
   const { isMobile } = useMobileDetection();
+  const { isComplete: isProfileComplete } = useProfileValidation();
   const [step, setStep] = useState<'form' | 'review'>('form');
   const [formData, setFormData] = useState<AuthorRegistrationData>({
     title: '',
@@ -144,11 +146,9 @@ const AuthorRegistration: React.FC = () => {
           </p>
         </div>
 
-        <ProfileCompletionCheck 
-          onContinue={() => setStep('form')} 
-        />
+        <ProfileCompletionCheck />
 
-        {step === 'form' && (
+        {step === 'form' && isProfileComplete && (
           <AuthorRegistrationSteps 
             initialData={formData}
             onSubmit={handleFormSubmit}
@@ -156,7 +156,7 @@ const AuthorRegistration: React.FC = () => {
           />
         )}
 
-        {step === 'review' && (
+        {step === 'review' && isProfileComplete && (
           <div className="space-y-4 md:space-y-6">
             <Button 
               variant="outline" 

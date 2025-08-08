@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Editor } from '../components/composer/Editor';
+import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
 import '../App.css';
 
 // Mobile-first responsive styles
@@ -24,10 +25,12 @@ const styles = `
 
 const Composer: React.FC = () => {
   return (
-    <div className="composer-page">
-      <style>{styles}</style>
-      <Editor />
-    </div>
+    <ProOnlyWrapper featureName="Compor">
+      <div className="composer-page">
+        <style>{styles}</style>
+        <Editor />
+      </div>
+    </ProOnlyWrapper>
   );
 };
 

@@ -46,7 +46,7 @@ const step1Schema = z.object({
 // Schema para a segunda etapa (informações da obra)
 const step2Schema = z.object({
   genre: z.string().min(1, 'Gênero é obrigatório'),
-  styleVariation: z.string().min(1, 'Variação do estilo é obrigatória'),
+  styleVariation: z.string().optional(),
   songVersion: z.string().optional(),
   additionalInfo: z.string().optional(),
   termsAccepted: z.boolean().refine((val) => val === true, {
@@ -463,7 +463,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                   name="styleVariation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Variação do Estilo *</FormLabel>
+                      <FormLabel>Variação do Estilo</FormLabel>
                       <FormControl>
                         <Input placeholder="Ex: Balada, Uptempo" {...field} />
                       </FormControl>

@@ -5,6 +5,9 @@ import { Edit, FileText, Folder, BookText, Users, Menu, X, FileMusic, ListMusic,
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { FunctionAwareMenuItem } from '@/components/layout/FunctionAwareMenuItem';
+import { useUserRole } from '@/hooks/useUserRole';
+import { FunctionStatusTag } from '@/components/layout/FunctionStatusTag';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -20,88 +23,107 @@ export const Sidebar: React.FC<SidebarProps> = ({
   toggleCollapse
 }) => {
   const location = useLocation();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isPro, isAdmin, isLoading } = useUserRole();
 
-  // Verificar se o usuário é admin
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data } = await supabase
-            .from('admin_users')
-            .select('role')
-            .eq('user_id', session.user.id)
-            .in('role', ['admin', 'super_admin'])
-            .single();
-          
-          setIsAdmin(!!data);
-        }
-      } catch (error) {
-        console.error('Erro ao verificar status admin:', error);
-      }
-    };
-
-    checkAdminStatus();
-  }, []);
+  // Funções disponíveis apenas para registro autoral e configurações (usuários básicos)
+  const basicFunctions = ['author-registration', 'settings'];
+  
+  // Verificar se a função deve ser acessível baseado no papel do usuário
+  const canAccessFunction = (functionKey: string) => {
+    // Admins têm acesso total
+    if (isAdmin) return true;
+    
+    // Usuários básicos só têm acesso ao registro autoral e configurações
+    if (!isPro && !basicFunctions.includes(functionKey)) {
+      return false;
+    }
+    
+    return true;
+  };
 
   const menuItems = [{
     label: 'Dashboard',
-    icon: <BarChart3 size={20} />,
-    path: '/dashboard'
+    icon: BarChart3,
+    path: '/dashboard',
+    functionKey: 'dashboard',
+    isPro: true
   }, {
     label: 'Compor',
-    icon: <Edit size={20} />,
-    path: '/composer'
+    icon: Edit,
+    path: '/composer',
+    functionKey: 'composer',
+    isPro: true
   }, {
     label: 'Registro autoral',
-    icon: <Shield size={20} />,
-    path: '/dashboard/author-registration'
+    icon: Shield,
+    path: '/dashboard/author-registration',
+    functionKey: 'author-registration',
+    isPro: false
   }, {
     label: 'Cifrador',
-    icon: <FileMusic size={20} />,
-    path: '/cifrador'
+    icon: FileMusic,
+    path: '/cifrador',
+    functionKey: 'cifrador',
+    isPro: true
   }, {
     label: 'Bases',
-    icon: <FileMusic size={20} />,
-    path: '/bases'
+    icon: FileMusic,
+    path: '/bases',
+    functionKey: 'bases',
+    isPro: true
   }, {
     label: 'Pastas',
-    icon: <Folder size={20} />,
-    path: '/folders'
+    icon: Folder,
+    path: '/folders',
+    functionKey: 'folders',
+    isPro: true
   }, {
     label: 'Rascunhos',
-    icon: <BookText size={20} />,
-    path: '/drafts'
+    icon: BookText,
+    path: '/drafts',
+    functionKey: 'drafts',
+    isPro: true
   }, {
     label: 'Parcerias',
-    icon: <Users size={20} />,
-    path: '/partnerships'
+    icon: Users,
+    path: '/partnerships',
+    functionKey: 'partnerships',
+    isPro: true
   }, {
     label: 'Tutoriais',
-    icon: <ListMusic size={20} />,
-    path: '/dashboard/tutorials'
+    icon: ListMusic,
+    path: '/dashboard/tutorials',
+    functionKey: 'tutorials',
+    isPro: true
   }, {
     label: 'Configurações',
-    icon: <User size={20} />,
-    path: '/dashboard/settings'
+    icon: User,
+    path: '/dashboard/settings',
+    functionKey: 'settings',
+    isPro: false
   }, {
     label: 'Lixeira',
-    icon: <Trash2 size={20} />,
-    path: '/dashboard/trash'
+    icon: Trash2,
+    path: '/dashboard/trash',
+    functionKey: 'trash',
+    isPro: true
   }];
 
   // Adicionar itens administrativos se o usuário for admin
   if (isAdmin) {
     menuItems.push({
       label: 'Administração',
-      icon: <Settings size={20} />,
-      path: '/admin'
+      icon: Settings,
+      path: '/admin',
+      functionKey: 'admin',
+      isPro: false
     });
     menuItems.push({
       label: 'Moderação',
-      icon: <Shield size={20} />,
-      path: '/moderator'
+      icon: Shield,
+      path: '/moderator',
+      functionKey: 'moderator',
+      isPro: false
     });
   }
 
@@ -139,28 +161,60 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <nav className="space-y-2 flex-1">
-          {menuItems.map(item => (
-            <Link 
-              key={item.path} 
-              to={item.path} 
-              className={cn(
-        "nav-link flex items-center rounded-lg text-white transition-colors", 
-        isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3",
-                location.pathname === item.path || location.pathname.startsWith(`${item.path}/`) 
-                  ? "bg-[#111111] text-[#00bd4b]" 
-                  : "hover:bg-[#111111]"
-              )}
-              onClick={() => {
-                if (window.innerWidth < 768) {
-                  toggleSidebar();
-                }
-              }}
-              title={isCollapsed ? item.label : undefined}
-            >
-              <span className={isCollapsed ? "text-xl" : ""}>{item.icon}</span>
-              {!isCollapsed && <span>{item.label}</span>}
-            </Link>
-          ))}
+          {menuItems.map(item => {
+            const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+            const hasAccess = canAccessFunction(item.functionKey);
+            
+            return (
+              <div key={item.path}>
+                {hasAccess ? (
+                  <Link 
+                    to={item.path} 
+                    className={cn(
+                      "nav-link flex items-center rounded-lg text-white transition-colors", 
+                      isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3",
+                      isActive 
+                        ? "bg-[#111111] text-[#00bd4b]" 
+                        : "hover:bg-[#111111]"
+                    )}
+                    onClick={() => {
+                      if (window.innerWidth < 768) {
+                        toggleSidebar();
+                      }
+                    }}
+                    title={isCollapsed ? item.label : undefined}
+                  >
+                    <item.icon size={20} />
+                    {!isCollapsed && (
+                      <div className="flex items-center justify-between w-full">
+                        <span>{item.label}</span>
+                        <FunctionStatusTag functionKey={item.functionKey} />
+                      </div>
+                    )}
+                  </Link>
+                ) : (
+                  <div 
+                    className={cn(
+                      "nav-link flex items-center rounded-lg text-gray-500 cursor-not-allowed", 
+                      isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3"
+                    )}
+                    title={isCollapsed ? `${item.label} (Pro)` : undefined}
+                  >
+                    <item.icon size={20} />
+                    {!isCollapsed && (
+                      <div className="flex items-center justify-between w-full">
+                        <span>{item.label}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded">PRO</span>
+                          <FunctionStatusTag functionKey={item.functionKey} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
 
         <div className="pt-4 mt-auto border-t border-sidebar-border">
