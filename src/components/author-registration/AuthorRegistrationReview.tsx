@@ -156,18 +156,44 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
 
   const startAnalysisSimulation = async (registrationId: string, title: string) => {
     try {
-      // Trigger the edge function to process registrations in the background
-      const { error } = await supabase.functions.invoke('process-registrations');
+      // Gerar tempo aleatório entre 1 e 5 minutos (60000ms a 300000ms)
+      const randomTime = Math.floor(Math.random() * (300000 - 60000 + 1)) + 60000;
       
-      if (error) {
-        console.error('Erro ao iniciar análise via edge function:', error);
-      }
+      console.log(`Iniciando análise para registro ${registrationId}. Tempo estimado: ${Math.floor(randomTime / 1000 / 60)}m${Math.floor((randomTime / 1000) % 60)}s`);
       
-      console.log('Edge function triggered for registration analysis');
+      // Simular o processamento da análise
+      setTimeout(async () => {
+        try {
+          // Atualizar status para "protegida" após o tempo aleatório
+          const analysisCompletedAt = new Date().toISOString();
+          
+          const { error: updateError } = await supabase
+            .from('author_registrations')
+            .update({ 
+              status: 'protegida',
+              analysis_completed_at: analysisCompletedAt
+            })
+            .eq('id', registrationId);
+
+          if (updateError) {
+            console.error('Erro ao atualizar status do registro:', updateError);
+            return;
+          }
+
+          // Mostrar notificação de sucesso
+          addNotification({
+            title: 'Parabéns sua obra está protegida!',
+            message: `A música "${title}" foi analisada e registrada com sucesso. Seus direitos autorais estão agora protegidos.`,
+            type: 'success'
+          });
+
+        } catch (error) {
+          console.error('Erro ao finalizar análise:', error);
+        }
+      }, randomTime);
       
-      // The real-time subscription will handle status updates automatically
     } catch (error) {
-      console.error('Erro na chamada da edge function:', error);
+      console.error('Erro na simulação da análise:', error);
     }
   };
 

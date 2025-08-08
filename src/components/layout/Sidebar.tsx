@@ -25,15 +25,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const location = useLocation();
   const { isPro, isAdmin, isLoading } = useUserRole();
 
-  // Funções disponíveis apenas para registro autoral e configurações (usuários básicos)
-  const basicFunctions = ['author-registration', 'settings'];
+  // Funções disponíveis para usuários básicos (não-PRO)
+  const basicFunctions = ['author-registration', 'settings', 'dashboard'];
   
   // Verificar se a função deve ser acessível baseado no papel do usuário
   const canAccessFunction = (functionKey: string) => {
     // Admins têm acesso total
     if (isAdmin) return true;
     
-    // Usuários básicos só têm acesso ao registro autoral e configurações
+    // Usuários básicos só têm acesso ao registro autoral, configurações e dashboard
     if (!isPro && !basicFunctions.includes(functionKey)) {
       return false;
     }
@@ -46,7 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     icon: BarChart3,
     path: '/dashboard',
     functionKey: 'dashboard',
-    isPro: true
+    isPro: false
   }, {
     label: 'Compor',
     icon: Edit,
@@ -198,16 +198,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       "nav-link flex items-center rounded-lg text-gray-500 cursor-not-allowed", 
                       isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3"
                     )}
-                    title={isCollapsed ? `${item.label} (Pro)` : undefined}
+                    title={isCollapsed ? item.label : undefined}
                   >
                     <item.icon size={20} />
                     {!isCollapsed && (
                       <div className="flex items-center justify-between w-full">
                         <span>{item.label}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded">PRO</span>
-                          <FunctionStatusTag functionKey={item.functionKey} />
-                        </div>
+                        <FunctionStatusTag functionKey={item.functionKey} />
                       </div>
                     )}
                   </div>
