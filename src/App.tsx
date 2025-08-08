@@ -10,7 +10,6 @@ import { NotificationProvider } from "@/components/ui/notification";
 import { ImpersonationBanner } from "@/components/ui/impersonation-banner";
 import { RoleRedirect } from "@/components/layout/RoleRedirect";
 
-import { FunctionStatusNotification } from "@/components/ui/function-status-notification";
 import { PageFunctionStatusWrapper } from "@/components/layout/FunctionStatusWrapper";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -48,7 +47,7 @@ const AppContent = () => {
     <div className="flex flex-col min-h-screen">
       <ImpersonationBanner />
       
-      <FunctionStatusNotification />
+      
       <div className="flex-1" style={{ paddingTop: 'var(--impersonation-banner-height, 0px)' }}>
         <RoleRedirect />
         <PageFunctionStatusWrapper>

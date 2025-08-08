@@ -19,6 +19,7 @@ import * as draftService from '../services/draftService';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Draft, AudioFile } from '../services/drafts/types';
 import { prepareAudioFilesForStorage } from '../services/drafts/audioService';
+import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
 
 const Drafts: React.FC = () => {
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -239,7 +240,8 @@ const Drafts: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <ProOnlyWrapper featureName="Rascunhos">
+      <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Seus Rascunhos</h2>
         <Button onClick={startNewDraft}>
@@ -384,7 +386,8 @@ const Drafts: React.FC = () => {
           )}
         </div>
       )}
-    </div>
+      </div>
+    </ProOnlyWrapper>
   );
 };
 

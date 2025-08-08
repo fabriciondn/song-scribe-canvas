@@ -36,6 +36,7 @@ import {
   validateCollaborationToken,
   getUserPartnerships
 } from '@/services/drafts/draftService';
+import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
 
 interface Partner {
   id: string;
@@ -255,7 +256,8 @@ const Partnerships: React.FC = () => {
   };
   
   return (
-    <div className="max-w-4xl mx-auto">
+    <ProOnlyWrapper featureName="Parcerias">
+      <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Parcerias</h2>
         <div className="flex gap-2">
@@ -485,6 +487,7 @@ const Partnerships: React.FC = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </ProOnlyWrapper>
   );
 };
 

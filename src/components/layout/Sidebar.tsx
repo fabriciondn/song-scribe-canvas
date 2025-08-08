@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Edit, FileText, Folder, BookText, Users, Menu, X, FileMusic, ListMusic, DollarSign, BarChart3, Trash2, Shield, User, Settings } from 'lucide-react';
@@ -42,6 +41,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const menuItems = [{
+    label: 'Registro autoral',
+    icon: Shield,
+    path: '/dashboard/author-registration',
+    functionKey: 'author-registration',
+    isPro: false
+  }, {
     label: 'Dashboard',
     icon: BarChart3,
     path: '/dashboard',
@@ -53,12 +58,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     path: '/composer',
     functionKey: 'composer',
     isPro: true
-  }, {
-    label: 'Registro autoral',
-    icon: Shield,
-    path: '/dashboard/author-registration',
-    functionKey: 'author-registration',
-    isPro: false
   }, {
     label: 'Cifrador',
     icon: FileMusic,

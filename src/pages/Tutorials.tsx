@@ -30,6 +30,7 @@ interface Comment {
 
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
 
 const mockComments: Comment[] = [
   {
@@ -325,7 +326,8 @@ export const Tutorials: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <ProOnlyWrapper featureName="Tutoriais">
+      <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
         <div className="mb-8">
@@ -437,6 +439,7 @@ export const Tutorials: React.FC = () => {
         )}
       </div>
     </div>
+    </ProOnlyWrapper>
   );
 };
 
