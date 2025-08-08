@@ -195,13 +195,13 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       // Simular o processamento da análise
       setTimeout(async () => {
         try {
-          // Atualizar status para "protegida" após o tempo aleatório
+          // Atualizar status para "registered" após o tempo aleatório
           const analysisCompletedAt = new Date().toISOString();
           
           const { error: updateError } = await supabase
             .from('author_registrations')
             .update({ 
-              status: 'protegida',
+              status: 'registered',
               analysis_completed_at: analysisCompletedAt
             })
             .eq('id', registrationId);
@@ -211,7 +211,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
             return;
           }
 
-          console.log(`Registro ${registrationId} atualizado para 'protegida' em:`, analysisCompletedAt);
+          console.log(`Registro ${registrationId} atualizado para 'registered' em:`, analysisCompletedAt);
 
         } catch (error) {
           console.error('Erro ao finalizar análise:', error);
