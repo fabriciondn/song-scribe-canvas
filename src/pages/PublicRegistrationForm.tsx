@@ -115,7 +115,7 @@ export default function PublicRegistrationForm() {
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <img 
-              src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+              src="/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"
               alt="Compuse Logo" 
               className="h-12"
             />

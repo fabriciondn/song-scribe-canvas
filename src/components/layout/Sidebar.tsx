@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { FunctionAwareMenuItem } from '@/components/layout/FunctionAwareMenuItem';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useTheme } from '@/hooks/useTheme';
 import { FunctionStatusTag } from '@/components/layout/FunctionStatusTag';
 
 interface SidebarProps {
@@ -23,6 +24,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const location = useLocation();
   const { isPro, isAdmin, isLoading } = useUserRole();
+  const { theme } = useTheme();
 
   // Funções disponíveis para usuários básicos (não-PRO)
   const basicFunctions = ['author-registration', 'settings', 'dashboard'];
@@ -142,7 +144,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex items-center justify-between mb-8">
           {!isCollapsed && (
             <img 
-              src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+              src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
               alt="Logo" 
               className="h-10"
             />

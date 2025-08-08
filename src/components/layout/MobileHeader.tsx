@@ -45,7 +45,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({ toggleSidebar }) => 
       {/* Logo */}
       <Link to="/dashboard" className="flex items-center justify-center flex-1 mx-4">
         <img 
-          src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" 
+          src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} 
           alt="Logo" 
           className="h-8 max-w-[120px] object-contain" 
         />

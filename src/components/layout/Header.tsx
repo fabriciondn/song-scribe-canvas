@@ -71,7 +71,11 @@ export const Header = ({
           <Menu className="h-5 w-5" />
         </Button>
         <Link to="/" className="flex items-center gap-2 mr-12">
-          <img src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" alt="Logo" className="h-9" />
+          <img 
+            src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} 
+            alt="Logo" 
+            className="h-9" 
+          />
         </Link>
         
       </div>
