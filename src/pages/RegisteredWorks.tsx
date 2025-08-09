@@ -253,69 +253,70 @@ const RegisteredWorks: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="outline" size="sm" asChild>
+    <div className="container mx-auto py-2 sm:py-6 px-2 sm:px-4 space-y-4 sm:space-y-6 pb-20 sm:pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
+        <Button variant="outline" size="sm" asChild className="w-fit">
           <Link to="/dashboard">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao Dashboard
+            <span className="hidden sm:inline">Voltar ao Dashboard</span>
+            <span className="sm:hidden">Voltar</span>
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Obras Registradas</h1>
-          <p className="text-muted-foreground mt-1">Visualize e baixe certificados das suas obras registradas</p>
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground">Obras Registradas</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">Visualize e baixe certificados das suas obras</p>
         </div>
       </div>
 
       {works && works.length > 0 ? (
-        <div className="grid gap-6">
+        <div className="grid gap-4 sm:gap-6">
           {works.map((work) => (
             <Card key={work.id} className="hover:shadow-lg transition-all duration-200">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-foreground">
-                    <FileText className="h-5 w-5 text-primary" />
-                    {work.title}
+              <CardHeader className="pb-3 sm:pb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2 text-foreground text-base sm:text-lg">
+                    <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                    <span className="truncate">{work.title}</span>
                   </CardTitle>
-                  <div className="flex items-center gap-2">
-                    {work.status === 'em análise' && <Clock className="h-4 w-4 text-muted-foreground" />}
-                    <Badge variant={getStatusVariant(work.status)}>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {work.status === 'em análise' && <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />}
+                    <Badge variant={getStatusVariant(work.status)} className="text-xs">
                       {getStatusText(work.status)}
                     </Badge>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Dados do Compositor */}
-                <div className="bg-secondary p-4 rounded-lg mb-4">
-                  <h4 className="font-semibold mb-3 text-secondary-foreground flex items-center gap-2">
-                    <User className="h-4 w-4" />
+              <CardContent className="space-y-3 sm:space-y-4 pt-0 sm:pt-4">
+                {/* Dados do Compositor - Mobile optimized */}
+                <div className="bg-secondary p-3 sm:p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2 sm:mb-3 text-secondary-foreground flex items-center gap-2 text-sm sm:text-base">
+                    <User className="h-3 w-3 sm:h-4 sm:w-4" />
                     Dados do Compositor
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="text-sm">
-                      <span className="font-medium text-foreground">Nome Completo:</span>
-                      <p className="text-muted-foreground">{profile?.name || work.author}</p>
+                  <div className="grid grid-cols-1 gap-2 sm:gap-3">
+                    <div className="text-xs sm:text-sm">
+                      <span className="font-medium text-foreground">Nome:</span>
+                      <p className="text-muted-foreground truncate">{profile?.name || work.author}</p>
                     </div>
                     {profile?.cpf && (
-                      <div className="text-sm">
+                      <div className="text-xs sm:text-sm">
                         <span className="font-medium text-foreground">CPF:</span>
                         <p className="text-muted-foreground">{profile.cpf}</p>
                       </div>
                     )}
                     {profile?.artistic_name && (
-                      <div className="text-sm">
+                      <div className="text-xs sm:text-sm">
                         <span className="font-medium text-foreground">Nome Artístico:</span>
-                        <p className="text-muted-foreground">{profile.artistic_name}</p>
+                        <p className="text-muted-foreground truncate">{profile.artistic_name}</p>
                       </div>
                     )}
                     {(profile?.street || profile?.city) && (
-                      <div className="text-sm md:col-span-2">
+                      <div className="text-xs sm:text-sm">
                         <span className="font-medium text-foreground flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
                           Endereço:
                         </span>
-                        <p className="text-muted-foreground">
+                        <p className="text-muted-foreground text-xs break-words">
                           {[profile?.street, profile?.number, profile?.neighborhood, profile?.city, profile?.state, profile?.cep]
                             .filter(Boolean)
                             .join(', ')}
@@ -325,63 +326,80 @@ const RegisteredWorks: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <FileText className="h-4 w-4" />
-                    <span><strong className="text-foreground">Título:</strong> {work.title}</span>
+                {/* Work Details - Mobile optimized grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Autor:</span>
+                    <p className="truncate">{work.author}</p>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <User className="h-4 w-4" />
-                    <span><strong className="text-foreground">Autor:</strong> {work.author}</span>
+                  
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Gênero:</span>
+                    <p className="truncate">{work.genre}</p>
                   </div>
+                  
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Ritmo:</span>
+                    <p className="truncate">{work.rhythm}</p>
+                  </div>
+                  
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Versão:</span>
+                    <p className="truncate">{work.song_version}</p>
+                  </div>
+                  
+                  <div className="text-xs sm:text-sm text-muted-foreground sm:col-span-2">
+                    <span className="font-medium text-foreground flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Registrado:
+                    </span>
+                    <p>{new Date(work.created_at).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                  
                   {parseOtherAuthors(work.other_authors) && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <User className="h-4 w-4" />
-                      <span><strong className="text-foreground">Co-autores:</strong> {parseOtherAuthors(work.other_authors)}</span>
+                    <div className="text-xs sm:text-sm text-muted-foreground sm:col-span-2">
+                      <span className="font-medium text-foreground">Co-autores:</span>
+                      <p className="break-words">{parseOtherAuthors(work.other_authors)}</p>
                     </div>
                   )}
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span><strong className="text-foreground">Gênero:</strong> {work.genre}</span>
+                  
+                  <div className="text-xs sm:text-sm text-muted-foreground sm:col-span-2">
+                    <span className="font-medium text-foreground flex items-center gap-1">
+                      <Hash className="h-3 w-3" />
+                      ID:
+                    </span>
+                    <p className="font-mono break-all">{work.id.substring(0, 8)}...</p>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span><strong className="text-foreground">Ritmo:</strong> {work.rhythm}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span><strong className="text-foreground">Versão:</strong> {work.song_version}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span><strong className="text-foreground">Registrado em:</strong> {new Date(work.created_at).toLocaleDateString('pt-BR')}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Hash className="h-4 w-4" />
-                    <span><strong className="text-foreground">ID:</strong> {work.id.substring(0, 8)}...</span>
-                  </div>
+                  
                   {work.hash && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground md:col-span-2 lg:col-span-3">
-                      <Hash className="h-4 w-4" />
-                      <span><strong className="text-foreground">Hash de Integridade:</strong></span>
-                      <span className="font-mono text-xs bg-muted px-2 py-1 rounded break-all text-foreground">
-                        {work.hash}
+                    <div className="text-xs sm:text-sm text-muted-foreground sm:col-span-2">
+                      <span className="font-medium text-foreground flex items-center gap-1">
+                        <Hash className="h-3 w-3" />
+                        Hash:
                       </span>
+                      <p className="font-mono text-xs bg-muted px-2 py-1 rounded break-all text-foreground mt-1">
+                        {work.hash}
+                      </p>
                     </div>
                   )}
                 </div>
 
-                <div className="bg-muted p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2 text-foreground">Letra da Música:</h4>
-                  <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto whitespace-pre-wrap">
-                    {work.lyrics.length > 200 
-                      ? `${work.lyrics.substring(0, 200)}...` 
+                {/* Lyrics Section - Mobile optimized */}
+                <div className="bg-muted p-3 sm:p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2 text-foreground text-sm sm:text-base">Letra:</h4>
+                  <div className="text-xs sm:text-sm text-muted-foreground max-h-24 sm:max-h-32 overflow-y-auto whitespace-pre-wrap">
+                    {work.lyrics.length > 150 
+                      ? `${work.lyrics.substring(0, 150)}...` 
                       : work.lyrics
                     }
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-4">
-                  {/* Controles de Áudio */}
+                {/* Actions Section - Mobile optimized */}
+                <div className="space-y-3">
+                  {/* Audio Controls */}
                   {work.audio_file_path ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button 
                         variant="outline"
                         onClick={(e) => {
@@ -389,47 +407,61 @@ const RegisteredWorks: React.FC = () => {
                           e.stopPropagation();
                           handlePlayAudio(work);
                         }}
-                        className="flex items-center gap-2"
+                        className="flex items-center justify-center gap-2 text-xs sm:text-sm"
+                        size="sm"
                       >
                         {playingAudio === work.id ? (
-                          <Pause className="h-4 w-4" />
+                          <Pause className="h-3 w-3 sm:h-4 sm:w-4" />
                         ) : (
-                          <Play className="h-4 w-4" />
+                          <Play className="h-3 w-3 sm:h-4 sm:w-4" />
                         )}
-                        {playingAudio === work.id ? 'Pausar Áudio' : 'Reproduzir Áudio'}
+                        <span className="hidden sm:inline">
+                          {playingAudio === work.id ? 'Pausar Áudio' : 'Reproduzir Áudio'}
+                        </span>
+                        <span className="sm:hidden">
+                          {playingAudio === work.id ? 'Pausar' : 'Play'}
+                        </span>
                       </Button>
                       <Button 
                         variant="outline"
                         onClick={() => handleDownloadAudio(work)}
-                        className="flex items-center gap-2"
+                        className="flex items-center justify-center gap-2 text-xs sm:text-sm"
+                        size="sm"
                       >
-                        <Download className="h-4 w-4" />
-                        Baixar Áudio MP3
+                        <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">Baixar Áudio MP3</span>
+                        <span className="sm:hidden">Baixar MP3</span>
                       </Button>
                     </div>
                   ) : (
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs sm:text-sm text-muted-foreground text-center py-2">
                       Áudio não disponível
                     </div>
                   )}
                   
-                  {/* Botão de Certificado */}
-                  <div className="flex justify-end">
-                    <Button 
-                      onClick={() => handleDownloadCertificate(work)}
-                      className="flex items-center gap-2"
-                      disabled={downloadingWork === work.id || work.status !== 'registered'}
-                    >
-                      {downloadingWork === work.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Download className="h-4 w-4" />
-                      )}
+                  {/* Certificate Button */}
+                  <Button 
+                    onClick={() => handleDownloadCertificate(work)}
+                    className="w-full flex items-center justify-center gap-2 text-xs sm:text-sm"
+                    disabled={downloadingWork === work.id || work.status !== 'registered'}
+                    size="sm"
+                  >
+                    {downloadingWork === work.id ? (
+                      <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                    )}
+                    <span className="hidden sm:inline">
                       {downloadingWork === work.id ? 'Gerando PDF...' : 
                        work.status !== 'registered' ? 'Certificado disponível após registro' : 
                        'Baixar Certificado PDF'}
-                    </Button>
-                  </div>
+                    </span>
+                    <span className="sm:hidden">
+                      {downloadingWork === work.id ? 'Gerando...' : 
+                       work.status !== 'registered' ? 'Aguardando registro' : 
+                       'Certificado'}
+                    </span>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

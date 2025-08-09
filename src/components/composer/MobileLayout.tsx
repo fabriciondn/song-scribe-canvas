@@ -55,8 +55,8 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
     setActiveTools(newOrder);
   };
   return (
-    <div className="flex flex-col gap-2 p-2 safe-area-inset">
-      <div className="bg-card rounded-lg shadow-sm p-3 border border-border">
+    <div className="flex flex-col gap-2 p-2 pb-20 sm:pb-2 safe-area-inset">
+      <div className="bg-card rounded-lg shadow-sm p-2 sm:p-3 border border-border">
         <EditorHeader 
           partnershipId={partnershipId}
           onNewClick={onNewClick}
@@ -70,22 +70,22 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
           <CollaborativeEditor partnershipId={partnershipId} />
         ) : (
           <>
-            <div className="mb-3 mt-3">
-              <Label htmlFor="song-title-mobile">Título da Composição</Label>
+            <div className="mb-2 sm:mb-3 mt-2 sm:mt-3">
+              <Label htmlFor="song-title-mobile" className="text-sm">Título</Label>
               <Input 
                 id="song-title-mobile" 
                 value={title} 
                 onChange={onTitleChange} 
                 placeholder="Digite o título da sua música" 
-                className="mt-1" 
+                className="mt-1 text-sm" 
               />
             </div>
             
             <SectionButtons onSectionClick={onSectionClick} />
             
-            <div className="mt-3">
+            <div className="mt-2 sm:mt-3">
               <div className="flex justify-between items-center mb-1">
-                <Label htmlFor="song-content-mobile">Letra</Label>
+                <Label htmlFor="song-content-mobile" className="text-sm">Letra</Label>
                 <MobileControls onInsertBase={onInsertBase} />
               </div>
               <Textarea 
@@ -93,7 +93,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
                 value={content} 
                 onChange={onContentChange} 
                 placeholder="Comece a compor sua letra aqui..." 
-                className="editor-content min-h-[300px] font-mono mt-1 text-sm md:text-base"
+                className="editor-content min-h-[250px] sm:min-h-[300px] font-mono mt-1 text-xs sm:text-sm"
                 ref={textareaRef}
                 onDrop={onTextAreaDrop}
                 onDragOver={(e) => e.preventDefault()}
@@ -105,7 +105,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
       
       {/* Painel de ferramentas móvel */}
       {activeTools.length > 0 && (
-        <div className="safe-area-inset px-2">
+        <div className="safe-area-inset px-1 sm:px-2 mb-16 sm:mb-0">
           <MultiToolPanel 
             activeTools={activeTools}
             onRemoveTool={handleRemoveTool}

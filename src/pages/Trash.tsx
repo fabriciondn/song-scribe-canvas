@@ -128,10 +128,10 @@ const Trash: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Trash2 className="h-6 w-6" />
-        <h1 className="text-2xl font-bold">Lixeira</h1>
+    <div className="container mx-auto p-2 sm:p-6 pb-20 sm:pb-6">
+      <div className="flex items-center gap-2 mb-4 sm:mb-6">
+        <Trash2 className="h-5 w-5 sm:h-6 sm:w-6" />
+        <h1 className="text-xl sm:text-2xl font-bold">Lixeira</h1>
       </div>
 
       {trashItems.length === 0 ? (
@@ -145,14 +145,13 @@ const Trash: React.FC = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+        <div className="space-y-3 sm:space-y-4">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
+            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
             <div>
-              <h4 className="font-medium text-yellow-800">Aviso sobre exclusão automática</h4>
-              <p className="text-sm text-yellow-700 mt-1">
-                Os itens da lixeira são excluídos permanentemente após 7 dias. 
-                Certifique-se de restaurar os itens que deseja manter.
+              <h4 className="font-medium text-yellow-800 text-sm sm:text-base">Exclusão automática</h4>
+              <p className="text-xs sm:text-sm text-yellow-700 mt-1">
+                Itens excluídos permanentemente após 7 dias.
               </p>
             </div>
           </div>
@@ -161,61 +160,66 @@ const Trash: React.FC = () => {
             const daysRemaining = getDaysRemaining(item.deleted_at);
             return (
               <Card key={`${item.type}-${item.id}`} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                <CardHeader className="pb-2 sm:pb-3">
+                  {/* Mobile Layout */}
+                  <div className="sm:hidden">
+                    <div className="flex items-start gap-2 mb-2">
                       {getItemIcon(item.type)}
-                      <div>
-                        <CardTitle className="text-lg">{item.title}</CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-base truncate">{item.title}</CardTitle>
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
                           <Badge variant="secondary" className="text-xs">
                             {getItemTypeLabel(item.type)}
                           </Badge>
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Calendar className="h-3 w-3" />
-                            Excluído {formatDistanceToNow(new Date(item.deleted_at), { 
-                              addSuffix: true, 
-                              locale: ptBR 
-                            })}
+                            <span className="truncate">
+                              {formatDistanceToNow(new Date(item.deleted_at), { 
+                                addSuffix: true, 
+                                locale: ptBR 
+                              })}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    
+                    <div className="flex items-center justify-between gap-2">
                       {daysRemaining > 0 ? (
                         <Badge 
                           variant={daysRemaining <= 2 ? "destructive" : "outline"}
-                          className="text-xs"
+                          className="text-xs flex-shrink-0"
                         >
-                          {daysRemaining} dia{daysRemaining !== 1 ? 's' : ''} restante{daysRemaining !== 1 ? 's' : ''}
+                          {daysRemaining}d
                         </Badge>
                       ) : (
-                        <Badge variant="destructive" className="text-xs">
+                        <Badge variant="destructive" className="text-xs flex-shrink-0">
                           Expira hoje
                         </Badge>
                       )}
+                      
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button
                             variant="outline"
                             size="sm"
                             disabled={restoringId === item.id}
+                            className="text-xs px-2 h-8"
                           >
-                            <RotateCcw className="h-4 w-4 mr-2" />
+                            <RotateCcw className="h-3 w-3 mr-1" />
                             Restaurar
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="mx-4">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Restaurar item</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja restaurar "{item.title}"? 
-                              O item será movido de volta para sua localização original.
+                            <AlertDialogTitle className="text-base">Restaurar item</AlertDialogTitle>
+                            <AlertDialogDescription className="text-sm">
+                              Restaurar "{item.title}"? O item voltará para sua localização original.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleRestore(item)}>
+                            <AlertDialogCancel className="text-sm">Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleRestore(item)} className="text-sm">
                               Restaurar
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -223,13 +227,79 @@ const Trash: React.FC = () => {
                       </AlertDialog>
                     </div>
                   </div>
+                  
+                  {/* Desktop Layout */}
+                  <div className="hidden sm:block">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {getItemIcon(item.type)}
+                        <div>
+                          <CardTitle className="text-lg">{item.title}</CardTitle>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="text-xs">
+                              {getItemTypeLabel(item.type)}
+                            </Badge>
+                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                              <Calendar className="h-3 w-3" />
+                              Excluído {formatDistanceToNow(new Date(item.deleted_at), { 
+                                addSuffix: true, 
+                                locale: ptBR 
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {daysRemaining > 0 ? (
+                          <Badge 
+                            variant={daysRemaining <= 2 ? "destructive" : "outline"}
+                            className="text-xs"
+                          >
+                            {daysRemaining} dia{daysRemaining !== 1 ? 's' : ''} restante{daysRemaining !== 1 ? 's' : ''}
+                          </Badge>
+                        ) : (
+                          <Badge variant="destructive" className="text-xs">
+                            Expira hoje
+                          </Badge>
+                        )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={restoringId === item.id}
+                            >
+                              <RotateCcw className="h-4 w-4 mr-2" />
+                              Restaurar
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Restaurar item</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja restaurar "{item.title}"? 
+                                O item será movido de volta para sua localização original.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleRestore(item)}>
+                                Restaurar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  </div>
                 </CardHeader>
+                
                 {item.content && (
                   <CardContent className="pt-0">
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <p className="text-sm text-gray-600 line-clamp-2">
-                        {item.content.length > 100 
-                          ? `${item.content.substring(0, 100)}...` 
+                    <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
+                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
+                        {item.content.length > (window.innerWidth < 768 ? 80 : 100)
+                          ? `${item.content.substring(0, window.innerWidth < 768 ? 80 : 100)}...` 
                           : item.content
                         }
                       </p>

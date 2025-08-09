@@ -257,86 +257,92 @@ const Partnerships: React.FC = () => {
   
   return (
     <ProOnlyWrapper featureName="Parcerias">
-      <div className="max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Parcerias</h2>
-        <div className="flex gap-2">
+      <div className="max-w-4xl mx-auto px-2 sm:px-4 pb-20 sm:pb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold">Parcerias</h2>
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button 
             variant="outline" 
             onClick={() => setIsJoinDialogOpen(true)}
+            size="sm"
+            className="text-xs sm:text-sm"
           >
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Entrar com Token
+            <ExternalLink className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Entrar com Token</span>
+            <span className="sm:hidden">Token</span>
           </Button>
-          <Button onClick={openNewPartnershipDialog}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Parceria
+          <Button onClick={openNewPartnershipDialog} size="sm" className="text-xs sm:text-sm">
+            <Plus className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Nova Parceria</span>
+            <span className="sm:hidden">Nova</span>
           </Button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {partnerships.length === 0 ? (
           <div className="col-span-full text-center py-12 text-muted-foreground">
             <p>Você ainda não possui parcerias. Crie uma agora!</p>
           </div>
         ) : (
           partnerships.map(partnership => (
-            <Card key={partnership.id}>
-              <CardHeader>
-                <CardTitle>{partnership.title}</CardTitle>
-                <CardDescription>
+            <Card key={partnership.id} className="sm:max-w-none">
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg truncate">{partnership.title}</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   Criado em {partnership.date}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm mb-4">
-                  {partnership.description || <span className="text-muted-foreground italic">Sem descrição</span>}
+              <CardContent className="space-y-3 sm:space-y-4">
+                <p className="text-xs sm:text-sm">
+                  {partnership.description ? (
+                    <span className="line-clamp-2">{partnership.description}</span>
+                  ) : (
+                    <span className="text-muted-foreground italic">Sem descrição</span>
+                  )}
                 </p>
                 
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium">Parceiros</h4>
-                    <div className="flex gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 text-xs"
-                        onClick={() => handleGenerateToken(partnership.id)}
-                      >
-                        <Copy className="h-3 w-3 mr-1" />
-                        Token
-                      </Button>
-                    </div>
+                    <h4 className="text-xs sm:text-sm font-medium">Parceiros</h4>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 sm:h-8 text-xs px-2"
+                      onClick={() => handleGenerateToken(partnership.id)}
+                    >
+                      <Copy className="h-3 w-3 mr-1" />
+                      Token
+                    </Button>
                   </div>
                   
                   {partnership.partners.length === 0 ? (
-                    <p className="text-xs text-muted-foreground py-2">
-                      Nenhum parceiro adicionado.
+                    <p className="text-xs text-muted-foreground py-2 text-center">
+                      Nenhum parceiro
                     </p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-1 sm:space-y-2 max-h-24 sm:max-h-32 overflow-y-auto">
                       {partnership.partners.map(partner => (
                         <div 
                           key={partner.id} 
-                          className="flex items-center justify-between p-2 bg-muted rounded-md text-sm"
+                          className="flex items-center justify-between p-2 bg-muted rounded-md text-xs sm:text-sm"
                         >
-                          <div className="flex items-center">
-                            <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                            <div>
-                              <p className="font-medium">{partner.name}</p>
-                              <p className="text-xs text-muted-foreground">{partner.email}</p>
+                          <div className="flex items-center min-w-0 flex-1">
+                            <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-muted-foreground flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium truncate">{partner.name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{partner.email}</p>
                             </div>
                           </div>
-                          <div className="flex items-center">
+                          <div className="flex items-center gap-1 flex-shrink-0">
                             <span 
-                              className={`text-xs px-2 py-0.5 rounded-full mr-2 ${
+                              className={`text-xs px-1.5 py-0.5 rounded-full ${
                                 partner.status === 'active' 
                                   ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
                                   : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
                               }`}
                             >
-                              {partner.status === 'active' ? 'Ativo' : 'Pendente'}
+                              {partner.status === 'active' ? 'Ativo' : 'Pend'}
                             </span>
                             {partner.permission === 'edit' ? (
                               <EditIcon className="h-3 w-3 text-blue-500" />
@@ -350,14 +356,15 @@ const Partnerships: React.FC = () => {
                   )}
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="pt-3 sm:pt-6">
                 <Button 
                   variant="default" 
-                  className="w-full"
+                  className="w-full text-xs sm:text-sm h-8 sm:h-10"
                   onClick={() => openCollaborativeEditor(partnership.id)}
                 >
-                  <EditIcon className="h-4 w-4 mr-2" />
-                  Abrir Compositor Colaborativo
+                  <EditIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Abrir Compositor Colaborativo</span>
+                  <span className="sm:hidden">Compositor</span>
                 </Button>
               </CardFooter>
             </Card>
@@ -367,41 +374,43 @@ const Partnerships: React.FC = () => {
       
       {/* New Partnership Dialog */}
       <Dialog open={isNewPartnershipOpen} onOpenChange={setIsNewPartnershipOpen}>
-        <DialogContent>
+        <DialogContent className="mx-4 sm:mx-0">
           <DialogHeader>
-            <DialogTitle>Nova Parceria</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-base sm:text-lg">Nova Parceria</DialogTitle>
+            <DialogDescription className="text-sm">
               Crie uma nova parceria para colaborar com outros compositores.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-3 sm:gap-4 py-3 sm:py-4">
             <div className="grid gap-2">
-              <Label htmlFor="title">Título da Parceria</Label>
+              <Label htmlFor="title" className="text-sm">Título da Parceria</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ex: Nova Canção Pop"
+                className="text-sm"
               />
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="description">Descrição (opcional)</Label>
+              <Label htmlFor="description" className="text-sm">Descrição (opcional)</Label>
               <Input
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descreva o propósito desta parceria..."
+                placeholder="Descreva o propósito..."
+                className="text-sm"
               />
             </div>
           </div>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsNewPartnershipOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setIsNewPartnershipOpen(false)} className="text-sm">
               Cancelar
             </Button>
-            <Button onClick={handleCreatePartnership}>
+            <Button onClick={handleCreatePartnership} className="text-sm">
               Criar Parceria
             </Button>
           </DialogFooter>
@@ -410,40 +419,40 @@ const Partnerships: React.FC = () => {
       
       {/* Token Dialog */}
       <Dialog open={isTokenDialogOpen} onOpenChange={setIsTokenDialogOpen}>
-        <DialogContent>
+        <DialogContent className="mx-4 sm:mx-0">
           <DialogHeader>
-            <DialogTitle>Token de Convite</DialogTitle>
-            <DialogDescription>
-              Compartilhe este token com outro compositor para que ele possa se juntar à parceria.
+            <DialogTitle className="text-base sm:text-lg">Token de Convite</DialogTitle>
+            <DialogDescription className="text-sm">
+              Compartilhe este token para que outro compositor possa se juntar à parceria.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-3 sm:gap-4 py-3 sm:py-4">
             <div className="grid gap-2">
-              <Label htmlFor="token">Token de Colaboração</Label>
-              <div className="flex">
+              <Label htmlFor="token" className="text-sm">Token de Colaboração</Label>
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   id="token"
                   value={collaborationToken}
                   readOnly
-                  className="font-mono"
+                  className="font-mono text-xs sm:text-sm flex-1"
                 />
                 <Button
                   variant="outline"
-                  className="ml-2"
                   onClick={handleCopyToken}
+                  className="text-sm px-3"
                 >
                   {isTokenCopied ? 'Copiado!' : 'Copiar'}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Este token é válido por 7 dias e só pode ser usado uma vez.
+                Token válido por 7 dias, uso único.
               </p>
             </div>
           </div>
           
           <DialogFooter>
-            <Button onClick={() => setIsTokenDialogOpen(false)}>
+            <Button onClick={() => setIsTokenDialogOpen(false)} className="text-sm">
               Fechar
             </Button>
           </DialogFooter>
@@ -452,34 +461,35 @@ const Partnerships: React.FC = () => {
       
       {/* Join Partnership Dialog */}
       <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
-        <DialogContent>
+        <DialogContent className="mx-4 sm:mx-0">
           <DialogHeader>
-            <DialogTitle>Entrar em uma Parceria</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-base sm:text-lg">Entrar em uma Parceria</DialogTitle>
+            <DialogDescription className="text-sm">
               Insira o token de convite que você recebeu para acessar uma parceria.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-3 sm:gap-4 py-3 sm:py-4">
             <div className="grid gap-2">
-              <Label htmlFor="join-token">Token de Parceria</Label>
+              <Label htmlFor="join-token" className="text-sm">Token de Parceria</Label>
               <Input
                 id="join-token"
                 value={joinToken}
                 onChange={(e) => setJoinToken(e.target.value)}
                 placeholder="Insira o token aqui"
-                className="font-mono"
+                className="font-mono text-xs sm:text-sm"
               />
             </div>
           </div>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsJoinDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setIsJoinDialogOpen(false)} className="text-sm">
               Cancelar
             </Button>
             <Button 
               onClick={handleJoinPartnership}
               disabled={isValidatingToken}
+              className="text-sm"
             >
               {isValidatingToken ? 'Validando...' : 'Entrar'}
             </Button>

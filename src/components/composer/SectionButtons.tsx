@@ -8,29 +8,46 @@ interface SectionButtonsProps {
 }
 
 export const SectionButtons: React.FC<SectionButtonsProps> = ({ onSectionClick }) => {
-  const isMobile = useMobileDetection();
+  const { isMobile } = useMobileDetection();
   const sections = [
-    { label: 'Introdução', value: '# Introdução\n\n' },
-    { label: 'Verso', value: '# Verso\n\n' },
-    { label: 'Pré-refrão', value: '# Pré-refrão\n\n' },
-    { label: 'Refrão', value: '# Refrão\n\n' },
-    { label: 'Ponte', value: '# Ponte\n\n' },
-    { label: 'Finalização', value: '# Finalização\n\n' }
+    { label: 'Introdução', value: '# Introdução\n\n', short: 'Intro' },
+    { label: 'Verso', value: '# Verso\n\n', short: 'Verso' },
+    { label: 'Pré-refrão', value: '# Pré-refrão\n\n', short: 'Pré' },
+    { label: 'Refrão', value: '# Refrão\n\n', short: 'Refrão' },
+    { label: 'Ponte', value: '# Ponte\n\n', short: 'Ponte' },
+    { label: 'Finalização', value: '# Finalização\n\n', short: 'Final' }
   ];
 
   return (
-    <div className={`flex flex-wrap gap-2 mb-4 ${isMobile ? 'justify-center' : ''}`}>
-      {sections.map((section) => (
-        <Button
-          key={section.label}
-          variant="secondary"
-          className="song-section text-xs md:text-sm"
-          size={isMobile ? "sm" : "default"}
-          onClick={() => onSectionClick(section.value)}
-        >
-          {section.label}
-        </Button>
-      ))}
+    <div className="mb-3 sm:mb-4">
+      {/* Mobile Grid Layout */}
+      <div className="grid grid-cols-3 gap-1.5 sm:hidden">
+        {sections.map((section) => (
+          <Button
+            key={section.label}
+            variant="secondary"
+            className="song-section text-xs px-2 py-1 h-8"
+            onClick={() => onSectionClick(section.value)}
+          >
+            {section.short}
+          </Button>
+        ))}
+      </div>
+
+      {/* Desktop Flex Layout */}
+      <div className="hidden sm:flex flex-wrap gap-2 justify-center">
+        {sections.map((section) => (
+          <Button
+            key={section.label}
+            variant="secondary"
+            className="song-section text-xs md:text-sm"
+            size="default"
+            onClick={() => onSectionClick(section.value)}
+          >
+            {section.label}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 };
