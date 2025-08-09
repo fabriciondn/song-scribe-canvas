@@ -13,11 +13,11 @@ interface MobileControlsProps {
 
 export const MobileControls: React.FC<MobileControlsProps> = ({ onInsertBase }) => {
   return (
-    <div className="flex gap-1.5 sm:gap-2">
+    <div className="flex gap-3">
       <MobileSheet
         trigger={
-          <Button variant="outline" size="sm" className="text-xs px-2 py-1 h-7 sm:h-8">
-            <Plus size={12} className="mr-1" /> Bases
+          <Button variant="outline" size="sm" className="text-sm px-4 py-2 h-10 rounded-full">
+            <Plus size={14} className="mr-2" /> Bases Musicais
           </Button>
         }
         title="Bases Musicais"
@@ -27,13 +27,13 @@ export const MobileControls: React.FC<MobileControlsProps> = ({ onInsertBase }) 
 
       <MobileSheet
         trigger={
-          <Button variant="outline" size="sm" className="text-xs px-2 py-1 h-7 sm:h-8">
-            <Plus size={12} className="mr-1" /> IA
+          <Button variant="outline" size="sm" className="text-sm px-4 py-2 h-10 rounded-full">
+            <Plus size={14} className="mr-2" /> IA Tools
           </Button>
         }
         title="Ferramentas de IA"
       >
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-6">
           <ThemeGenerator />
           <RhymeAssistant />
         </div>

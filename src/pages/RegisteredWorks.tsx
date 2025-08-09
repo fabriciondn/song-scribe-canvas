@@ -293,10 +293,10 @@ const RegisteredWorks: React.FC = () => {
                     <User className="h-3 w-3 sm:h-4 sm:w-4" />
                     Dados do Compositor
                   </h4>
-                  <div className="grid grid-cols-1 gap-2 sm:gap-3">
+                  <div className="space-y-2">
                     <div className="text-xs sm:text-sm">
                       <span className="font-medium text-foreground">Nome:</span>
-                      <p className="text-muted-foreground truncate">{profile?.name || work.author}</p>
+                      <p className="text-muted-foreground break-words">{profile?.name || work.author}</p>
                     </div>
                     {profile?.cpf && (
                       <div className="text-xs sm:text-sm">
@@ -307,7 +307,7 @@ const RegisteredWorks: React.FC = () => {
                     {profile?.artistic_name && (
                       <div className="text-xs sm:text-sm">
                         <span className="font-medium text-foreground">Nome Artístico:</span>
-                        <p className="text-muted-foreground truncate">{profile.artistic_name}</p>
+                        <p className="text-muted-foreground break-words">{profile.artistic_name}</p>
                       </div>
                     )}
                     {(profile?.street || profile?.city) && (
@@ -316,11 +316,29 @@ const RegisteredWorks: React.FC = () => {
                           <MapPin className="h-3 w-3" />
                           Endereço:
                         </span>
-                        <p className="text-muted-foreground text-xs break-words">
-                          {[profile?.street, profile?.number, profile?.neighborhood, profile?.city, profile?.state, profile?.cep]
-                            .filter(Boolean)
-                            .join(', ')}
-                        </p>
+                        <div className="text-muted-foreground text-xs leading-relaxed">
+                          {/* Mobile: Show truncated address with expand option */}
+                          <div className="block sm:hidden">
+                            <p className="break-words overflow-hidden">
+                              {(() => {
+                                const fullAddress = [profile?.street, profile?.number, profile?.neighborhood, profile?.city, profile?.state, profile?.cep]
+                                  .filter(Boolean)
+                                  .join(', ');
+                                return fullAddress.length > 40 
+                                  ? `${fullAddress.substring(0, 40)}...`
+                                  : fullAddress;
+                              })()}
+                            </p>
+                          </div>
+                          {/* Desktop: Show full address */}
+                          <div className="hidden sm:block">
+                            <p className="break-words">
+                              {[profile?.street, profile?.number, profile?.neighborhood, profile?.city, profile?.state, profile?.cep]
+                                .filter(Boolean)
+                                .join(', ')}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -377,9 +395,18 @@ const RegisteredWorks: React.FC = () => {
                         <Hash className="h-3 w-3" />
                         Hash:
                       </span>
-                      <p className="font-mono text-xs bg-muted px-2 py-1 rounded break-all text-foreground mt-1">
-                        {work.hash}
-                      </p>
+                      {/* Mobile: Truncated hash */}
+                      <div className="block sm:hidden">
+                        <p className="font-mono text-xs bg-muted px-2 py-1 rounded text-foreground mt-1">
+                          {work.hash.substring(0, 20)}...
+                        </p>
+                      </div>
+                      {/* Desktop: Full hash */}
+                      <div className="hidden sm:block">
+                        <p className="font-mono text-xs bg-muted px-2 py-1 rounded break-all text-foreground mt-1">
+                          {work.hash}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>

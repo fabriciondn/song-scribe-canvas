@@ -19,14 +19,14 @@ export const SectionButtons: React.FC<SectionButtonsProps> = ({ onSectionClick }
   ];
 
   return (
-    <div className="mb-3 sm:mb-4">
-      {/* Mobile Grid Layout */}
-      <div className="grid grid-cols-3 gap-1.5 sm:hidden">
+    <div className="mb-4">
+      {/* Mobile Grid Layout - exactly 3x2 as shown in reference image */}
+      <div className="grid grid-cols-3 gap-2 sm:hidden">
         {sections.map((section) => (
           <Button
             key={section.label}
-            variant="secondary"
-            className="song-section text-xs px-2 py-1 h-8"
+            variant="outline"
+            className="h-12 text-sm font-medium border-2 hover:bg-muted transition-colors"
             onClick={() => onSectionClick(section.value)}
           >
             {section.short}
