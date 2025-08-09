@@ -91,13 +91,6 @@ export function ModeratorSidebar() {
                            ? "bg-muted text-primary font-medium" 
                            : "hover:bg-muted/50"
                        }
-                       onClick={() => {
-                         // Navegação imediata para usuários
-                         if (item.url === '/moderator/users') {
-                           window.history.pushState({}, '', item.url);
-                           window.dispatchEvent(new PopStateEvent('popstate'));
-                         }
-                       }}
                      >
                        <item.icon className="mr-2 h-4 w-4" />
                        {!collapsed && <span>{item.title}</span>}

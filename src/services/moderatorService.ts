@@ -19,67 +19,117 @@ export interface ManagedUserData {
 
 // Buscar estatísticas do dashboard do moderador
 export const getModeratorDashboardStats = async (): Promise<ModeratorDashboardStats> => {
-  const { data, error } = await supabase.rpc('get_moderator_dashboard_stats');
-  
-  if (error) {
-    console.error('Error fetching moderator dashboard stats:', error);
-    throw new Error('Erro ao carregar estatísticas do moderador');
+  try {
+    console.log('📊 Fetching moderator dashboard stats...');
+    
+    const { data, error } = await supabase.rpc('get_moderator_dashboard_stats');
+    
+    if (error) {
+      console.error('❌ Error fetching moderator dashboard stats:', error);
+      
+      // Return default stats instead of throwing
+      return {
+        total_managed_users: 0,
+        total_managed_songs: 0,
+        total_managed_drafts: 0,
+        total_managed_registered_works: 0,
+        total_credits_distributed: 0
+      };
+    }
+    
+    console.log('✅ Moderator dashboard stats fetched:', data);
+    
+    if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+      return data as unknown as ModeratorDashboardStats;
+    }
+    
+    // Return default if data is not in expected format
+    return {
+      total_managed_users: 0,
+      total_managed_songs: 0,
+      total_managed_drafts: 0,
+      total_managed_registered_works: 0,
+      total_credits_distributed: 0
+    };
+  } catch (error) {
+    console.error('❌ Unexpected error fetching moderator dashboard stats:', error);
+    
+    // Return default stats on any error
+    return {
+      total_managed_users: 0,
+      total_managed_songs: 0,
+      total_managed_drafts: 0,
+      total_managed_registered_works: 0,
+      total_credits_distributed: 0
+    };
   }
-  
-  if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
-    return data as unknown as ModeratorDashboardStats;
-  }
-  
-  return {
-    total_managed_users: 0,
-    total_managed_songs: 0,
-    total_managed_drafts: 0,
-    total_managed_registered_works: 0,
-    total_credits_distributed: 0
-  };
 };
 
 // Buscar usuários gerenciados pelo moderador
 export const getManagedUsers = async (): Promise<ManagedUserData[]> => {
-  // Fazemos duas consultas separadas para evitar problemas de join
-  const { data: moderatorUsers, error: moderatorError } = await supabase
-    .from('moderator_users')
-    .select('user_id, created_at')
-    .order('created_at', { ascending: false });
+  try {
+    console.log('👥 Fetching managed users...');
+    
+    // Fazemos duas consultas separadas para evitar problemas de join
+    const { data: moderatorUsers, error: moderatorError } = await supabase
+      .from('moderator_users')
+      .select('user_id, created_at')
+      .order('created_at', { ascending: false });
 
-  if (moderatorError) {
-    console.error('Error fetching moderator users:', moderatorError);
-    throw new Error('Erro ao carregar usuários gerenciados');
+    if (moderatorError) {
+      console.error('❌ Error fetching moderator users:', moderatorError);
+      return []; // Return empty array instead of throwing
+    }
+
+    if (!moderatorUsers || moderatorUsers.length === 0) {
+      console.log('📭 No managed users found');
+      return [];
+    }
+
+    console.log('✅ Found moderator users:', moderatorUsers.length);
+
+    const userIds = moderatorUsers.map(mu => mu.user_id);
+    
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, name, email, artistic_name, credits')
+      .in('id', userIds);
+
+    if (profilesError) {
+      console.error('❌ Error fetching profiles:', profilesError);
+      // Return users with basic data even if profiles fail
+      return moderatorUsers.map(mu => ({
+        id: mu.user_id,
+        name: null,
+        email: null,
+        artistic_name: null,
+        credits: 0,
+        created_at: mu.created_at
+      }));
+    }
+
+    console.log('✅ Found profiles:', profiles?.length || 0);
+
+    // Combinar os dados
+    const combinedData = moderatorUsers.map(mu => {
+      const profile = profiles?.find(p => p.id === mu.user_id);
+      return {
+        id: mu.user_id,
+        name: profile?.name || null,
+        email: profile?.email || null,
+        artistic_name: profile?.artistic_name || null,
+        credits: profile?.credits || 0,
+        created_at: mu.created_at
+      };
+    });
+    
+    console.log('✅ Combined managed users data:', combinedData.length);
+    return combinedData;
+    
+  } catch (error) {
+    console.error('❌ Unexpected error fetching managed users:', error);
+    return []; // Return empty array on any error
   }
-
-  if (!moderatorUsers || moderatorUsers.length === 0) {
-    return [];
-  }
-
-  const userIds = moderatorUsers.map(mu => mu.user_id);
-  
-  const { data: profiles, error: profilesError } = await supabase
-    .from('profiles')
-    .select('id, name, email, artistic_name, credits')
-    .in('id', userIds);
-
-  if (profilesError) {
-    console.error('Error fetching profiles:', profilesError);
-    throw new Error('Erro ao carregar perfis dos usuários');
-  }
-
-  // Combinar os dados
-  return moderatorUsers.map(mu => {
-    const profile = profiles?.find(p => p.id === mu.user_id);
-    return {
-      id: mu.user_id,
-      name: profile?.name || null,
-      email: profile?.email || null,
-      artistic_name: profile?.artistic_name || null,
-      credits: profile?.credits || 0,
-      created_at: mu.created_at
-    };
-  });
 };
 
 // Atualizar créditos de usuário gerenciado

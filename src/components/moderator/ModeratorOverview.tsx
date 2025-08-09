@@ -4,9 +4,12 @@ import { Users, Music, FileText, Award, Coins } from 'lucide-react';
 import { getModeratorDashboardStats } from '@/services/moderatorService';
 
 export const ModeratorOverview = () => {
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading, error } = useQuery({
     queryKey: ['moderator-dashboard-stats'],
     queryFn: getModeratorDashboardStats,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   if (isLoading) {
@@ -23,6 +26,32 @@ export const ModeratorOverview = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error('❌ Erro ao carregar estatísticas:', error);
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard do Moderador</h2>
+          <p className="text-muted-foreground">
+            Erro ao carregar estatísticas. Exibindo valores padrão.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center">
+                <div className="text-destructive">Erro ao carregar dados</div>
+                <div className="text-sm text-muted-foreground">
+                  Tente recarregar a página
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
