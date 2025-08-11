@@ -260,14 +260,14 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   // **SEGUNDA PÁGINA** - Letra completa (sempre criada)
   pdf.addPage();
   
-  // Header da segunda página
+  // Header da segunda página - faixa mais fina
   pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
-  pdf.rect(0, 0, 210, 35, 'F');
-  
+  pdf.rect(0, 0, 210, 25, 'F');
+
   pdf.setTextColor(whiteColor[0], whiteColor[1], whiteColor[2]);
-  pdf.setFontSize(16);
+  pdf.setFontSize(14);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('LETRA COMPLETA', 105, 22, { align: 'center' });
+  pdf.text('LETRA COMPLETA', 105, 16, { align: 'center' });
   
   // Letra completa com sistema de duas colunas
   pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
@@ -277,9 +277,9 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   // Configurações para layout em duas colunas
   const pageHeight = 297; // A4 height in mm
   const footerHeight = 22; // Footer height
-  const headerHeight = 35; // Header height
+  const headerHeight = 25; // Header height reduzido
   const availableHeight = pageHeight - headerHeight - footerHeight - 10; // 10mm margin
-  const startY = 50;
+  const startY = 40;
   const lineHeight = 5;
   const maxLinesPerColumn = Math.floor(availableHeight / lineHeight);
   

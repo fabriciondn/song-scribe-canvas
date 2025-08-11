@@ -9,6 +9,7 @@ import { MobileControls } from './MobileControls';
 import { CollaborativeEditor } from './CollaborativeEditor';
 import { MultiToolPanel } from './MultiToolPanel';
 import { ToolType } from './ToolSelector';
+import { MobileNavigation } from '@/components/layout/MobileNavigation';
 
 interface MobileLayoutProps {
   partnershipId: string | null;
@@ -54,6 +55,10 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   const handleReorderTools = (newOrder: ToolType[]) => {
     setActiveTools(newOrder);
   };
+  const showToolsPanel = () => {
+    setActiveTools(['bases', 'themes', 'rhymes']); // Mostrar todas as ferramentas por padrão
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {partnershipId ? (
@@ -63,7 +68,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
       ) : (
         <>
           {/* Main content area */}
-          <div className="flex-1 p-4 pb-4 overflow-y-auto">
+          <div className="flex-1 p-4 pb-20 overflow-y-auto"> {/* pb-20 para espaço do menu inferior */}
             {/* Title input */}
             <div className="mb-4">
               <Input 
@@ -121,25 +126,27 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
               <h2 className="text-lg font-semibold">IA + Tools</h2>
               <button
                 onClick={() => setActiveTools([])}
-                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
+                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
               >
                 ✕
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4">
-              <div className="space-y-6">
-                <MobileControls onInsertBase={onInsertBase} />
-                <MultiToolPanel 
-                  activeTools={activeTools}
-                  onRemoveTool={handleRemoveTool}
-                  onReorderTools={handleReorderTools}
-                  onInsertBase={onInsertBase}
-                />
-              </div>
+              <MultiToolPanel 
+                activeTools={activeTools}
+                onRemoveTool={handleRemoveTool}
+                onReorderTools={handleReorderTools}
+                onInsertBase={onInsertBase}
+              />
             </div>
           </div>
         </div>
       )}
+
+      {/* Mobile Navigation with Tools functionality */}
+      <div className="md:hidden">
+        <MobileNavigation onToolsClick={showToolsPanel} />
+      </div>
     </div>
   );
 };

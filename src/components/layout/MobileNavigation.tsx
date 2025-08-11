@@ -6,7 +6,7 @@ import {
   FolderOpen, 
   FileText, 
   ShieldCheck,
-  Users 
+  Sparkles 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,7 +24,7 @@ const navigationItems = [
   {
     title: 'IA+Tools',
     href: '#',
-    icon: Users,
+    icon: Sparkles,
     action: 'tools'
   },
   {
