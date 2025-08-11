@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/form';
 import { Upload, FileAudio } from 'lucide-react';
 import { AuthorRegistrationData } from '@/pages/AuthorRegistration';
+import { useProfile } from '@/hooks/useProfile';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3'];
@@ -67,6 +68,8 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
   const { isMobile } = useMobileDetection();
   const [audioFile, setAudioFile] = useState<File | null>(initialData.audioFile);
   const [audioError, setAudioError] = useState<string>('');
+  const [isCurrentUser, setIsCurrentUser] = useState<boolean>(false);
+  const { profile } = useProfile();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -87,6 +90,18 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
 
   const hasOtherAuthors = form.watch('hasOtherAuthors');
   const otherAuthors = form.watch('otherAuthors') || [];
+
+  // Handle "Eu mesmo" checkbox change
+  const handleCurrentUserChange = (checked: boolean) => {
+    setIsCurrentUser(checked);
+    if (checked && profile) {
+      form.setValue('author', profile.name || '');
+      form.setValue('authorCpf', profile.cpf || '');
+    } else {
+      form.setValue('author', '');
+      form.setValue('authorCpf', '');
+    }
+  };
 
   const handleAudioFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -214,6 +229,29 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
               )}
             />
 
+            {/* Checkbox "Eu mesmo" */}
+            <div className="flex items-center space-x-3 mb-4">
+              <Checkbox
+                id="current-user"
+                checked={isCurrentUser}
+                onCheckedChange={handleCurrentUserChange}
+                disabled={!profile?.name || !profile?.cpf}
+              />
+              <Label 
+                htmlFor="current-user" 
+                className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
+                  !profile?.name || !profile?.cpf ? 'text-muted-foreground' : 'cursor-pointer'
+                }`}
+              >
+                Eu mesmo
+                {(!profile?.name || !profile?.cpf) && (
+                  <span className="text-xs text-muted-foreground block">
+                    (Complete seu perfil para usar esta opção)
+                  </span>
+                )}
+              </Label>
+            </div>
+
             <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
               {/* Autor */}
               <FormField
@@ -221,9 +259,14 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
                 name="author"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Autor *</FormLabel>
+                    <FormLabel>Autor Principal *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Digite o nome do autor principal" {...field} />
+                      <Input 
+                        placeholder="Digite o nome do autor principal" 
+                        {...field} 
+                        disabled={isCurrentUser}
+                        className={isCurrentUser ? 'bg-muted' : ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -241,18 +284,22 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
                       <Input 
                         placeholder="000.000.000-00" 
                         {...field}
+                        disabled={isCurrentUser}
+                        className={isCurrentUser ? 'bg-muted' : ''}
                         onChange={(e) => {
-                          const formatted = formatCpf(e.target.value);
-                          field.onChange(formatted);
-                          
-                          // Validação em tempo real
-                          if (e.target.value && !validateCpf(formatted)) {
-                            form.setError('authorCpf', { 
-                              type: 'custom', 
-                              message: 'CPF inválido' 
-                            });
-                          } else {
-                            form.clearErrors('authorCpf');
+                          if (!isCurrentUser) {
+                            const formatted = formatCpf(e.target.value);
+                            field.onChange(formatted);
+                            
+                            // Validação em tempo real
+                            if (e.target.value && !validateCpf(formatted)) {
+                              form.setError('authorCpf', { 
+                                type: 'custom', 
+                                message: 'CPF inválido' 
+                              });
+                            } else {
+                              form.clearErrors('authorCpf');
+                            }
                           }
                         }}
                       />

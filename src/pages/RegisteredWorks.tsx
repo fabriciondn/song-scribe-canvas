@@ -466,29 +466,32 @@ const RegisteredWorks: React.FC = () => {
                     </div>
                   )}
                   
-                  {/* Certificate Button */}
-                  <Button 
-                    onClick={() => handleDownloadCertificate(work)}
-                    className="w-full flex items-center justify-center gap-2 text-xs sm:text-sm"
-                    disabled={downloadingWork === work.id || work.status !== 'registered'}
-                    size="sm"
-                  >
-                    {downloadingWork === work.id ? (
-                      <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                    ) : (
-                      <Download className="h-3 w-3 sm:h-4 sm:w-4" />
-                    )}
-                    <span className="hidden sm:inline">
-                      {downloadingWork === work.id ? 'Gerando PDF...' : 
-                       work.status !== 'registered' ? 'Certificado disponível após registro' : 
-                       'Baixar Certificado PDF'}
-                    </span>
-                    <span className="sm:hidden">
-                      {downloadingWork === work.id ? 'Gerando...' : 
-                       work.status !== 'registered' ? 'Aguardando registro' : 
-                       'Certificado'}
-                    </span>
-                  </Button>
+                  {/* Certificate Button - Smaller size to match other buttons */}
+                  <div className="flex justify-center">
+                    <Button 
+                      onClick={() => handleDownloadCertificate(work)}
+                      variant="default"
+                      className="flex items-center justify-center gap-2 text-xs sm:text-sm"
+                      disabled={downloadingWork === work.id || work.status !== 'registered'}
+                      size="sm"
+                    >
+                      {downloadingWork === work.id ? (
+                        <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                      ) : (
+                        <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                      )}
+                      <span className="hidden sm:inline">
+                        {downloadingWork === work.id ? 'Gerando PDF...' : 
+                         work.status !== 'registered' ? 'Certificado disponível após registro' : 
+                         'Baixar Certificado'}
+                      </span>
+                      <span className="sm:hidden">
+                        {downloadingWork === work.id ? 'Gerando...' : 
+                         work.status !== 'registered' ? 'Aguardando' : 
+                         'Certificado'}
+                      </span>
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
