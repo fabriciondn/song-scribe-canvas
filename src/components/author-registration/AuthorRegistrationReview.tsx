@@ -10,10 +10,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserCredits } from '@/hooks/useUserCredits';
-import { useNotification } from '@/components/ui/notification';
 import { useNavigate } from 'react-router-dom';
 import { useImpersonation } from '@/context/ImpersonationContext';
-import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 interface AuthorRegistrationReviewProps {
   data: AuthorRegistrationData;
@@ -28,42 +26,13 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   const { toast } = useToast();
   const { user } = useAuth();
   const { refreshCredits } = useUserCredits();
-  const { addNotification } = useNotification();
   const navigate = useNavigate();
   const { isImpersonating, impersonatedUser } = useImpersonation();
   
   // Usar o ID do usuário correto (impersonado ou real)
   const currentUserId = isImpersonating && impersonatedUser ? impersonatedUser.id : user?.id;
 
-  // Configurar realtime updates para author_registrations
-  useRealtimeUpdates([
-    {
-      table: 'author_registrations',
-      event: 'UPDATE',
-      filter: currentUserId ? `user_id=eq.${currentUserId}` : undefined,
-      onUpdate: (payload) => {
-        const { new: updatedRegistration } = payload;
-        console.log('Atualização de registro em tempo real:', updatedRegistration);
-        
-        // Se o status mudou para 'registered', mostrar notificação
-        if (updatedRegistration.status === 'registered') {
-          console.log('🎉 Música registrada com sucesso! Mostrando notificação...');
-          addNotification({
-            title: 'Parabéns sua obra está protegida!',
-            message: `A música "${updatedRegistration.title}" foi analisada e registrada com sucesso. Seus direitos autorais estão agora protegidos.`,
-            type: 'success',
-            duration: 8000
-          });
-          
-          // Também mostrar toast para garantir que o usuário veja
-          toast({
-            title: 'Parabéns sua obra está protegida!',
-            description: `A música "${updatedRegistration.title}" foi analisada e registrada com sucesso.`,
-          });
-        }
-      }
-    }
-  ]);
+  // Notificações são agora tratadas globalmente pelo GlobalNotifications component
 
   // Função para gerar hash SHA-256
   const gerarHash = async (texto: string): Promise<string> => {
