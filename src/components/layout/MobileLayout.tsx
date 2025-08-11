@@ -19,6 +19,11 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
     return null;
   }
 
+  const handleToolsClick = () => {
+    // Implementar lógica para mostrar ferramentas quando necessário
+    console.log('Tools clicked');
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-hidden touch-manipulation">
       {/* Header móvel otimizado */}
@@ -32,7 +37,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
       </main>
       
       {/* Navegação inferior */}
-      <MobileNavigation />
+      <MobileNavigation onToolsClick={handleToolsClick} />
       
     </div>
   );

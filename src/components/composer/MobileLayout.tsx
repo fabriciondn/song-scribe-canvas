@@ -70,7 +70,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
                 value={title} 
                 onChange={onTitleChange} 
                 placeholder="Digite o título da sua música" 
-                className="text-base font-medium border-0 px-0 bg-transparent focus:ring-0 focus:outline-none placeholder:text-muted-foreground"
+                className="text-base font-medium border border-border/30 rounded-md px-3 py-2 bg-transparent focus:ring-0 focus:outline-none placeholder:text-muted-foreground"
               />
             </div>
             
@@ -79,67 +79,37 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
             
             {/* Textarea */}
             <div className="mt-4">
+              <Label className="text-sm font-medium text-muted-foreground mb-2 block">Letra</Label>
               <Textarea 
                 value={content} 
                 onChange={onContentChange} 
                 placeholder="Comece a compor sua letra aqui..." 
-                className="min-h-[40vh] border-0 px-0 bg-transparent resize-none focus:ring-0 focus:outline-none text-base leading-relaxed"
+                className="min-h-[40vh] border border-border/30 rounded-md px-3 py-2 bg-transparent resize-none focus:ring-0 focus:outline-none text-base leading-relaxed"
                 ref={textareaRef}
                 onDrop={onTextAreaDrop}
                 onDragOver={(e) => e.preventDefault()}
               />
             </div>
             
-            {/* Mobile controls for bases and AI tools */}
-            <div className="mt-4 flex justify-center">
-              <MobileControls onInsertBase={onInsertBase} />
+            {/* Mobile controls for Novo and Salvar */}
+            <div className="mt-4 flex justify-center gap-4">
+              <button
+                onClick={onNewClick}
+                className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-full text-sm font-medium hover:bg-secondary/80 transition-colors"
+              >
+                <span className="text-xs">+</span>
+                Novo
+              </button>
+              <button
+                onClick={openSaveModal}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                <span className="text-xs">💾</span>
+                Salvar
+              </button>
             </div>
           </div>
           
-          {/* Bottom navigation bar with main actions */}
-          <div className="bg-background border-t border-border p-4 safe-area-bottom">
-            <div className="flex justify-around items-center">
-              <button
-                onClick={onNewClick}
-                className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
-              >
-                <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
-                  <span className="text-xs font-medium">+</span>
-                </div>
-                <span className="text-xs font-medium text-muted-foreground">Novo</span>
-              </button>
-              
-              <button
-                onClick={openSaveModal}
-                className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
-              >
-                <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
-                  <span className="text-xs font-medium">💾</span>
-                </div>
-                <span className="text-xs font-medium text-muted-foreground">Salvar</span>
-              </button>
-              
-              <button
-                onClick={() => handleAddTool('rhyme' as any)}
-                className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
-              >
-                <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
-                  <span className="text-xs font-medium">🔧</span>
-                </div>
-                <span className="text-xs font-medium text-muted-foreground">Ferramentas</span>
-              </button>
-              
-              <button
-                onClick={openRegisterWorkModal}
-                className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
-              >
-                <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
-                  <span className="text-xs font-medium">📝</span>
-                </div>
-                <span className="text-xs font-medium text-muted-foreground">Registrar</span>
-              </button>
-            </div>
-          </div>
         </>
       )}
       
@@ -148,7 +118,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
         <div className="fixed inset-0 bg-background z-50">
           <div className="h-full flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h2 className="text-lg font-semibold">Ferramentas</h2>
+              <h2 className="text-lg font-semibold">IA + Tools</h2>
               <button
                 onClick={() => setActiveTools([])}
                 className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
@@ -157,12 +127,15 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4">
-              <MultiToolPanel 
-                activeTools={activeTools}
-                onRemoveTool={handleRemoveTool}
-                onReorderTools={handleReorderTools}
-                onInsertBase={onInsertBase}
-              />
+              <div className="space-y-6">
+                <MobileControls onInsertBase={onInsertBase} />
+                <MultiToolPanel 
+                  activeTools={activeTools}
+                  onRemoveTool={handleRemoveTool}
+                  onReorderTools={handleReorderTools}
+                  onInsertBase={onInsertBase}
+                />
+              </div>
             </div>
           </div>
         </div>
