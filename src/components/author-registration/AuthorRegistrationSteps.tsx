@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/form';
 import { Upload, FileAudio, ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import { AuthorRegistrationData } from '@/pages/AuthorRegistration';
+import { useProfile } from '@/hooks/useProfile';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3'];
@@ -82,6 +83,8 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [lyrics, setLyrics] = useState<string>('');
+  const [isCurrentUser, setIsCurrentUser] = useState<boolean>(false);
+  const { profile } = useProfile();
 
   const step1Form = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
@@ -101,6 +104,18 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
 
   const hasOtherAuthors = step1Form.watch('hasOtherAuthors');
   const otherAuthors = step1Form.watch('otherAuthors') || [];
+
+  // Handle "Eu mesmo" checkbox change
+  const handleCurrentUserChange = (checked: boolean) => {
+    setIsCurrentUser(checked);
+    if (checked && profile) {
+      step1Form.setValue('author', profile.name || '');
+      step1Form.setValue('authorCpf', profile.cpf || '');
+    } else {
+      step1Form.setValue('author', '');
+      step1Form.setValue('authorCpf', '');
+    }
+  };
 
   const handleAudioFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -279,6 +294,29 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                 )}
               />
 
+              {/* Checkbox "Eu mesmo" */}
+              <div className="flex items-center space-x-3 mb-4">
+                <Checkbox
+                  id="current-user"
+                  checked={isCurrentUser}
+                  onCheckedChange={handleCurrentUserChange}
+                  disabled={!profile?.name || !profile?.cpf}
+                />
+                <Label 
+                  htmlFor="current-user" 
+                  className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
+                    !profile?.name || !profile?.cpf ? 'text-muted-foreground' : 'cursor-pointer'
+                  }`}
+                >
+                  Eu mesmo
+                  {(!profile?.name || !profile?.cpf) && (
+                    <span className="text-xs text-muted-foreground block">
+                      (Complete seu perfil para usar esta opção)
+                    </span>
+                  )}
+                </Label>
+              </div>
+
               <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                 {/* Autor */}
                 <FormField
@@ -288,7 +326,12 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                     <FormItem>
                       <FormLabel>Autor Principal *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Digite o nome do autor principal" {...field} />
+                        <Input 
+                          placeholder="Digite o nome do autor principal" 
+                          {...field}
+                          disabled={isCurrentUser}
+                          className={isCurrentUser ? 'bg-muted' : ''}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -306,7 +349,10 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                         <Input 
                           placeholder="000.000.000-00" 
                           {...field}
-                            onChange={(e) => {
+                          disabled={isCurrentUser}
+                          className={isCurrentUser ? 'bg-muted' : ''}
+                          onChange={(e) => {
+                            if (!isCurrentUser) {
                               const formatted = formatCpf(e.target.value);
                               field.onChange(formatted);
                               
@@ -319,7 +365,8 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                               } else {
                                 step1Form.clearErrors('authorCpf');
                               }
-                            }}
+                            }
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
