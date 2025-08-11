@@ -269,28 +269,30 @@ const RegisteredWorks: React.FC = () => {
       </div>
 
       {works && works.length > 0 ? (
-        <div className="grid gap-4 sm:gap-6">
+        <div className="grid gap-3 sm:gap-6">
           {works.map((work) => (
-            <Card key={work.id} className="hover:shadow-lg transition-all duration-200">
-              <CardHeader className="pb-3 sm:pb-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <CardTitle className="flex items-center gap-2 text-foreground text-base sm:text-lg">
-                    <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
-                    <span className="truncate">{work.title}</span>
-                  </CardTitle>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {work.status === 'em análise' && <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />}
-                    <Badge variant={getStatusVariant(work.status)} className="text-xs">
-                      {getStatusText(work.status)}
-                    </Badge>
+            <Card key={work.id} className="hover:shadow-lg transition-all duration-200 bg-card border border-border/50">
+              <CardHeader className="pb-2 sm:pb-4 p-3 sm:p-6">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-foreground text-sm sm:text-lg font-semibold">
+                      <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                      <span className="truncate">{work.title}</span>
+                    </CardTitle>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {work.status === 'em análise' && <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />}
+                      <Badge variant={getStatusVariant(work.status)} className="text-xs">
+                        {getStatusText(work.status)}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3 sm:space-y-4 pt-0 sm:pt-4">
+              <CardContent className="space-y-3 sm:space-y-4 pt-0 p-3 sm:p-6">
                 {/* Dados do Compositor - Mobile optimized */}
-                <div className="bg-secondary p-3 sm:p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2 sm:mb-3 text-secondary-foreground flex items-center gap-2 text-sm sm:text-base">
-                    <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                <div className="bg-muted/30 p-3 sm:p-4 rounded-lg border border-border/30">
+                  <h4 className="font-medium mb-2 text-foreground flex items-center gap-2 text-xs sm:text-sm">
+                    <User className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                     Dados do Compositor
                   </h4>
                   <div className="space-y-2">
@@ -412,18 +414,18 @@ const RegisteredWorks: React.FC = () => {
                 </div>
 
                 {/* Lyrics Section - Mobile optimized */}
-                <div className="bg-muted p-3 sm:p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2 text-foreground text-sm sm:text-base">Letra:</h4>
-                  <div className="text-xs sm:text-sm text-muted-foreground max-h-24 sm:max-h-32 overflow-y-auto whitespace-pre-wrap">
-                    {work.lyrics.length > 150 
-                      ? `${work.lyrics.substring(0, 150)}...` 
+                <div className="bg-muted/30 p-3 sm:p-4 rounded-lg border border-border/30">
+                  <h4 className="font-medium mb-2 text-foreground text-xs sm:text-sm">Letra:</h4>
+                  <div className="text-xs sm:text-sm text-muted-foreground max-h-20 sm:max-h-32 overflow-y-auto whitespace-pre-wrap leading-relaxed">
+                    {work.lyrics.length > 120 
+                      ? `${work.lyrics.substring(0, 120)}...` 
                       : work.lyrics
                     }
                   </div>
                 </div>
 
                 {/* Actions Section - Mobile optimized */}
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3 pt-2 border-t border-border/30">
                   {/* Audio Controls */}
                   {work.audio_file_path ? (
                     <div className="flex flex-col sm:flex-row gap-2">
@@ -434,7 +436,7 @@ const RegisteredWorks: React.FC = () => {
                           e.stopPropagation();
                           handlePlayAudio(work);
                         }}
-                        className="flex items-center justify-center gap-2 text-xs sm:text-sm"
+                        className="flex items-center justify-center gap-2 text-xs sm:text-sm h-8 sm:h-9"
                         size="sm"
                       >
                         {playingAudio === work.id ? (
@@ -452,7 +454,7 @@ const RegisteredWorks: React.FC = () => {
                       <Button 
                         variant="outline"
                         onClick={() => handleDownloadAudio(work)}
-                        className="flex items-center justify-center gap-2 text-xs sm:text-sm"
+                        className="flex items-center justify-center gap-2 text-xs sm:text-sm h-8 sm:h-9"
                         size="sm"
                       >
                         <Download className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -466,12 +468,12 @@ const RegisteredWorks: React.FC = () => {
                     </div>
                   )}
                   
-                  {/* Certificate Button - Smaller size to match other buttons */}
+                  {/* Certificate Button */}
                   <div className="flex justify-center">
                     <Button 
                       onClick={() => handleDownloadCertificate(work)}
                       variant="default"
-                      className="flex items-center justify-center gap-2 text-xs sm:text-sm"
+                      className="flex items-center justify-center gap-2 text-xs sm:text-sm h-8 sm:h-9 bg-primary hover:bg-primary/90"
                       disabled={downloadingWork === work.id || work.status !== 'registered'}
                       size="sm"
                     >

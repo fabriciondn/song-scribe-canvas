@@ -56,6 +56,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
     setActiveTools(newOrder);
   };
   const showToolsPanel = () => {
+    console.log('showToolsPanel chamada');
     setActiveTools(['bases', 'themes', 'rhymes']); // Mostrar todas as ferramentas por padrão
   };
 
@@ -123,7 +124,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
         <div className="fixed inset-0 bg-background z-50">
           <div className="h-full flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h2 className="text-lg font-semibold">IA + Tools</h2>
+              <h2 className="text-lg font-semibold">IA + Tools ({activeTools.length})</h2>
               <button
                 onClick={() => setActiveTools([])}
                 className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
