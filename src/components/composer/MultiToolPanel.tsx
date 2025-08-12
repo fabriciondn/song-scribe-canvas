@@ -35,6 +35,8 @@ export const MultiToolPanel: React.FC<MultiToolPanelProps> = ({
 }) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
+  console.log('MultiToolPanel renderizando com activeTools:', activeTools);
+
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
@@ -87,6 +89,10 @@ export const MultiToolPanel: React.FC<MultiToolPanelProps> = ({
         if (!toolType) return null;
         
         const config = toolConfigs[toolType as string];
+        if (!config) {
+          console.log('Config não encontrado para toolType:', toolType);
+          return null;
+        }
         const Icon = config.icon;
         
         return (
