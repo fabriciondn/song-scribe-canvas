@@ -920,7 +920,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          artistic_name: string | null
+          id: string | null
+          name: string | null
+        }
+        Insert: {
+          artistic_name?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Update: {
+          artistic_name?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_update_user_credits: {
