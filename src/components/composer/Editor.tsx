@@ -12,7 +12,11 @@ import * as folderService from '@/services/folderService';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-export const Editor: React.FC = () => {
+interface EditorProps {
+  onToolsRequest?: () => void;
+}
+
+export const Editor: React.FC<EditorProps> = ({ onToolsRequest }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
@@ -22,6 +26,7 @@ export const Editor: React.FC = () => {
   const [isNewLyricConfirmOpen, setIsNewLyricConfirmOpen] = useState(false);
   const [processing, setProcessing] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mobileLayoutRef = useRef<{ showTools: () => void }>(null);
   const { toast } = useToast();
   const { isMobile } = useMobileDetection();
   const [searchParams] = useSearchParams();
@@ -187,10 +192,28 @@ export const Editor: React.FC = () => {
     }, 0);
   };
 
+  const handleShowTools = () => {
+    if (mobileLayoutRef.current?.showTools) {
+      mobileLayoutRef.current.showTools();
+    }
+  };
+
+  // Expor a função para o componente pai
+  useEffect(() => {
+    if (onToolsRequest) {
+      // Esta função será chamada quando o botão IA+Tools for clicado
+      (window as any).editorShowTools = handleShowTools;
+    }
+    return () => {
+      delete (window as any).editorShowTools;
+    };
+  }, [onToolsRequest]);
+
   return (
     <>
       {isMobile ? (
         <MobileLayout
+          ref={mobileLayoutRef}
           partnershipId={partnershipId}
           title={title}
           content={content}

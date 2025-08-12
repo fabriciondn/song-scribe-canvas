@@ -20,8 +20,12 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   }
 
   const handleToolsClick = () => {
-    // Implementar lógica para mostrar ferramentas quando necessário
-    console.log('Tools clicked');
+    // Verificar se estamos na página do composer e se há uma função disponível
+    if ((window as any).editorShowTools) {
+      (window as any).editorShowTools();
+    } else {
+      console.log('Tools clicked - função não disponível');
+    }
   };
 
   return (

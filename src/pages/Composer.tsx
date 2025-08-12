@@ -24,11 +24,15 @@ const styles = `
 `;
 
 const Composer: React.FC = () => {
+  const handleToolsRequest = () => {
+    console.log('Tools request received');
+  };
+
   return (
     <ProOnlyWrapper featureName="Compor">
       <div className="composer-page">
         <style>{styles}</style>
-        <Editor />
+        <Editor onToolsRequest={handleToolsRequest} />
       </div>
     </ProOnlyWrapper>
   );

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,6 @@ import { MobileControls } from './MobileControls';
 import { CollaborativeEditor } from './CollaborativeEditor';
 import { MultiToolPanel } from './MultiToolPanel';
 import { ToolType } from './ToolSelector';
-import { MobileNavigation } from '@/components/layout/MobileNavigation';
 
 interface MobileLayoutProps {
   partnershipId: string | null;
@@ -26,7 +25,11 @@ interface MobileLayoutProps {
   onInsertBase: (baseInfo: { title: string; genre: string }) => void;
 }
 
-export const MobileLayout: React.FC<MobileLayoutProps> = ({
+export interface MobileLayoutHandle {
+  showTools: () => void;
+}
+
+export const MobileLayout = forwardRef<MobileLayoutHandle, MobileLayoutProps>(({
   partnershipId,
   title,
   content,
@@ -39,7 +42,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   openSaveModal,
   openRegisterWorkModal,
   onInsertBase
-}) => {
+}, ref) => {
   const [activeTools, setActiveTools] = useState<ToolType[]>([]);
 
   const handleAddTool = (tool: ToolType) => {
@@ -59,6 +62,10 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
     console.log('showToolsPanel chamada');
     setActiveTools(['bases', 'themes', 'rhymes']); // Mostrar todas as ferramentas por padrão
   };
+
+  useImperativeHandle(ref, () => ({
+    showTools: showToolsPanel
+  }));
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -144,10 +151,6 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
         </div>
       )}
 
-      {/* Mobile Navigation with Tools functionality */}
-      <div className="md:hidden">
-        <MobileNavigation onToolsClick={showToolsPanel} />
-      </div>
     </div>
   );
-};
+});
