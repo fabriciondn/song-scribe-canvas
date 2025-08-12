@@ -18,99 +18,65 @@ export const useRoleBasedNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Debounced role fetcher to prevent excessive calls
+  // Debounced role fetcher otimizado para uma única chamada
   const debouncedFetchUserRole = debounce(async (userId: string) => {
     try {
       console.log('🔍 Verificando role do usuário:', userId);
 
-      // Use rate limiting for role fetching
-      const roleResult = await withRateLimit(
-        `get_user_role_${userId}`,
+      // Uma única chamada para buscar role e permissões juntos
+      const result = await withRateLimit(
+        `user_role_complete_${userId}`,
         async () => {
-          const result = await supabase.rpc('get_user_role', { user_id: userId });
-          return result;
+          // Tenta buscar dados de admin primeiro
+          const adminResult = await supabase
+            .from('admin_users')
+            .select('role, permissions')
+            .eq('user_id', userId)
+            .maybeSingle(); // maybeSingle não dá erro se não encontrar
+
+          return adminResult;
         },
-        3, // Max 3 calls per minute
-        60000
+        15, // Max 15 calls por janela
+        120000 // 2 minutos
       );
 
-      if (!roleResult) {
-        console.warn('Role fetch rate limited, using default');
+      if (!result) {
+        console.warn('Role fetch rate limited, usando cache ou default');
         setUserRole({ role: 'user' });
         setIsRoleLoading(false);
         return;
       }
 
-      const { data: roleData, error } = roleResult as any;
+      const { data: adminData, error } = result as any;
 
-      if (error) {
-        console.error('Erro ao buscar role:', error);
-        setUserRole({ role: 'user' });
-        setIsRoleLoading(false);
-        return;
-      }
-
-      console.log('📋 Role encontrado:', roleData);
-
-      // Definir o role baseado no retorno
-      const userRole = roleData || 'user';
+      let role = 'user';
       let permissions: string[] = [];
 
-      if (userRole === 'admin' || userRole === 'super_admin') {
-        // Buscar permissões específicas para admins com rate limiting
-        const permissionsResult = await withRateLimit(
-          `admin_permissions_${userId}`,
-          async () => {
-            const result = await supabase
-              .from('admin_users')
-              .select('permissions')
-              .eq('user_id', userId)
-              .single();
-            return result;
-          },
-          2, // Max 2 calls per minute
-          60000
-        );
-        
-        if (permissionsResult && (permissionsResult as any)?.data) {
-          permissions = Array.isArray((permissionsResult as any).data.permissions) 
-            ? (permissionsResult as any).data.permissions as string[] 
-            : [];
-        }
-        
-        setUserRole({
-          role: 'admin', // Mapear super_admin para admin no frontend
-          permissions
-        });
-      } else if (userRole === 'moderator') {
-        // Buscar permissões específicas para moderadores com rate limiting
-        const permissionsResult = await withRateLimit(
-          `moderator_permissions_${userId}`,
-          async () => {
-            const result = await supabase
-              .from('admin_users')
-              .select('permissions')
-              .eq('user_id', userId)
-              .single();
-            return result;
-          },
-          2, // Max 2 calls per minute
-          60000
-        );
-        
-        if (permissionsResult && (permissionsResult as any)?.data) {
-          permissions = Array.isArray((permissionsResult as any).data.permissions) 
-            ? (permissionsResult as any).data.permissions as string[] 
-            : [];
-        }
-        
-        setUserRole({
-          role: 'moderator',
-          permissions
-        });
+      if (adminData && !error) {
+        // Usuário tem entrada na tabela admin_users
+        role = adminData.role || 'user';
+        permissions = Array.isArray(adminData.permissions) 
+          ? adminData.permissions 
+          : (typeof adminData.permissions === 'string' 
+             ? JSON.parse(adminData.permissions || '[]')
+             : []);
+      } else if (!error) {
+        // Não há erro mas também não encontrou dados = usuário comum
+        role = 'user';
       } else {
-        setUserRole({ role: 'user' });
+        console.warn('Erro ao buscar dados de admin, assumindo usuário comum:', error);
+        role = 'user';
       }
+
+      console.log('👤 Role encontrado:', role, 'Permissões:', permissions);
+
+      // Mapear role para o formato esperado pelo frontend
+      const mappedRole = role === 'super_admin' ? 'admin' : role as ('admin' | 'moderator' | 'user');
+
+      setUserRole({ 
+        role: mappedRole, 
+        permissions 
+      });
 
       setIsRoleLoading(false);
 
@@ -119,7 +85,7 @@ export const useRoleBasedNavigation = () => {
       setUserRole({ role: 'user' });
       setIsRoleLoading(false);
     }
-  }, 1000); // 1 second debounce
+  }, 500); // Reduzido para 500ms
 
   // Buscar role do usuário
   useEffect(() => {

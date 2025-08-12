@@ -19,11 +19,16 @@ export const useAuth = () => {
   // Memoizar o user ID para evitar re-renders desnecessários
   const userId = useMemo(() => context.user?.id, [context.user?.id]);
 
-  // Registrar login quando o usuário se autentica (desabilitado temporariamente)
+  // Log de atividade otimizado
   useEffect(() => {
     if (userId) {
       console.log('🔍 Usuário autenticado:', userId);
-      // logUserActivity('user_session_active'); // Desabilitado para evitar lentidão
+      // Log apenas uma vez por sessão para evitar rate limiting
+      const sessionKey = `logged-${userId}-${Date.now().toString().slice(0, -5)}`;
+      if (!sessionStorage.getItem(sessionKey)) {
+        sessionStorage.setItem(sessionKey, 'true');
+        // logUserActivity('user_session_active'); // Ainda desabilitado
+      }
     }
   }, [userId]);
 

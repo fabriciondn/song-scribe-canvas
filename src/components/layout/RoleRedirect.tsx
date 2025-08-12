@@ -3,11 +3,13 @@ import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useImpersonation } from '@/context/ImpersonationContext';
+import { useRegionalAuth } from '@/hooks/useRegionalAuth';
 
 export const RoleRedirect = () => {
   const { userRole, isRoleLoading } = useRoleBasedNavigation();
   const { isAuthenticated } = useAuth();
   const { isImpersonating } = useImpersonation();
+  const { reportAuthIssue } = useRegionalAuth(); // Monitor de problemas regionais
   const navigate = useNavigate();
   const location = useLocation();
 

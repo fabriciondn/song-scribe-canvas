@@ -45,8 +45,8 @@ export function debounce<T extends (...args: any[]) => any>(
 export async function withRateLimit<T>(
   key: string,
   operation: () => Promise<T>,
-  maxCalls = 5,
-  windowMs = 60000 // 1 minute
+  maxCalls = 20, // Aumentado de 5 para 20
+  windowMs = 300000 // Aumentado para 5 minutos
 ): Promise<T | null> {
   const now = Date.now();
   const state = rateLimitStates.get(key) || {
@@ -101,9 +101,12 @@ export async function withRateLimit<T>(
   }
 }
 
-// Enhanced cleanup function
+// Enhanced cleanup function - apenas para logout completo
 export const cleanupAuthState = () => {
   try {
+    // Só fazer cleanup completo em logout, não durante login
+    console.log('🧹 Full auth state cleanup');
+    
     // Remove standard auth tokens
     const keysToRemove = [
       'supabase.auth.token',
@@ -111,30 +114,40 @@ export const cleanupAuthState = () => {
       'sb-refresh-token'
     ];
 
-    // Remove specific known keys
     keysToRemove.forEach(key => {
       localStorage.removeItem(key);
       sessionStorage.removeItem(key);
     });
 
-    // Remove all Supabase auth keys from localStorage
+    // Remove all Supabase auth keys
     Object.keys(localStorage).forEach((key) => {
       if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
         localStorage.removeItem(key);
       }
     });
 
-    // Clear session storage keys too
     Object.keys(sessionStorage || {}).forEach((key) => {
       if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
         sessionStorage.removeItem(key);
       }
     });
 
-    console.log('🧹 Auth state cleaned up');
   } catch (error) {
     console.error('Error cleaning up auth state:', error);
   }
+};
+
+// Logging específico para debugging regional
+export const logAuthEvent = (event: string, metadata?: any) => {
+  const timestamp = new Date().toISOString();
+  const userAgent = navigator.userAgent;
+  const location = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  
+  console.log(`🔐 [${timestamp}] Auth Event: ${event}`, {
+    location,
+    userAgent: userAgent.substring(0, 100),
+    metadata
+  });
 };
 
 // Safer Supabase operations with retry

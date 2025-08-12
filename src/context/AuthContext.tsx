@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     
     setIsLoading(false);
-  }, 300); // 300ms debounce
+  }, 100); // Reduzido de 300ms para 100ms
 
   // Initialize auth state (singleton pattern)
   useEffect(() => {
@@ -92,27 +92,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  // Login function with rate limiting
+  // Login function otimizado sem cleanup agressivo
   const login = async (email: string, password: string) => {
     try {
-      // Clean up existing state first for a fresh login
-      cleanupAuthState();
-      
-      // Try to sign out globally with safe call
-      await safeSupabaseCall(
-        () => supabase.auth.signOut({ scope: 'global' }),
-        1, // Only 1 retry
-        1000
-      );
-
-      // Login with rate limiting
+      // Login direto sem limpeza prévia agressiva
       const result = await safeSupabaseCall(
         () => supabase.auth.signInWithPassword({ email, password }),
         2, // 2 retries for login
-        2000
+        1000 // Delay reduzido
       );
 
       if (result?.error) throw result.error;
+      
+      console.log('✅ Login realizado com sucesso');
     } catch (error: any) {
       console.error('Login error:', error);
       throw error;
@@ -160,18 +152,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Logout function with safe cleanup
+  // Logout function with cleanup após logout
   const logout = async () => {
     try {
-      // Clean up auth state first
-      cleanupAuthState();
-      
-      // Attempt global sign out with safe call
+      // Attempt global sign out com safe call
       await safeSupabaseCall(
         () => supabase.auth.signOut({ scope: 'global' }),
         1, // Only 1 retry for logout
         1000
       );
+      
+      // Cleanup após logout para não interferir na sessão ativa
+      cleanupAuthState();
       
       // Clear state immediately
       setUser(null);
@@ -181,6 +173,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       console.error('Logout error:', error);
       // Still clear local state even if remote logout fails
+      cleanupAuthState();
       setUser(null);
       setSession(null);
       throw error;

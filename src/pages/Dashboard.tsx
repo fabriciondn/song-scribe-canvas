@@ -10,6 +10,7 @@ import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
 import { useToast } from '@/hooks/use-toast';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { useImpersonationSync } from '@/hooks/useImpersonationSync';
+import { useRegionalAuth } from '@/hooks/useRegionalAuth';
 import { cn } from '@/lib/utils';
 
 const Dashboard: React.FC = () => {
@@ -18,6 +19,7 @@ const Dashboard: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const { userRole, isRoleLoading } = useRoleBasedNavigation();
   const { isMobile } = useMobileDetection();
+  const { reportAuthIssue } = useRegionalAuth(); // Monitor de problemas regionais
   const navigate = useNavigate();
   const { toast } = useToast();
   
