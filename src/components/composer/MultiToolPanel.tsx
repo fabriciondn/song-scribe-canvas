@@ -36,6 +36,7 @@ export const MultiToolPanel: React.FC<MultiToolPanelProps> = ({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   console.log('MultiToolPanel renderizando com activeTools:', activeTools);
+  console.log('Número de ferramentas ativas:', activeTools.length);
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
@@ -69,14 +70,19 @@ export const MultiToolPanel: React.FC<MultiToolPanelProps> = ({
   };
 
   const renderTool = (toolType: ToolType) => {
+    console.log('Renderizando ferramenta:', toolType);
     switch (toolType) {
       case 'bases':
+        console.log('Renderizando MusicBases');
         return <MusicBases onInsertBase={onInsertBase} />;
       case 'themes':
+        console.log('Renderizando ThemeGenerator');
         return <ThemeGenerator />;
       case 'rhymes':
+        console.log('Renderizando RhymeAssistant');
         return <RhymeAssistant />;
       default:
+        console.log('Tipo de ferramenta não reconhecido:', toolType);
         return null;
     }
   };
@@ -98,7 +104,7 @@ export const MultiToolPanel: React.FC<MultiToolPanelProps> = ({
         return (
           <div
             key={`${toolType}-${index}`}
-            className={`section-box transition-opacity duration-200 ${
+            className={`w-full p-6 bg-card rounded-lg shadow-sm border border-border transition-opacity duration-200 ${
               draggedIndex === index ? 'opacity-50' : 'opacity-100'
             }`}
             draggable
