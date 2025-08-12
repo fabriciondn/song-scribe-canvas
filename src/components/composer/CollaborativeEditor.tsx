@@ -115,7 +115,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
           .from('partnership_collaborators')
           .select(`
             user_id,
-            profiles:user_id (
+            public_profiles:user_id (
               id,
               name
             )
@@ -129,7 +129,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
           .from('partnerships')
           .select(`
             user_id,
-            profiles:user_id (
+            public_profiles:user_id (
               id,
               name
             )
@@ -146,8 +146,8 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
         if (partnershipData) {
           // Type casting to access properties safely
           const partnershipInfo = partnershipData as any;
-          if (partnershipInfo.user_id && partnershipInfo.profiles) {
-            const profile = partnershipInfo.profiles as ProfileData;
+          if (partnershipInfo.user_id && partnershipInfo.public_profiles) {
+            const profile = partnershipInfo.public_profiles as ProfileData;
             authorsMap[partnershipInfo.user_id] = {
               id: partnershipInfo.user_id,
               name: profile.name || 'Criador',
@@ -160,11 +160,11 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
         if (collaboratorsData) {
           (collaboratorsData as any[]).forEach((collab, index) => {
             // Type casting to access properties safely
-            if (collab.user_id && collab.profiles) {
+            if (collab.user_id && collab.public_profiles) {
               // Skip if already added (creator)
               if (authorsMap[collab.user_id]) return;
               
-              const profile = collab.profiles as ProfileData;
+              const profile = collab.public_profiles as ProfileData;
               authorsMap[collab.user_id] = {
                 id: collab.user_id,
                 name: profile.name || `Colaborador ${index + 1}`,
