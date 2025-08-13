@@ -250,22 +250,31 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
       return;
     }
 
-    // Se já está tocando, para o áudio
-    if (audioElement) {
+    // Se já está tocando, apenas pausar
+    if (isPlaying && audioElement) {
       audioElement.pause();
-      setAudioElement(null);
       setIsPlaying(false);
-      if (isPlaying) {
-        return; // Se estava tocando, apenas para
-      }
+      return;
     }
 
+    // Se já existe um elemento pausado, retomar reprodução
+    if (audioElement && !isPlaying) {
+      audioElement.play().then(() => {
+        setIsPlaying(true);
+      }).catch(err => {
+        console.error("Erro ao retomar reprodução:", err);
+        setAudioError('Não foi possível retomar a reprodução.');
+        setIsPlaying(false);
+      });
+      return;
+    }
+
+    // Criar novo elemento de áudio
     try {
       const audio = new Audio(URL.createObjectURL(audioFile));
       
       audio.onended = () => {
         setIsPlaying(false);
-        setAudioElement(null);
       };
       
       audio.onerror = () => {
@@ -276,9 +285,11 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
       };
       
       setAudioElement(audio);
-      setIsPlaying(true);
       
-      audio.play().catch(err => {
+      audio.play().then(() => {
+        setIsPlaying(true);
+        setAudioError(''); // Limpar erros anteriores
+      }).catch(err => {
         console.error("Erro ao reproduzir áudio:", err);
         setAudioError('Não foi possível reproduzir o arquivo. Tente novamente.');
         setIsPlaying(false);
