@@ -16,6 +16,7 @@ import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { TransactionForm } from './TransactionForm';
 import { UserTransactionsList } from './UserTransactionsList';
 import { UserNotesModal } from './UserNotesModal';
+import { DataMask } from '@/components/ui/data-mask';
 
 export const ModeratorUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -336,7 +337,9 @@ export const ModeratorUsers = () => {
                     <TableCell className="font-medium">
                       {user.name || 'Não informado'}
                     </TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <DataMask data={user.email} type="email" />
+                    </TableCell>
                     <TableCell>
                       {user.artistic_name ? (
                         <Badge variant="secondary">{user.artistic_name}</Badge>

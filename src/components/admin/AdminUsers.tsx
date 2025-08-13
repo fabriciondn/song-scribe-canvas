@@ -11,6 +11,7 @@ import { getAllUsers, updateUserCredits } from '@/services/adminService';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { useToast } from '@/components/ui/use-toast';
 import { Edit, Search, Coins } from 'lucide-react';
+import { DataMask } from '@/components/ui/data-mask';
 
 export const AdminUsers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -142,7 +143,9 @@ export const AdminUsers: React.FC = () => {
                     <TableCell className="font-medium">
                       {user.name || 'Nome não informado'}
                     </TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <DataMask data={user.email} type="email" />
+                    </TableCell>
                     <TableCell>
                       {user.artistic_name ? (
                         <Badge variant="outline">{user.artistic_name}</Badge>
