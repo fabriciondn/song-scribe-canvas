@@ -92,19 +92,45 @@ export const FolderPage: React.FC = () => {
     }
   };
 
-  // Função para imprimir ou salvar como PDF
+  // Função para imprimir ou salvar como PDF de forma segura
   const handlePrint = () => {
     if (!pdfContentRef.current) return;
     
-    const originalContents = document.body.innerHTML;
-    const printContent = pdfContentRef.current.innerHTML;
+    // Clone the content safely instead of using innerHTML
+    const printContent = pdfContentRef.current.cloneNode(true) as HTMLElement;
     
-    document.body.innerHTML = printContent;
-    window.print();
-    document.body.innerHTML = originalContents;
-    
-    // Re-renderiza o componente após a impressão
-    window.location.reload();
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Composição - ${selectedSong?.title || 'Sem título'}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              pre { white-space: pre-wrap; font-family: monospace; }
+            </style>
+          </head>
+          <body></body>
+        </html>
+      `);
+      
+      // Safely append the cloned content
+      printWindow.document.body.appendChild(printContent);
+      
+      // Add print functionality
+      const script = printWindow.document.createElement('script');
+      script.textContent = `
+        window.onload = function() {
+          setTimeout(function() {
+            window.print();
+            setTimeout(function() { window.close(); }, 500);
+          }, 500);
+        }
+      `;
+      printWindow.document.head.appendChild(script);
+      printWindow.document.close();
+    }
   };
 
   const handleBackClick = () => {

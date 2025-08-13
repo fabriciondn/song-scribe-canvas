@@ -136,122 +136,131 @@ export const DAModal: React.FC<DAModalProps> = ({
   };
 
   const handlePrint = () => {
-    // Create a printable version of the document
-    const printContent = document.createElement('div');
-    printContent.innerHTML = `
-      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-        <h1 style="text-align: center; font-size: 24px; margin-bottom: 30px;">Documento de Anterioridade</h1>
-        
-        <div style="margin-bottom: 20px;">
-          <h2 style="font-size: 18px; margin-bottom: 5px;">Título da Obra</h2>
-          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${songTitle || "Sem título"}</p>
-        </div>
-        
-        <div style="margin-bottom: 20px;">
-          <h2 style="font-size: 18px; margin-bottom: 5px;">Nome do Autor</h2>
-          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${author || "Nome não informado"}</p>
-        </div>
-        
-        ${location ? `
-        <div style="margin-bottom: 20px;">
-          <h2 style="font-size: 18px; margin-bottom: 5px;">Local</h2>
-          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${location}</p>
-        </div>
-        ` : ''}
-        
-        ${city ? `
-        <div style="margin-bottom: 20px;">
-          <h2 style="font-size: 18px; margin-bottom: 5px;">Cidade</h2>
-          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${city}</p>
-        </div>
-        ` : ''}
-        
-        ${genre ? `
-        <div style="margin-bottom: 20px;">
-          <h2 style="font-size: 18px; margin-bottom: 5px;">Gênero Musical</h2>
-          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${genre}</p>
-        </div>
-        ` : ''}
-        
-        ${version ? `
-        <div style="margin-bottom: 20px;">
-          <h2 style="font-size: 18px; margin-bottom: 5px;">Versão da Letra</h2>
-          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${version}</p>
-        </div>
-        ` : ''}
-        
-        ${collaborators ? `
-        <div style="margin-bottom: 20px;">
-          <h2 style="font-size: 18px; margin-bottom: 5px;">Colaboradores</h2>
-          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${collaborators}</p>
-        </div>
-        ` : ''}
-        
-        ${instrumentation ? `
-        <div style="margin-bottom: 20px;">
-          <h2 style="font-size: 18px; margin-bottom: 5px;">Instrumentação</h2>
-          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${instrumentation}</p>
-        </div>
-        ` : ''}
-        
-        ${duration ? `
-        <div style="margin-bottom: 20px;">
-          <h2 style="font-size: 18px; margin-bottom: 5px;">Duração Estimada</h2>
-          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${duration}</p>
-        </div>
-        ` : ''}
-        
-        ${notes ? `
-        <div style="margin-bottom: 20px;">
-          <h2 style="font-size: 18px; margin-bottom: 5px;">Observações</h2>
-          <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${notes}</p>
-        </div>
-        ` : ''}
-        
-        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-          <div>
-            <h2 style="font-size: 18px; margin-bottom: 5px;">Data</h2>
-            <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${today}</p>
-          </div>
-          <div>
-            <h2 style="font-size: 18px; margin-bottom: 5px;">Hora</h2>
-            <p style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${time}</p>
-          </div>
-        </div>
-        
-        <div style="margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px;">
-          <h2 style="font-size: 18px; margin-bottom: 15px;">Letra da Composição</h2>
-          <pre style="white-space: pre-wrap; font-family: monospace;">${songContent}</pre>
-        </div>
-        
-        <div style="margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px; text-align: center; font-style: italic;">
-          <p>Este documento registra a anterioridade da obra musical acima descrita, cujo conteúdo está em posse do autor.</p>
-          <p>Documento gerado em ${today} às ${time}</p>
-        </div>
-      </div>
-    `;
+    // Create a secure printable version using DOM manipulation
+    const createSecureField = (label: string, value: string) => {
+      const div = document.createElement('div');
+      div.style.marginBottom = '20px';
+      
+      const h2 = document.createElement('h2');
+      h2.style.fontSize = '18px';
+      h2.style.marginBottom = '5px';
+      h2.textContent = label;
+      
+      const p = document.createElement('p');
+      p.style.borderBottom = '1px solid #ccc';
+      p.style.paddingBottom = '5px';
+      p.textContent = value;
+      
+      div.appendChild(h2);
+      div.appendChild(p);
+      return div;
+    };
 
-    // Create a new window for printing
+    // Create main container
+    const container = document.createElement('div');
+    container.style.fontFamily = 'Arial, sans-serif';
+    container.style.maxWidth = '800px';
+    container.style.margin = '0 auto';
+    container.style.padding = '20px';
+
+    // Title
+    const title = document.createElement('h1');
+    title.style.textAlign = 'center';
+    title.style.fontSize = '24px';
+    title.style.marginBottom = '30px';
+    title.textContent = 'Documento de Anterioridade';
+    container.appendChild(title);
+
+    // Add fields
+    container.appendChild(createSecureField('Título da Obra', songTitle || 'Sem título'));
+    container.appendChild(createSecureField('Nome do Autor', author || 'Nome não informado'));
+    
+    if (location) container.appendChild(createSecureField('Local', location));
+    if (city) container.appendChild(createSecureField('Cidade', city));
+    if (genre) container.appendChild(createSecureField('Gênero Musical', genre));
+    if (version) container.appendChild(createSecureField('Versão da Letra', version));
+    if (collaborators) container.appendChild(createSecureField('Colaboradores', collaborators));
+    if (instrumentation) container.appendChild(createSecureField('Instrumentação', instrumentation));
+    if (duration) container.appendChild(createSecureField('Duração Estimada', duration));
+    if (notes) container.appendChild(createSecureField('Observações', notes));
+
+    // Date and time section
+    const dateTimeDiv = document.createElement('div');
+    dateTimeDiv.style.display = 'flex';
+    dateTimeDiv.style.justifyContent = 'space-between';
+    dateTimeDiv.style.marginBottom = '20px';
+    
+    const dateDiv = createSecureField('Data', today);
+    const timeDiv = createSecureField('Hora', time);
+    dateTimeDiv.appendChild(dateDiv);
+    dateTimeDiv.appendChild(timeDiv);
+    container.appendChild(dateTimeDiv);
+
+    // Song content section
+    const songSection = document.createElement('div');
+    songSection.style.marginTop = '40px';
+    songSection.style.borderTop = '1px solid #ccc';
+    songSection.style.paddingTop = '20px';
+    
+    const songTitle = document.createElement('h2');
+    songTitle.style.fontSize = '18px';
+    songTitle.style.marginBottom = '15px';
+    songTitle.textContent = 'Letra da Composição';
+    
+    const songPre = document.createElement('pre');
+    songPre.style.whiteSpace = 'pre-wrap';
+    songPre.style.fontFamily = 'monospace';
+    songPre.textContent = songContent;
+    
+    songSection.appendChild(songTitle);
+    songSection.appendChild(songPre);
+    container.appendChild(songSection);
+
+    // Footer
+    const footer = document.createElement('div');
+    footer.style.marginTop = '40px';
+    footer.style.borderTop = '1px solid #ccc';
+    footer.style.paddingTop = '20px';
+    footer.style.textAlign = 'center';
+    footer.style.fontStyle = 'italic';
+    
+    const footerP1 = document.createElement('p');
+    footerP1.textContent = 'Este documento registra a anterioridade da obra musical acima descrita, cujo conteúdo está em posse do autor.';
+    
+    const footerP2 = document.createElement('p');
+    footerP2.textContent = `Documento gerado em ${today} às ${time}`;
+    
+    footer.appendChild(footerP1);
+    footer.appendChild(footerP2);
+    container.appendChild(footer);
+
+    // Create new window and append content safely
     const printWindow = window.open('', '_blank');
-    printWindow?.document.write(`
-      <html>
-        <head>
-          <title>Documento de Anterioridade - ${songTitle}</title>
-        </head>
-        <body>
-          ${printContent.innerHTML}
-          <script>
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-                setTimeout(function() { window.close(); }, 500);
-              }, 500);
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow?.document.close();
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>${document.createTextNode(`Documento de Anterioridade - ${songTitle || 'Sem título'}`).textContent}</title>
+          </head>
+          <body></body>
+        </html>
+      `);
+      
+      printWindow.document.body.appendChild(container);
+      
+      // Add print script
+      const script = printWindow.document.createElement('script');
+      script.textContent = `
+        window.onload = function() {
+          setTimeout(function() {
+            window.print();
+            setTimeout(function() { window.close(); }, 500);
+          }, 500);
+        }
+      `;
+      printWindow.document.head.appendChild(script);
+      printWindow.document.close();
+    }
   };
   
   const today = new Date().toLocaleDateString('pt-BR');
