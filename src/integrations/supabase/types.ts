@@ -682,6 +682,39 @@ export type Database = {
         }
         Relationships: []
       }
+      registration_rate_limits: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          first_submission: string | null
+          id: string
+          ip_address: unknown | null
+          is_blocked: boolean | null
+          last_submission: string | null
+          submission_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          first_submission?: string | null
+          id?: string
+          ip_address?: unknown | null
+          is_blocked?: boolean | null
+          last_submission?: string | null
+          submission_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          first_submission?: string | null
+          id?: string
+          ip_address?: unknown | null
+          is_blocked?: boolean | null
+          last_submission?: string | null
+          submission_count?: number | null
+        }
+        Relationships: []
+      }
       songs: {
         Row: {
           content: string
@@ -1070,6 +1103,23 @@ export type Database = {
           p_email: string
         }
         Returns: boolean
+      }
+      secure_public_registration: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_cpf: string
+          p_birth_date: string
+          p_cep: string
+          p_street: string
+          p_number: string
+          p_neighborhood: string
+          p_city: string
+          p_state: string
+          p_artistic_name?: string
+          p_client_ip?: unknown
+        }
+        Returns: Json
       }
       update_draft: {
         Args: { draft_id: string; draft_updates: Json }
