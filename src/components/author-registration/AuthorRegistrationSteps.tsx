@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -85,6 +85,17 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   const [lyrics, setLyrics] = useState<string>('');
   const [isCurrentUser, setIsCurrentUser] = useState<boolean>(false);
   const { profile } = useProfile();
+
+  // Cleanup do áudio quando o componente é desmontado
+  useEffect(() => {
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.src = '';
+        audioElement.load();
+      }
+    };
+  }, [audioElement]);
 
   const step1Form = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
@@ -234,29 +245,50 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
     e.preventDefault();
     e.stopPropagation();
     
-    if (!audioFile) return;
+    if (!audioFile) {
+      setAudioError('Nenhum arquivo de áudio selecionado');
+      return;
+    }
 
+    // Se já está tocando, para o áudio
     if (audioElement) {
+      audioElement.pause();
+      setAudioElement(null);
+      setIsPlaying(false);
       if (isPlaying) {
-        audioElement.pause();
-        setIsPlaying(false);
-      } else {
-        audioElement.play();
-        setIsPlaying(true);
+        return; // Se estava tocando, apenas para
       }
-    } else {
+    }
+
+    try {
       const audio = new Audio(URL.createObjectURL(audioFile));
-      audio.addEventListener('ended', () => {
+      
+      audio.onended = () => {
         setIsPlaying(false);
-      });
-      audio.addEventListener('error', () => {
-        setAudioError('Erro ao reproduzir o arquivo de áudio');
+        setAudioElement(null);
+      };
+      
+      audio.onerror = () => {
+        console.error('Erro ao reproduzir áudio');
+        setAudioError('Erro ao reproduzir o arquivo de áudio. Verifique se o arquivo está válido.');
         setIsPlaying(false);
-      });
+        setAudioElement(null);
+      };
       
       setAudioElement(audio);
-      audio.play();
       setIsPlaying(true);
+      
+      audio.play().catch(err => {
+        console.error("Erro ao reproduzir áudio:", err);
+        setAudioError('Não foi possível reproduzir o arquivo. Tente novamente.');
+        setIsPlaying(false);
+        setAudioElement(null);
+      });
+    } catch (error) {
+      console.error('Erro ao criar elemento de áudio:', error);
+      setAudioError('Erro ao processar o arquivo de áudio');
+      setIsPlaying(false);
+      setAudioElement(null);
     }
   };
 
@@ -566,11 +598,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              toggleAudioPlayback(e);
-                            }}
+                            onClick={toggleAudioPlayback}
                           >
                             {isPlaying ? (
                               <>
