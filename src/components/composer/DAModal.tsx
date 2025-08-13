@@ -202,17 +202,17 @@ export const DAModal: React.FC<DAModalProps> = ({
     songSection.style.borderTop = '1px solid #ccc';
     songSection.style.paddingTop = '20px';
     
-    const songTitle = document.createElement('h2');
-    songTitle.style.fontSize = '18px';
-    songTitle.style.marginBottom = '15px';
-    songTitle.textContent = 'Letra da Composição';
+    const songTitleElement = document.createElement('h2');
+    songTitleElement.style.fontSize = '18px';
+    songTitleElement.style.marginBottom = '15px';
+    songTitleElement.textContent = 'Letra da Composição';
     
     const songPre = document.createElement('pre');
     songPre.style.whiteSpace = 'pre-wrap';
     songPre.style.fontFamily = 'monospace';
     songPre.textContent = songContent;
     
-    songSection.appendChild(songTitle);
+    songSection.appendChild(songTitleElement);
     songSection.appendChild(songPre);
     container.appendChild(songSection);
 
