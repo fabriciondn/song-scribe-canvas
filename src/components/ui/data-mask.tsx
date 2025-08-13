@@ -70,9 +70,14 @@ export const DataMask: React.FC<DataMaskProps> = ({
     return <span className={className}>{maskedData}</span>;
   }
 
-  const handleReveal = () => {
+  const handleReveal = async () => {
     setIsRevealed(true);
+    
+    // Import SecurityAuditService dynamically to avoid circular deps
+    const { SecurityAuditService } = await import('@/services/securityAuditService');
+    
     // Log the access for audit purposes
+    await SecurityAuditService.logPIIAccess(type, data);
     console.log(`🔍 PII Access: ${type} data accessed at ${new Date().toISOString()}`);
   };
 

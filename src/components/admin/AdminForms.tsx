@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Search, Eye, Calendar, User, Mail, Phone, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { DataMask } from '@/components/ui/data-mask';
 
 interface RegistrationForm {
   id: string;
@@ -155,7 +156,9 @@ export const AdminForms: React.FC = () => {
                         <span className="text-muted-foreground italic">Não informado</span>
                       )}
                     </TableCell>
-                    <TableCell>{form.email}</TableCell>
+                    <TableCell>
+                      <DataMask data={form.email} type="email" />
+                    </TableCell>
                     <TableCell>{formatDateTime(form.created_at)}</TableCell>
                     <TableCell>
                       <Button
@@ -214,7 +217,7 @@ export const AdminForms: React.FC = () => {
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">E-mail</span>
                   </div>
-                  <p className="text-sm pl-6">{selectedForm.email}</p>
+                  <DataMask data={selectedForm.email} type="email" />
                 </div>
 
                 <div className="space-y-2">
@@ -230,7 +233,7 @@ export const AdminForms: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <span className="text-sm font-medium">CPF</span>
                 </div>
-                <p className="text-sm pl-6">{formatCpf(selectedForm.cpf)}</p>
+                <DataMask data={selectedForm.cpf} type="cpf" />
               </div>
 
               <div className="space-y-2">
