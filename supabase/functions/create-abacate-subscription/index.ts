@@ -47,30 +47,30 @@ serve(async (req) => {
 
     logStep("Processing subscription", { user_data, plan });
 
-    // Integração real com Abacate Pay
+    // Integração com Abacate Pay usando SDK
     const abacateApiKey = Deno.env.get("ABACATE_API_KEY");
     if (!abacateApiKey) throw new Error("ABACATE_API_KEY não configurada");
 
-    const abacateResponse = await fetch('https://api.abacatepay.com/api/v1/billing/subscriptions', {
+    const abacateResponse = await fetch('https://api.abacatepay.com/api/v1/billing', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${abacateApiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        customer: {
-          name: user_data.name,
-          email: user_data.email,
-          document: user_data.cpf.replace(/\D/g, '') // Remove formatação do CPF
-        },
-        plan: {
-          name: plan.name,
-          amount: Math.round(plan.price * 100), // Valor em centavos
-          currency: plan.currency || 'BRL',
-          interval: 'monthly'
-        },
-        return_url: `${req.headers.get("origin")}/dashboard?payment=success`,
-        cancel_url: `${req.headers.get("origin")}/checkout?payment=cancelled`
+        frequency: 'MULTIPLE_PAYMENTS',
+        methods: ['PIX'],
+        products: [
+          {
+            externalId: `user-${user.id}-pro`,
+            name: 'Compuse Pro',
+            description: 'Assinatura Pro mensal',
+            quantity: 1,
+            price: Math.round(plan.price * 100), // Valor em centavos
+          },
+        ],
+        returnUrl: `${req.headers.get("origin")}/dashboard?payment=success`,
+        completionUrl: `${req.headers.get("origin")}/dashboard?payment=completed`,
       })
     });
 
