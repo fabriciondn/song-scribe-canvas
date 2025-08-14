@@ -276,15 +276,19 @@ const Checkout = () => {
                 </Button>
                 
                 <Button 
-                  onClick={() => {
-                    setShowQRCode(false);
-                    refreshSubscription();
-                    navigate('/dashboard');
-                  }}
+                  onClick={checkPaymentStatus}
                   variant="secondary"
                   className="w-full"
+                  disabled={isCheckingPayment}
                 >
-                  Voltar ao Dashboard
+                  {isCheckingPayment ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verificando pagamento...
+                    </>
+                  ) : (
+                    "Já paguei"
+                  )}
                 </Button>
               </div>
               
