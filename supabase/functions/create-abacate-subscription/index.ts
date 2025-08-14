@@ -47,30 +47,34 @@ serve(async (req) => {
 
     logStep("Processing subscription", { user_data, plan });
 
-    // Integração com Abacate Pay usando SDK
+    // Integração com Abacate Pay para criar QR Code PIX
     const abacateApiKey = Deno.env.get("ABACATE_API_KEY");
     if (!abacateApiKey) throw new Error("ABACATE_API_KEY não configurada");
 
-    const abacateResponse = await fetch('https://api.abacatepay.com/api/v1/billing', {
+    // Validar se temos todos os campos obrigatórios do usuário
+    if (!user_data.cellphone) {
+      throw new Error("Campo telefone é obrigatório para o PIX");
+    }
+
+    const abacateResponse = await fetch('https://api.abacatepay.com/v1/pixQrCode/create', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${abacateApiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        frequency: 'MULTIPLE_PAYMENTS',
-        methods: ['PIX'],
-        products: [
-          {
-            externalId: `user-${user.id}-pro`,
-            name: 'Compuse Pro',
-            description: 'Assinatura Pro mensal',
-            quantity: 1,
-            price: Math.round(plan.price * 100), // Valor em centavos
-          },
-        ],
-        returnUrl: `${req.headers.get("origin")}/dashboard?payment=success`,
-        completionUrl: `${req.headers.get("origin")}/dashboard?payment=completed`,
+        amount: Math.round(plan.price * 100), // Valor em centavos
+        expiresIn: 3600, // 1 hora para expirar
+        description: `Assinatura ${plan.name} - Compuse Pro`,
+        customer: {
+          name: user_data.name,
+          cellphone: user_data.cellphone,
+          email: user_data.email,
+          taxId: user_data.cpf.replace(/\D/g, '') // Remove formatação do CPF
+        },
+        metadata: {
+          externalId: `user-${user.id}-pro-${Date.now()}`
+        }
       })
     });
 
@@ -81,7 +85,11 @@ serve(async (req) => {
     }
 
     const abacateData = await abacateResponse.json();
-    logStep("Abacate subscription created", abacateData);
+    logStep("Abacate PIX QR Code created", abacateData);
+
+    if (abacateData.error) {
+      throw new Error(`Erro na criação do PIX: ${abacateData.error}`);
+    }
 
     // Criar subscription no banco
     const expiresAt = new Date();
@@ -97,7 +105,7 @@ serve(async (req) => {
         expires_at: expiresAt.toISOString(),
         auto_renew: true,
         payment_provider: 'abacate',
-        payment_provider_subscription_id: abacateData.id || abacateData.subscription_id,
+        payment_provider_subscription_id: abacateData.data?.id || abacateData.id,
         amount: plan.price,
         currency: plan.currency || 'BRL'
       }, { 
@@ -113,8 +121,14 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       subscription_id: subscription.id,
-      payment_url: abacateData.checkout_url || abacateData.payment_url,
-      status: abacateData.status || 'pending'
+      pix_data: {
+        id: abacateData.data.id,
+        amount: abacateData.data.amount,
+        brCode: abacateData.data.brCode,
+        brCodeBase64: abacateData.data.brCodeBase64,
+        expiresAt: abacateData.data.expiresAt
+      },
+      status: abacateData.data?.status || 'pending'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

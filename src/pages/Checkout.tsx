@@ -17,6 +17,8 @@ const Checkout = () => {
   const { profile } = useProfile();
   const { subscription, refreshSubscription } = useSubscription();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [pixData, setPixData] = useState<any>(null);
+  const [showQRCode, setShowQRCode] = useState(false);
 
   const planDetails = {
     name: 'Pro',
@@ -38,7 +40,7 @@ const Checkout = () => {
   };
 
   // Verificar se usuário pode fazer checkout
-  if (!profile?.name || !profile?.cpf || !profile?.email) {
+  if (!profile?.name || !profile?.cpf || !profile?.email || !profile?.cellphone) {
     return (
       <ResponsiveContainer>
         <div className="max-w-2xl mx-auto p-6 space-y-6">
@@ -51,6 +53,7 @@ const Checkout = () => {
               {!profile?.name && <p className="text-sm text-red-500">• Nome completo é obrigatório</p>}
               {!profile?.cpf && <p className="text-sm text-red-500">• CPF é obrigatório</p>}
               {!profile?.email && <p className="text-sm text-red-500">• Email é obrigatório</p>}
+              {!profile?.cellphone && <p className="text-sm text-red-500">• Telefone é obrigatório</p>}
             </div>
             <Button onClick={() => navigate('/settings')}>
               Completar Perfil
@@ -92,6 +95,7 @@ const Checkout = () => {
             name: profile.name,
             email: profile.email,
             cpf: profile.cpf,
+            cellphone: profile.cellphone,
           },
           plan: {
             name: planDetails.name,
@@ -103,22 +107,12 @@ const Checkout = () => {
 
       if (error) throw error;
 
-      if (data?.payment_url) {
-        // Redirecionar para página de pagamento da Abacate
-        window.open(data.payment_url, '_blank');
-        
-        // Mostrar mensagem de sucesso
-        toast.success('Redirecionando para pagamento...');
-        
-        // Aguardar alguns segundos e verificar status
-        setTimeout(() => {
-          refreshSubscription();
-          navigate('/plans', { 
-            state: { message: 'Pagamento processado! Verifique sua nova assinatura.' }
-          });
-        }, 3000);
+      if (data?.success && data?.pix_data) {
+        setPixData(data.pix_data);
+        setShowQRCode(true);
+        toast.success('QR Code PIX gerado com sucesso!');
       } else {
-        throw new Error('URL de pagamento não recebida');
+        throw new Error(data?.error || 'Erro ao processar pagamento');
       }
       
     } catch (error) {
@@ -128,6 +122,71 @@ const Checkout = () => {
       setIsProcessing(false);
     }
   };
+
+  // Se QR Code deve ser exibido
+  if (showQRCode && pixData) {
+    return (
+      <ResponsiveContainer>
+        <div className="max-w-2xl mx-auto p-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">PIX para Pagamento</CardTitle>
+              <CardDescription className="text-center">
+                Escaneie o QR Code abaixo para pagar sua assinatura Pro
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex justify-center">
+                <img 
+                  src={pixData.brCodeBase64} 
+                  alt="QR Code PIX" 
+                  className="max-w-xs border rounded-lg"
+                />
+              </div>
+              
+              <div className="text-center space-y-2">
+                <p className="font-semibold text-lg">
+                  Valor: R$ {(pixData.amount / 100).toFixed(2)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Expira em: {new Date(pixData.expiresAt).toLocaleString('pt-BR')}
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <Button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(pixData.brCode);
+                    toast.success('Código PIX copiado!');
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Copiar código PIX
+                </Button>
+                
+                <Button 
+                  onClick={() => {
+                    setShowQRCode(false);
+                    refreshSubscription();
+                    navigate('/dashboard');
+                  }}
+                  variant="secondary"
+                  className="w-full"
+                >
+                  Voltar ao Dashboard
+                </Button>
+              </div>
+              
+              <div className="text-xs text-muted-foreground text-center">
+                Após o pagamento, sua assinatura será ativada automaticamente
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </ResponsiveContainer>
+    );
+  }
 
   return (
     <ResponsiveContainer>
@@ -222,6 +281,9 @@ const Checkout = () => {
                   </p>
                   <p className="text-sm">
                     <span className="font-medium">CPF:</span> {profile.cpf}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">Telefone:</span> {profile.cellphone}
                   </p>
                 </div>
                 <Button

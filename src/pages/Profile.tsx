@@ -19,6 +19,7 @@ const profileSchema = z.object({
   username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres').optional(),
   email: z.string().email('Email inválido'),
   cpf: z.string().min(11, 'CPF deve ter 11 dígitos').optional(),
+  cellphone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos').optional(),
   address: z.string().optional(),
 });
 
@@ -37,6 +38,7 @@ export default function Profile() {
       username: '',
       email: '',
       cpf: '',
+      cellphone: '',
       address: '',
     },
   });
@@ -67,6 +69,7 @@ export default function Profile() {
           username: data.username || '',
           email: data.email || user.email || '',
           cpf: data.cpf || '',
+          cellphone: data.cellphone || '',
           address: data.address || '',
         });
         setAvatarUrl(data.avatar_url || '');
@@ -262,6 +265,24 @@ export default function Profile() {
                           placeholder="000.000.000-00" 
                           {...field} 
                           maxLength={14}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cellphone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Telefone</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="(11) 99999-9999" 
+                          {...field} 
+                          maxLength={15}
                         />
                       </FormControl>
                       <FormMessage />
