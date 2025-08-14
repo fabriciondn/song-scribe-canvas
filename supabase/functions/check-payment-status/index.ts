@@ -71,7 +71,8 @@ serve(async (req) => {
       );
     }
 
-    const checkUrl = `https://api.abacatepay.com/v1/pixQrCode/check/${paymentId}`;
+    // Get all payments to find the specific one
+    const checkUrl = `https://api.abacatepay.com/v1/pixQrCode`;
     const checkResponse = await fetch(checkUrl, {
       method: 'GET',
       headers: {
@@ -88,22 +89,54 @@ serve(async (req) => {
       );
     }
 
-    const paymentData = await checkResponse.json();
-    console.log('[CHECK-PAYMENT-STATUS] Payment status checked', { paymentData });
+    const paymentsData = await checkResponse.json();
+    console.log('[CHECK-PAYMENT-STATUS] All payments received', { paymentsData });
 
-    // Check if payment is confirmed (not PENDING)
-    const isPaymentConfirmed = paymentData.data.status !== 'PENDING';
+    // Find the specific payment by ID
+    const payment = paymentsData.data?.find((p: any) => p.id === paymentId);
+    
+    if (!payment) {
+      console.log('[CHECK-PAYMENT-STATUS] Payment not found', { paymentId });
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          paymentStatus: 'NOT_FOUND',
+          isPaid: false,
+          expiresAt: null 
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('[CHECK-PAYMENT-STATUS] Payment found', { payment });
+
+    // Check if payment is confirmed (status is not "PENDING")
+    const isPaymentConfirmed = payment.status !== 'PENDING';
+    console.log('[CHECK-PAYMENT-STATUS] Payment confirmation check', { 
+      status: payment.status, 
+      isPaymentConfirmed 
+    });
     
     if (isPaymentConfirmed) {
-      // Update subscription status to active
+      // Update subscription to Pro active status
+      const now = new Date().toISOString();
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1); // Add 1 month
+      
       const { error: updateError } = await supabaseClient
         .from('subscriptions')
         .update({ 
           status: 'active',
-          updated_at: new Date().toISOString()
+          plan_type: 'pro',
+          started_at: now,
+          expires_at: expiresAt.toISOString(),
+          payment_provider: 'abacate_pay',
+          payment_provider_subscription_id: paymentId,
+          amount: 14.99,
+          currency: 'BRL',
+          updated_at: now
         })
-        .eq('user_id', user.id)
-        .eq('payment_provider_subscription_id', paymentId);
+        .eq('user_id', user.id);
 
       if (updateError) {
         console.error('[CHECK-PAYMENT-STATUS] Failed to update subscription', updateError);
@@ -119,9 +152,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        paymentStatus: paymentData.data.status,
+        paymentStatus: payment.status,
         isPaid: isPaymentConfirmed,
-        expiresAt: paymentData.data.expiresAt
+        expiresAt: payment.expiresAt
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

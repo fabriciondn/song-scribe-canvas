@@ -54,6 +54,7 @@ const Checkout = () => {
 
       if (error) {
         console.error('Erro ao verificar pagamento:', error);
+        toast.error(`Erro ao verificar pagamento: ${error.message || 'Erro desconhecido'}`);
         return;
       }
 
@@ -73,6 +74,15 @@ const Checkout = () => {
         setTimeout(() => {
           navigate('/dashboard');
         }, 3000);
+      } else {
+        // Mostrar status atual do pagamento
+        toast.info(`Status do pagamento: ${data?.paymentStatus || 'Desconhecido'}`);
+        console.log('Pagamento ainda não confirmado:', {
+          paymentId,
+          status: data?.paymentStatus,
+          isPaid: data?.isPaid,
+          expiresAt: data?.expiresAt
+        });
       }
     } catch (error) {
       console.error('Erro ao verificar status:', error);
