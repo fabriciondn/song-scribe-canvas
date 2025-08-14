@@ -135,8 +135,23 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage });
+    // Melhor tratamento de erro para debugging
+    let errorMessage: string;
+    let errorDetails: any = {};
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = { 
+        name: error.name, 
+        stack: error.stack,
+        message: error.message
+      };
+    } else {
+      errorMessage = JSON.stringify(error);
+      errorDetails = error;
+    }
+    
+    logStep("ERROR", errorDetails);
     
     return new Response(JSON.stringify({ 
       error: errorMessage,

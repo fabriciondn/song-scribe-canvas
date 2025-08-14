@@ -88,6 +88,20 @@ const Checkout = () => {
   const handleProcessPayment = async () => {
     setIsProcessing(true);
     try {
+      console.log('Iniciando processo de pagamento...', {
+        user_data: {
+          name: profile.name,
+          email: profile.email,
+          cpf: profile.cpf,
+          cellphone: profile.cellphone,
+        },
+        plan: {
+          name: planDetails.name,
+          price: planDetails.price,
+          currency: 'BRL'
+        }
+      });
+
       // Chamar edge function da Abacate Pay
       const { data, error } = await supabase.functions.invoke('create-abacate-subscription', {
         body: {
@@ -105,19 +119,26 @@ const Checkout = () => {
         }
       });
 
-      if (error) throw error;
+      console.log('Resposta da edge function:', { data, error });
+
+      if (error) {
+        console.error('Erro da edge function:', error);
+        throw error;
+      }
 
       if (data?.success && data?.pix_data) {
+        console.log('PIX data recebido:', data.pix_data);
         setPixData(data.pix_data);
         setShowQRCode(true);
         toast.success('QR Code PIX gerado com sucesso!');
       } else {
+        console.error('Resposta inesperada:', data);
         throw new Error(data?.error || 'Erro ao processar pagamento');
       }
       
     } catch (error) {
       console.error('Erro ao processar pagamento:', error);
-      toast.error('Erro ao processar pagamento. Tente novamente.');
+      toast.error(`Erro ao processar pagamento: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setIsProcessing(false);
     }
