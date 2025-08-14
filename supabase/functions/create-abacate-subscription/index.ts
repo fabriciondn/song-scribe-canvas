@@ -47,15 +47,11 @@ serve(async (req) => {
 
     logStep("Processing subscription", { user_data, plan });
 
-    // Aqui você integraria com a API da Abacate Pay
-    // Por enquanto, simularemos a criação da subscription
-    
-    // Exemplo de como seria a integração real com Abacate Pay:
-    /*
+    // Integração real com Abacate Pay
     const abacateApiKey = Deno.env.get("ABACATE_API_KEY");
-    if (!abacateApiKey) throw new Error("Abacate API key not configured");
+    if (!abacateApiKey) throw new Error("ABACATE_API_KEY não configurada");
 
-    const abacateResponse = await fetch('https://api.abacatepay.com/subscriptions', {
+    const abacateResponse = await fetch('https://api.abacatepay.com/api/v1/billing/subscriptions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${abacateApiKey}`,
@@ -65,34 +61,27 @@ serve(async (req) => {
         customer: {
           name: user_data.name,
           email: user_data.email,
-          document: user_data.cpf
+          document: user_data.cpf.replace(/\D/g, '') // Remove formatação do CPF
         },
         plan: {
           name: plan.name,
-          amount: plan.price * 100, // Valor em centavos
+          amount: Math.round(plan.price * 100), // Valor em centavos
           currency: plan.currency || 'BRL',
-          interval: 'month'
+          interval: 'monthly'
         },
-        return_url: `${req.headers.get("origin")}/dashboard`,
-        cancel_url: `${req.headers.get("origin")}/checkout`
+        return_url: `${req.headers.get("origin")}/dashboard?payment=success`,
+        cancel_url: `${req.headers.get("origin")}/checkout?payment=cancelled`
       })
     });
 
     if (!abacateResponse.ok) {
-      throw new Error(`Abacate API error: ${abacateResponse.statusText}`);
+      const errorData = await abacateResponse.text();
+      logStep("Abacate API error", { status: abacateResponse.status, error: errorData });
+      throw new Error(`Erro na API Abacate: ${abacateResponse.status} - ${errorData}`);
     }
 
     const abacateData = await abacateResponse.json();
-    */
-
-    // SIMULAÇÃO - Em produção, usar dados reais da Abacate Pay
-    const mockAbacateData = {
-      id: `abacate_${Date.now()}`,
-      payment_url: `https://checkout.abacatepay.com/mock-payment?amount=${plan.price * 100}&customer=${encodeURIComponent(user_data.name)}`,
-      status: 'pending'
-    };
-
-    logStep("Abacate subscription created", mockAbacateData);
+    logStep("Abacate subscription created", abacateData);
 
     // Criar subscription no banco
     const expiresAt = new Date();
@@ -102,13 +91,13 @@ serve(async (req) => {
       .from('subscriptions')
       .upsert({
         user_id: user.id,
-        status: 'active', // Em produção, começaria como 'pending'
+        status: 'pending', // Começa como pending até confirmação do pagamento
         plan_type: 'pro',
         started_at: new Date().toISOString(),
         expires_at: expiresAt.toISOString(),
         auto_renew: true,
         payment_provider: 'abacate',
-        payment_provider_subscription_id: mockAbacateData.id,
+        payment_provider_subscription_id: abacateData.id || abacateData.subscription_id,
         amount: plan.price,
         currency: plan.currency || 'BRL'
       }, { 
@@ -124,8 +113,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       subscription_id: subscription.id,
-      payment_url: mockAbacateData.payment_url,
-      status: mockAbacateData.status
+      payment_url: abacateData.checkout_url || abacateData.payment_url,
+      status: abacateData.status || 'pending'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
