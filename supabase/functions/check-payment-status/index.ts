@@ -25,7 +25,7 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client
+    // Initialize Supabase client with user session
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -34,6 +34,12 @@ serve(async (req) => {
           headers: { Authorization: authHeader },
         },
       }
+    );
+
+    // Initialize service role client for database operations
+    const supabaseServiceClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     // Get the user from the authorization header
@@ -82,7 +88,10 @@ serve(async (req) => {
     });
 
     if (!checkResponse.ok) {
-      console.error('[CHECK-PAYMENT-STATUS] Abacate API error', checkResponse.status);
+      console.error('[CHECK-PAYMENT-STATUS] Abacate API error', {
+        status: checkResponse.status,
+        statusText: checkResponse.statusText
+      });
       return new Response(
         JSON.stringify({ error: 'Failed to check payment status' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -90,7 +99,10 @@ serve(async (req) => {
     }
 
     const paymentsData = await checkResponse.json();
-    console.log('[CHECK-PAYMENT-STATUS] All payments received', { paymentsData });
+    console.log('[CHECK-PAYMENT-STATUS] Payments received', { 
+      totalPayments: paymentsData.data?.length || 0,
+      searchingForId: paymentId
+    });
 
     // Find the specific payment by ID
     const payment = paymentsData.data?.find((p: any) => p.id === paymentId);
@@ -108,7 +120,11 @@ serve(async (req) => {
       );
     }
 
-    console.log('[CHECK-PAYMENT-STATUS] Payment found', { payment });
+    console.log('[CHECK-PAYMENT-STATUS] Payment found', { 
+      paymentId: payment.id,
+      status: payment.status,
+      amount: payment.amount
+    });
 
     // Check if payment is confirmed (status is not "PENDING")
     const isPaymentConfirmed = payment.status !== 'PENDING';
@@ -118,12 +134,12 @@ serve(async (req) => {
     });
     
     if (isPaymentConfirmed) {
-      // Update subscription to Pro active status
+      // Update subscription to Pro active status using service role client
       const now = new Date().toISOString();
       const expiresAt = new Date();
       expiresAt.setMonth(expiresAt.getMonth() + 1); // Add 1 month
       
-      const { error: updateError } = await supabaseClient
+      const { error: updateError } = await supabaseServiceClient
         .from('subscriptions')
         .update({ 
           status: 'active',
@@ -162,8 +178,11 @@ serve(async (req) => {
   } catch (error) {
     console.error('[CHECK-PAYMENT-STATUS] Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ 
+        error: 'Internal server error',
+        details: error.message
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-});
+})
