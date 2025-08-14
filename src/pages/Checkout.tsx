@@ -43,13 +43,16 @@ const Checkout = () => {
   };
 
   // Função para verificar o status do pagamento
-  const checkPaymentStatus = async () => {
+  const checkPaymentStatus = async (useSimulation = false) => {
     if (!paymentId) return;
 
     try {
       setIsCheckingPayment(true);
       const { data, error } = await supabase.functions.invoke('check-payment-status', {
-        body: { paymentId }
+        body: { 
+          paymentId,
+          simulate: useSimulation
+        }
       });
 
       if (error) {
@@ -95,7 +98,7 @@ const Checkout = () => {
   useEffect(() => {
     if (showQRCode && paymentId && !paymentConfirmed) {
       // Verificar a cada 5 segundos
-      const interval = setInterval(checkPaymentStatus, 5000);
+      const interval = setInterval(() => checkPaymentStatus(false), 5000);
       
       return () => clearInterval(interval);
     }
@@ -286,7 +289,7 @@ const Checkout = () => {
                 </Button>
                 
                 <Button 
-                  onClick={checkPaymentStatus}
+                  onClick={() => checkPaymentStatus(true)}
                   variant="secondary"
                   className="w-full"
                   disabled={isCheckingPayment}

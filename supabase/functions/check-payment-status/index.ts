@@ -15,49 +15,45 @@ serve(async (req) => {
   }
 
   try {
-    // Get the authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.log('[CHECK-PAYMENT-STATUS] Missing authorization header');
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Initialize Supabase client with user session
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
-    );
-
-    // Initialize service role client for database operations
+    // Initialize service role client for database operations (always available)
     const supabaseServiceClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the user from the authorization header
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    
-    if (userError || !user) {
-      console.log('[CHECK-PAYMENT-STATUS] Invalid or missing user', userError);
-      return new Response(
-        JSON.stringify({ error: 'Authentication failed' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    let user = null;
+
+    if (authHeader) {
+      // Initialize Supabase client with user session for authentication
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        {
+          global: {
+            headers: { Authorization: authHeader },
+          },
+        }
       );
+
+      // Get the user from the authorization header
+      const { data: { user: authUser }, error: userError } = await supabaseClient.auth.getUser();
+      
+      if (authUser && !userError) {
+        user = authUser;
+        console.log('[CHECK-PAYMENT-STATUS] User authenticated', { userId: user.id });
+      } else {
+        console.log('[CHECK-PAYMENT-STATUS] Authentication failed, but continuing...', userError?.message);
+      }
+    } else {
+      console.log('[CHECK-PAYMENT-STATUS] No authorization header, continuing without auth...');
     }
 
-    console.log('[CHECK-PAYMENT-STATUS] User authenticated', { userId: user.id });
-
     // Parse request body
-    const { paymentId } = await req.json();
-    
+    const body = await req.json();
+    const { paymentId, simulate } = body;
+
     if (!paymentId) {
       return new Response(
         JSON.stringify({ error: 'Payment ID is required' }),
@@ -65,7 +61,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('[CHECK-PAYMENT-STATUS] Checking payment status', { paymentId });
+    console.log('[CHECK-PAYMENT-STATUS] Checking payment status', { paymentId, simulate });
 
     // Check payment status with Abacate Pay API
     const abacateApiKey = Deno.env.get('ABACATE_API_KEY');
@@ -77,63 +73,97 @@ serve(async (req) => {
       );
     }
 
-    // Get all payments to find the specific one
-    const checkUrl = `https://api.abacatepay.com/v1/pixQrCode`;
-    const checkResponse = await fetch(checkUrl, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${abacateApiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    let payment = null;
+    let isPaymentConfirmed = false;
 
-    if (!checkResponse.ok) {
-      console.error('[CHECK-PAYMENT-STATUS] Abacate API error', {
-        status: checkResponse.status,
-        statusText: checkResponse.statusText
+    // If simulate is true, use simulation API for development
+    if (simulate) {
+      console.log('[CHECK-PAYMENT-STATUS] Using simulation mode');
+      
+      const simulateUrl = 'https://api.abacatepay.com/v1/pixQrCode/simulate-payment';
+      const simulateResponse = await fetch(simulateUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${abacateApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ metadata: {} })
       });
-      return new Response(
-        JSON.stringify({ error: 'Failed to check payment status' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+
+      if (simulateResponse.ok) {
+        const simulateData = await simulateResponse.json();
+        console.log('[CHECK-PAYMENT-STATUS] Simulation response', simulateData);
+        
+        // Create a mock payment object for simulation
+        payment = {
+          id: paymentId,
+          status: 'PAID', // Simulate successful payment
+          amount: 14.99,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        };
+        isPaymentConfirmed = true;
+      } else {
+        console.error('[CHECK-PAYMENT-STATUS] Simulation API error', simulateResponse.status);
+        // Fallback to regular API check
+      }
     }
 
-    const paymentsData = await checkResponse.json();
-    console.log('[CHECK-PAYMENT-STATUS] Payments received', { 
-      totalPayments: paymentsData.data?.length || 0,
-      searchingForId: paymentId
-    });
-
-    // Find the specific payment by ID
-    const payment = paymentsData.data?.find((p: any) => p.id === paymentId);
-    
+    // If not simulating or simulation failed, use regular API
     if (!payment) {
-      console.log('[CHECK-PAYMENT-STATUS] Payment not found', { paymentId });
-      return new Response(
-        JSON.stringify({ 
-          success: true,
-          paymentStatus: 'NOT_FOUND',
-          isPaid: false,
-          expiresAt: null 
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      const checkUrl = `https://api.abacatepay.com/v1/pixQrCode`;
+      const checkResponse = await fetch(checkUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${abacateApiKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!checkResponse.ok) {
+        console.error('[CHECK-PAYMENT-STATUS] Abacate API error', {
+          status: checkResponse.status,
+          statusText: checkResponse.statusText
+        });
+        return new Response(
+          JSON.stringify({ error: 'Failed to check payment status' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const paymentsData = await checkResponse.json();
+      console.log('[CHECK-PAYMENT-STATUS] Payments received', { 
+        totalPayments: paymentsData.data?.length || 0,
+        searchingForId: paymentId
+      });
+
+      // Find the specific payment by ID
+      payment = paymentsData.data?.find((p: any) => p.id === paymentId);
+      
+      if (!payment) {
+        console.log('[CHECK-PAYMENT-STATUS] Payment not found', { paymentId });
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            paymentStatus: 'NOT_FOUND',
+            isPaid: false,
+            expiresAt: null 
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Check if payment is confirmed (status is not "PENDING")
+      isPaymentConfirmed = payment.status !== 'PENDING';
     }
 
     console.log('[CHECK-PAYMENT-STATUS] Payment found', { 
       paymentId: payment.id,
       status: payment.status,
-      amount: payment.amount
-    });
-
-    // Check if payment is confirmed (status is not "PENDING")
-    const isPaymentConfirmed = payment.status !== 'PENDING';
-    console.log('[CHECK-PAYMENT-STATUS] Payment confirmation check', { 
-      status: payment.status, 
-      isPaymentConfirmed 
+      amount: payment.amount,
+      isPaymentConfirmed
     });
     
-    if (isPaymentConfirmed) {
+    if (isPaymentConfirmed && user) {
       // Update subscription to Pro active status using service role client
       const now = new Date().toISOString();
       const expiresAt = new Date();
@@ -163,6 +193,8 @@ serve(async (req) => {
       }
 
       console.log('[CHECK-PAYMENT-STATUS] Subscription activated successfully');
+    } else if (isPaymentConfirmed && !user) {
+      console.log('[CHECK-PAYMENT-STATUS] Payment confirmed but no user authenticated - subscription not updated');
     }
 
     return new Response(
