@@ -87,8 +87,14 @@ serve(async (req) => {
     const abacateData = await abacateResponse.json();
     logStep("Abacate PIX QR Code created", abacateData);
 
+    // Verificar se há erro na resposta da Abacate Pay
     if (abacateData.error) {
       throw new Error(`Erro na criação do PIX: ${abacateData.error}`);
+    }
+
+    // Verificar se os dados estão presentes
+    if (!abacateData.data) {
+      throw new Error('Resposta inválida da Abacate Pay - dados não encontrados');
     }
 
     // Criar subscription no banco
@@ -105,7 +111,7 @@ serve(async (req) => {
         expires_at: expiresAt.toISOString(),
         auto_renew: true,
         payment_provider: 'abacate',
-        payment_provider_subscription_id: abacateData.data?.id || abacateData.id,
+        payment_provider_subscription_id: abacateData.data.id,
         amount: plan.price,
         currency: plan.currency || 'BRL'
       }, { 
@@ -115,9 +121,14 @@ serve(async (req) => {
       .select()
       .single();
 
-    if (subError) throw subError;
+    if (subError) {
+      logStep("Database error", subError);
+      throw new Error(`Erro ao salvar subscription: ${subError.message}`);
+    }
+    
     logStep("Subscription saved to database", subscription);
 
+    // Retornar dados no formato esperado pelo frontend
     return new Response(JSON.stringify({
       success: true,
       subscription_id: subscription.id,
@@ -126,9 +137,10 @@ serve(async (req) => {
         amount: abacateData.data.amount,
         brCode: abacateData.data.brCode,
         brCodeBase64: abacateData.data.brCodeBase64,
-        expiresAt: abacateData.data.expiresAt
+        expiresAt: abacateData.data.expiresAt,
+        status: abacateData.data.status
       },
-      status: abacateData.data?.status || 'pending'
+      status: 'pending'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
