@@ -19,6 +19,8 @@ import Composer from "./pages/Composer";
 import Cifrador from "./pages/Cifrador";
 import Bases from "./pages/Bases";
 import Templates from "./pages/Templates";
+import Plans from "./pages/Plans";
+import Checkout from "./pages/Checkout";
 import Folders from "./pages/Folders";
 import Drafts from "./pages/Drafts";
 import Partnerships from "./pages/Partnerships";
@@ -98,6 +100,12 @@ const AppContent = () => {
         <Route path="/moderator/profile" element={<ModeratorDashboard />} />
         <Route path="/moderator-auth" element={<ModeratorAuth />} />
         <Route path="/formulario" element={<PublicRegistrationForm />} />
+        <Route path="/plans" element={<Dashboard />}>
+          <Route index element={<Plans />} />
+        </Route>
+        <Route path="/checkout" element={<Dashboard />}>
+          <Route index element={<Checkout />} />
+        </Route>
         <Route path="*" element={<NotFound />} />
           </Routes>
         </PageFunctionStatusWrapper>

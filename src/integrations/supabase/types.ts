@@ -759,6 +759,54 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          amount: number | null
+          auto_renew: boolean
+          created_at: string
+          currency: string | null
+          expires_at: string | null
+          id: string
+          payment_provider: string | null
+          payment_provider_subscription_id: string | null
+          plan_type: string
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          auto_renew?: boolean
+          created_at?: string
+          currency?: string | null
+          expires_at?: string | null
+          id?: string
+          payment_provider?: string | null
+          payment_provider_subscription_id?: string | null
+          plan_type?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          auto_renew?: boolean
+          created_at?: string
+          currency?: string | null
+          expires_at?: string | null
+          id?: string
+          payment_provider?: string | null
+          payment_provider_subscription_id?: string | null
+          plan_type?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       templates: {
         Row: {
           city: string | null

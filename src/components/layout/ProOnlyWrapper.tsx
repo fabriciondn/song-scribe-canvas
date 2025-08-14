@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ export const ProOnlyWrapper: React.FC<ProOnlyWrapperProps> = ({
   featureName 
 }) => {
   const { isPro, isAdmin, isLoading } = useUserRole();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -49,13 +51,13 @@ export const ProOnlyWrapper: React.FC<ProOnlyWrapperProps> = ({
             </p>
           </div>
           
-          <Button size="lg" className="w-full">
+          <Button size="lg" className="w-full" onClick={() => navigate('/plans')}>
             <Crown className="mr-2 h-4 w-4" />
             Fazer Upgrade para Pro
           </Button>
           
           <p className="text-xs text-muted-foreground">
-            Entre em contato conosco para mais informações sobre os planos Pro.
+            Oferta de lançamento: de R$ 49,99 por apenas R$ 14,99/mês
           </p>
         </CardContent>
       </Card>

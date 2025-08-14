@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Edit, FileText, Folder, BookText, Users, Menu, X, FileMusic, ListMusic, DollarSign, BarChart3, Trash2, Shield, User, Settings } from 'lucide-react';
+import { Edit, FileText, Folder, BookText, Users, Menu, X, FileMusic, ListMusic, DollarSign, BarChart3, Trash2, Shield, User, Settings, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -101,6 +101,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
     icon: User,
     path: '/dashboard/settings',
     functionKey: 'settings',
+    isPro: false
+  }, {
+    label: 'Planos',
+    icon: Crown,
+    path: '/plans',
+    functionKey: 'plans',
     isPro: false
   }, {
     label: 'Lixeira',
