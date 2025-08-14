@@ -41,6 +41,7 @@ const settingsSchema = z.object({
   }, {
     message: 'CPF inválido'
   }),
+  cellphone: z.string().optional(),
   birth_day: z.string().optional(),
   birth_month: z.string().optional(),
   birth_year: z.string().optional(),
@@ -70,6 +71,7 @@ export default function OptimizedSettings() {
       name: '',
       email: '',
       cpf: '',
+      cellphone: '',
       birth_day: '',
       birth_month: '',
       birth_year: '',
@@ -140,6 +142,7 @@ export default function OptimizedSettings() {
         name: profile.name || '',
         email: profile.email || userData.email || '',
         cpf: profile.cpf || '',
+        cellphone: (profile as any).cellphone || '',
         birth_day: birthDate ? String(birthDate.getDate()).padStart(2, '0') : '',
         birth_month: birthDate ? String(birthDate.getMonth() + 1).padStart(2, '0') : '',
         birth_year: birthDate ? String(birthDate.getFullYear()) : '',
@@ -245,6 +248,7 @@ export default function OptimizedSettings() {
         name: data.name,
         email: data.email,
         cpf: data.cpf,
+        cellphone: data.cellphone,
         cep: data.cep,
         street: data.street,
         number: data.number,
@@ -442,6 +446,27 @@ export default function OptimizedSettings() {
                               const formatted = formatCpf(e.target.value);
                               field.onChange(formatted);
                             }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1">
+                  <FormField
+                    control={form.control}
+                    name="cellphone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telefone</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="(11) 99999-9999" 
+                            type="tel" 
+                            {...field} 
+                            maxLength={15}
                           />
                         </FormControl>
                         <FormMessage />
