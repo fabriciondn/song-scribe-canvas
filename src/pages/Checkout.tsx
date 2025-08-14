@@ -42,6 +42,55 @@ const Checkout = () => {
     ]
   };
 
+  // Função para verificar o status do pagamento
+  const checkPaymentStatus = async () => {
+    if (!paymentId) return;
+
+    try {
+      setIsCheckingPayment(true);
+      const { data, error } = await supabase.functions.invoke('check-payment-status', {
+        body: { paymentId }
+      });
+
+      if (error) {
+        console.error('Erro ao verificar pagamento:', error);
+        return;
+      }
+
+      console.log('Status do pagamento:', data);
+
+      if (data?.isPaid) {
+        setPaymentConfirmed(true);
+        setIsCheckingPayment(false);
+        
+        // Mostrar mensagem de sucesso
+        toast.success('🎉 Pagamento confirmado! Bem-vindo ao Pro!');
+        
+        // Atualizar subscription
+        await refreshSubscription();
+        
+        // Redirecionar após 3 segundos
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar status:', error);
+    } finally {
+      setIsCheckingPayment(false);
+    }
+  };
+
+  // Effect para verificar pagamento periodicamente quando QR code está sendo exibido
+  useEffect(() => {
+    if (showQRCode && paymentId && !paymentConfirmed) {
+      // Verificar a cada 5 segundos
+      const interval = setInterval(checkPaymentStatus, 5000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [showQRCode, paymentId, paymentConfirmed]);
+
   // Verificar se usuário pode fazer checkout
   if (!profile?.name || !profile?.cpf || !profile?.email || !profile?.cellphone) {
     return (
@@ -83,6 +132,42 @@ const Checkout = () => {
               Voltar ao Dashboard
             </Button>
           </div>
+        </div>
+      </ResponsiveContainer>
+    );
+  }
+
+  // Se pagamento foi confirmado, mostrar tela de sucesso
+  if (paymentConfirmed) {
+    return (
+      <ResponsiveContainer>
+        <div className="max-w-2xl mx-auto p-6 space-y-6">
+          <Card className="text-center">
+            <CardHeader>
+              <div className="flex justify-center">
+                <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
+              </div>
+              <CardTitle className="text-2xl text-green-600">Parabéns!</CardTitle>
+              <CardDescription className="text-lg">
+                Pagamento confirmado com sucesso!
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
+                <Crown className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-2">Você agora é Pro! 🎉</h3>
+                <p className="text-muted-foreground">
+                  Todas as funcionalidades premium foram liberadas em sua conta.
+                  Você será redirecionado para o dashboard em instantes.
+                </p>
+              </div>
+              
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Redirecionando para o dashboard...
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </ResponsiveContainer>
     );
@@ -147,91 +232,6 @@ const Checkout = () => {
       setIsProcessing(false);
     }
   };
-
-  // Função para verificar o status do pagamento
-  const checkPaymentStatus = async () => {
-    if (!paymentId) return;
-
-    try {
-      setIsCheckingPayment(true);
-      const { data, error } = await supabase.functions.invoke('check-payment-status', {
-        body: { paymentId }
-      });
-
-      if (error) {
-        console.error('Erro ao verificar pagamento:', error);
-        return;
-      }
-
-      console.log('Status do pagamento:', data);
-
-      if (data?.isPaid) {
-        setPaymentConfirmed(true);
-        setIsCheckingPayment(false);
-        
-        // Mostrar mensagem de sucesso
-        toast.success('🎉 Pagamento confirmado! Bem-vindo ao Pro!');
-        
-        // Atualizar subscription
-        await refreshSubscription();
-        
-        // Redirecionar após 3 segundos
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 3000);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar status:', error);
-    } finally {
-      setIsCheckingPayment(false);
-    }
-  };
-
-  // Effect para verificar pagamento periodicamente quando QR code está sendo exibido
-  useEffect(() => {
-    if (showQRCode && paymentId && !paymentConfirmed) {
-      // Verificar a cada 5 segundos
-      const interval = setInterval(checkPaymentStatus, 5000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [showQRCode, paymentId, paymentConfirmed]);
-
-  // Se pagamento foi confirmado, mostrar tela de sucesso
-  if (paymentConfirmed) {
-    return (
-      <ResponsiveContainer>
-        <div className="max-w-2xl mx-auto p-6 space-y-6">
-          <Card className="text-center">
-            <CardHeader>
-              <div className="flex justify-center">
-                <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-              </div>
-              <CardTitle className="text-2xl text-green-600">Parabéns!</CardTitle>
-              <CardDescription className="text-lg">
-                Pagamento confirmado com sucesso!
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
-                <Crown className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-2">Você agora é Pro! 🎉</h3>
-                <p className="text-muted-foreground">
-                  Todas as funcionalidades premium foram liberadas em sua conta.
-                  Você será redirecionado para o dashboard em instantes.
-                </p>
-              </div>
-              
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Redirecionando para o dashboard...
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </ResponsiveContainer>
-    );
-  }
 
   // Se QR Code deve ser exibido
   if (showQRCode && pixData) {
