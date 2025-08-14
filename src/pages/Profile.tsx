@@ -19,7 +19,7 @@ const profileSchema = z.object({
   username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres').optional(),
   email: z.string().email('Email inválido'),
   cpf: z.string().min(11, 'CPF deve ter 11 dígitos').optional(),
-  cellphone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos').optional(),
+  cellphone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos'),
   address: z.string().optional(),
 });
 
@@ -69,7 +69,7 @@ export default function Profile() {
           username: data.username || '',
           email: data.email || user.email || '',
           cpf: data.cpf || '',
-          cellphone: data.cellphone || '',
+          cellphone: (data as any).cellphone || '',
           address: data.address || '',
         });
         setAvatarUrl(data.avatar_url || '');

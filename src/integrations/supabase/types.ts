@@ -574,6 +574,7 @@ export type Database = {
           artistic_name: string | null
           avatar_url: string | null
           birth_date: string | null
+          cellphone: string | null
           cep: string | null
           city: string | null
           cpf: string | null
@@ -594,6 +595,7 @@ export type Database = {
           artistic_name?: string | null
           avatar_url?: string | null
           birth_date?: string | null
+          cellphone?: string | null
           cep?: string | null
           city?: string | null
           cpf?: string | null
@@ -614,6 +616,7 @@ export type Database = {
           artistic_name?: string | null
           avatar_url?: string | null
           birth_date?: string | null
+          cellphone?: string | null
           cep?: string | null
           city?: string | null
           cpf?: string | null
