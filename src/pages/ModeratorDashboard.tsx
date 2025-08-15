@@ -25,6 +25,8 @@ const ModeratorDashboardPage = () => {
     activeTab = 'transactions';
   } else if (path.includes('/profile')) {
     activeTab = 'profile';
+  } else if (path.includes('/debug')) {
+    activeTab = 'debug';
   }
 
   return <ModeratorDashboard activeTab={activeTab} />;

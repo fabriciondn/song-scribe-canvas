@@ -98,6 +98,7 @@ const AppContent = () => {
         <Route path="/moderator/users" element={<ModeratorDashboard />} />
         <Route path="/moderator/transactions" element={<ModeratorDashboard />} />
         <Route path="/moderator/profile" element={<ModeratorDashboard />} />
+        <Route path="/moderator/debug" element={<ModeratorDashboard />} />
         <Route path="/moderator-auth" element={<ModeratorAuth />} />
         <Route path="/formulario" element={<PublicRegistrationForm />} />
         <Route path="/plans" element={<Dashboard />}>

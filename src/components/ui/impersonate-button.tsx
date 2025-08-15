@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { UserCheck } from 'lucide-react';
 import { useImpersonation } from '@/context/ImpersonationContext';
+import { useNavigate } from 'react-router-dom';
 
 interface ImpersonateButtonProps {
   targetUser: {
@@ -23,6 +24,7 @@ export const ImpersonateButton = ({
   className = '' 
 }: ImpersonateButtonProps) => {
   const { startImpersonation, canImpersonate } = useImpersonation();
+  const navigate = useNavigate();
 
   if (!canImpersonate(targetRole)) {
     return null;
@@ -40,8 +42,8 @@ export const ImpersonateButton = ({
     });
     
     console.log('🚀 Redirecionando para dashboard como usuário');
-    // Usar navigate em vez de window.open para evitar duas guias
-    window.location.href = '/dashboard';
+    // Usar navigate para evitar travamento
+    navigate('/dashboard', { replace: true });
   };
 
   return (

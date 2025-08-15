@@ -24,6 +24,9 @@ const ModeratorProfile = lazy(() =>
 const ModeratorTransactions = lazy(() => 
   import('./ModeratorTransactions').then(module => ({ default: module.ModeratorTransactions }))
 );
+const ModeratorAccessTest = lazy(() => 
+  import('./ModeratorAccessTest').then(module => ({ default: module.ModeratorAccessTest }))
+);
 
 // Componente de loading
 const LoadingComponent = () => (
@@ -61,6 +64,8 @@ export const ModeratorDashboard = ({ activeTab = 'overview' }: ModeratorDashboar
       setCurrentTab('transactions');
     } else if (path.includes('/profile')) {
       setCurrentTab('profile');
+    } else if (path.includes('/debug')) {
+      setCurrentTab('debug');
     } else {
       setCurrentTab('overview');
     }
@@ -131,6 +136,12 @@ export const ModeratorDashboard = ({ activeTab = 'overview' }: ModeratorDashboar
           return (
             <Suspense fallback={<LoadingComponent />}>
               <ModeratorProfile />
+            </Suspense>
+          );
+        case 'debug':
+          return (
+            <Suspense fallback={<LoadingComponent />}>
+              <ModeratorAccessTest />
             </Suspense>
           );
         case 'overview':

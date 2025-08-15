@@ -133,6 +133,12 @@ export const useRoleBasedNavigation = () => {
       navigate('/moderator', { replace: true });
       return;
     }
+    
+    // Se está impersonando, permitir acesso ao dashboard mesmo sendo moderador
+    if (isImpersonating && currentPath.startsWith('/dashboard')) {
+      console.log('🎭 Impersonação ativa - permitindo acesso ao dashboard');
+      return;
+    }
 
     // Se admin está tentando acessar dashboard comum quando deveria ter acesso completo
     if (currentUserRole.role === 'admin' && (currentPath === '/dashboard' || currentPath === '/')) {

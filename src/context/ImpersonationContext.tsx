@@ -39,29 +39,25 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
 
       try {
         // Verificar se é admin
-        const { data: adminData } = await supabase
+        const { data: adminData, error: adminError } = await supabase
           .from('admin_users')
           .select('role')
           .eq('user_id', user.id)
-          .eq('role', 'admin')
-          .single();
+          .maybeSingle();
 
-        if (adminData) {
-          setUserRole('admin');
+        if (adminData && !adminError) {
+          console.log('👤 Role detectado:', adminData.role);
+          const role = adminData.role === 'super_admin' ? 'admin' : adminData.role;
+          if (['admin', 'moderator', 'user'].includes(role)) {
+            setUserRole(role as 'admin' | 'moderator' | 'user');
+          } else {
+            setUserRole('user');
+          }
           return;
         }
 
-        // Verificar se é moderador
-        const { data: moderatorData } = await supabase
-          .from('admin_users')
-          .select('role')
-          .eq('user_id', user.id)
-          .eq('role', 'moderator')
-          .single();
-
-        if (moderatorData) {
-          setUserRole('moderator');
-          return;
+        if (adminError && adminError.code !== 'PGRST116') {
+          console.error('Erro ao verificar role:', adminError);
         }
 
         setUserRole('user');
@@ -94,6 +90,8 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
+    console.log('🎭 Iniciando impersonação...', targetUser);
+
     // Se já está impersonando, parar primeiro
     if (isImpersonating) {
       stopImpersonation();
@@ -108,13 +106,16 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
         .single();
 
       if (profileData) {
-        setOriginalUser({
+        const original = {
           id: profileData.id,
           name: profileData.name,
           email: profileData.email,
           artistic_name: profileData.artistic_name,
           role: userRole as 'user' | 'moderator'
-        });
+        };
+        
+        setOriginalUser(original);
+        console.log('💾 Usuário original salvo:', original);
       }
     }
 
@@ -123,10 +124,18 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsImpersonating(true);
 
     // Salvar no localStorage para sincronizar entre abas
-    localStorage.setItem('impersonation_data', JSON.stringify(targetUser));
+    localStorage.setItem('impersonation_data', JSON.stringify({
+      targetUser,
+      originalUser: originalUser || {
+        id: user.id,
+        name: user.user_metadata?.full_name || null,
+        email: user.email || null,
+        artistic_name: null,
+        role: userRole as 'user' | 'moderator'
+      }
+    }));
 
-    console.log('🎭 Impersonação iniciada:', targetUser);
-    console.log('🎭 Estado da impersonação:', { isImpersonating: true, targetUser });
+    console.log('🎭 Impersonação iniciada com sucesso:', targetUser);
   };
 
   // Parar impersonação
@@ -140,6 +149,38 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
     console.log('🎭 Impersonação finalizada');
   };
 
+  // Sincronizar com localStorage na inicialização
+  useEffect(() => {
+    const syncFromStorage = () => {
+      try {
+        const storedData = localStorage.getItem('impersonation_data');
+        if (storedData && !isImpersonating && user) {
+          const parsedData = JSON.parse(storedData);
+          console.log('🔄 Sincronizando impersonação do localStorage:', parsedData);
+          
+          if (parsedData.targetUser) {
+            setImpersonatedUser(parsedData.targetUser);
+            setIsImpersonating(true);
+            if (parsedData.originalUser) {
+              setOriginalUser(parsedData.originalUser);
+            }
+          } else {
+            // Formato antigo - compatibilidade
+            setImpersonatedUser(parsedData);
+            setIsImpersonating(true);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao sincronizar impersonação:', error);
+        localStorage.removeItem('impersonation_data');
+      }
+    };
+
+    if (user) {
+      syncFromStorage();
+    }
+  }, [user, isImpersonating]);
+
   // Limpar estado quando usuário deslogar
   useEffect(() => {
     if (!user) {
@@ -147,6 +188,7 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
       setOriginalUser(null);
       setIsImpersonating(false);
       setUserRole(null);
+      localStorage.removeItem('impersonation_data');
     }
   }, [user]);
 

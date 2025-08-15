@@ -13,7 +13,14 @@ export const useImpersonationSync = () => {
         try {
           const impersonationData = JSON.parse(storedImpersonation);
           console.log('🔄 Sincronizando impersonação entre abas:', impersonationData);
-          startImpersonation(impersonationData);
+          
+          // Se os dados têm a estrutura nova com targetUser e originalUser
+          if (impersonationData.targetUser) {
+            startImpersonation(impersonationData.targetUser);
+          } else {
+            // Compatibilidade com formato antigo
+            startImpersonation(impersonationData);
+          }
         } catch (error) {
           console.error('Erro ao sincronizar impersonação:', error);
           localStorage.removeItem('impersonation_data');
