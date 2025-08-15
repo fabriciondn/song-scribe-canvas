@@ -110,13 +110,13 @@ export const useRoleBasedNavigation = () => {
       isImpersonating
     });
 
-    // Se está impersonando, não fazer redirecionamentos automáticos
+    // Se está impersonando, BLOQUEAR qualquer redirecionamento automático
     if (isImpersonating) {
-      console.log('🎭 Impersonação ativa, não redirecionando automaticamente');
+      console.log('🎭 IMPERSONAÇÃO ATIVA - Bloqueando redirecionamentos automáticos');
       return;
     }
 
-    // Se o usuário está tentando acessar uma área restrita
+    // Se o usuário está tentando acessar uma área restrita SEM impersonação
     if (currentPath.startsWith('/admin') && currentUserRole.role !== 'admin') {
       console.log('❌ Acesso negado ao admin, redirecionando...');
       if (currentUserRole.role === 'moderator') {
@@ -127,24 +127,22 @@ export const useRoleBasedNavigation = () => {
       return;
     }
 
-    // Se moderador está tentando acessar área de usuário comum (SEM IMPERSONAÇÃO)
+    // Se moderador tenta acessar dashboard SEM impersonação - redirecionar
     if (currentUserRole.role === 'moderator' && currentPath === '/dashboard' && !isImpersonating) {
       console.log('🔄 Redirecionando moderador para área específica (sem impersonação)...');
       navigate('/moderator', { replace: true });
       return;
     }
-    
-    // Se está impersonando, permitir acesso ao dashboard mesmo sendo moderador
-    if (isImpersonating && currentPath.startsWith('/dashboard')) {
-      console.log('🎭 Impersonação ativa - permitindo acesso ao dashboard');
+
+    // Se o usuário está em uma área de moderador sem permissão
+    if (currentPath.startsWith('/moderator') && !['admin', 'moderator'].includes(currentUserRole.role)) {
+      console.log('❌ Acesso negado ao moderador, redirecionando...');
+      navigate('/dashboard', { replace: true });
       return;
     }
 
-    // Se admin está tentando acessar dashboard comum quando deveria ter acesso completo
-    if (currentUserRole.role === 'admin' && (currentPath === '/dashboard' || currentPath === '/')) {
-      console.log('👑 Admin detectado, permitindo acesso mas sugerindo admin dashboard...');
-      // Admins podem acessar qualquer área, não forçamos redirecionamento
-    }
+    // Para outras situações, não fazer redirecionamento automático
+    console.log('✅ Navegação permitida sem redirecionamento');
   };
 
   // useEffect para chamar a função de redirecionamento

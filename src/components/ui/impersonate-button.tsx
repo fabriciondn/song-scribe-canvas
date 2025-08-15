@@ -33,17 +33,25 @@ export const ImpersonateButton = ({
   const handleImpersonate = async () => {
     console.log('🔘 Botão impersonar clicado:', targetUser);
     
-    await startImpersonation({
-      id: targetUser.id,
-      name: targetUser.name,
-      email: targetUser.email,
-      artistic_name: targetUser.artistic_name,
-      role: targetRole
-    });
-    
-    console.log('🚀 Redirecionando para dashboard como usuário');
-    // Usar navigate para evitar travamento
-    navigate('/dashboard', { replace: true });
+    try {
+      await startImpersonation({
+        id: targetUser.id,
+        name: targetUser.name,
+        email: targetUser.email,
+        artistic_name: targetUser.artistic_name,
+        role: targetRole
+      });
+      
+      console.log('🚀 Aguardando 500ms antes de redirecionar...');
+      // Aguardar um pouco para garantir que o contexto seja atualizado
+      setTimeout(() => {
+        console.log('🚀 Redirecionando para dashboard como usuário');
+        navigate('/dashboard', { replace: true });
+      }, 500);
+      
+    } catch (error) {
+      console.error('❌ Erro ao impersonar:', error);
+    }
   };
 
   return (

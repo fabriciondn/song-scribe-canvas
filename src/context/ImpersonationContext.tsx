@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AuthContext } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface ImpersonationUser {
   id: string;
@@ -86,56 +87,84 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
   // Iniciar impersonação
   const startImpersonation = async (targetUser: ImpersonationUser) => {
     if (!user || !canImpersonate(targetUser.role)) {
-      console.error('Não é possível impersonar este usuário');
+      console.error('❌ Não é possível impersonar este usuário', { user: !!user, canImpersonate: canImpersonate(targetUser.role) });
       return;
     }
 
     console.log('🎭 Iniciando impersonação...', targetUser);
 
-    // Se já está impersonando, parar primeiro
-    if (isImpersonating) {
-      stopImpersonation();
-    }
-
-    // Salvar usuário original se não estiver salvo
-    if (!originalUser) {
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('id, name, email, artistic_name')
-        .eq('id', user.id)
-        .single();
-
-      if (profileData) {
-        const original = {
-          id: profileData.id,
-          name: profileData.name,
-          email: profileData.email,
-          artistic_name: profileData.artistic_name,
-          role: userRole as 'user' | 'moderator'
-        };
-        
-        setOriginalUser(original);
-        console.log('💾 Usuário original salvo:', original);
+    try {
+      // Se já está impersonando, parar primeiro
+      if (isImpersonating) {
+        console.log('🔄 Já impersonando, parando primeiro...');
+        stopImpersonation();
+        // Aguardar um pouco para limpar o estado
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
-    }
 
-    // Iniciar impersonação
-    setImpersonatedUser(targetUser);
-    setIsImpersonating(true);
+      // Salvar usuário original se não estiver salvo
+      let currentOriginalUser = originalUser;
+      if (!currentOriginalUser) {
+        console.log('💾 Salvando usuário original...');
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('id, name, email, artistic_name')
+          .eq('id', user.id)
+          .single();
 
-    // Salvar no localStorage para sincronizar entre abas
-    localStorage.setItem('impersonation_data', JSON.stringify({
-      targetUser,
-      originalUser: originalUser || {
-        id: user.id,
-        name: user.user_metadata?.full_name || null,
-        email: user.email || null,
-        artistic_name: null,
-        role: userRole as 'user' | 'moderator'
+        if (profileData && !error) {
+          currentOriginalUser = {
+            id: profileData.id,
+            name: profileData.name,
+            email: profileData.email,
+            artistic_name: profileData.artistic_name,
+            role: userRole as 'user' | 'moderator'
+          };
+          
+          setOriginalUser(currentOriginalUser);
+          console.log('💾 Usuário original salvo:', currentOriginalUser);
+        } else {
+          // Fallback para dados do Auth se não conseguir do profile
+          currentOriginalUser = {
+            id: user.id,
+            name: user.user_metadata?.full_name || null,
+            email: user.email || null,
+            artistic_name: null,
+            role: userRole as 'user' | 'moderator'
+          };
+          
+          setOriginalUser(currentOriginalUser);
+          console.log('💾 Usuário original salvo (fallback):', currentOriginalUser);
+        }
       }
-    }));
 
-    console.log('🎭 Impersonação iniciada com sucesso:', targetUser);
+      // Definir estados de impersonação
+      console.log('🎯 Definindo estado de impersonação...');
+      setImpersonatedUser(targetUser);
+      setIsImpersonating(true);
+
+      // Salvar no localStorage IMEDIATAMENTE
+      const impersonationData = {
+        targetUser,
+        originalUser: currentOriginalUser,
+        timestamp: Date.now()
+      };
+      
+      localStorage.setItem('impersonation_data', JSON.stringify(impersonationData));
+      console.log('💾 Dados salvos no localStorage:', impersonationData);
+
+      console.log('✅ Impersonação iniciada com sucesso!', {
+        isImpersonating: true,
+        targetUser,
+        originalUser: currentOriginalUser
+      });
+
+      toast.success(`Operando como ${targetUser.name || targetUser.email}`);
+
+    } catch (error) {
+      console.error('❌ Erro ao iniciar impersonação:', error);
+      toast.error('Erro ao iniciar impersonação');
+    }
   };
 
   // Parar impersonação
