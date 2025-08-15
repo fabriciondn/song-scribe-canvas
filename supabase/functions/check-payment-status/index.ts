@@ -76,41 +76,25 @@ serve(async (req) => {
     let payment = null;
     let isPaymentConfirmed = false;
 
-    // If simulate is true, use simulation API for development
+    console.log('[CHECK-PAYMENT-STATUS] Processing payment check', { paymentId, simulate });
+
+    // If simulate is true, simulate a successful payment for development
     if (simulate) {
-      console.log('[CHECK-PAYMENT-STATUS] Using simulation mode');
+      console.log('[CHECK-PAYMENT-STATUS] Using simulation mode - creating mock paid payment');
       
-      const simulateUrl = 'https://api.abacatepay.com/v1/pixQrCode/simulate-payment';
-      const simulateResponse = await fetch(simulateUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${abacateApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ metadata: {} })
-      });
-
-      if (simulateResponse.ok) {
-        const simulateData = await simulateResponse.json();
-        console.log('[CHECK-PAYMENT-STATUS] Simulation response', simulateData);
-        
-        // Create a mock payment object for simulation
-        payment = {
-          id: paymentId,
-          status: 'PAID', // Simulate successful payment
-          amount: 14.99,
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-        };
-        isPaymentConfirmed = true;
-      } else {
-        console.error('[CHECK-PAYMENT-STATUS] Simulation API error', simulateResponse.status);
-        // Fallback to regular API check
-      }
-    }
-
-    // If not simulating or simulation failed, use regular API
-    if (!payment) {
-      const checkUrl = `https://api.abacatepay.com/v1/pixQrCode`;
+      // Create a mock payment object for simulation
+      payment = {
+        id: paymentId,
+        status: 'PAID',
+        amount: 14.99,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      };
+      isPaymentConfirmed = true;
+    } else {
+      // Use regular API to check payment status
+      const checkUrl = `https://api.abacatepay.com/v1/pixQrCode/${paymentId}`;
+      console.log('[CHECK-PAYMENT-STATUS] Calling Abacate API', { checkUrl });
+      
       const checkResponse = await fetch(checkUrl, {
         method: 'GET',
         headers: {
@@ -119,28 +103,39 @@ serve(async (req) => {
         },
       });
 
+      console.log('[CHECK-PAYMENT-STATUS] API response status', { 
+        status: checkResponse.status,
+        statusText: checkResponse.statusText
+      });
+
       if (!checkResponse.ok) {
+        const errorText = await checkResponse.text();
         console.error('[CHECK-PAYMENT-STATUS] Abacate API error', {
           status: checkResponse.status,
-          statusText: checkResponse.statusText
+          statusText: checkResponse.statusText,
+          body: errorText
         });
+        
         return new Response(
-          JSON.stringify({ error: 'Failed to check payment status' }),
+          JSON.stringify({ 
+            success: false,
+            error: 'Failed to check payment status',
+            details: `API returned ${checkResponse.status}: ${checkResponse.statusText}`
+          }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      const paymentsData = await checkResponse.json();
-      console.log('[CHECK-PAYMENT-STATUS] Payments received', { 
-        totalPayments: paymentsData.data?.length || 0,
-        searchingForId: paymentId
-      });
+      const paymentData = await checkResponse.json();
+      console.log('[CHECK-PAYMENT-STATUS] Payment data received', paymentData);
 
-      // Find the specific payment by ID
-      payment = paymentsData.data?.find((p: any) => p.id === paymentId);
-      
-      if (!payment) {
-        console.log('[CHECK-PAYMENT-STATUS] Payment not found', { paymentId });
+      // Check if the response has the expected structure
+      if (paymentData.data) {
+        payment = paymentData.data;
+      } else if (paymentData.id) {
+        payment = paymentData;
+      } else {
+        console.log('[CHECK-PAYMENT-STATUS] Payment not found or invalid response structure', { paymentId, response: paymentData });
         return new Response(
           JSON.stringify({ 
             success: true,
@@ -153,7 +148,7 @@ serve(async (req) => {
       }
 
       // Check if payment is confirmed (status is not "PENDING")
-      isPaymentConfirmed = payment.status !== 'PENDING';
+      isPaymentConfirmed = payment.status === 'PAID' || payment.status === 'CONFIRMED';
     }
 
     console.log('[CHECK-PAYMENT-STATUS] Payment found', { 

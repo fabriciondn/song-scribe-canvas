@@ -57,11 +57,18 @@ const Checkout = () => {
 
       if (error) {
         console.error('Erro ao verificar pagamento:', error);
-        toast.error(`Erro ao verificar pagamento: ${error.message || 'Erro desconhecido'}`);
+        toast.error(`Erro na requisição: ${error.message || 'Erro desconhecido'}`);
         return;
       }
 
       console.log('Status do pagamento:', data);
+
+      // Verificar se houve erro na resposta
+      if (data?.success === false) {
+        console.error('Erro na verificação:', data.error);
+        toast.error(`Erro: ${data.error || 'Falha na verificação'}`);
+        return;
+      }
 
       if (data?.isPaid) {
         setPaymentConfirmed(true);
@@ -78,14 +85,18 @@ const Checkout = () => {
           navigate('/dashboard');
         }, 3000);
       } else {
-        // Mostrar status atual do pagamento
-        toast.info(`Status do pagamento: ${data?.paymentStatus || 'Desconhecido'}`);
-        console.log('Pagamento ainda não confirmado:', {
-          paymentId,
-          status: data?.paymentStatus,
-          isPaid: data?.isPaid,
-          expiresAt: data?.expiresAt
-        });
+        // Se for simulação e não deu certo, mostrar erro específico
+        if (useSimulation) {
+          toast.error('Simulação de pagamento falhou. Verifique a configuração da API.');
+        } else {
+          // Mostrar status atual do pagamento apenas se não for simulação
+          console.log('Pagamento ainda não confirmado:', {
+            paymentId,
+            status: data?.paymentStatus,
+            isPaid: data?.isPaid,
+            expiresAt: data?.expiresAt
+          });
+        }
       }
     } catch (error) {
       console.error('Erro ao verificar status:', error);
