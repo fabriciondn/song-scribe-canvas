@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -179,6 +179,48 @@ export type Database = {
           is_default?: boolean
           name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          bonus_credits: number | null
+          completed_at: string | null
+          created_at: string
+          credits_purchased: number
+          id: string
+          payment_id: string | null
+          status: string
+          total_amount: number
+          unit_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bonus_credits?: number | null
+          completed_at?: string | null
+          created_at?: string
+          credits_purchased: number
+          id?: string
+          payment_id?: string | null
+          status?: string
+          total_amount: number
+          unit_price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bonus_credits?: number | null
+          completed_at?: string | null
+          created_at?: string
+          credits_purchased?: number
+          id?: string
+          payment_id?: string | null
+          status?: string
+          total_amount?: number
+          unit_price?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1025,7 +1067,7 @@ export type Database = {
     }
     Functions: {
       admin_update_user_credits: {
-        Args: { target_user_id: string; new_credits: number }
+        Args: { new_credits: number; target_user_id: string }
         Returns: undefined
       }
       check_admin_access: {
@@ -1042,9 +1084,9 @@ export type Database = {
       }
       create_draft: {
         Args: {
-          draft_title: string
-          draft_content: string
           draft_audio_url: string
+          draft_content: string
+          draft_title: string
           draft_user_id: string
         }
         Returns: {
@@ -1135,7 +1177,7 @@ export type Database = {
         Returns: undefined
       }
       moderator_update_user_credits: {
-        Args: { target_user_id: string; new_credits: number }
+        Args: { new_credits: number; target_user_id: string }
         Returns: undefined
       }
       populate_menu_functions: {
@@ -1148,27 +1190,27 @@ export type Database = {
       }
       register_moderator_with_token: {
         Args: {
+          p_email: string
+          p_name: string
           p_token: string
           p_user_id: string
-          p_name: string
-          p_email: string
         }
         Returns: boolean
       }
       secure_public_registration: {
         Args: {
-          p_email: string
-          p_full_name: string
-          p_cpf: string
+          p_artistic_name?: string
           p_birth_date: string
           p_cep: string
-          p_street: string
-          p_number: string
-          p_neighborhood: string
           p_city: string
-          p_state: string
-          p_artistic_name?: string
           p_client_ip?: unknown
+          p_cpf: string
+          p_email: string
+          p_full_name: string
+          p_neighborhood: string
+          p_number: string
+          p_state: string
+          p_street: string
         }
         Returns: Json
       }
@@ -1189,8 +1231,8 @@ export type Database = {
       }
       update_user_credits: {
         Args: {
-          target_user_id: string
           credit_amount: number
+          target_user_id: string
           transaction_description?: string
         }
         Returns: boolean

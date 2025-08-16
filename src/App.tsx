@@ -21,6 +21,7 @@ import Bases from "./pages/Bases";
 import Templates from "./pages/Templates";
 import Plans from "./pages/Plans";
 import Checkout from "./pages/Checkout";
+import CreditsCheckout from "./pages/CreditsCheckout";
 import Folders from "./pages/Folders";
 import Drafts from "./pages/Drafts";
 import Partnerships from "./pages/Partnerships";
@@ -107,6 +108,7 @@ const AppContent = () => {
         <Route path="/checkout" element={<Dashboard />}>
           <Route index element={<Checkout />} />
         </Route>
+        <Route path="/credits-checkout" element={<CreditsCheckout />} />
         <Route path="*" element={<NotFound />} />
           </Routes>
         </PageFunctionStatusWrapper>

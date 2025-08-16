@@ -146,8 +146,8 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
           variant="outline" 
           className="w-full mt-3"
           onClick={() => {
-            // TODO: Implementar modal para adicionar créditos
-            console.log('Adicionar créditos via Pix');
+            navigate('/credits-checkout');
+            onClose();
           }}
         >
           <Plus className="h-4 w-4 mr-2" />

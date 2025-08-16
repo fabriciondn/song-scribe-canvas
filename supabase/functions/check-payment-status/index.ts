@@ -158,38 +158,96 @@ serve(async (req) => {
       isPaymentConfirmed
     });
     
+    // Handle payment confirmation based on type
+    const paymentType = body.type || 'subscription'; // Default to subscription for backwards compatibility
+
     if (isPaymentConfirmed && user) {
-      // Update subscription to Pro active status using service role client
-      const now = new Date().toISOString();
-      const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 1); // Add 1 month
+      console.log('[CHECK-PAYMENT-STATUS] Payment confirmed, processing...', { paymentType, userId: user.id });
       
-      const { error: updateError } = await supabaseServiceClient
-        .from('subscriptions')
-        .update({ 
-          status: 'active',
-          plan_type: 'pro',
-          started_at: now,
-          expires_at: expiresAt.toISOString(),
-          payment_provider: 'abacate_pay',
-          payment_provider_subscription_id: paymentId,
-          amount: 14.99,
-          currency: 'BRL',
-          updated_at: now
-        })
-        .eq('user_id', user.id);
+      if (paymentType === 'credits') {
+        // Handle credit purchase confirmation
+        console.log('[CHECK-PAYMENT-STATUS] Processing credit purchase...');
+        
+        // Get credit transaction details
+        const { data: transaction, error: transactionError } = await supabaseServiceClient
+          .from('credit_transactions')
+          .select('*')
+          .eq('payment_id', paymentId)
+          .eq('user_id', user.id)
+          .single();
+        
+        if (transactionError || !transaction) {
+          console.error('[CHECK-PAYMENT-STATUS] Credit transaction not found:', transactionError);
+        } else {
+          const totalCredits = transaction.credits_purchased + (transaction.bonus_credits || 0);
+          
+          // Get current user credits
+          const { data: currentProfile, error: profileError } = await supabaseServiceClient
+            .from('profiles')
+            .select('credits')
+            .eq('id', user.id)
+            .single();
+          
+          if (!profileError && currentProfile) {
+            const newCreditsTotal = (currentProfile.credits || 0) + totalCredits;
+            
+            // Update user credits
+            const { error: creditsError } = await supabaseServiceClient
+              .from('profiles')
+              .update({ credits: newCreditsTotal })
+              .eq('id', user.id);
+            
+            if (creditsError) {
+              console.error('[CHECK-PAYMENT-STATUS] Error adding credits:', creditsError);
+            } else {
+              // Update transaction status
+              await supabaseServiceClient
+                .from('credit_transactions')
+                .update({
+                  status: 'completed',
+                  completed_at: new Date().toISOString()
+                })
+                .eq('id', transaction.id);
+              
+              console.log('[CHECK-PAYMENT-STATUS] Credits added successfully:', { totalCredits, newCreditsTotal });
+            }
+          }
+        }
+      } else {
+        // Handle subscription confirmation (existing logic)
+        console.log('[CHECK-PAYMENT-STATUS] Processing subscription...');
+        
+        const now = new Date().toISOString();
+        const expiresAt = new Date();
+        expiresAt.setMonth(expiresAt.getMonth() + 1); // Add 1 month
+        
+        const { error: updateError } = await supabaseServiceClient
+          .from('subscriptions')
+          .update({ 
+            status: 'active',
+            plan_type: 'pro',
+            started_at: now,
+            expires_at: expiresAt.toISOString(),
+            payment_provider: 'abacate_pay',
+            payment_provider_subscription_id: paymentId,
+            amount: 14.99,
+            currency: 'BRL',
+            updated_at: now
+          })
+          .eq('user_id', user.id);
 
-      if (updateError) {
-        console.error('[CHECK-PAYMENT-STATUS] Failed to update subscription', updateError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to update subscription' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        if (updateError) {
+          console.error('[CHECK-PAYMENT-STATUS] Failed to update subscription', updateError);
+          return new Response(
+            JSON.stringify({ error: 'Failed to update subscription' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        console.log('[CHECK-PAYMENT-STATUS] Subscription activated successfully');
       }
-
-      console.log('[CHECK-PAYMENT-STATUS] Subscription activated successfully');
     } else if (isPaymentConfirmed && !user) {
-      console.log('[CHECK-PAYMENT-STATUS] Payment confirmed but no user authenticated - subscription not updated');
+      console.log('[CHECK-PAYMENT-STATUS] Payment confirmed but no user authenticated - not updated');
     }
 
     return new Response(

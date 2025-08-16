@@ -93,10 +93,7 @@ export const Header = ({
               <CreditCard className="h-3 w-3" />
               {credits || 0} créditos
             </Badge>
-            <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => {
-          // TODO: Implementar modal para adicionar créditos
-          console.log('Adicionar créditos via Pix');
-        }}>
+            <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => navigate('/credits-checkout')}>
               <Plus className="h-3 w-3 mr-1" />
               Adicionar
             </Button>
@@ -146,13 +143,10 @@ export const Header = ({
                 )}
               </DropdownMenuItem>
               
-              <DropdownMenuItem onClick={() => {
-            // TODO: Implementar modal para adicionar créditos
-            console.log('Adicionar créditos via Pix');
-          }}>
-                <CreditCard className="mr-2 h-4 w-4" />
-                <span>Adicionar Créditos</span>
-              </DropdownMenuItem>
+               <DropdownMenuItem onClick={() => navigate('/credits-checkout')}>
+                 <CreditCard className="mr-2 h-4 w-4" />
+                 <span>Adicionar Créditos</span>
+               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem disabled={isLoggingOut} onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
