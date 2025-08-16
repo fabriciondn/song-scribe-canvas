@@ -68,6 +68,14 @@ export default function CreditsCheckout() {
       return;
     }
 
+    console.log('🔄 Iniciando processamento de pagamento...', {
+      credits: credits,
+      bonusCredits: pricing.bonusCredits,
+      unitPrice: pricing.unitPrice,
+      totalAmount: pricing.totalAmount,
+      userId: user.id
+    });
+
     setIsProcessing(true);
 
     try {
@@ -80,8 +88,10 @@ export default function CreditsCheckout() {
         },
       });
 
+      console.log('📡 Resposta da Edge Function:', { data, error });
+
       if (error) {
-        console.error('Erro ao processar pagamento:', error);
+        console.error('❌ Erro ao processar pagamento:', error);
         toast({
           title: "Erro no Pagamento",
           description: error.message || "Não foi possível processar o pagamento.",
@@ -91,6 +101,12 @@ export default function CreditsCheckout() {
       }
 
       if (data?.qr_code && data?.payment_id) {
+        console.log('✅ QR Code gerado com sucesso!', {
+          payment_id: data.payment_id,
+          has_qr_code: !!data.qr_code,
+          has_qr_code_url: !!data.qr_code_url
+        });
+        
         setPixData({
           qr_code: data.qr_code,
           qr_code_url: data.qr_code_url,
@@ -101,9 +117,16 @@ export default function CreditsCheckout() {
           title: "PIX Gerado!",
           description: "Use o QR Code para realizar o pagamento.",
         });
+      } else {
+        console.error('❌ Dados insuficientes na resposta:', data);
+        toast({
+          title: "Erro na Resposta",
+          description: "Resposta inválida do servidor. Tente novamente.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error('Erro inesperado:', error);
+      console.error('❌ Erro inesperado:', error);
       toast({
         title: "Erro",
         description: "Erro inesperado ao processar pagamento.",
@@ -168,17 +191,27 @@ export default function CreditsCheckout() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6 text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-4">Login Necessário</h2>
-            <p className="text-muted-foreground mb-6">
-              Você precisa estar logado para comprar créditos.
-            </p>
-            <Button onClick={() => navigate('/dashboard')} className="w-full">
-              Ir para Login
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="w-full max-w-md mx-auto">
+          {/* Logo Centralizado */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
+              COMPOSE
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
+          </div>
+          
+          <Card className="w-full">
+            <CardContent className="pt-6 text-center">
+              <h2 className="text-2xl font-bold text-foreground mb-4">Login Necessário</h2>
+              <p className="text-muted-foreground mb-6">
+                Você precisa estar logado para comprar créditos.
+              </p>
+              <Button onClick={() => navigate('/dashboard')} className="w-full">
+                Ir para Login
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -186,20 +219,30 @@ export default function CreditsCheckout() {
   if (paymentConfirmed) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6 text-center">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="h-10 w-10 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Pagamento Confirmado!</h2>
+        <div className="w-full max-w-md mx-auto">
+          {/* Logo Centralizado */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
+              COMPOSE
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
+          </div>
+          
+          <Card className="w-full">
+            <CardContent className="pt-6 text-center">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Check className="h-10 w-10 text-green-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground mb-4">Pagamento Confirmado!</h2>
             <p className="text-muted-foreground mb-6">
               {pricing.finalCredits} créditos foram adicionados à sua conta com sucesso.
             </p>
             <Button onClick={() => navigate('/dashboard')} className="w-full">
               Voltar ao Dashboard
             </Button>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -208,6 +251,14 @@ export default function CreditsCheckout() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
         <div className="max-w-2xl mx-auto">
+          {/* Logo Centralizado */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
+              COMPOSE
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
+          </div>
+
           <Button
             variant="ghost"
             onClick={() => setShowQRCode(false)}
@@ -286,13 +337,21 @@ export default function CreditsCheckout() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
       <div className="max-w-4xl mx-auto">
+        {/* Logo Centralizado */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
+            COMPOSE
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
+        </div>
+
         <Button
           variant="ghost"
           onClick={() => navigate('/dashboard')}
           className="mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar aos Planos
+          Voltar ao Dashboard
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

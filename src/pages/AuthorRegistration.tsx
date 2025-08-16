@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CreditCard, ArrowLeft } from 'lucide-react';
+import { CreditCard, ArrowLeft, Gift } from 'lucide-react';
 import { AuthorRegistrationSteps } from '@/components/author-registration/AuthorRegistrationSteps';
 import { AuthorRegistrationReview } from '@/components/author-registration/AuthorRegistrationReview';
 import { ProfileCompletionCheck } from '@/components/author-registration/ProfileCompletionCheck';
@@ -28,6 +29,7 @@ export interface AuthorRegistrationData {
 
 const AuthorRegistration: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { credits, isLoading: creditsLoading } = useUserCredits();
   const { isMobile } = useMobileDetection();
   const { isComplete: isProfileComplete } = useProfileValidation();
@@ -86,14 +88,51 @@ const AuthorRegistration: React.FC = () => {
                 <p>Seus créditos atuais: <span className="font-semibold">{credits || 0}</span></p>
               </div>
             </div>
+
+            {/* Ofertas Especiais */}
+            <div className="space-y-3">
+              <Card className="border-orange-200 bg-orange-50">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-2 text-orange-600 mb-2">
+                    <Gift className="h-4 w-4" />
+                    <span className="font-semibold">Oferta Especial!</span>
+                  </div>
+                  <p className="text-sm text-orange-700">
+                    5+ créditos = R$ 25,00 cada (ao invés de R$ 30,00)
+                  </p>
+                  <p className="text-xs text-orange-600 font-medium">
+                    Economia de até R$ 25,00!
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-2 text-green-600 mb-2">
+                    <Gift className="h-4 w-4" />
+                    <span className="font-semibold">Super Oferta!</span>
+                  </div>
+                  <p className="text-sm text-green-700">
+                    10+ créditos = R$ 25,00 cada + 2 créditos GRÁTIS
+                  </p>
+                  <p className="text-xs text-green-600 font-medium">
+                    Economia total: R$ 110,00!
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
             
             <div className="space-y-4">
-              <Button size={isMobile ? "default" : "lg"} className="w-full">
+              <Button 
+                size={isMobile ? "default" : "lg"} 
+                className="w-full"
+                onClick={() => navigate('/credits-checkout')}
+              >
                 <CreditCard className="mr-2 h-4 w-4" />
                 Adicionar Créditos via Pix
               </Button>
               <p className="text-xs md:text-sm text-muted-foreground">
-                Entre em contato conosco para adicionar créditos à sua conta
+                Escolha a quantidade ideal de créditos e pague com PIX de forma segura
               </p>
             </div>
           </CardContent>

@@ -79,41 +79,55 @@ serve(async (req) => {
     // Create PIX payment with Abacate
     console.log('🔄 Creating PIX payment with Abacate...');
     
+    const requestBody = {
+      frequency: 'one-time',
+      methods: ['pix'],
+      products: [
+        {
+          externalId: `credits-${user.id}-${Date.now()}`,
+          name: `${credits} Créditos${bonusCredits > 0 ? ` + ${bonusCredits} Bônus` : ''}`,
+          description: `Compra de ${credits} créditos${bonusCredits > 0 ? ` com ${bonusCredits} créditos bônus` : ''}`,
+          quantity: 1,
+          price: Math.round(totalAmount * 100) // Convert to cents
+        }
+      ],
+      returnUrl: `${req.headers.get("origin")}/dashboard`,
+      completionUrl: `${req.headers.get("origin")}/dashboard`
+    };
+    
+    console.log('📤 Request to Abacate:', JSON.stringify(requestBody, null, 2));
+    
     const abacateResponse = await fetch('https://api.abacatepay.com/v1/billing/pix', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${abacateApiKey}`
       },
-      body: JSON.stringify({
-        frequency: 'one-time',
-        methods: ['pix'],
-        products: [
-          {
-            externalId: `credits-${user.id}-${Date.now()}`,
-            name: `${credits} Créditos${bonusCredits > 0 ? ` + ${bonusCredits} Bônus` : ''}`,
-            description: `Compra de ${credits} créditos${bonusCredits > 0 ? ` com ${bonusCredits} créditos bônus` : ''}`,
-            quantity: 1,
-            price: Math.round(totalAmount * 100) // Convert to cents
-          }
-        ],
-        returnUrl: `${req.headers.get("origin")}/dashboard`,
-        completionUrl: `${req.headers.get("origin")}/dashboard`
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!abacateResponse.ok) {
       const errorText = await abacateResponse.text();
-      console.error('❌ Abacate API error:', errorText);
-      throw new Error(`Payment service error: ${abacateResponse.status}`);
+      console.error('❌ Abacate API error:', {
+        status: abacateResponse.status,
+        statusText: abacateResponse.statusText,
+        headers: Object.fromEntries(abacateResponse.headers),
+        errorText: errorText
+      });
+      throw new Error(`Payment service error: ${abacateResponse.status} - ${errorText}`);
     }
 
     const abacateData = await abacateResponse.json();
-    console.log('✅ Abacate response:', abacateData);
+    console.log('✅ Abacate response:', JSON.stringify(abacateData, null, 2));
 
-    if (!abacateData.id || !abacateData.paymentGatewayAttributes?.pix?.qrCode) {
-      console.error('❌ Invalid Abacate response:', abacateData);
-      throw new Error("Invalid payment response");
+    if (!abacateData.id) {
+      console.error('❌ Missing payment ID in Abacate response:', abacateData);
+      throw new Error("Invalid payment response - missing payment ID");
+    }
+
+    if (!abacateData.paymentGatewayAttributes?.pix?.qrCode) {
+      console.error('❌ Missing QR Code in Abacate response:', abacateData);
+      throw new Error("Invalid payment response - missing QR Code");
     }
 
     const paymentId = abacateData.id;
