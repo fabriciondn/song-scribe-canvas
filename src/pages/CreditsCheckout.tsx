@@ -68,28 +68,12 @@ export default function CreditsCheckout() {
       return;
     }
 
-    // Verificar se temos os dados necessários do usuário antes de iniciar o processamento
-    if (!profile?.name || !profile?.email || !profile?.cpf) {
-      toast({
-        title: "Dados Incompletos",
-        description: "Complete seu perfil (nome, email e CPF) nas configurações antes de comprar créditos.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     console.log('🔄 Iniciando processamento de pagamento...', {
       credits: credits,
       bonusCredits: pricing.bonusCredits,
       unitPrice: pricing.unitPrice,
       totalAmount: pricing.totalAmount,
-      userId: user.id,
-      userData: {
-        name: profile.name,
-        email: profile.email,
-        cpf: profile.cpf,
-        cellphone: profile.cellphone
-      }
+      userId: user.id
     });
 
     setIsProcessing(true);
@@ -101,12 +85,6 @@ export default function CreditsCheckout() {
           bonusCredits: pricing.bonusCredits,
           unitPrice: pricing.unitPrice,
           totalAmount: pricing.totalAmount,
-          user_data: {
-            name: profile.name,
-            email: profile.email,
-            cpf: profile.cpf,
-            cellphone: profile.cellphone || ''
-          }
         },
       });
 

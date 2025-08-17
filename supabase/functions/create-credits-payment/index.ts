@@ -11,12 +11,6 @@ interface CreditPaymentRequest {
   bonusCredits: number;
   unitPrice: number;
   totalAmount: number;
-  user_data: {
-    name: string;
-    email: string;
-    cpf: string;
-    cellphone?: string;
-  };
 }
 
 serve(async (req) => {
@@ -60,12 +54,7 @@ serve(async (req) => {
 
     // Parse request body
     const body: CreditPaymentRequest = await req.json();
-    const { credits, bonusCredits, unitPrice, totalAmount, user_data } = body;
-
-    // Validate user data
-    if (!user_data?.name || !user_data?.email || !user_data?.cpf) {
-      throw new Error("Missing required user data (name, email, cpf)");
-    }
+    const { credits, bonusCredits, unitPrice, totalAmount } = body;
 
     console.log('💳 Payment details:', {
       userId: user.id,
@@ -102,12 +91,6 @@ serve(async (req) => {
           price: Math.round(totalAmount * 100) // Convert to cents
         }
       ],
-      customer: {
-        name: user_data.name,
-        cellphone: user_data.cellphone || '',
-        email: user_data.email,
-        taxId: user_data.cpf.replace(/\D/g, '') // Remove formatação do CPF
-      },
       returnUrl: `${req.headers.get("origin")}/dashboard`,
       completionUrl: `${req.headers.get("origin")}/dashboard`
     };
