@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Plus, Clock, CheckCircle, X } from 'lucide-react';
+import { CreateModeratorModal } from './CreateModeratorModal';
+import { Copy, Plus, Clock, CheckCircle, X, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
   generateModeratorRegistrationToken, 
@@ -17,6 +18,7 @@ import {
 
 export const AdminModerators = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreateModeratorModalOpen, setIsCreateModeratorModalOpen] = useState(false);
   const [daysValid, setDaysValid] = useState(7);
   const [generatedUrl, setGeneratedUrl] = useState<string>('');
 
@@ -94,18 +96,29 @@ export const AdminModerators = () => {
         <div>
           <h2 className="text-2xl font-bold">Gestão de Moderadores</h2>
           <p className="text-muted-foreground">
-            Gere links de cadastro para novos moderadores
+            Crie novos moderadores e gere links de cadastro
           </p>
         </div>
         
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Gerar Link de Cadastro
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex gap-3">
+          <Button onClick={() => setIsCreateModeratorModalOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Criar Moderador
+          </Button>
+          
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Gerar Token
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+        </div>
+      </div>
+
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
             <DialogHeader>
               <DialogTitle>Gerar Token de Cadastro para Moderador</DialogTitle>
             </DialogHeader>
@@ -171,7 +184,6 @@ export const AdminModerators = () => {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
 
       <Card>
         <CardHeader>
@@ -243,6 +255,15 @@ export const AdminModerators = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal para criar moderador */}
+      <CreateModeratorModal
+        isOpen={isCreateModeratorModalOpen}
+        onClose={() => setIsCreateModeratorModalOpen(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['moderator-registration-tokens'] });
+        }}
+      />
     </div>
   );
 };

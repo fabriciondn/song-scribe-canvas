@@ -8,7 +8,7 @@ interface ImpersonationUser {
   name: string | null;
   email: string | null;
   artistic_name: string | null;
-  role: 'user' | 'moderator';
+  role: 'user' | 'moderator' | 'admin';
 }
 
 interface ImpersonationContextType {
@@ -17,7 +17,7 @@ interface ImpersonationContextType {
   originalUser: ImpersonationUser | null;
   startImpersonation: (targetUser: ImpersonationUser) => void;
   stopImpersonation: () => void;
-  canImpersonate: (targetRole: 'user' | 'moderator') => boolean;
+  canImpersonate: (targetRole: 'user' | 'moderator' | 'admin') => boolean;
 }
 
 export const ImpersonationContext = createContext<ImpersonationContextType | undefined>(undefined);
@@ -72,7 +72,7 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [user]);
 
   // Verificar se pode impersonar determinado role
-  const canImpersonate = (targetRole: 'user' | 'moderator'): boolean => {
+  const canImpersonate = (targetRole: 'user' | 'moderator' | 'admin'): boolean => {
     if (!userRole) return false;
     
     // Admin pode impersonar qualquer um
@@ -118,7 +118,7 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
             name: profileData.name,
             email: profileData.email,
             artistic_name: profileData.artistic_name,
-            role: userRole as 'user' | 'moderator'
+            role: userRole as 'user' | 'moderator' | 'admin'
           };
           
           setOriginalUser(currentOriginalUser);
@@ -130,7 +130,7 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
             name: user.user_metadata?.full_name || null,
             email: user.email || null,
             artistic_name: null,
-            role: userRole as 'user' | 'moderator'
+            role: userRole as 'user' | 'moderator' | 'admin'
           };
           
           setOriginalUser(currentOriginalUser);

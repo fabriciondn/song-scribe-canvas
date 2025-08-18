@@ -9,14 +9,17 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { getAllUsers, updateUserCredits } from '@/services/adminService';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
+import { UserDetailsModal } from './UserDetailsModal';
 import { useToast } from '@/components/ui/use-toast';
-import { Edit, Search, Coins } from 'lucide-react';
+import { Edit, Search, Coins, Eye } from 'lucide-react';
 import { DataMask } from '@/components/ui/data-mask';
 
 export const AdminUsers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [newCredits, setNewCredits] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -93,6 +96,11 @@ export const AdminUsers: React.FC = () => {
     }
   };
 
+  const handleViewDetails = (userId: string) => {
+    setSelectedUserId(userId);
+    setIsDetailsModalOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -163,7 +171,15 @@ export const AdminUsers: React.FC = () => {
                       {new Date(user.created_at).toLocaleDateString('pt-BR')}
                     </TableCell>
                     <TableCell>
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2 flex-wrap gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewDetails(user.id)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Detalhes
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
@@ -232,6 +248,13 @@ export const AdminUsers: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de detalhes do usuário */}
+      <UserDetailsModal 
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        userId={selectedUserId || ''}
+      />
     </div>
   );
 };

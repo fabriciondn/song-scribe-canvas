@@ -80,17 +80,25 @@ export const ImpersonationBanner = () => {
             </div>
           </div>
           
-          <Button
+            <Button
             variant="outline"
             size="sm"
             onClick={() => {
               stopImpersonationGlobally();
-              window.location.href = '/moderator';
+              // Verificar se o usuário original é admin ou moderador
+              const currentUrl = window.location.pathname;
+              if (originalUser?.role === 'admin' || currentUrl.includes('/admin')) {
+                window.location.href = '/admin';
+              } else {
+                window.location.href = '/moderator';
+              }
             }}
             className="flex items-center space-x-2 border-warning-foreground/30 text-warning-foreground hover:bg-warning-foreground/10 flex-shrink-0"
           >
             <UserX className="h-4 w-4" />
-            <span className="hidden sm:inline">Voltar para Moderação</span>
+            <span className="hidden sm:inline">
+              Voltar para {originalUser?.role === 'admin' ? 'Admin' : 'Moderação'}
+            </span>
             <span className="sm:hidden">Voltar</span>
           </Button>
         </div>
