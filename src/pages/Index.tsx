@@ -45,7 +45,12 @@ const Index: React.FC = () => {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
+          <div className="text-center mb-8 space-y-4">
+            <img 
+              src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+              alt="Compuse Logo" 
+              className="h-8 mx-auto"
+            />
             <Button 
               variant="ghost" 
               onClick={() => setShowAuth(false)}
@@ -66,9 +71,11 @@ const Index: React.FC = () => {
       <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-black/80 border-b border-gray-800/50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-green-300 bg-clip-text text-transparent">
-              Compuse
-            </h1>
+            <img 
+              src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+              alt="Compuse Logo" 
+              className="h-8"
+            />
           </div>
 
           <Button 
@@ -111,9 +118,11 @@ const Index: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-green-300 bg-clip-text text-transparent">
-                Compuse
-              </h1>
+              <img 
+                src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+                alt="Compuse Logo" 
+                className="h-6"
+              />
               <span className="text-gray-500">© {new Date().getFullYear()}</span>
             </div>
             
