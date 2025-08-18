@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Glassmorphism utilities */
+@layer utilities {
+  .glass-card {
+    @apply backdrop-blur-xl bg-white/5 border border-white/10;
+  }
+  
+  .glass-card-dark {
+    @apply backdrop-blur-xl bg-black/20 border border-white/5;
+  }
+}
+
 @layer base {
   :root {
     /* Light theme - com cor preta e verde (#00bd4b) */

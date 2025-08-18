@@ -3,89 +3,132 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { AuthForm } from '../components/auth/AuthForm';
 import { Button } from '@/components/ui/button';
+import { HeroSection } from '@/components/landing/HeroSection';
+import { BenefitsSection } from '@/components/landing/BenefitsSection';
+import { ProcessSection } from '@/components/landing/ProcessSection';
+import { ComparisonSection } from '@/components/landing/ComparisonSection';
+import { LegalProofSection } from '@/components/landing/LegalProofSection';
+import { FinalCTASection } from '@/components/landing/FinalCTASection';
+
 const Index: React.FC = () => {
-  const {
-    isAuthenticated,
-    isLoading
-  } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [showAuth, setShowAuth] = useState(false);
+
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
       navigate('/dashboard');
     }
   }, [isAuthenticated, isLoading, navigate]);
-  return <div className="min-h-screen flex flex-col">
-      <header className="w-full py-4 px-6 flex items-center justify-between bg-background border-b">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">Compuse</h1>
-        </div>
 
-        <Button onClick={() => setShowAuth(true)} variant="default">
-          Entrar
-        </Button>
+  // Force dark theme for landing page
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add('dark');
+    
+    return () => {
+      // Cleanup handled by useTheme hook elsewhere
+    };
+  }, []);
+
+  const handleGetStarted = () => {
+    setShowAuth(true);
+  };
+
+  const handleLearnMore = () => {
+    document.getElementById('benefits')?.scrollIntoView({
+      behavior: 'smooth'
+    });
+  };
+
+  if (showAuth) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowAuth(false)}
+              className="text-gray-400 hover:text-white"
+            >
+              ← Voltar para o site
+            </Button>
+          </div>
+          <AuthForm />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      {/* Fixed Header */}
+      <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-black/80 border-b border-gray-800/50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-green-300 bg-clip-text text-transparent">
+              Compuse
+            </h1>
+          </div>
+
+          <Button 
+            onClick={handleGetStarted} 
+            className="bg-gradient-to-r from-primary to-green-400 hover:from-green-400 hover:to-primary text-black font-semibold transition-all duration-300 hover:scale-105"
+          >
+            Começar agora
+          </Button>
+        </div>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-6">
-        {showAuth ? <div className="w-full max-w-md animate-fade-in">
-            <AuthForm />
-          </div> : <div className="max-w-3xl text-center space-y-8 animate-fade-in">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              <span className="bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-                Organize suas composições
-              </span>{' '}
-              com elegância e facilidade
-            </h1>
-            
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Compuse é a plataforma para compositores organizarem suas letras, gerarem documentos de anterioridade e colaborarem em tempo real.</p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button onClick={() => setShowAuth(true)} size="lg" className="text-lg px-8">
-                Começar agora
-              </Button>
-              <Button variant="outline" size="lg" className="text-lg px-8" onClick={() => {
-            document.getElementById('features')?.scrollIntoView({
-              behavior: 'smooth'
-            });
-          }}>
-                Saiba mais
-              </Button>
-            </div>
-          </div>}
+      {/* Main Content */}
+      <main className="pt-20">
+        {/* Hero Section */}
+        <HeroSection 
+          onGetStarted={handleGetStarted}
+          onLearnMore={handleLearnMore}
+        />
+
+        {/* Benefits Section */}
+        <div id="benefits">
+          <BenefitsSection />
+        </div>
+
+        {/* Process Section */}
+        <ProcessSection />
+
+        {/* Comparison Section */}
+        <ComparisonSection />
+
+        {/* Legal Proof Section */}
+        <LegalProofSection />
+
+        {/* Final CTA Section */}
+        <FinalCTASection onGetStarted={handleGetStarted} />
       </main>
 
-      <section id="features" className="py-20 px-6 bg-secondary/50">
-        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
-          <div className="bg-card p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold mb-2">Editor Intuitivo</h3>
-            <p className="text-muted-foreground">
-              Editor de texto especializado para letras de música com seções pré-definidas.
-            </p>
+      {/* Footer */}
+      <footer className="py-12 px-6 bg-gradient-to-b from-black to-gray-950 border-t border-gray-800">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-green-300 bg-clip-text text-transparent">
+                Compuse
+              </h1>
+              <span className="text-gray-500">© {new Date().getFullYear()}</span>
+            </div>
+            
+            <div className="text-center text-gray-400">
+              <p>Protegendo compositores com tecnologia e respaldo jurídico</p>
+            </div>
+            
+            <div className="flex items-center gap-4 text-sm text-gray-500">
+              <span>Todos os direitos reservados</span>
+            </div>
           </div>
-          
-          <div className="bg-card p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold mb-2">Documentos de Anterioridade</h3>
-            <p className="text-muted-foreground">
-              Gere DAs profissionais com suas informações automaticamente.
-            </p>
-          </div>
-          
-          <div className="bg-card p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold mb-2">Colaboração em Tempo Real</h3>
-            <p className="text-muted-foreground">
-              Trabalhe em parceria com outros compositores de forma simples.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <footer className="py-8 px-6 bg-card border-t">
-        <div className="max-w-5xl mx-auto text-center">
-          <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} SongScribe Canvas. Todos os direitos reservados.
-          </p>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;
