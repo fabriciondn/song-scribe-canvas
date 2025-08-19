@@ -86,8 +86,8 @@ serve(async (req) => {
     console.log('🔄 Creating PIX payment with Abacate...');
     
     const requestBody = {
-      frequency: 'one-time',
-      methods: ['pix'],
+      frequency: 'ONE_TIME',
+      methods: ['PIX'],
       products: [
         {
           externalId: `credits-${user.id}-${Date.now()}`,
@@ -109,7 +109,7 @@ serve(async (req) => {
     
     console.log('📤 Request to Abacate:', JSON.stringify(requestBody, null, 2));
     
-    const abacateResponse = await fetch('https://api.abacatepay.com/v1/billing/subscription', {
+    const abacateResponse = await fetch('https://api.abacatepay.com/v1/billing/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -132,19 +132,19 @@ serve(async (req) => {
     const abacateData = await abacateResponse.json();
     console.log('✅ Abacate response:', JSON.stringify(abacateData, null, 2));
 
-    if (!abacateData.id) {
+    if (!abacateData.data?.id) {
       console.error('❌ Missing payment ID in Abacate response:', abacateData);
       throw new Error("Invalid payment response - missing payment ID");
     }
 
-    if (!abacateData.paymentGatewayAttributes?.pix?.qrCode) {
+    if (!abacateData.data?.paymentGatewayAttributes?.pix?.qrCode) {
       console.error('❌ Missing QR Code in Abacate response:', abacateData);
       throw new Error("Invalid payment response - missing QR Code");
     }
 
-    const paymentId = abacateData.id;
-    const qrCode = abacateData.paymentGatewayAttributes.pix.qrCode;
-    const qrCodeUrl = abacateData.paymentGatewayAttributes.pix.qrCodeUrl;
+    const paymentId = abacateData.data.id;
+    const qrCode = abacateData.data.paymentGatewayAttributes.pix.qrCode;
+    const qrCodeUrl = abacateData.data.paymentGatewayAttributes.pix.qrCodeUrl;
 
     // Save credit transaction to database
     console.log('💾 Saving credit transaction to database...');

@@ -224,9 +224,11 @@ export default function CreditsCheckout() {
         <div className="w-full max-w-md mx-auto">
           {/* Logo Centralizado */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
-              COMPOSE
-            </h1>
+            <img 
+              src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
+              alt="Compuse Logo" 
+              className="h-10 mx-auto"
+            />
             <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
           </div>
           
@@ -252,9 +254,11 @@ export default function CreditsCheckout() {
         <div className="w-full max-w-md mx-auto">
           {/* Logo Centralizado */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
-              COMPOSE
-            </h1>
+            <img 
+              src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
+              alt="Compuse Logo" 
+              className="h-10 mx-auto"
+            />
             <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
           </div>
           
@@ -283,9 +287,11 @@ export default function CreditsCheckout() {
         <div className="max-w-2xl mx-auto">
           {/* Logo Centralizado */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
-              COMPOSE
-            </h1>
+            <img 
+              src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
+              alt="Compuse Logo" 
+              className="h-10 mx-auto"
+            />
             <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
           </div>
 
@@ -369,9 +375,11 @@ export default function CreditsCheckout() {
       <div className="max-w-4xl mx-auto">
         {/* Logo Centralizado */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
-            COMPOSE
-          </h1>
+          <img 
+            src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
+            alt="Compuse Logo" 
+            className="h-10 mx-auto"
+          />
           <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
         </div>
 
@@ -445,7 +453,7 @@ export default function CreditsCheckout() {
             {/* 5 Credits Order Bump */}
             <Card 
               className={`border-2 cursor-pointer transition-all ${
-                credits === 5 ? 'border-orange-500 bg-orange-50' : 'border-orange-200 hover:border-orange-300'
+                credits === 5 ? 'border-orange-500 bg-orange-50 dark:bg-orange-950' : 'border-orange-200 hover:border-orange-300'
               }`}
               onClick={() => setCredits(5)}
             >
@@ -456,13 +464,13 @@ export default function CreditsCheckout() {
                       <Gift className="h-5 w-5 text-orange-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-orange-800">Oferta Especial - 5 Créditos</h3>
-                      <p className="text-sm text-orange-700">De R$ 30,00 por apenas R$ 25,00 cada</p>
+                      <h3 className="font-semibold text-orange-800 dark:text-orange-200">Oferta Especial - 5 Créditos</h3>
+                      <p className="text-sm text-orange-700 dark:text-orange-300">De R$ 30,00 por apenas R$ 25,00 cada</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-orange-600 line-through">R$ 150,00</div>
-                    <div className="text-lg font-bold text-orange-800">R$ 125,00</div>
+                    <div className="text-sm text-orange-600 dark:text-orange-400 line-through">R$ 150,00</div>
+                    <div className="text-lg font-bold text-orange-800 dark:text-orange-200">R$ 125,00</div>
                   </div>
                 </div>
               </CardContent>
@@ -471,7 +479,7 @@ export default function CreditsCheckout() {
             {/* 10 Credits Order Bump */}
             <Card 
               className={`border-2 cursor-pointer transition-all ${
-                credits === 10 ? 'border-green-500 bg-green-50' : 'border-green-200 hover:border-green-300'
+                credits === 10 ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-green-200 hover:border-green-300'
               }`}
               onClick={() => setCredits(10)}
             >
@@ -482,13 +490,13 @@ export default function CreditsCheckout() {
                       <Gift className="h-5 w-5 text-green-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-green-800">Super Oferta - 10 Créditos + 2 GRÁTIS</h3>
-                      <p className="text-sm text-green-700">12 créditos por R$ 25,00 cada (apenas os 10)</p>
+                      <h3 className="font-semibold text-green-800 dark:text-green-200">Super Oferta - 10 Créditos + 2 GRÁTIS</h3>
+                      <p className="text-sm text-green-700 dark:text-green-300">12 créditos por R$ 25,00 cada (apenas os 10)</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-green-600 line-through">R$ 360,00</div>
-                    <div className="text-lg font-bold text-green-800">R$ 250,00</div>
+                    <div className="text-sm text-green-600 dark:text-green-400 line-through">R$ 360,00</div>
+                    <div className="text-lg font-bold text-green-800 dark:text-green-200">R$ 250,00</div>
                   </div>
                 </div>
               </CardContent>
