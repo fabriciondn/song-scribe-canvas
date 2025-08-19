@@ -10,20 +10,25 @@ import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
-
 interface PixData {
   qr_code: string;
   qr_code_url: string;
   payment_id: string;
 }
-
 export default function CreditsCheckout() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { profile } = useProfile();
-  const { toast } = useToast();
-  const { theme } = useTheme();
-  
+  const {
+    user
+  } = useAuth();
+  const {
+    profile
+  } = useProfile();
+  const {
+    toast
+  } = useToast();
+  const {
+    theme
+  } = useTheme();
   const [credits, setCredits] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [pixData, setPixData] = useState<PixData | null>(null);
@@ -41,24 +46,20 @@ export default function CreditsCheckout() {
       }
     }
   }, [theme]);
-
   const calculatePricing = (creditAmount: number) => {
     let unitPrice = 30.00;
     let bonusCredits = 0;
     let savings = 0;
-
     if (creditAmount >= 10) {
       unitPrice = 25.00;
       bonusCredits = 2;
-      savings = (30 - 25) * creditAmount + (2 * 30); // R$5 per credit + 2 free credits
+      savings = (30 - 25) * creditAmount + 2 * 30; // R$5 per credit + 2 free credits
     } else if (creditAmount >= 5) {
       unitPrice = 25.00;
       savings = (30 - 25) * creditAmount; // R$5 per credit
     }
-
     const totalAmount = unitPrice * creditAmount;
     const originalPrice = 30 * creditAmount;
-
     return {
       unitPrice,
       totalAmount,
@@ -68,15 +69,13 @@ export default function CreditsCheckout() {
       finalCredits: creditAmount + bonusCredits
     };
   };
-
   const pricing = calculatePricing(credits);
-
   const handleProcessPayment = async () => {
     if (!user) {
       toast({
         title: "Erro",
         description: "Você precisa estar logado para comprar créditos.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
@@ -86,12 +85,11 @@ export default function CreditsCheckout() {
       toast({
         title: "Dados Incompletos",
         description: "Para continuar, complete seu perfil com nome, CPF e telefone nas configurações.",
-        variant: "destructive",
+        variant: "destructive"
       });
       navigate('/settings');
       return;
     }
-
     console.log('🔄 Iniciando processamento de pagamento...', {
       credits: credits,
       bonusCredits: pricing.bonusCredits,
@@ -99,11 +97,12 @@ export default function CreditsCheckout() {
       totalAmount: pricing.totalAmount,
       userId: user.id
     });
-
     setIsProcessing(true);
-
     try {
-      const { data, error } = await supabase.functions.invoke('create-credits-payment', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('create-credits-payment', {
         body: {
           credits: credits,
           bonusCredits: pricing.bonusCredits,
@@ -115,28 +114,27 @@ export default function CreditsCheckout() {
             cpf: profile.cpf,
             phone: profile.cellphone
           }
-        },
+        }
       });
-
-      console.log('📡 Resposta da Edge Function:', { data, error });
-
+      console.log('📡 Resposta da Edge Function:', {
+        data,
+        error
+      });
       if (error) {
         console.error('❌ Erro ao processar pagamento:', error);
         toast({
           title: "Erro no Pagamento",
           description: error.message || "Não foi possível processar o pagamento.",
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
-
       if (data?.qr_code && data?.payment_id) {
         console.log('✅ QR Code gerado com sucesso!', {
           payment_id: data.payment_id,
           has_qr_code: !!data.qr_code,
           has_qr_code_url: !!data.qr_code_url
         });
-        
         setPixData({
           qr_code: data.qr_code,
           qr_code_url: data.qr_code_url,
@@ -145,14 +143,14 @@ export default function CreditsCheckout() {
         setShowQRCode(true);
         toast({
           title: "PIX Gerado!",
-          description: "Use o QR Code para realizar o pagamento.",
+          description: "Use o QR Code para realizar o pagamento."
         });
       } else {
         console.error('❌ Dados insuficientes na resposta:', data);
         toast({
           title: "Erro na Resposta",
           description: "Resposta inválida do servidor. Tente novamente.",
-          variant: "destructive",
+          variant: "destructive"
         });
       }
     } catch (error) {
@@ -160,43 +158,39 @@ export default function CreditsCheckout() {
       toast({
         title: "Erro",
         description: "Erro inesperado ao processar pagamento.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsProcessing(false);
     }
   };
-
   const checkPaymentStatus = async () => {
     if (!pixData?.payment_id) return;
-
     setIsCheckingPayment(true);
-
     try {
-      const { data, error } = await supabase.functions.invoke('check-payment-status', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('check-payment-status', {
         body: {
           paymentId: pixData.payment_id,
           type: 'credits'
-        },
+        }
       });
-
       if (error) {
         console.error('Erro ao verificar pagamento:', error);
         return;
       }
-
       if (data?.paid) {
         setPaymentConfirmed(true);
         setIsCheckingPayment(false);
-        
+
         // Dispatch event to update credits globally
         window.dispatchEvent(new CustomEvent('credits-updated'));
-        
         toast({
           title: "Pagamento Confirmado!",
-          description: `${pricing.finalCredits} créditos foram adicionados à sua conta.`,
+          description: `${pricing.finalCredits} créditos foram adicionados à sua conta.`
         });
-
         setTimeout(() => {
           navigate('/dashboard');
         }, 3000);
@@ -207,7 +201,6 @@ export default function CreditsCheckout() {
       setIsCheckingPayment(false);
     }
   };
-
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (showQRCode && !paymentConfirmed && pixData?.payment_id) {
@@ -217,18 +210,12 @@ export default function CreditsCheckout() {
       if (interval) clearInterval(interval);
     };
   }, [showQRCode, paymentConfirmed, pixData?.payment_id]);
-
   if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex items-center justify-center">
+    return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex items-center justify-center">
         <div className="w-full max-w-md mx-auto">
           {/* Logo Centralizado */}
           <div className="text-center mb-8">
-            <img 
-              src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
-              alt="Compuse Logo" 
-              className="h-10 mx-auto"
-            />
+            <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
             <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
           </div>
           
@@ -244,21 +231,14 @@ export default function CreditsCheckout() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (paymentConfirmed) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex items-center justify-center">
+    return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex items-center justify-center">
         <div className="w-full max-w-md mx-auto">
           {/* Logo Centralizado */}
           <div className="text-center mb-8">
-            <img 
-              src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
-              alt="Compuse Logo" 
-              className="h-10 mx-auto"
-            />
+            <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
             <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
           </div>
           
@@ -277,29 +257,18 @@ export default function CreditsCheckout() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (showQRCode && pixData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
+    return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
         <div className="max-w-2xl mx-auto">
           {/* Logo Centralizado */}
           <div className="text-center mb-8">
-            <img 
-              src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
-              alt="Compuse Logo" 
-              className="h-10 mx-auto"
-            />
+            <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
             <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
           </div>
 
-          <Button
-            variant="ghost"
-            onClick={() => setShowQRCode(false)}
-            className="mb-6"
-          >
+          <Button variant="ghost" onClick={() => setShowQRCode(false)} className="mb-6">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
           </Button>
@@ -314,32 +283,20 @@ export default function CreditsCheckout() {
             <CardContent className="space-y-6">
               <div className="flex flex-col items-center space-y-4">
                 <div className="bg-white p-4 rounded-lg">
-                  <img 
-                    src={pixData.qr_code_url} 
-                    alt="QR Code PIX" 
-                    className="w-64 h-64"
-                  />
+                  <img src={pixData.qr_code_url} alt="QR Code PIX" className="w-64 h-64" />
                 </div>
                 
                 <div className="w-full">
                   <Label htmlFor="pix-code">Código PIX</Label>
                   <div className="flex gap-2 mt-1">
-                    <Input
-                      id="pix-code"
-                      value={pixData.qr_code}
-                      readOnly
-                      className="font-mono text-xs"
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        navigator.clipboard.writeText(pixData.qr_code);
-                        toast({
-                          title: "Copiado!",
-                          description: "Código PIX copiado para a área de transferência.",
-                        });
-                      }}
-                    >
+                    <Input id="pix-code" value={pixData.qr_code} readOnly className="font-mono text-xs" />
+                    <Button variant="outline" onClick={() => {
+                    navigator.clipboard.writeText(pixData.qr_code);
+                    toast({
+                      title: "Copiado!",
+                      description: "Código PIX copiado para a área de transferência."
+                    });
+                  }}>
                       Copiar
                     </Button>
                   </div>
@@ -354,40 +311,27 @@ export default function CreditsCheckout() {
                   </p>
                 </div>
 
-                {isCheckingPayment && (
-                  <div className="text-center">
+                {isCheckingPayment && <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
                     <p className="text-sm text-muted-foreground">
                       Verificando pagamento...
                     </p>
-                  </div>
-                )}
+                  </div>}
               </div>
             </CardContent>
           </Card>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
+  return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
       <div className="max-w-4xl mx-auto">
         {/* Logo Centralizado */}
         <div className="text-center mb-8">
-          <img 
-            src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
-            alt="Compuse Logo" 
-            className="h-10 mx-auto"
-          />
-          <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
+          <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
+          <p className="text-muted-foreground text-sm mt-1">Chekout</p>
         </div>
 
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/dashboard')}
-          className="mb-6"
-        >
+        <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-6">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar ao Dashboard
         </Button>
@@ -404,15 +348,7 @@ export default function CreditsCheckout() {
             <CardContent className="space-y-6">
               <div>
                 <Label htmlFor="credits">Quantidade de Créditos</Label>
-                <Input
-                  id="credits"
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={credits}
-                  onChange={(e) => setCredits(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="text-lg font-semibold"
-                />
+                <Input id="credits" type="number" min="1" max="100" value={credits} onChange={e => setCredits(Math.max(1, parseInt(e.target.value) || 1))} className="text-lg font-semibold" />
               </div>
 
               <div className="bg-muted p-4 rounded-lg">
@@ -420,12 +356,10 @@ export default function CreditsCheckout() {
                   <span className="text-muted-foreground">Créditos base:</span>
                   <span className="font-medium">{credits}</span>
                 </div>
-                {pricing.bonusCredits > 0 && (
-                  <div className="flex justify-between items-center mb-2">
+                {pricing.bonusCredits > 0 && <div className="flex justify-between items-center mb-2">
                     <span className="text-muted-foreground">Créditos bônus:</span>
                     <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
-                  </div>
-                )}
+                  </div>}
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-muted-foreground">Total de créditos:</span>
                   <span className="font-bold text-primary">{pricing.finalCredits}</span>
@@ -434,11 +368,9 @@ export default function CreditsCheckout() {
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Valor total:</span>
                   <div className="text-right">
-                    {pricing.savings > 0 && (
-                      <div className="text-xs text-muted-foreground line-through">
+                    {pricing.savings > 0 && <div className="text-xs text-muted-foreground line-through">
                         R$ {pricing.originalPrice.toFixed(2)}
-                      </div>
-                    )}
+                      </div>}
                     <div className="text-lg font-bold text-foreground">
                       R$ {pricing.totalAmount.toFixed(2)}
                     </div>
@@ -451,12 +383,7 @@ export default function CreditsCheckout() {
           {/* Order Bump Banners */}
           <div className="space-y-4">
             {/* 5 Credits Order Bump */}
-            <Card 
-              className={`border-2 cursor-pointer transition-all ${
-                credits === 5 ? 'border-orange-500 bg-orange-50 dark:bg-orange-950' : 'border-orange-200 hover:border-orange-300'
-              }`}
-              onClick={() => setCredits(5)}
-            >
+            <Card className={`border-2 cursor-pointer transition-all ${credits === 5 ? 'border-orange-500 bg-orange-50 dark:bg-orange-950' : 'border-orange-200 hover:border-orange-300'}`} onClick={() => setCredits(5)}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -477,12 +404,7 @@ export default function CreditsCheckout() {
             </Card>
 
             {/* 10 Credits Order Bump */}
-            <Card 
-              className={`border-2 cursor-pointer transition-all ${
-                credits === 10 ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-green-200 hover:border-green-300'
-              }`}
-              onClick={() => setCredits(10)}
-            >
+            <Card className={`border-2 cursor-pointer transition-all ${credits === 10 ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-green-200 hover:border-green-300'}`} onClick={() => setCredits(10)}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -540,12 +462,10 @@ export default function CreditsCheckout() {
                   <span className="text-muted-foreground">Quantidade:</span>
                   <span className="font-medium">{credits} créditos</span>
                 </div>
-                {pricing.bonusCredits > 0 && (
-                  <div className="flex justify-between">
+                {pricing.bonusCredits > 0 && <div className="flex justify-between">
                     <span className="text-muted-foreground">Créditos bônus:</span>
                     <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
-                  </div>
-                )}
+                  </div>}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total de créditos:</span>
                   <span className="font-bold text-primary">{pricing.finalCredits}</span>
@@ -556,25 +476,15 @@ export default function CreditsCheckout() {
                 </div>
               </div>
 
-              <Button 
-                onClick={handleProcessPayment} 
-                disabled={isProcessing} 
-                className="w-full"
-                size="lg"
-              >
-                {isProcessing ? (
-                  <div className="flex items-center gap-2">
+              <Button onClick={handleProcessPayment} disabled={isProcessing} className="w-full" size="lg">
+                {isProcessing ? <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     Processando...
-                  </div>
-                ) : (
-                  `Finalizar Compra - R$ ${pricing.totalAmount.toFixed(2)}`
-                )}
+                  </div> : `Finalizar Compra - R$ ${pricing.totalAmount.toFixed(2)}`}
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
