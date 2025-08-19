@@ -11,6 +11,12 @@ interface CreditPaymentRequest {
   bonusCredits: number;
   unitPrice: number;
   totalAmount: number;
+  customerData?: {
+    name: string;
+    email: string;
+    cpf: string;
+    phone: string;
+  };
 }
 
 serve(async (req) => {
@@ -54,7 +60,7 @@ serve(async (req) => {
 
     // Parse request body
     const body: CreditPaymentRequest = await req.json();
-    const { credits, bonusCredits, unitPrice, totalAmount } = body;
+    const { credits, bonusCredits, unitPrice, totalAmount, customerData } = body;
 
     console.log('💳 Payment details:', {
       userId: user.id,
@@ -91,13 +97,19 @@ serve(async (req) => {
           price: Math.round(totalAmount * 100) // Convert to cents
         }
       ],
+      customer: customerData ? {
+        name: customerData.name,
+        email: customerData.email,
+        cpf: customerData.cpf,
+        phone: customerData.phone
+      } : undefined,
       returnUrl: `${req.headers.get("origin")}/dashboard`,
       completionUrl: `${req.headers.get("origin")}/dashboard`
     };
     
     console.log('📤 Request to Abacate:', JSON.stringify(requestBody, null, 2));
     
-    const abacateResponse = await fetch('https://api.abacatepay.com/v1/billing/pix', {
+    const abacateResponse = await fetch('https://api.abacatepay.com/v1/billing/subscription', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

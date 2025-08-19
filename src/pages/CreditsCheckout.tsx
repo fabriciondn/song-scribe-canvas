@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/hooks/useTheme';
 
 interface PixData {
   qr_code: string;
@@ -21,6 +22,7 @@ export default function CreditsCheckout() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { toast } = useToast();
+  const { theme } = useTheme();
   
   const [credits, setCredits] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -28,6 +30,17 @@ export default function CreditsCheckout() {
   const [showQRCode, setShowQRCode] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+
+  // Force theme consistency
+  useEffect(() => {
+    if (theme && document.documentElement.classList.contains('dark') !== (theme === 'dark')) {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }, [theme]);
 
   const calculatePricing = (creditAmount: number) => {
     let unitPrice = 30.00;
@@ -68,6 +81,17 @@ export default function CreditsCheckout() {
       return;
     }
 
+    // Validar dados obrigatórios do perfil
+    if (!profile?.name || !profile?.cpf || !profile?.cellphone) {
+      toast({
+        title: "Dados Incompletos",
+        description: "Para continuar, complete seu perfil com nome, CPF e telefone nas configurações.",
+        variant: "destructive",
+      });
+      navigate('/settings');
+      return;
+    }
+
     console.log('🔄 Iniciando processamento de pagamento...', {
       credits: credits,
       bonusCredits: pricing.bonusCredits,
@@ -85,6 +109,12 @@ export default function CreditsCheckout() {
           bonusCredits: pricing.bonusCredits,
           unitPrice: pricing.unitPrice,
           totalAmount: pricing.totalAmount,
+          customerData: {
+            name: profile.name,
+            email: user.email,
+            cpf: profile.cpf,
+            phone: profile.cellphone
+          }
         },
       });
 
@@ -354,7 +384,7 @@ export default function CreditsCheckout() {
           Voltar ao Dashboard
         </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-6">
           {/* Credit Selection */}
           <Card>
             <CardHeader>
@@ -376,41 +406,6 @@ export default function CreditsCheckout() {
                   className="text-lg font-semibold"
                 />
               </div>
-
-              {/* Offers */}
-              {credits >= 5 && credits < 10 && (
-                <Card className="border-orange-200 bg-orange-50">
-                  <CardContent className="pt-4">
-                    <div className="flex items-center gap-2 text-orange-600 mb-2">
-                      <Gift className="h-4 w-4" />
-                      <span className="font-semibold">Oferta Especial!</span>
-                    </div>
-                    <p className="text-sm text-orange-700">
-                      5+ créditos = R$ 25,00 cada (ao invés de R$ 30,00)
-                    </p>
-                    <p className="text-xs text-orange-600 font-medium">
-                      Economia: R$ {pricing.savings.toFixed(2)}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {credits >= 10 && (
-                <Card className="border-green-200 bg-green-50">
-                  <CardContent className="pt-4">
-                    <div className="flex items-center gap-2 text-green-600 mb-2">
-                      <Gift className="h-4 w-4" />
-                      <span className="font-semibold">Super Oferta!</span>
-                    </div>
-                    <p className="text-sm text-green-700">
-                      10+ créditos = R$ 25,00 cada + 2 créditos GRÁTIS
-                    </p>
-                    <p className="text-xs text-green-600 font-medium">
-                      Economia total: R$ {pricing.savings.toFixed(2)}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
 
               <div className="bg-muted p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
@@ -445,6 +440,61 @@ export default function CreditsCheckout() {
             </CardContent>
           </Card>
 
+          {/* Order Bump Banners */}
+          <div className="space-y-4">
+            {/* 5 Credits Order Bump */}
+            <Card 
+              className={`border-2 cursor-pointer transition-all ${
+                credits === 5 ? 'border-orange-500 bg-orange-50' : 'border-orange-200 hover:border-orange-300'
+              }`}
+              onClick={() => setCredits(5)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-orange-100 p-2 rounded-full">
+                      <Gift className="h-5 w-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-orange-800">Oferta Especial - 5 Créditos</h3>
+                      <p className="text-sm text-orange-700">De R$ 30,00 por apenas R$ 25,00 cada</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-orange-600 line-through">R$ 150,00</div>
+                    <div className="text-lg font-bold text-orange-800">R$ 125,00</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 10 Credits Order Bump */}
+            <Card 
+              className={`border-2 cursor-pointer transition-all ${
+                credits === 10 ? 'border-green-500 bg-green-50' : 'border-green-200 hover:border-green-300'
+              }`}
+              onClick={() => setCredits(10)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-green-100 p-2 rounded-full">
+                      <Gift className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-green-800">Super Oferta - 10 Créditos + 2 GRÁTIS</h3>
+                      <p className="text-sm text-green-700">12 créditos por R$ 25,00 cada (apenas os 10)</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-green-600 line-through">R$ 360,00</div>
+                    <div className="text-lg font-bold text-green-800">R$ 250,00</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* User Summary */}
           <Card>
             <CardHeader>
@@ -454,11 +504,19 @@ export default function CreditsCheckout() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Nome:</span>
-                  <span className="font-medium">{profile?.name || 'Usuário'}</span>
+                  <span className="font-medium">{profile?.name || 'Não informado'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Email:</span>
                   <span className="font-medium">{user.email}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">CPF:</span>
+                  <span className="font-medium">{profile?.cpf || 'Não informado'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Telefone:</span>
+                  <span className="font-medium">{profile?.cellphone || 'Não informado'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Créditos atuais:</span>
@@ -474,37 +532,35 @@ export default function CreditsCheckout() {
                   <span className="text-muted-foreground">Quantidade:</span>
                   <span className="font-medium">{credits} créditos</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Preço unitário:</span>
-                  <span className="font-medium">R$ {pricing.unitPrice.toFixed(2)}</span>
-                </div>
                 {pricing.bonusCredits > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Bônus:</span>
-                    <span className="font-medium text-green-600">
-                      +{pricing.bonusCredits} créditos grátis
-                    </span>
+                    <span className="text-muted-foreground">Créditos bônus:</span>
+                    <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total:</span>
-                  <span className="text-primary">R$ {pricing.totalAmount.toFixed(2)}</span>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total de créditos:</span>
+                  <span className="font-bold text-primary">{pricing.finalCredits}</span>
+                </div>
+                <div className="flex justify-between text-lg">
+                  <span className="font-bold">Valor total:</span>
+                  <span className="font-bold text-primary">R$ {pricing.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
 
-              <Button
-                onClick={handleProcessPayment}
-                disabled={isProcessing || !user}
-                className="w-full text-lg py-3"
+              <Button 
+                onClick={handleProcessPayment} 
+                disabled={isProcessing} 
+                className="w-full"
                 size="lg"
               >
                 {isProcessing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     Processando...
-                  </>
+                  </div>
                 ) : (
-                  'Finalizar Compra'
+                  `Finalizar Compra - R$ ${pricing.totalAmount.toFixed(2)}`
                 )}
               </Button>
             </CardContent>
