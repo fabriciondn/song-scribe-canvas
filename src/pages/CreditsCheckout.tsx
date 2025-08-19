@@ -412,7 +412,7 @@ export default function CreditsCheckout() {
                       <Gift className="h-5 w-5 text-green-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-green-800 dark:text-green-200">Super Oferta - 10 Registros+ 2 GRÁTIS</h3>
+                      <h3 className="font-semibold text-green-800 dark:text-green-200">Super Oferta - 10 Créditos + 2 Registros  GRÁTIS</h3>
                       <p className="text-sm text-green-700 dark:text-green-300">12 créditos por R$ 25,00 cada (apenas os 10)</p>
                     </div>
                   </div>
