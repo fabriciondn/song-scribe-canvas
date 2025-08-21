@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Edit, FileText, Folder, BookText, Users, Menu, X, FileMusic, ListMusic, DollarSign, BarChart3, Trash2, Shield, User, Settings, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ import { FunctionAwareMenuItem } from '@/components/layout/FunctionAwareMenuItem
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTheme } from '@/hooks/useTheme';
 import { FunctionStatusTag } from '@/components/layout/FunctionStatusTag';
+import { useMenuItems } from '@/hooks/useMenuItems';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const location = useLocation();
   const { isPro, isAdmin, isLoading } = useUserRole();
   const { theme } = useTheme();
+  const { menuItems, isLoading: menuLoading } = useMenuItems();
 
   // Funções disponíveis para usuários básicos (não-PRO)
   const basicFunctions = ['author-registration', 'settings', 'dashboard'];
@@ -42,97 +44,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return true;
   };
 
-  const menuItems = [{
-    label: 'Dashboard',
-    icon: BarChart3,
-    path: '/dashboard',
-    functionKey: 'dashboard',
-    isPro: false
-  }, {
-    label: 'Registro autoral',
-    icon: Shield,
-    path: '/dashboard/author-registration',
-    functionKey: 'author-registration',
-    isPro: false
-  }, {
-    label: 'Compor',
-    icon: Edit,
-    path: '/composer',
-    functionKey: 'composer',
-    isPro: true
-  }, {
-    label: 'Cifrador',
-    icon: FileMusic,
-    path: '/cifrador',
-    functionKey: 'cifrador',
-    isPro: true
-  }, {
-    label: 'Bases',
-    icon: FileMusic,
-    path: '/bases',
-    functionKey: 'bases',
-    isPro: true
-  }, {
-    label: 'Pastas',
-    icon: Folder,
-    path: '/folders',
-    functionKey: 'folders',
-    isPro: true
-  }, {
-    label: 'Rascunhos',
-    icon: BookText,
-    path: '/drafts',
-    functionKey: 'drafts',
-    isPro: true
-  }, {
-    label: 'Parcerias',
-    icon: Users,
-    path: '/partnerships',
-    functionKey: 'partnerships',
-    isPro: true
-  }, {
-    label: 'Tutoriais',
-    icon: ListMusic,
-    path: '/dashboard/tutorials',
-    functionKey: 'tutorials',
-    isPro: true
-  }, {
-    label: 'Configurações',
-    icon: User,
-    path: '/dashboard/settings',
-    functionKey: 'settings',
-    isPro: false
-  }, {
-    label: 'Planos',
-    icon: Crown,
-    path: '/plans',
-    functionKey: 'plans',
-    isPro: false
-  }, {
-    label: 'Lixeira',
-    icon: Trash2,
-    path: '/dashboard/trash',
-    functionKey: 'trash',
-    isPro: true
-  }];
-
-  // Adicionar itens administrativos se o usuário for admin
-  if (isAdmin) {
-    menuItems.push({
-      label: 'Administração',
-      icon: Settings,
-      path: '/admin',
-      functionKey: 'admin',
-      isPro: false
-    });
-    menuItems.push({
-      label: 'Moderação',
-      icon: Shield,
-      path: '/moderator',
-      functionKey: 'moderator',
-      isPro: false
-    });
-  }
+  // Filter out hidden functions for non-admin users
+  const visibleMenuItems = useMemo(() => {
+    let items = menuItems;
+    
+    // Filter by admin status
+    if (!isAdmin) {
+      items = items.filter(item => !['admin', 'moderator'].includes(item.functionKey));
+    }
+    
+    // Filter hidden functions for non-admin users
+    if (!isAdmin) {
+      items = items.filter(item => !item.isHidden);
+    }
+    
+    return items;
+  }, [menuItems, isAdmin]);
 
   return (
     <>
@@ -168,9 +95,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <nav className="space-y-2 flex-1">
-          {menuItems.map(item => {
-            const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
-            const hasAccess = canAccessFunction(item.functionKey);
+          {menuLoading ? (
+            <div className="animate-pulse space-y-2">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="h-8 bg-muted rounded" />
+              ))}
+            </div>
+          ) : (
+            visibleMenuItems.map(item => {
+              const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+              const hasAccess = canAccessFunction(item.functionKey);
             
             return (
               <div key={item.path}>
@@ -218,7 +152,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 )}
               </div>
             );
-          })}
+            })
+          )}
         </nav>
 
         <div className="pt-4 mt-auto border-t border-sidebar-border">

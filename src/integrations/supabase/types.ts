@@ -304,6 +304,7 @@ export type Database = {
           function_key: string
           icon: string | null
           id: string
+          is_hidden: boolean | null
           name: string
           route: string | null
           status: string
@@ -316,6 +317,7 @@ export type Database = {
           function_key: string
           icon?: string | null
           id?: string
+          is_hidden?: boolean | null
           name: string
           route?: string | null
           status?: string
@@ -328,6 +330,7 @@ export type Database = {
           function_key?: string
           icon?: string | null
           id?: string
+          is_hidden?: boolean | null
           name?: string
           route?: string | null
           status?: string
@@ -689,6 +692,7 @@ export type Database = {
           id: string
           neighborhood: string
           number: string
+          phone: string | null
           state: string
           street: string
           updated_at: string
@@ -705,6 +709,7 @@ export type Database = {
           id?: string
           neighborhood: string
           number: string
+          phone?: string | null
           state: string
           street: string
           updated_at?: string
@@ -721,6 +726,7 @@ export type Database = {
           id?: string
           neighborhood?: string
           number?: string
+          phone?: string | null
           state?: string
           street?: string
           updated_at?: string
@@ -1152,6 +1158,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_online_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          email: string
+          last_activity: string
+          name: string
+          user_id: string
+        }[]
+      }
       get_online_users_count: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -1198,20 +1214,36 @@ export type Database = {
         Returns: boolean
       }
       secure_public_registration: {
-        Args: {
-          p_artistic_name?: string
-          p_birth_date: string
-          p_cep: string
-          p_city: string
-          p_client_ip?: unknown
-          p_cpf: string
-          p_email: string
-          p_full_name: string
-          p_neighborhood: string
-          p_number: string
-          p_state: string
-          p_street: string
-        }
+        Args:
+          | {
+              p_artistic_name?: string
+              p_birth_date: string
+              p_cep: string
+              p_city: string
+              p_client_ip?: unknown
+              p_cpf: string
+              p_email: string
+              p_full_name: string
+              p_neighborhood: string
+              p_number: string
+              p_phone?: string
+              p_state: string
+              p_street: string
+            }
+          | {
+              p_artistic_name?: string
+              p_birth_date: string
+              p_cep: string
+              p_city: string
+              p_client_ip?: unknown
+              p_cpf: string
+              p_email: string
+              p_full_name: string
+              p_neighborhood: string
+              p_number: string
+              p_state: string
+              p_street: string
+            }
         Returns: Json
       }
       update_draft: {

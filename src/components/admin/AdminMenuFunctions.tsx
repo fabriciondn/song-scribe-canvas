@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Plus, Edit, Trash2, Settings } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { MenuFunction } from '@/services/menuFunctionService';
 
 const statusLabels = {
@@ -39,6 +40,10 @@ export function AdminMenuFunctions() {
 
   const handleStatusChange = async (functionId: string, newStatus: MenuFunction['status']) => {
     await updateFunctionStatus(functionId, newStatus);
+  };
+
+  const handleVisibilityChange = async (functionId: string, isHidden: boolean) => {
+    await updateFunction(functionId, { is_hidden: isHidden });
   };
 
   const handleCreateFunction = async () => {
@@ -213,24 +218,35 @@ export function AdminMenuFunctions() {
                     <CardDescription>{func.description}</CardDescription>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-4">
                   <Badge variant={statusColors[func.status]}>
                     {statusLabels[func.status]}
                   </Badge>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openEditDialog(func)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteFunction(func.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-muted-foreground">
+                      {func.is_hidden ? 'Oculta' : 'Visível'}
+                    </span>
+                    <Switch
+                      checked={!func.is_hidden}
+                      onCheckedChange={(checked) => handleVisibilityChange(func.id, !checked)}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditDialog(func)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteFunction(func.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardHeader>

@@ -23,6 +23,7 @@ const formSchema = z.object({
   neighborhood: z.string().min(1, 'Bairro é obrigatório'),
   city: z.string().min(1, 'Cidade é obrigatória'),
   state: z.string().min(1, 'Estado é obrigatório'),
+  phone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos'),
 });
 
 export default function PublicRegistrationForm() {
@@ -44,6 +45,7 @@ export default function PublicRegistrationForm() {
       neighborhood: '',
       city: '',
       state: '',
+      phone: '',
     },
   });
 
@@ -94,6 +96,7 @@ export default function PublicRegistrationForm() {
         p_neighborhood: values.neighborhood,
         p_city: values.city,
         p_state: values.state,
+        p_phone: values.phone,
         p_artistic_name: values.artisticName || null,
         // p_client_ip would require server-side implementation for security
       });
@@ -249,6 +252,24 @@ export default function PublicRegistrationForm() {
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="(11) 99999-9999" 
+                        type="tel"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Endereço</h3>

@@ -11,6 +11,7 @@ export interface MenuFunction {
   created_by?: string;
   created_at: string;
   updated_at: string;
+  is_hidden?: boolean;
 }
 
 export const menuFunctionService = {

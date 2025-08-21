@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,14 @@ import { AdminModerators } from '@/components/admin/AdminModerators';
 import { AdminMenuFunctions } from '@/components/admin/AdminMenuFunctions';
 import { AdminForms } from '@/components/admin/AdminForms';
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useProfile } from '@/hooks/useProfile';
 import { Shield, Users, BarChart3, AlertTriangle, CheckCircle, Clock, Activity } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
@@ -31,6 +39,9 @@ const AdminDashboard: React.FC = () => {
     activeUsers: 0,
     responseTime: '120ms'
   });
+  
+  const { profile } = useProfile();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -196,6 +207,22 @@ const AdminDashboard: React.FC = () => {
                 <Activity className="h-4 w-4 mr-2" />
                 Uptime: {systemHealth.uptime}
               </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <Avatar className="w-8 h-8 cursor-pointer">
+                    <AvatarImage src={profile?.avatar_url} alt={profile?.name} />
+                    <AvatarFallback>
+                      {profile?.name?.slice(0, 2).toUpperCase() || 'AD'}
+                    </AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                    Painel Usuário
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
 
