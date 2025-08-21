@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMenuFunctions } from '@/hooks/useMenuFunctions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ const statusColors = {
 } as const;
 
 export function AdminMenuFunctions() {
-  const { functions, loading, updateFunctionStatus, updateFunction, createFunction, deleteFunction } = useMenuFunctions();
+  const { functions, loading, updateFunctionStatus, updateFunction, createFunction, deleteFunction, refresh } = useMenuFunctions();
   const [editingFunction, setEditingFunction] = useState<MenuFunction | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -37,6 +37,21 @@ export function AdminMenuFunctions() {
     icon: '',
     route: ''
   });
+
+  // Ensure 'Cifrador Neo' always appears for management
+  useEffect(() => {
+    if (!loading && !functions.find(f => f.function_key === 'cifrador-neo')) {
+      createFunction({
+        function_key: 'cifrador-neo',
+        name: 'Cifrador Neo',
+        description: 'Novo editor de cifras',
+        status: 'beta',
+        icon: 'FileMusic',
+        route: '/cifrador-neo',
+        is_hidden: false
+      }).then(() => refresh());
+    }
+  }, [loading, functions]);
 
   const handleStatusChange = async (functionId: string, newStatus: MenuFunction['status']) => {
     await updateFunctionStatus(functionId, newStatus);
@@ -207,70 +222,44 @@ export function AdminMenuFunctions() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {functions.map((func) => (
-          <Card key={func.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div>
-                    <CardTitle className="text-lg">{func.name}</CardTitle>
-                    <CardDescription>{func.description}</CardDescription>
-                  </div>
+          <Card key={func.id} className="flex flex-col h-full">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <CardTitle className="text-base mb-1">{func.name}</CardTitle>
+                  <CardDescription className="text-xs line-clamp-2 min-h-[32px]">{func.description}</CardDescription>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <Badge variant={statusColors[func.status]}>
-                    {statusLabels[func.status]}
-                  </Badge>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-muted-foreground">
-                      {func.is_hidden ? 'Oculta' : 'Visível'}
-                    </span>
-                    <Switch
-                      checked={!func.is_hidden}
-                      onCheckedChange={(checked) => handleVisibilityChange(func.id, !checked)}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openEditDialog(func)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteFunction(func.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+                <Badge variant={statusColors[func.status]}>{statusLabels[func.status]}</Badge>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Chave:</strong> {func.function_key}
-                  </p>
-                  {func.route && (
-                    <p className="text-sm text-muted-foreground">
-                      <strong>Rota:</strong> {func.route}
-                    </p>
-                  )}
+            <CardContent className="flex-1 flex flex-col justify-between gap-2">
+              <div className="space-y-1 mb-2">
+                <p className="text-xs text-muted-foreground"><strong>Chave:</strong> {func.function_key}</p>
+                {func.route && (
+                  <p className="text-xs text-muted-foreground"><strong>Rota:</strong> {func.route}</p>
+                )}
+              </div>
+              <div className="flex flex-col gap-2 mt-auto">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">{func.is_hidden ? 'Oculta' : 'Visível'}</span>
+                  <Switch
+                    checked={!func.is_hidden}
+                    onCheckedChange={async (checked) => {
+                      await handleVisibilityChange(func.id, !checked);
+                    }}
+                  />
                 </div>
-                <div>
-                  <Label htmlFor={`status-${func.id}`} className="text-sm">
-                    Alterar Status:
-                  </Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor={`status-${func.id}`} className="text-xs">Status:</Label>
                   <Select
                     value={func.status}
-                    onValueChange={(value: MenuFunction['status']) => handleStatusChange(func.id, value)}
+                    onValueChange={async (value: MenuFunction['status']) => {
+                      await handleStatusChange(func.id, value);
+                    }}
                   >
-                    <SelectTrigger className="w-40">
+                    <SelectTrigger className="w-24 h-8 text-xs" tabIndex={0} onClick={e => e.stopPropagation()}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -279,6 +268,14 @@ export function AdminMenuFunctions() {
                       <SelectItem value="coming_soon">Em Breve</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="flex items-center justify-end gap-2 mt-2">
+                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openEditDialog(func)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleDeleteFunction(func.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </CardContent>

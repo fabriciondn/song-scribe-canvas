@@ -50,16 +50,18 @@ export default function CreditsCheckout() {
     let unitPrice = 30.00;
     let bonusCredits = 0;
     let savings = 0;
-    if (creditAmount >= 10) {
+    // Promoção de 10 créditos
+    if (creditAmount === 10) {
       unitPrice = 25.00;
       bonusCredits = 2;
-      savings = (30 - 25) * creditAmount + 2 * 30; // R$5 per credit + 2 free credits
-    } else if (creditAmount >= 5) {
+      savings = (30 - 25) * 10 + 2 * 30;
+    // Promoção de 5 créditos
+    } else if (creditAmount === 5) {
       unitPrice = 25.00;
-      savings = (30 - 25) * creditAmount; // R$5 per credit
+      savings = (30 - 25) * 5;
     }
-    const totalAmount = unitPrice * creditAmount;
-    const originalPrice = 30 * creditAmount;
+    let totalAmount = creditAmount * unitPrice;
+    let originalPrice = 30 * creditAmount;
     return {
       unitPrice,
       totalAmount,
@@ -356,10 +358,12 @@ export default function CreditsCheckout() {
                   <span className="text-muted-foreground">Créditos base:</span>
                   <span className="font-medium">{credits}</span>
                 </div>
-                {pricing.bonusCredits > 0 && <div className="flex justify-between items-center mb-2">
+                {pricing.bonusCredits > 0 && (
+                  <div className="flex justify-between items-center mb-2">
                     <span className="text-muted-foreground">Créditos bônus:</span>
                     <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
-                  </div>}
+                  </div>
+                )}
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-muted-foreground">Total de créditos:</span>
                   <span className="font-bold text-primary">{pricing.finalCredits}</span>
@@ -368,9 +372,11 @@ export default function CreditsCheckout() {
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Valor total:</span>
                   <div className="text-right">
-                    {pricing.savings > 0 && <div className="text-xs text-muted-foreground line-through">
+                    {pricing.savings > 0 && (
+                      <div className="text-xs text-muted-foreground line-through">
                         R$ {pricing.originalPrice.toFixed(2)}
-                      </div>}
+                      </div>
+                    )}
                     <div className="text-lg font-bold text-foreground">
                       R$ {pricing.totalAmount.toFixed(2)}
                     </div>
@@ -396,8 +402,8 @@ export default function CreditsCheckout() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-orange-600 dark:text-orange-400 line-through">R$ 150,00</div>
-                    <div className="text-lg font-bold text-orange-800 dark:text-orange-200">R$ 125,00</div>
+                    <div className="text-sm text-orange-600 dark:text-orange-400 line-through">R$ {(30*5).toFixed(2)}</div>
+                    <div className="text-lg font-bold text-orange-800 dark:text-orange-200">R$ {(25*5).toFixed(2)}</div>
                   </div>
                 </div>
               </CardContent>
@@ -412,13 +418,13 @@ export default function CreditsCheckout() {
                       <Gift className="h-5 w-5 text-green-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-green-800 dark:text-green-200">Super Oferta - recarregue 10 Créditos e ganher +2 Registros  GRÁTIS</h3>
+                      <h3 className="font-semibold text-green-800 dark:text-green-200">Super Oferta - recarregue 10 Créditos e ganhe +2 Registros GRÁTIS</h3>
                       <p className="text-sm text-green-700 dark:text-green-300">12 créditos por R$ 25,00 cada (apenas os 10)</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-green-600 dark:text-green-400 line-through">R$ 360,00</div>
-                    <div className="text-lg font-bold text-green-800 dark:text-green-200">R$ 250,00</div>
+                    <div className="text-sm text-green-600 dark:text-green-400 line-through">R$ {(30*12).toFixed(2)}</div>
+                    <div className="text-lg font-bold text-green-800 dark:text-green-200">R$ {(25*10).toFixed(2)}</div>
                   </div>
                 </div>
               </CardContent>

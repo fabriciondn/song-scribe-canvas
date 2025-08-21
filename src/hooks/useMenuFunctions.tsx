@@ -30,7 +30,7 @@ export function useMenuFunctions() {
   const updateFunctionStatus = async (id: string, status: MenuFunction['status']) => {
     try {
       await menuFunctionService.updateFunctionStatus(id, status);
-      await fetchFunctions(); // Recarregar dados
+      setFunctions(prev => prev.map(f => f.id === id ? { ...f, status } : f));
       toast({
         title: 'Sucesso',
         description: 'Status da função atualizado com sucesso',
@@ -48,7 +48,7 @@ export function useMenuFunctions() {
   const updateFunction = async (id: string, updates: Partial<MenuFunction>) => {
     try {
       await menuFunctionService.updateMenuFunction(id, updates);
-      await fetchFunctions(); // Recarregar dados
+      setFunctions(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
       toast({
         title: 'Sucesso',
         description: 'Função atualizada com sucesso',

@@ -17,6 +17,7 @@ import Dashboard from "./pages/Dashboard";
 import DashboardHome from "./pages/DashboardHome";
 import Composer from "./pages/Composer";
 import Cifrador from "./pages/Cifrador";
+import CifradorNeo from "./pages/CifradorNeo";
 import Bases from "./pages/Bases";
 import Templates from "./pages/Templates";
 import Plans from "./pages/Plans";
@@ -78,6 +79,9 @@ const AppContent = () => {
         </Route>
         <Route path="/cifrador" element={<Dashboard />}>
           <Route index element={<Cifrador />} />
+        </Route>
+        <Route path="/cifrador-neo" element={<Dashboard />}>
+          <Route index element={<CifradorNeo />} />
         </Route>
         <Route path="/bases" element={<Dashboard />}>
           <Route index element={<Bases />} />

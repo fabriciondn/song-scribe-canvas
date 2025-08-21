@@ -64,13 +64,10 @@ const Plans = () => {
     }
   ];
 
+  const [showProfileWarning, setShowProfileWarning] = React.useState(false);
   const handleUpgrade = () => {
     if (!profile?.name || !profile?.cpf || !profile?.email) {
-      navigate('/settings', { 
-        state: { 
-          message: 'Complete seu perfil antes de fazer o upgrade para Pro. Precisamos do seu nome completo, CPF e email.' 
-        }
-      });
+      setShowProfileWarning(true);
       return;
     }
     navigate('/checkout');
@@ -94,6 +91,14 @@ const Plans = () => {
           <p className="text-xl text-muted-foreground">
             Libere todo o potencial da plataforma musical
           </p>
+          {showProfileWarning && (
+            <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 rounded-md px-4 py-3 max-w-xl mx-auto flex flex-col items-center gap-3">
+              <span>Complete seu perfil antes de fazer o upgrade para Pro. Precisamos do seu nome completo, CPF e email.</span>
+              <Button onClick={() => navigate('/dashboard/settings')} variant="default">
+                Completar perfil
+              </Button>
+            </div>
+          )}
           {subscription && (
             <div className="flex justify-center">
               <Badge variant={subscription.status === 'active' ? 'default' : 'secondary'}>

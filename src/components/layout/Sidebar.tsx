@@ -129,6 +129,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {!isCollapsed && (
                       <div className="flex items-center justify-between w-full">
                         <span>{item.label}</span>
+                        {item.functionKey === 'cifrador-neo' && (
+                          <span className="ml-2 px-2 py-0.5 text-xs rounded bg-green-600 text-white">Beta</span>
+                        )}
                         <FunctionStatusTag functionKey={item.functionKey} />
                       </div>
                     )}

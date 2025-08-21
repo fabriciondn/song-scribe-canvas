@@ -58,6 +58,14 @@ export const useMenuItems = () => {
         isPro: true
       },
       {
+        label: 'Cifrador Neo',
+        icon: FileMusic,
+        path: '/cifrador-neo',
+        functionKey: 'cifrador-neo',
+        isPro: true,
+        badge: 'Beta',
+      },
+      {
         label: 'Bases',
         icon: FileMusic,
         path: '/bases',
