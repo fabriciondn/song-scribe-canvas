@@ -72,7 +72,7 @@ export const useMenuItems = () => {
         isPro: true
       },
       {
-        label: 'Rascunhos',
+  label: 'Rascunho',
         icon: BookText,
         path: '/drafts',
         functionKey: 'drafts',

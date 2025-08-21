@@ -53,7 +53,7 @@ const mainNavigationItems = [
     icon: FolderOpen,
   },
   {
-    title: 'Rascunhos',
+  title: 'Rascunho',
     href: '/dashboard/drafts',
     icon: FileText,
   },
