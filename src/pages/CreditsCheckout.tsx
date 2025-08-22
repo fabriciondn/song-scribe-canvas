@@ -101,10 +101,7 @@ export default function CreditsCheckout() {
     });
     setIsProcessing(true);
     try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('create-credits-payment', {
+      const { data, error } = await supabase.functions.invoke('create-credits-payment', {
         body: {
           credits: credits,
           bonusCredits: pricing.bonusCredits,
@@ -118,25 +115,32 @@ export default function CreditsCheckout() {
           }
         }
       });
-      console.log('📡 Resposta da Edge Function:', {
-        data,
-        error
-      });
+      console.log('📡 Resposta da Edge Function:', { data, error });
       if (error) {
-        console.error('❌ Erro ao processar pagamento:', error);
+        // Tenta extrair mensagem detalhada do backend (Supabase Functions)
+        let errorMsg = error.message || error.error_description || error.error || 'Não foi possível processar o pagamento.';
+        // Se vier um JSON stringificado, tenta parsear
+        try {
+          const parsed = JSON.parse(errorMsg);
+          if (parsed?.error) errorMsg = parsed.error;
+        } catch {}
+
+        // Supabase Functions: erro detalhado pode vir em error.context.response.body
+        if (error.context && error.context.response && error.context.response.body) {
+          try {
+            const backend = JSON.parse(error.context.response.body);
+            if (backend?.error) errorMsg = backend.error;
+            else if (backend?.message) errorMsg = backend.message;
+          } catch {}
+        }
         toast({
           title: "Erro no Pagamento",
-          description: error.message || "Não foi possível processar o pagamento.",
+          description: errorMsg,
           variant: "destructive"
         });
         return;
       }
       if (data?.qr_code && data?.payment_id) {
-        console.log('✅ QR Code gerado com sucesso!', {
-          payment_id: data.payment_id,
-          has_qr_code: !!data.qr_code,
-          has_qr_code_url: !!data.qr_code_url
-        });
         setPixData({
           qr_code: data.qr_code,
           qr_code_url: data.qr_code_url,
@@ -148,7 +152,6 @@ export default function CreditsCheckout() {
           description: "Use o QR Code para realizar o pagamento."
         });
       } else {
-        console.error('❌ Dados insuficientes na resposta:', data);
         toast({
           title: "Erro na Resposta",
           description: "Resposta inválida do servidor. Tente novamente.",

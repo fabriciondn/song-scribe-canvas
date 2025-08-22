@@ -84,7 +84,22 @@ serve(async (req) => {
 
     // Create PIX payment with Abacate
     console.log('🔄 Creating PIX payment with Abacate...');
-    
+
+    // Validação extra para taxId (cpf)
+    let abacateCustomer: any = {};
+    if (customerData) {
+      if (!customerData.cpf || typeof customerData.cpf !== 'string' || customerData.cpf.trim().length < 11) {
+        console.error('❌ CPF ausente ou inválido em customerData:', customerData);
+        throw new Error("CPF do usuário ausente ou inválido. Não é possível gerar o pagamento.");
+      }
+      abacateCustomer = {
+        name: customerData.name,
+        email: customerData.email,
+        taxId: customerData.cpf.replace(/\D/g, ''), // Remove máscara se vier
+        cellphone: customerData.phone
+      };
+    }
+
     const requestBody = {
       metadata: {
         externalId: `credits-${user.id}-${Date.now()}`
@@ -92,14 +107,9 @@ serve(async (req) => {
       amount: Math.round(totalAmount * 100), // Convert to cents
       expiresIn: 3600, // 1 hour
       description: `${credits} Créditos${bonusCredits > 0 ? ` + ${bonusCredits} Bônus` : ''}`,
-      customer: customerData ? {
-        name: customerData.name,
-        email: customerData.email,
-        cpf: customerData.cpf,
-        cellphone: customerData.phone
-      } : {}
+      customer: abacateCustomer
     };
-    
+
     console.log('📤 Request to Abacate:', JSON.stringify(requestBody, null, 2));
     
     const abacateResponse = await fetch('https://api.abacatepay.com/v1/pixQrCode/create', {
@@ -119,7 +129,16 @@ serve(async (req) => {
         headers: Object.fromEntries(abacateResponse.headers),
         errorText: errorText
       });
-      throw new Error(`Payment service error: ${abacateResponse.status} - ${errorText}`);
+      // Retornar erro detalhado para o frontend
+      return new Response(
+        JSON.stringify({
+          error: `Abacate API error: ${abacateResponse.status} - ${errorText}`
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: abacateResponse.status,
+        }
+      );
     }
 
     const abacateData = await abacateResponse.json();
