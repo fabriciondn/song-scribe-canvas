@@ -63,7 +63,6 @@ export const useMenuItems = () => {
         path: '/cifrador-neo',
         functionKey: 'cifrador-neo',
         isPro: true,
-        badge: 'Beta',
       },
       {
         label: 'Bases',

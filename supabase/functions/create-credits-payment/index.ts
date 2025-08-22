@@ -86,30 +86,23 @@ serve(async (req) => {
     console.log('🔄 Creating PIX payment with Abacate...');
     
     const requestBody = {
-      frequency: 'ONE_TIME',
-      methods: ['PIX'],
-      products: [
-        {
-          externalId: `credits-${user.id}-${Date.now()}`,
-          name: `${credits} Créditos${bonusCredits > 0 ? ` + ${bonusCredits} Bônus` : ''}`,
-          description: `Compra de ${credits} créditos${bonusCredits > 0 ? ` com ${bonusCredits} créditos bônus` : ''}`,
-          quantity: 1,
-          price: Math.round(totalAmount * 100) // Convert to cents
-        }
-      ],
+      metadata: {
+        externalId: `credits-${user.id}-${Date.now()}`
+      },
+      amount: Math.round(totalAmount * 100), // Convert to cents
+      expiresIn: 3600, // 1 hour
+      description: `${credits} Créditos${bonusCredits > 0 ? ` + ${bonusCredits} Bônus` : ''}`,
       customer: customerData ? {
         name: customerData.name,
         email: customerData.email,
         cpf: customerData.cpf,
-        phone: customerData.phone
-      } : undefined,
-      returnUrl: `${req.headers.get("origin")}/dashboard`,
-      completionUrl: `${req.headers.get("origin")}/dashboard`
+        cellphone: customerData.phone
+      } : {}
     };
     
     console.log('📤 Request to Abacate:', JSON.stringify(requestBody, null, 2));
     
-    const abacateResponse = await fetch('https://api.abacatepay.com/v1/billing/create', {
+    const abacateResponse = await fetch('https://api.abacatepay.com/v1/pixQrCode/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -137,14 +130,14 @@ serve(async (req) => {
       throw new Error("Invalid payment response - missing payment ID");
     }
 
-    if (!abacateData.data?.paymentGatewayAttributes?.pix?.qrCode) {
+    if (!abacateData.data?.brCode) {
       console.error('❌ Missing QR Code in Abacate response:', abacateData);
       throw new Error("Invalid payment response - missing QR Code");
     }
 
     const paymentId = abacateData.data.id;
-    const qrCode = abacateData.data.paymentGatewayAttributes.pix.qrCode;
-    const qrCodeUrl = abacateData.data.paymentGatewayAttributes.pix.qrCodeUrl;
+    const qrCode = abacateData.data.brCode;
+    const qrCodeUrl = abacateData.data.brCodeBase64;
 
     // Save credit transaction to database
     console.log('💾 Saving credit transaction to database...');
