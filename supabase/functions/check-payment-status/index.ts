@@ -91,10 +91,11 @@ serve(async (req) => {
       };
       isPaymentConfirmed = true;
     } else {
-      // Use regular API to check payment status
-      const checkUrl = `https://api.abacatepay.com/v1/pixQrCode/${paymentId}`;
+      // Use correct Abacate Pay API endpoint for status check
+      // GET https://api.abacatepay.com/v1/pixQrCode/check?externalId=<id>
+      const checkUrl = `https://api.abacatepay.com/v1/pixQrCode/check?externalId=${encodeURIComponent(paymentId)}`;
       console.log('[CHECK-PAYMENT-STATUS] Calling Abacate API', { checkUrl });
-      
+
       const checkResponse = await fetch(checkUrl, {
         method: 'GET',
         headers: {
@@ -103,7 +104,7 @@ serve(async (req) => {
         },
       });
 
-      console.log('[CHECK-PAYMENT-STATUS] API response status', { 
+      console.log('[CHECK-PAYMENT-STATUS] API response status', {
         status: checkResponse.status,
         statusText: checkResponse.statusText
       });
@@ -115,9 +116,8 @@ serve(async (req) => {
           statusText: checkResponse.statusText,
           body: errorText
         });
-        
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             success: false,
             error: 'Failed to check payment status',
             details: `API returned ${checkResponse.status}: ${checkResponse.statusText}`
@@ -129,19 +129,16 @@ serve(async (req) => {
       const paymentData = await checkResponse.json();
       console.log('[CHECK-PAYMENT-STATUS] Payment data received', paymentData);
 
-      // Check if the response has the expected structure
       if (paymentData.data) {
         payment = paymentData.data;
-      } else if (paymentData.id) {
-        payment = paymentData;
       } else {
         console.log('[CHECK-PAYMENT-STATUS] Payment not found or invalid response structure', { paymentId, response: paymentData });
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             success: true,
             paymentStatus: 'NOT_FOUND',
             isPaid: false,
-            expiresAt: null 
+            expiresAt: null
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );

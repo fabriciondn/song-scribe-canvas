@@ -21,7 +21,8 @@ export default function CreditsCheckout() {
     user
   } = useAuth();
   const {
-    profile
+    profile,
+    loadProfile
   } = useProfile();
   const {
     toast
@@ -186,15 +187,20 @@ export default function CreditsCheckout() {
         console.error('Erro ao verificar pagamento:', error);
         return;
       }
-      if (data?.paid) {
+      if (data?.isPaid || data?.paid) {
         setPaymentConfirmed(true);
         setIsCheckingPayment(false);
 
-        // Dispatch event to update credits globally
+        // Atualiza créditos globalmente e força recarregar perfil
         window.dispatchEvent(new CustomEvent('credits-updated'));
+        if (typeof loadProfile === 'function') {
+          setTimeout(() => {
+            loadProfile();
+          }, 500); // pequeno delay para garantir update no backend
+        }
         toast({
           title: "Pagamento Confirmado!",
-          description: `${pricing.finalCredits} créditos foram adicionados à sua conta.`
+          description: `Parabéns! você recarregou ${pricing.finalCredits} créditos.`
         });
         setTimeout(() => {
           navigate('/dashboard');
@@ -215,6 +221,19 @@ export default function CreditsCheckout() {
       if (interval) clearInterval(interval);
     };
   }, [showQRCode, paymentConfirmed, pixData?.payment_id]);
+    useEffect(() => {
+      let interval: NodeJS.Timeout;
+      if (showQRCode && !paymentConfirmed && pixData?.payment_id) {
+        interval = setInterval(() => {
+          if (!isCheckingPayment) {
+            checkPaymentStatus();
+          }
+        }, 5000);
+      }
+      return () => {
+        if (interval) clearInterval(interval);
+      };
+    }, [showQRCode, paymentConfirmed, pixData?.payment_id, isCheckingPayment]);
   if (!user) {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex items-center justify-center">
         <div className="w-full max-w-md mx-auto">
@@ -290,23 +309,21 @@ export default function CreditsCheckout() {
                 <div className="bg-white p-4 rounded-lg">
                   <img src={pixData.qr_code_url} alt="QR Code PIX" className="w-64 h-64" />
                 </div>
-                
                 <div className="w-full">
                   <Label htmlFor="pix-code">Código PIX</Label>
                   <div className="flex gap-2 mt-1">
                     <Input id="pix-code" value={pixData.qr_code} readOnly className="font-mono text-xs" />
                     <Button variant="outline" onClick={() => {
-                    navigator.clipboard.writeText(pixData.qr_code);
-                    toast({
-                      title: "Copiado!",
-                      description: "Código PIX copiado para a área de transferência."
-                    });
-                  }}>
+                      navigator.clipboard.writeText(pixData.qr_code);
+                      toast({
+                        title: "Copiado!",
+                        description: "Código PIX copiado para a área de transferência."
+                      });
+                    }}>
                       Copiar
                     </Button>
                   </div>
                 </div>
-
                 <div className="text-center space-y-2">
                   <p className="text-2xl font-bold text-foreground">
                     R$ {pricing.totalAmount.toFixed(2)}
@@ -315,7 +332,9 @@ export default function CreditsCheckout() {
                     {pricing.finalCredits} créditos ({credits} + {pricing.bonusCredits} bônus)
                   </p>
                 </div>
-
+                <Button className="mt-4" onClick={checkPaymentStatus} disabled={isCheckingPayment}>
+                  {isCheckingPayment ? 'Verificando pagamento...' : 'Já efetuei o pagamento'}
+                </Button>
                 {isCheckingPayment && <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
                     <p className="text-sm text-muted-foreground">

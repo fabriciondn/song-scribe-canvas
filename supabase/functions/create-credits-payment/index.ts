@@ -92,11 +92,14 @@ serve(async (req) => {
         console.error('❌ CPF ausente ou inválido em customerData:', customerData);
         throw new Error("CPF do usuário ausente ou inválido. Não é possível gerar o pagamento.");
       }
+      if (!customerData.name || !customerData.email || !customerData.phone) {
+        throw new Error("Nome, email e telefone são obrigatórios para gerar o pagamento.");
+      }
       abacateCustomer = {
         name: customerData.name,
+        cellphone: customerData.phone,
         email: customerData.email,
-        taxId: customerData.cpf.replace(/\D/g, ''), // Remove máscara se vier
-        cellphone: customerData.phone
+        taxId: customerData.cpf // Enviar o CPF com máscara, conforme exemplo do curl
       };
     }
 
