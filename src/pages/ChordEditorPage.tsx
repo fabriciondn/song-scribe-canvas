@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { LyricsTextarea } from './LyricsTextarea';
-import { ChordPreview } from './ChordPreview';
-import { ChordSheetMetaModal } from './ChordSheetMetaModal';
-// ...outros imports necessários
+import { LyricsTextarea } from '@/components/cifrador/LyricsTextarea';
+import { ChordPreview } from '@/components/cifrador/ChordPreview';
+import { ChordSheetMetaModal } from '@/components/cifrador/ChordSheetMetaModal';
 
 // Tipos
 export type Placement = { charIndex: number; symbol: string };
 export type Placements = { lines: { text: string; chords: Placement[] }[] };
 
+export default function ChordEditorPage() {
   const [lyrics, setLyrics] = useState('');
   const [placements, setPlacements] = useState<Placements>({ lines: [] });
   const [key, setKey] = useState('C');

@@ -47,21 +47,21 @@ export default function CreditsCheckout() {
     }
   }, [theme]);
   const calculatePricing = (creditAmount: number) => {
-    let unitPrice = 30.00;
+    let unitPrice = 1.00; // Temporarily changed from 30.00 to 1.00 for testing
     let bonusCredits = 0;
     let savings = 0;
     // Promoção de 10 créditos
     if (creditAmount === 10) {
-      unitPrice = 25.00;
+      unitPrice = 1.00; // Temporarily changed from 25.00 to 1.00 for testing
       bonusCredits = 2;
-      savings = (30 - 25) * 10 + 2 * 30;
+      savings = (1 - 1) * 10 + 2 * 1; // Adjusted for new price
     // Promoção de 5 créditos
     } else if (creditAmount === 5) {
-      unitPrice = 25.00;
-      savings = (30 - 25) * 5;
+      unitPrice = 1.00; // Temporarily changed from 25.00 to 1.00 for testing
+      savings = (1 - 1) * 5; // Adjusted for new price
     }
     let totalAmount = creditAmount * unitPrice;
-    let originalPrice = 30 * creditAmount;
+    let originalPrice = 1 * creditAmount; // Adjusted for new price
     return {
       unitPrice,
       totalAmount,
@@ -396,14 +396,14 @@ export default function CreditsCheckout() {
                     <div className="bg-orange-100 p-2 rounded-full">
                       <Gift className="h-5 w-5 text-orange-600" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-orange-800 dark:text-orange-200">Oferta Especial - 5 Créditos</h3>
-                      <p className="text-sm text-orange-700 dark:text-orange-300">De R$ 30,00 por apenas R$ 25,00 cada</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-orange-600 dark:text-orange-400 line-through">R$ {(30*5).toFixed(2)}</div>
-                    <div className="text-lg font-bold text-orange-800 dark:text-orange-200">R$ {(25*5).toFixed(2)}</div>
+                     <div>
+                       <h3 className="font-semibold text-orange-800 dark:text-orange-200">Oferta Especial - 5 Créditos</h3>
+                       <p className="text-sm text-orange-700 dark:text-orange-300">De R$ 1,00 por apenas R$ 1,00 cada</p>
+                     </div>
+                   </div>
+                   <div className="text-right">
+                     <div className="text-sm text-orange-600 dark:text-orange-400 line-through">R$ {(1*5).toFixed(2)}</div>
+                     <div className="text-lg font-bold text-orange-800 dark:text-orange-200">R$ {(1*5).toFixed(2)}</div>
                   </div>
                 </div>
               </CardContent>
@@ -417,14 +417,14 @@ export default function CreditsCheckout() {
                     <div className="bg-green-100 p-2 rounded-full">
                       <Gift className="h-5 w-5 text-green-600" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-green-800 dark:text-green-200">Super Oferta - recarregue 10 Créditos e ganhe +2 Registros GRÁTIS</h3>
-                      <p className="text-sm text-green-700 dark:text-green-300">12 créditos por R$ 25,00 cada (apenas os 10)</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-green-600 dark:text-green-400 line-through">R$ {(30*12).toFixed(2)}</div>
-                    <div className="text-lg font-bold text-green-800 dark:text-green-200">R$ {(25*10).toFixed(2)}</div>
+                     <div>
+                       <h3 className="font-semibold text-green-800 dark:text-green-200">Super Oferta - recarregue 10 Créditos e ganhe +2 Registros GRÁTIS</h3>
+                       <p className="text-sm text-green-700 dark:text-green-300">12 créditos por R$ 1,00 cada (apenas os 10)</p>
+                     </div>
+                   </div>
+                   <div className="text-right">
+                     <div className="text-sm text-green-600 dark:text-green-400 line-through">R$ {(1*12).toFixed(2)}</div>
+                     <div className="text-lg font-bold text-green-800 dark:text-green-200">R$ {(1*10).toFixed(2)}</div>
                   </div>
                 </div>
               </CardContent>
