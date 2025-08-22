@@ -27,7 +27,8 @@ const Dashboard: React.FC = () => {
   useImpersonationSync();
 
   console.log('🏠 Dashboard - Role check:', { userRole, isRoleLoading });
-  
+
+  // Redirecionar moderador para /moderator após login
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       navigate('/', { replace: true });
@@ -36,8 +37,13 @@ const Dashboard: React.FC = () => {
         description: 'Você precisa estar logado para acessar esta área.',
         variant: 'destructive',
       });
+      return;
     }
-  }, [isAuthenticated, isLoading, navigate, toast]);
+    // Se for moderador e não está impersonando, redirecionar para /moderator
+    if (!isRoleLoading && userRole?.role === 'moderator') {
+      navigate('/moderator', { replace: true });
+    }
+  }, [isAuthenticated, isLoading, userRole, isRoleLoading, navigate, toast]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(prev => !prev);

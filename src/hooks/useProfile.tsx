@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
+import { useImpersonation } from '@/context/ImpersonationContext';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface UserProfile {
@@ -25,12 +26,16 @@ export interface UserProfile {
 
 export const useProfile = () => {
   const { user } = useAuth();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Memoizar o user ID para evitar re-renders desnecessários
-  const userId = useMemo(() => user?.id, [user?.id]);
+  const userId = useMemo(() => {
+    if (isImpersonating && impersonatedUser?.id) return impersonatedUser.id;
+    return user?.id;
+  }, [user?.id, isImpersonating, impersonatedUser?.id]);
 
   // Memoizar a função loadProfile para evitar re-criações desnecessárias
   const loadProfile = useCallback(async () => {

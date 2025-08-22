@@ -1,3 +1,4 @@
+import { useImpersonation } from '@/context/ImpersonationContext';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -12,6 +13,7 @@ interface UserRole {
 
 export const useUserRole = (): UserRole => {
   const { user } = useAuth();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
   const { isPro: subscriptionIsPro, isLoading: subscriptionLoading } = useSubscription();
   const [role, setRole] = useState<UserRole>({
     isPro: false,
@@ -22,7 +24,8 @@ export const useUserRole = (): UserRole => {
 
   useEffect(() => {
     const fetchUserRole = async () => {
-      if (!user?.id) {
+      const currentUserId = isImpersonating && impersonatedUser?.id ? impersonatedUser.id : user?.id;
+      if (!currentUserId) {
         setRole({
           isPro: false,
           isAdmin: false,
@@ -37,7 +40,7 @@ export const useUserRole = (): UserRole => {
         const { data: adminData } = await supabase
           .from('admin_users')
           .select('role')
-          .eq('user_id', user.id)
+          .eq('user_id', currentUserId)
           .single();
 
         if (adminData) {
@@ -72,7 +75,7 @@ export const useUserRole = (): UserRole => {
     };
 
     fetchUserRole();
-  }, [user?.id, subscriptionIsPro, subscriptionLoading]);
+  }, [user?.id, isImpersonating, impersonatedUser?.id, subscriptionIsPro, subscriptionLoading]);
 
   return role;
 };

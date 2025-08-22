@@ -1,3 +1,4 @@
+import { useImpersonation } from '@/context/ImpersonationContext';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,13 +19,15 @@ export interface Subscription {
 
 export const useSubscription = () => {
   const { user } = useAuth();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSubscription = async () => {
-      if (!user?.id) {
+      const currentUserId = isImpersonating && impersonatedUser?.id ? impersonatedUser.id : user?.id;
+      if (!currentUserId) {
         setSubscription(null);
         setIsLoading(false);
         return;
@@ -37,7 +40,7 @@ export const useSubscription = () => {
         const { data, error } = await supabase
           .from('subscriptions')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', currentUserId)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -49,7 +52,7 @@ export const useSubscription = () => {
           const { data: newSub, error: createError } = await supabase
             .from('subscriptions')
             .insert({
-              user_id: user.id,
+              user_id: currentUserId,
               status: 'free',
               plan_type: 'free',
               auto_renew: false,
@@ -89,16 +92,17 @@ export const useSubscription = () => {
     };
 
     fetchSubscription();
-  }, [user?.id]);
+  }, [user?.id, isImpersonating, impersonatedUser?.id]);
 
   const refreshSubscription = async () => {
-    if (!user?.id) return;
+    const currentUserId = isImpersonating && impersonatedUser?.id ? impersonatedUser.id : user?.id;
+    if (!currentUserId) return;
 
     try {
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', currentUserId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();

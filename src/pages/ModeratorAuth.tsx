@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Shield, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { validateModeratorRegistrationToken, markTokenAsUsed } from '@/services/moderatorTokenService';
+
 import { useAuth } from '@/hooks/useAuth';
 
 const ModeratorAuth = () => {
@@ -17,10 +17,10 @@ const ModeratorAuth = () => {
   const [searchParams] = useSearchParams();
   const { isAuthenticated } = useAuth();
   
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  // Only login mode is supported now
+  const [mode] = useState<'login'>('login');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [tokenValid, setTokenValid] = useState<boolean | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -28,24 +28,7 @@ const ModeratorAuth = () => {
     confirmPassword: ''
   });
 
-  const token = searchParams.get('token');
 
-  // Verificar token na URL
-  useEffect(() => {
-    const checkToken = async () => {
-      if (token) {
-        const isValid = await validateModeratorRegistrationToken(token);
-        setTokenValid(isValid);
-        if (isValid) {
-          setMode('register');
-        }
-      } else {
-        setTokenValid(null);
-      }
-    };
-
-    checkToken();
-  }, [token]);
 
   // Redirecionar se já autenticado
   useEffect(() => {
@@ -60,91 +43,35 @@ const ModeratorAuth = () => {
     setIsSubmitting(true);
 
     try {
-      if (mode === 'register') {
-        // Validações específicas para registro
-        if (!token || !tokenValid) {
-          throw new Error('Token de cadastro inválido ou expirado');
+      // Login
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (error) throw error;
+
+      // Verificar se é moderador
+      if (data.user) {
+        const { data: moderatorData } = await supabase
+          .from('admin_users')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .in('role', ['admin', 'moderator'])
+          .single();
+
+        if (!moderatorData) {
+          await supabase.auth.signOut();
+          throw new Error('Acesso negado. Esta área é restrita a moderadores e administradores.');
         }
 
-        if (formData.password !== formData.confirmPassword) {
-          throw new Error('As senhas não coincidem');
-        }
-
-        if (formData.password.length < 6) {
-          throw new Error('A senha deve ter pelo menos 6 caracteres');
-        }
-
-        // Registrar usuário
-        const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              name: formData.name,
-              role: 'moderator'
-            },
-            emailRedirectTo: `${window.location.origin}/moderator`
-          }
-        });
-
-        if (error) throw error;
-
-        if (data.user) {
-          console.log('🔧 Registrando moderador com token:', token);
-          
-          // Usar função de banco de dados para registrar moderador com token
-          const { error: registerError } = await supabase.rpc('register_moderator_with_token', {
-            p_token: token,
-            p_user_id: data.user.id,
-            p_name: formData.name,
-            p_email: formData.email
-          });
-
-          if (registerError) {
-            console.error('Erro ao registrar moderador:', registerError);
-            await supabase.auth.signOut(); // Desfazer cadastro se houver erro
-            throw new Error('Erro ao criar conta de moderador: ' + registerError.message);
-          }
-
-          console.log('✅ Moderador registrado com sucesso!');
-          toast.success('Conta de moderador criada com sucesso!');
-          
-          // Aguardar um pouco para garantir que tudo foi processado
-          setTimeout(() => {
-            navigate('/moderator', { replace: true });
-          }, 1000);
-        }
-      } else {
-        // Login
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password
-        });
-
-        if (error) throw error;
-
-        // Verificar se é moderador
-        if (data.user) {
-          const { data: moderatorData } = await supabase
-            .from('admin_users')
-            .select('role')
-            .eq('user_id', data.user.id)
-            .in('role', ['admin', 'moderator'])
-            .single();
-
-          if (!moderatorData) {
-            await supabase.auth.signOut();
-            throw new Error('Acesso negado. Esta área é restrita a moderadores e administradores.');
-          }
-
-          toast.success('Login realizado com sucesso!');
-          // Evitar redirecionamento automático imediato após login
-          sessionStorage.setItem('skipModeratorRedirect', 'true');
-          setTimeout(() => {
-            sessionStorage.removeItem('skipModeratorRedirect');
-            navigate('/moderator', { replace: true });
-          }, 100);
-        }
+        toast.success('Login realizado com sucesso!');
+        // Evitar redirecionamento automático imediato após login
+        sessionStorage.setItem('skipModeratorRedirect', 'true');
+        setTimeout(() => {
+          sessionStorage.removeItem('skipModeratorRedirect');
+          navigate('/moderator', { replace: true });
+        }, 100);
       }
     } catch (error: any) {
       console.error('Auth error:', error);
@@ -170,34 +97,9 @@ const ModeratorAuth = () => {
               <Shield className="h-8 w-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl">
-            {mode === 'register' ? 'Cadastro de Moderador' : 'Acesso de Moderador'}
-          </CardTitle>
-          <CardDescription>
-            {mode === 'register' 
-              ? 'Complete seu cadastro para acessar o painel de moderação'
-              : 'Entre com suas credenciais de moderador'
-            }
-          </CardDescription>
-          
-          {token && (
-            <div className="mt-4">
-              {tokenValid === true && (
-                <Badge className="flex items-center space-x-1 bg-green-100 text-green-800 border-green-200">
-                  <CheckCircle className="h-3 w-3" />
-                  <span>Token válido</span>
-                </Badge>
-              )}
-              {tokenValid === false && (
-                <Badge variant="destructive" className="flex items-center space-x-1">
-                  <AlertTriangle className="h-3 w-3" />
-                  <span>Token inválido ou expirado</span>
-                </Badge>
-              )}
-            </div>
-          )}
+          <CardTitle className="text-2xl">Acesso de Moderador</CardTitle>
+          <CardDescription>Entre com suas credenciais de moderador</CardDescription>
         </CardHeader>
-
         <CardContent>
           {error && (
             <Alert className="mb-6" variant="destructive">
@@ -205,23 +107,7 @@ const ModeratorAuth = () => {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-
           <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === 'register' && (
-              <div>
-                <Label htmlFor="name">Nome Completo</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  required
-                  disabled={isSubmitting}
-                  placeholder="Seu nome completo"
-                />
-              </div>
-            )}
-
             <div>
               <Label htmlFor="email">Email</Label>
               <Input
@@ -234,7 +120,6 @@ const ModeratorAuth = () => {
                 placeholder="seu.email@exemplo.com"
               />
             </div>
-
             <div>
               <Label htmlFor="password">Senha</Label>
               <Input
@@ -248,51 +133,14 @@ const ModeratorAuth = () => {
                 minLength={6}
               />
             </div>
-
-            {mode === 'register' && (
-              <div>
-                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                  required
-                  disabled={isSubmitting}
-                  placeholder="Confirme sua senha"
-                  minLength={6}
-                />
-              </div>
-            )}
-
             <Button
               type="submit"
               className="w-full"
-              disabled={isSubmitting || (mode === 'register' && !tokenValid)}
+              disabled={isSubmitting}
             >
-              {isSubmitting 
-                ? (mode === 'register' ? 'Criando conta...' : 'Entrando...') 
-                : (mode === 'register' ? 'Criar Conta de Moderador' : 'Entrar')
-              }
+              {isSubmitting ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
-
-          {!token && (
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-                className="text-sm text-primary hover:underline"
-                disabled={isSubmitting}
-              >
-                {mode === 'login' 
-                  ? 'Tem um token de cadastro? Clique aqui' 
-                  : 'Já tem uma conta? Fazer login'
-                }
-              </button>
-            </div>
-          )}
-
           <div className="mt-6 text-center">
             <button
               type="button"

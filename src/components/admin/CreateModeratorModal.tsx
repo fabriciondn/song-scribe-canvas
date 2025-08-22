@@ -56,8 +56,12 @@ export const CreateModeratorModal: React.FC<CreateModeratorModalProps> = ({
     }
 
     setLoading(true);
+
     try {
-      // Chamar a edge function para criar o moderador
+      // Obter o token JWT do usuário autenticado
+      const session = supabase.auth.getSession && (await supabase.auth.getSession()).data.session;
+      const accessToken = session?.access_token;
+      // Chamar a edge function para criar o moderador, enviando o token no header
       const { data, error } = await supabase.functions.invoke('create-user-by-admin', {
         body: {
           name: formData.name,
@@ -65,6 +69,9 @@ export const CreateModeratorModal: React.FC<CreateModeratorModalProps> = ({
           password: formData.password,
           role: 'moderator',
           credits: parseInt(formData.credits) || 500
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`
         }
       });
 
