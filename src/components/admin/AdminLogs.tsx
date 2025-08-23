@@ -157,7 +157,7 @@ export const AdminLogs: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+  <div className="space-y-4 md:space-y-6 px-1 md:px-0">
       {/* Estatísticas dos Logs */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>

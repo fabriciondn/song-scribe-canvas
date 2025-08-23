@@ -110,7 +110,7 @@ export const AdminUsers: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+  <div className="space-y-4 md:space-y-6 px-1 md:px-0">
       <Card>
         <CardHeader>
           <CardTitle>Gerenciamento de Usuários</CardTitle>
@@ -118,7 +118,7 @@ export const AdminUsers: React.FC = () => {
             Visualize e gerencie todos os usuários da plataforma
           </CardDescription>
         </CardHeader>
-        <CardContent>
+    <CardContent className="overflow-x-auto">
           {/* Barra de Pesquisa */}
           <div className="mb-6">
             <div className="relative">
@@ -133,79 +133,112 @@ export const AdminUsers: React.FC = () => {
           </div>
 
           {/* Tabela de Usuários */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Nome Artístico</TableHead>
-                  <TableHead>Créditos</TableHead>
-                  <TableHead>Data de Registro</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      {user.name || 'Nome não informado'}
-                    </TableCell>
-                    <TableCell>
-                      <DataMask data={user.email} type="email" />
-                    </TableCell>
-                    <TableCell>
-                      {user.artistic_name ? (
-                        <Badge variant="outline">{user.artistic_name}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Coins className="h-4 w-4 text-yellow-600" />
-                        {user.credits}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(user.created_at).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2 flex-wrap gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewDetails(user.id)}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Detalhes
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditCredits(user)}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Editar Créditos
-                        </Button>
-                        <ImpersonateButton 
-                          targetUser={user} 
-                          targetRole="user" 
-                        />
-                      </div>
-                    </TableCell>
+          <div className="rounded-md border min-w-[350px] text-xs md:text-base">
+            {/* Mobile: cards empilhados, Desktop: tabela */}
+            <div className="block md:hidden divide-y divide-border">
+              {filteredUsers.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    {searchTerm ? 'Nenhum usuário encontrado com o termo pesquisado' : 'Nenhum usuário encontrado'}
+                  </p>
+                </div>
+              )}
+              {filteredUsers.map((user) => (
+                <div key={user.id} className="py-3 px-2 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold">{user.name || 'Nome não informado'}</span>
+                    <Badge variant="outline">{user.artistic_name || '-'}</Badge>
+                  </div>
+                  <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+                    <span><b>E-mail:</b> <DataMask data={user.email} type="email" /></span>
+                    <span><b>Créditos:</b> <span className="inline-flex items-center gap-1"><Coins className="h-4 w-4 text-yellow-600" />{user.credits}</span></span>
+                    <span><b>Registro:</b> {new Date(user.created_at).toLocaleDateString('pt-BR')}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Button variant="outline" size="sm" onClick={() => handleViewDetails(user.id)}>
+                      <Eye className="h-4 w-4 mr-1" />Detalhes
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleEditCredits(user)}>
+                      <Edit className="h-4 w-4 mr-1" />Editar Créditos
+                    </Button>
+                    <ImpersonateButton targetUser={user} targetRole="user" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hidden md:block">
+              <Table className="min-w-[350px] text-xs md:text-base">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Nome Artístico</TableHead>
+                    <TableHead>Créditos</TableHead>
+                    <TableHead>Data de Registro</TableHead>
+                    <TableHead>Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {filteredUsers.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  {searchTerm ? 'Nenhum usuário encontrado com o termo pesquisado' : 'Nenhum usuário encontrado'}
-                </p>
-              </div>
-            )}
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">
+                        {user.name || 'Nome não informado'}
+                      </TableCell>
+                      <TableCell>
+                        <DataMask data={user.email} type="email" />
+                      </TableCell>
+                      <TableCell>
+                        {user.artistic_name ? (
+                          <Badge variant="outline">{user.artistic_name}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Coins className="h-4 w-4 text-yellow-600" />
+                          {user.credits}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2 flex-wrap gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewDetails(user.id)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Detalhes
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditCredits(user)}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Editar Créditos
+                          </Button>
+                          <ImpersonateButton 
+                            targetUser={user} 
+                            targetRole="user" 
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {filteredUsers.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    {searchTerm ? 'Nenhum usuário encontrado com o termo pesquisado' : 'Nenhum usuário encontrado'}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

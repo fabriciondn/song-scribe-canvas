@@ -35,7 +35,7 @@ export const AdminModerators = () => {
   });
 
   return (
-    <div className="space-y-6">
+  <div className="space-y-4 md:space-y-6 px-1 md:px-0">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Gestão de Moderadores</h2>
@@ -56,38 +56,40 @@ export const AdminModerators = () => {
       />
 
       {/* Lista de moderadores */}
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold mb-2">Moderadores cadastrados</h3>
+      <div className="mt-4 md:mt-8">
+        <h3 className="text-base md:text-lg font-semibold mb-2">Moderadores cadastrados</h3>
         {isLoading ? (
           <div className="text-muted-foreground">Carregando moderadores...</div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Foto</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Função</TableHead>
-                <TableHead>Criado em</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(moderators as any[])?.map((mod: any) => (
-                <TableRow key={mod.user_id}>
-                  <TableCell>
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={mod.profile.avatar_url} alt={mod.profile.name} />
-                      <AvatarFallback>{mod.profile.name?.[0] || 'M'}</AvatarFallback>
-                    </Avatar>
-                  </TableCell>
-                  <TableCell>{mod.profile.name || '-'}</TableCell>
-                  <TableCell>{mod.profile.email || '-'}</TableCell>
-                  <TableCell>{mod.role}</TableCell>
-                  <TableCell>{new Date(mod.created_at).toLocaleDateString('pt-BR')}</TableCell>
+          <div className="overflow-x-auto">
+            <Table className="min-w-[350px] text-xs md:text-base">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Foto</TableHead>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Função</TableHead>
+                  <TableHead>Criado em</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {(moderators as any[])?.map((mod: any) => (
+                  <TableRow key={mod.user_id}>
+                    <TableCell>
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={mod.profile.avatar_url} alt={mod.profile.name} />
+                        <AvatarFallback>{mod.profile.name?.[0] || 'M'}</AvatarFallback>
+                      </Avatar>
+                    </TableCell>
+                    <TableCell>{mod.profile.name || '-'}</TableCell>
+                    <TableCell>{mod.profile.email || '-'}</TableCell>
+                    <TableCell>{mod.role}</TableCell>
+                    <TableCell>{new Date(mod.created_at).toLocaleDateString('pt-BR')}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </div>
     </div>

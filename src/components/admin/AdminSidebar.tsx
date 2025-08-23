@@ -96,7 +96,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   const collapsed = !state || state === "collapsed";
 
   return (
-    <Sidebar className="bg-black border-r border-gray-800" collapsible="icon">
+  <Sidebar className="bg-black border-r border-gray-800 w-64 md:w-64 fixed md:static inset-y-0 left-0 z-50 md:z-auto transition-transform duration-300 md:translate-x-0 translate-x-[-100%] md:block" collapsible="icon">
       <SidebarHeader className="border-b border-gray-800 p-4">
         <div className="flex items-center gap-3">
           {!collapsed && (

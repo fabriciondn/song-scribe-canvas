@@ -27,7 +27,7 @@ export const AdminSettings: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+  <div className="space-y-4 md:space-y-6 px-1 md:px-0">
       {/* Configurações Gerais */}
       <Card>
         <CardHeader>

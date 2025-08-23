@@ -83,87 +83,43 @@ serve(async (req) => {
     }
 
     // Create PIX payment with Abacate
-    console.log('🔄 Creating PIX payment with Abacate...');
-
-    // Validação extra para taxId (cpf)
-    let abacateCustomer: any = {};
-    if (customerData) {
-      if (!customerData.cpf || typeof customerData.cpf !== 'string' || customerData.cpf.trim().length < 11) {
-        console.error('❌ CPF ausente ou inválido em customerData:', customerData);
-        throw new Error("CPF do usuário ausente ou inválido. Não é possível gerar o pagamento.");
-      }
-      if (!customerData.name || !customerData.email || !customerData.phone) {
-        throw new Error("Nome, email e telefone são obrigatórios para gerar o pagamento.");
-      }
-      abacateCustomer = {
-        name: customerData.name,
-        cellphone: customerData.phone,
-        email: customerData.email,
-        taxId: customerData.cpf // Enviar o CPF com máscara, conforme exemplo do curl
-      };
+    console.log('🔄 Criando QRCode Pix na Abacate Pay...');
+    // Validação dos dados do cliente
+    if (!customerData || !customerData.cpf || !customerData.name || !customerData.email || !customerData.phone) {
+      throw new Error("Nome, email, telefone e CPF são obrigatórios para gerar o pagamento.");
     }
-
-    const requestBody = {
-      metadata: {
-        externalId: `credits-${user.id}-${Date.now()}`
-      },
-      amount: Math.round(totalAmount * 100), // Convert to cents
-      expiresIn: 3600, // 1 hour
-      description: `${credits} Créditos${bonusCredits > 0 ? ` + ${bonusCredits} Bônus` : ''}`,
+    const abacateCustomer = {
+      name: customerData.name,
+      cellphone: customerData.phone,
+      email: customerData.email,
+      taxId: customerData.cpf.replace(/\D/g, '')
+    };
+    const abacateBody = {
+      amount: Math.round(totalAmount * 100),
+      expiresIn: 3600,
+      description: `${credits} Crédito${credits > 1 ? 's' : ''}`,
       customer: abacateCustomer
     };
-
-    console.log('📤 Request to Abacate:', JSON.stringify(requestBody, null, 2));
-    
     const abacateResponse = await fetch('https://api.abacatepay.com/v1/pixQrCode/create', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${abacateApiKey}`
+        Authorization: `Bearer ${abacateApiKey}`,
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(abacateBody)
     });
-
+    const abacateData = await abacateResponse.json();
     if (!abacateResponse.ok) {
-      const errorText = await abacateResponse.text();
-      console.error('❌ Abacate API error:', {
-        status: abacateResponse.status,
-        statusText: abacateResponse.statusText,
-        headers: Object.fromEntries(abacateResponse.headers),
-        errorText: errorText
-      });
-      // Retornar erro detalhado para o frontend
+      console.error('❌ Erro ao criar QRCode Pix:', abacateData.error || abacateResponse.statusText);
       return new Response(
-        JSON.stringify({
-          error: `Abacate API error: ${abacateResponse.status} - ${errorText}`
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: abacateResponse.status,
-        }
+        JSON.stringify({ error: abacateData.error || abacateResponse.statusText }),
+        { status: abacateResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const abacateData = await abacateResponse.json();
-    console.log('✅ Abacate response:', JSON.stringify(abacateData, null, 2));
-
     if (!abacateData.data?.id) {
-      console.error('❌ Missing payment ID in Abacate response:', abacateData);
-      throw new Error("Invalid payment response - missing payment ID");
+      throw new Error('Resposta inválida da Abacate Pay: id ausente');
     }
-
-    if (!abacateData.data?.brCode) {
-      console.error('❌ Missing QR Code in Abacate response:', abacateData);
-      throw new Error("Invalid payment response - missing QR Code");
-    }
-
-    const paymentId = abacateData.data.id;
-    const qrCode = abacateData.data.brCode;
-    const qrCodeUrl = abacateData.data.brCodeBase64;
-
-    // Save credit transaction to database
-    console.log('💾 Saving credit transaction to database...');
-    
+    // Salva a transação no banco
     const { error: insertError } = await supabaseService
       .from('credit_transactions')
       .insert({
@@ -172,35 +128,24 @@ serve(async (req) => {
         bonus_credits: bonusCredits,
         unit_price: unitPrice,
         total_amount: totalAmount,
-        payment_id: paymentId,
+        payment_id: abacateData.data.id,
         status: 'pending'
       });
-
     if (insertError) {
-      console.error('❌ Database error:', insertError);
-      throw new Error("Failed to save transaction");
+      throw new Error('Erro ao salvar transação no banco');
     }
-
-    console.log('✅ Credit transaction saved successfully');
-
-    // Return PIX payment data
+    // Retorna os dados para o frontend
     return new Response(
       JSON.stringify({
-        payment_id: paymentId,
-        qr_code: qrCode,
-        qr_code_url: qrCodeUrl,
+        payment_id: abacateData.data.id,
+        qr_code: abacateData.data.brCode,
+        qr_code_url: abacateData.data.brCodeBase64,
         amount: totalAmount,
-        credits: credits,
-        bonusCredits: bonusCredits,
+        credits,
+        bonusCredits,
         finalCredits: credits + bonusCredits
       }),
-      {
-        headers: { 
-          ...corsHeaders, 
-          "Content-Type": "application/json" 
-        },
-        status: 200,
-      }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {

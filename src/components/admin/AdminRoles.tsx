@@ -181,7 +181,7 @@ export const AdminRoles: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+  <div className="space-y-4 md:space-y-6 px-1 md:px-0">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Gerenciar Funções</h2>
@@ -259,8 +259,8 @@ export const AdminRoles: React.FC = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="overflow-x-auto">
+          <Table className="min-w-[350px] text-xs md:text-base">
             <TableHeader>
               <TableRow>
                 <TableHead>Usuário</TableHead>

@@ -111,7 +111,7 @@ export const AdminForms: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+  <div className="space-y-4 md:space-y-6 px-1 md:px-0">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Formulários de Registro</h2>
         <Badge variant="secondary" className="text-sm">
@@ -131,7 +131,7 @@ export const AdminForms: React.FC = () => {
             />
           </div>
         </CardHeader>
-        <CardContent>
+  <CardContent className="overflow-x-auto">
           {filteredForms.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {searchTerm ? 'Nenhum formulário encontrado com esses termos de busca.' : 'Nenhum formulário recebido ainda.'}
