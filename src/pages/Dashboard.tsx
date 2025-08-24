@@ -7,6 +7,7 @@ import { ImpersonationBanner } from '@/components/ui/impersonation-banner';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
+import { useImpersonation } from '@/context/ImpersonationContext';
 import { useToast } from '@/hooks/use-toast';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { useImpersonationSync } from '@/hooks/useImpersonationSync';
@@ -18,6 +19,7 @@ const Dashboard: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
   const { userRole, isRoleLoading } = useRoleBasedNavigation();
+  const { isImpersonating } = useImpersonation();
   const { isMobile } = useMobileDetection();
   const { reportAuthIssue } = useRegionalAuth(); // Monitor de problemas regionais
   const navigate = useNavigate();
@@ -39,11 +41,11 @@ const Dashboard: React.FC = () => {
       });
       return;
     }
-    // Se for moderador e não está impersonando, redirecionar para /moderator
-    if (!isRoleLoading && userRole?.role === 'moderator') {
+    // Só redireciona moderador se NÃO estiver impersonando
+    if (!isRoleLoading && userRole?.role === 'moderator' && !isImpersonating) {
       navigate('/moderator', { replace: true });
     }
-  }, [isAuthenticated, isLoading, userRole, isRoleLoading, navigate, toast]);
+  }, [isAuthenticated, isLoading, userRole, isRoleLoading, isImpersonating, navigate, toast]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(prev => !prev);

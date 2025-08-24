@@ -49,13 +49,11 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
         if (adminData && !adminError) {
           console.log('👤 Role detectado:', adminData.role);
           const role = adminData.role === 'super_admin' ? 'admin' : adminData.role;
-          if (['admin', 'moderator', 'user'].includes(role)) {
-            setUserRole(role as 'admin' | 'moderator' | 'user');
-          } else {
-            setUserRole('user');
-          }
-          return;
+          setUserRole(role as 'admin' | 'moderator' | 'user');
+        } else {
+          setUserRole('user');
         }
+        return;
 
         if (adminError && adminError.code !== 'PGRST116') {
           console.error('Erro ao verificar role:', adminError);
@@ -63,6 +61,7 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
 
         setUserRole('user');
       } catch (error) {
+        const [managedUserIds, setManagedUserIds] = useState<string[]>([]);
         console.error('Erro ao buscar role do usuário:', error);
         setUserRole('user');
       }
@@ -103,6 +102,54 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       // Salvar usuário original se não estiver salvo
+        useEffect(() => {
+          const fetchUserRoleAndManagedUsers = async () => {
+            if (!user) {
+              setUserRole(null);
+              setManagedUserIds([]);
+              return;
+            }
+
+            try {
+              // Verificar se é admin/moderador/user
+              const { data: adminData, error: adminError } = await supabase
+                .from('admin_users')
+                .select('role')
+                .eq('user_id', user.id)
+                .maybeSingle();
+
+              let role: 'admin' | 'moderator' | 'user' = 'user';
+              if (adminData && !adminError) {
+                console.log('👤 Role detectado:', adminData.role);
+                role = adminData.role === 'super_admin' ? 'admin' : adminData.role;
+                if (!['admin', 'moderator', 'user'].includes(role)) {
+                  role = 'user';
+                }
+              }
+              setUserRole(role);
+
+              // Se for moderador, buscar usuários gerenciados
+              if (role === 'moderator') {
+                const { data: moderatorUsers, error: modError } = await supabase
+                  .from('moderator_users')
+                  .select('user_id')
+                  .eq('moderator_id', user.id);
+                if (!modError && moderatorUsers) {
+                  setManagedUserIds(moderatorUsers.map((mu: any) => mu.user_id));
+                } else {
+                  setManagedUserIds([]);
+                }
+              } else {
+                setManagedUserIds([]);
+              }
+            } catch (error) {
+              console.error('Erro ao buscar role ou managed users:', error);
+              setUserRole('user');
+              setManagedUserIds([]);
+            }
+          };
+          fetchUserRoleAndManagedUsers();
+        }, [user]);
       let currentOriginalUser = originalUser;
       if (!currentOriginalUser) {
         console.log('💾 Salvando usuário original...');
@@ -120,7 +167,6 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
             artistic_name: profileData.artistic_name,
             role: userRole as 'user' | 'moderator' | 'admin'
           };
-          
           setOriginalUser(currentOriginalUser);
           console.log('💾 Usuário original salvo:', currentOriginalUser);
         } else {
@@ -132,7 +178,6 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
             artistic_name: null,
             role: userRole as 'user' | 'moderator' | 'admin'
           };
-          
           setOriginalUser(currentOriginalUser);
           console.log('💾 Usuário original salvo (fallback):', currentOriginalUser);
         }
@@ -149,7 +194,6 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
         originalUser: currentOriginalUser,
         timestamp: Date.now()
       };
-      
       localStorage.setItem('impersonation_data', JSON.stringify(impersonationData));
       console.log('💾 Dados salvos no localStorage:', impersonationData);
 

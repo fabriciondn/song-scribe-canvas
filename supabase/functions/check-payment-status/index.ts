@@ -3,6 +3,9 @@ async function verificarStatusPagamento(pixId: string, token: string, tentativas
   for (let i = 0; i < tentativas; i++) {
     try {
       const url = `https://api.abacatepay.com/v1/pixQrCode/check?id=${pixId}`;
+      const tokenPreview = token ? `${token.slice(0, 4)}...${token.slice(-4)}` : 'undefined';
+      console.log(`[verificarStatusPagamento] Tentativa ${i+1} - URL: ${url}`);
+      console.log(`[verificarStatusPagamento] Token (prefix/suffix): ${tokenPreview}`);
       const options = {
         method: 'GET',
         headers: {
@@ -11,8 +14,8 @@ async function verificarStatusPagamento(pixId: string, token: string, tentativas
       };
       const response = await fetch(url, options);
       const data = await response.json();
+      console.log(`[verificarStatusPagamento] Resposta completa da API:`, data);
       if (response.ok) {
-        console.log(`[verificarStatusPagamento] Tentativa ${i+1} - Resposta da API:`, data);
         if (data.data && data.data.status === "PAID") {
           console.log("[verificarStatusPagamento] Pagamento confirmado!");
           return { status: "PAID", data };
@@ -20,7 +23,7 @@ async function verificarStatusPagamento(pixId: string, token: string, tentativas
           console.log(`[verificarStatusPagamento] Tentativa ${i+1}: Pagamento pendente. Status: ${data.data ? data.data.status : 'Status não encontrado'}`);
         }
       } else {
-        console.error("[verificarStatusPagamento] Erro na requisição:", data.error || response.statusText);
+        console.error(`[verificarStatusPagamento] Erro na requisição: status ${response.status} -`, data.error || response.statusText);
         return { status: "ERROR", data };
       }
     } catch (error) {

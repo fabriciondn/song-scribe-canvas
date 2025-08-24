@@ -175,16 +175,39 @@ const AdminDashboard: React.FC = () => {
           <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
         <SidebarInset className="flex-1">
-          {/* Header */}
-          <header className="flex h-14 md:h-16 shrink-0 items-center gap-2 border-b px-2 md:px-4 bg-background sticky top-0 z-30">
-            <SidebarTrigger className="-ml-1 block md:hidden" />
-            <div className="flex items-center space-x-2 flex-1">
+          {/* Header + Status do Sistema */}
+          <header className="flex flex-col gap-2 md:gap-0 md:flex-row h-auto md:h-16 shrink-0 items-start md:items-center border-b px-2 md:px-4 bg-background sticky top-0 z-30">
+            <div className="flex items-center space-x-2 flex-1 py-2 md:py-0">
+              <SidebarTrigger className="-ml-1 block md:hidden" />
               <Shield className="h-7 w-7 text-primary" />
               <div>
                 <h1 className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                   Painel Administrativo
                 </h1>
                 <p className="text-xs text-muted-foreground">Sistema de Gestão Compuse</p>
+              </div>
+            </div>
+            {/* Status do Sistema - topo, sem card */}
+            <div className="flex flex-wrap gap-2 md:gap-4 items-center justify-end w-full md:w-auto py-2 md:py-0">
+              <div className="flex items-center gap-1 px-2 py-1 rounded bg-background/80 border text-blue-700 text-xs font-medium">
+                <BarChart3 className="h-4 w-4 text-blue-600" />
+                <span>Resposta Média:</span>
+                <span className="font-bold text-blue-900">{systemHealth.responseTime}</span>
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded bg-background/80 border text-green-700 text-xs font-medium">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span>Uptime:</span>
+                <span className="font-bold text-green-900">{systemHealth.uptime}</span>
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded bg-background/80 border text-purple-700 text-xs font-medium">
+                <Users className="h-4 w-4 text-purple-600" />
+                <span>Usuários Online:</span>
+                <span className="font-bold text-purple-900">{systemHealth.activeUsers}</span>
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded bg-background/80 border text-orange-700 text-xs font-medium">
+                <Shield className="h-4 w-4 text-orange-600" />
+                <span>Status:</span>
+                <span className="font-bold text-orange-900">Operacional</span>
               </div>
             </div>
             <DropdownMenu>
@@ -206,53 +229,7 @@ const AdminDashboard: React.FC = () => {
           {/* Conteúdo Principal */}
           <main className="flex-1 p-2 md:p-6 bg-gradient-to-br from-background to-secondary/20">
             <div className="space-y-4 md:space-y-6">
-              {/* Métricas Rápidas */}
-              <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-4">
-                <Card className="bg-gradient-to-r from-blue-500/10 to-blue-600/10 border-blue-200">
-                  <CardContent className="p-3 md:p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs md:text-sm font-medium text-blue-700">Resposta Média</p>
-                        <p className="text-xl md:text-2xl font-bold text-blue-900">{systemHealth.responseTime}</p>
-                      </div>
-                      <BarChart3 className="h-7 w-7 md:h-8 md:w-8 text-blue-600" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-r from-green-500/10 to-green-600/10 border-green-200">
-                  <CardContent className="p-3 md:p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs md:text-sm font-medium text-green-700">Uptime</p>
-                        <p className="text-xl md:text-2xl font-bold text-green-900">{systemHealth.uptime}</p>
-                      </div>
-                      <CheckCircle className="h-7 w-7 md:h-8 md:w-8 text-green-600" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-r from-purple-500/10 to-purple-600/10 border-purple-200">
-                  <CardContent className="p-3 md:p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs md:text-sm font-medium text-purple-700">Usuários Online</p>
-                        <p className="text-xl md:text-2xl font-bold text-purple-900">{systemHealth.activeUsers}</p>
-                      </div>
-                      <Users className="h-7 w-7 md:h-8 md:w-8 text-purple-600" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-orange-200">
-                  <CardContent className="p-3 md:p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs md:text-sm font-medium text-orange-700">Status</p>
-                        <p className="text-lg md:text-xl font-bold text-orange-900">Operacional</p>
-                      </div>
-                      <Shield className="h-7 w-7 md:h-8 md:w-8 text-orange-600" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              {/* Métricas removidas do conteúdo principal, agora exibidas no topo */}
               {/* Conteúdo da Aba Ativa */}
               <Card className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <CardContent className="p-2 md:p-6">

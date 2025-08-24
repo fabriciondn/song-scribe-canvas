@@ -26,7 +26,8 @@ export const ImpersonateButton = ({
   const { startImpersonation, canImpersonate } = useImpersonation();
   const navigate = useNavigate();
 
-  if (!canImpersonate(targetRole)) {
+  // Novo: passar id do usuário alvo para checagem
+  if (!canImpersonate(targetRole, targetUser.id)) {
     return null;
   }
 
@@ -45,8 +46,8 @@ export const ImpersonateButton = ({
       console.log('🚀 Aguardando 500ms antes de redirecionar...');
       // Aguardar um pouco para garantir que o contexto seja atualizado
       setTimeout(() => {
-        console.log('🚀 Redirecionando para dashboard como usuário');
-        navigate('/dashboard', { replace: true });
+        console.log('🚀 Redirecionando para dashboard do usuário comum');
+        navigate('/dashboard/home', { replace: true });
       }, 500);
       
     } catch (error) {

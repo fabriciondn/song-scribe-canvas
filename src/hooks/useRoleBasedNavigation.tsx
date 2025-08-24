@@ -12,7 +12,7 @@ interface UserRole {
 
 export const useRoleBasedNavigation = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { isImpersonating } = useImpersonation();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
   const navigate = useNavigate();
@@ -147,17 +147,25 @@ export const useRoleBasedNavigation = () => {
 
   // useEffect para chamar a função de redirecionamento
   useEffect(() => {
-    if (isLoading || isRoleLoading || !isAuthenticated || !userRole) {
+    if (isLoading || isRoleLoading || !isAuthenticated) {
       return;
     }
 
-    redirectBasedOnRole(userRole, location.pathname, isImpersonating);
-  }, [userRole, isRoleLoading, isAuthenticated, isLoading, location.pathname, isImpersonating, navigate]);
+    // Se estiver impersonando, usar o role do usuário impersonado
+    const effectiveRole: UserRole = isImpersonating && impersonatedUser
+      ? { role: impersonatedUser.role }
+      : userRole || { role: 'user' };
+
+    redirectBasedOnRole(effectiveRole, location.pathname, isImpersonating);
+  }, [userRole, isRoleLoading, isAuthenticated, isLoading, location.pathname, isImpersonating, impersonatedUser, navigate]);
 
   const getDefaultDashboard = () => {
-    if (!userRole) return '/dashboard';
-    
-    switch (userRole.role) {
+    // Se estiver impersonando, usar o role do usuário impersonado
+    const effectiveRole = isImpersonating && impersonatedUser
+      ? impersonatedUser.role
+      : userRole?.role;
+    if (!effectiveRole) return '/dashboard';
+    switch (effectiveRole) {
       case 'admin':
         return '/admin';
       case 'moderator':
@@ -168,7 +176,11 @@ export const useRoleBasedNavigation = () => {
   };
 
   const canAccess = (requiredRole: 'admin' | 'moderator' | 'user') => {
-    if (!userRole) return false;
+    // Se estiver impersonando, usar o role do usuário impersonado
+    const effectiveRole = isImpersonating && impersonatedUser
+      ? impersonatedUser.role
+      : userRole?.role;
+    if (!effectiveRole) return false;
 
     const roleHierarchy = {
       admin: 3,
@@ -177,9 +189,9 @@ export const useRoleBasedNavigation = () => {
     };
 
     // Admin pode acessar tudo, incluindo painel moderador
-    if (userRole.role === 'admin') return true;
+    if (effectiveRole === 'admin') return true;
 
-    return roleHierarchy[userRole.role] >= roleHierarchy[requiredRole];
+    return roleHierarchy[effectiveRole] >= roleHierarchy[requiredRole];
   };
 
   return {

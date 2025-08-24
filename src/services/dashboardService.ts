@@ -43,17 +43,12 @@ export interface DashboardStats {
   };
 }
 
-export const getDashboardStats = async (): Promise<DashboardStats> => {
+export const getDashboardStats = async (userId: string): Promise<DashboardStats> => {
   try {
     console.log('🔄 Iniciando carregamento das estatísticas do dashboard...');
-    
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
+    if (!userId) {
       throw new Error('No authenticated user');
     }
-
-    const userId = session.user.id;
     console.log('👤 User ID:', userId);
 
     // Fetch all data in parallel for better performance

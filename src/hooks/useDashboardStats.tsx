@@ -1,20 +1,20 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { getDashboardStats, DashboardStats } from '@/services/dashboardService';
-import { useAuth } from '@/hooks/useAuth';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export const useDashboardStats = () => {
-  const { isAuthenticated } = useAuth();
-
+  const user = useCurrentUser();
+  const userId = user?.id;
   const {
     data: stats,
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['dashboard-stats'],
-    queryFn: getDashboardStats,
-    enabled: isAuthenticated,
+    queryKey: ['dashboard-stats', userId],
+    queryFn: () => userId ? getDashboardStats(userId) : Promise.reject('No user'),
+    enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 3,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
