@@ -17,148 +17,105 @@ interface ImpersonationContextType {
   originalUser: ImpersonationUser | null;
   startImpersonation: (targetUser: ImpersonationUser) => void;
   stopImpersonation: () => void;
-  canImpersonate: (targetRole: 'user' | 'moderator' | 'admin') => boolean;
+  canImpersonate: (targetRole: 'user' | 'moderator' | 'admin', targetUserId?: string) => boolean;
+  managedUserIds: string[]; // DEBUG: expor para debug
 }
 
 export const ImpersonationContext = createContext<ImpersonationContextType | undefined>(undefined);
 
-export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface ImpersonationProviderProps {
+  children: React.ReactNode;
+}
+
+export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ children }) => {
   const authContext = useContext(AuthContext);
   const user = authContext?.user;
   const [isImpersonating, setIsImpersonating] = useState(false);
   const [impersonatedUser, setImpersonatedUser] = useState<ImpersonationUser | null>(null);
   const [originalUser, setOriginalUser] = useState<ImpersonationUser | null>(null);
   const [userRole, setUserRole] = useState<'admin' | 'moderator' | 'user' | null>(null);
+  const [managedUserIds, setManagedUserIds] = useState<string[]>([]);
 
-  // Buscar role do usuário atual
   useEffect(() => {
-    const fetchUserRole = async () => {
+    const fetchUserRoleAndManagedUsers = async () => {
       if (!user) {
         setUserRole(null);
+        setManagedUserIds([]);
         return;
       }
-
       try {
-        // Verificar se é admin
         const { data: adminData, error: adminError } = await supabase
           .from('admin_users')
           .select('role')
           .eq('user_id', user.id)
           .maybeSingle();
 
+        let role: 'admin' | 'moderator' | 'user' = 'user';
         if (adminData && !adminError) {
-          console.log('👤 Role detectado:', adminData.role);
-          const role = adminData.role === 'super_admin' ? 'admin' : adminData.role;
-          setUserRole(role as 'admin' | 'moderator' | 'user');
+          if (adminData.role === 'super_admin') {
+            role = 'admin';
+          } else if (adminData.role === 'admin' || adminData.role === 'moderator' || adminData.role === 'user') {
+            role = adminData.role;
+          }
+        }
+        setUserRole(role);
+
+        if (role === 'moderator') {
+          const { data: moderatorUsers, error: modError } = await supabase
+            .from('moderator_users')
+            .select('user_id, moderator_id')
+            .eq('moderator_id', user.id);
+          if (!modError && moderatorUsers) {
+            console.log('🟣 moderator_users rows:', moderatorUsers);
+            setManagedUserIds(moderatorUsers.map((mu: any) => mu.user_id));
+          } else {
+            setManagedUserIds([]);
+          }
         } else {
-          setUserRole('user');
+          setManagedUserIds([]);
         }
-        return;
-
-        if (adminError && adminError.code !== 'PGRST116') {
-          console.error('Erro ao verificar role:', adminError);
-        }
-
-        setUserRole('user');
       } catch (error) {
-        const [managedUserIds, setManagedUserIds] = useState<string[]>([]);
-        console.error('Erro ao buscar role do usuário:', error);
         setUserRole('user');
+        setManagedUserIds([]);
       }
     };
-
-    fetchUserRole();
+    fetchUserRoleAndManagedUsers();
   }, [user]);
 
-  // Verificar se pode impersonar determinado role
-  const canImpersonate = (targetRole: 'user' | 'moderator' | 'admin'): boolean => {
+  const stopImpersonation = () => {
+    setImpersonatedUser(null);
+    setIsImpersonating(false);
+    localStorage.removeItem('impersonation_data');
+    setUserRole(null);
+    setManagedUserIds([]);
+  };
+
+  const canImpersonate = (targetRole: 'user' | 'moderator' | 'admin', targetUserId?: string): boolean => {
     if (!userRole) return false;
-    
-    // Admin pode impersonar qualquer um
     if (userRole === 'admin') return true;
-    
-    // Moderador só pode impersonar usuários
-    if (userRole === 'moderator' && targetRole === 'user') return true;
-    
+    if (userRole === 'moderator' && targetRole === 'user' && targetUserId) {
+      return managedUserIds.includes(targetUserId);
+    }
     return false;
   };
 
-  // Iniciar impersonação
   const startImpersonation = async (targetUser: ImpersonationUser) => {
-    if (!user || !canImpersonate(targetUser.role)) {
-      console.error('❌ Não é possível impersonar este usuário', { user: !!user, canImpersonate: canImpersonate(targetUser.role) });
+    if (!user || !canImpersonate(targetUser.role, targetUser.id)) {
+      toast.error('Você não tem permissão para operar como este usuário.');
       return;
     }
-
-    console.log('🎭 Iniciando impersonação...', targetUser);
-
     try {
-      // Se já está impersonando, parar primeiro
       if (isImpersonating) {
-        console.log('🔄 Já impersonando, parando primeiro...');
         stopImpersonation();
-        // Aguardar um pouco para limpar o estado
         await new Promise(resolve => setTimeout(resolve, 100));
       }
-
-      // Salvar usuário original se não estiver salvo
-        useEffect(() => {
-          const fetchUserRoleAndManagedUsers = async () => {
-            if (!user) {
-              setUserRole(null);
-              setManagedUserIds([]);
-              return;
-            }
-
-            try {
-              // Verificar se é admin/moderador/user
-              const { data: adminData, error: adminError } = await supabase
-                .from('admin_users')
-                .select('role')
-                .eq('user_id', user.id)
-                .maybeSingle();
-
-              let role: 'admin' | 'moderator' | 'user' = 'user';
-              if (adminData && !adminError) {
-                console.log('👤 Role detectado:', adminData.role);
-                role = adminData.role === 'super_admin' ? 'admin' : adminData.role;
-                if (!['admin', 'moderator', 'user'].includes(role)) {
-                  role = 'user';
-                }
-              }
-              setUserRole(role);
-
-              // Se for moderador, buscar usuários gerenciados
-              if (role === 'moderator') {
-                const { data: moderatorUsers, error: modError } = await supabase
-                  .from('moderator_users')
-                  .select('user_id')
-                  .eq('moderator_id', user.id);
-                if (!modError && moderatorUsers) {
-                  setManagedUserIds(moderatorUsers.map((mu: any) => mu.user_id));
-                } else {
-                  setManagedUserIds([]);
-                }
-              } else {
-                setManagedUserIds([]);
-              }
-            } catch (error) {
-              console.error('Erro ao buscar role ou managed users:', error);
-              setUserRole('user');
-              setManagedUserIds([]);
-            }
-          };
-          fetchUserRoleAndManagedUsers();
-        }, [user]);
       let currentOriginalUser = originalUser;
       if (!currentOriginalUser) {
-        console.log('💾 Salvando usuário original...');
         const { data: profileData, error } = await supabase
           .from('profiles')
           .select('id, name, email, artistic_name')
           .eq('id', user.id)
           .single();
-
         if (profileData && !error) {
           currentOriginalUser = {
             id: profileData.id,
@@ -167,10 +124,7 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
             artistic_name: profileData.artistic_name,
             role: userRole as 'user' | 'moderator' | 'admin'
           };
-          setOriginalUser(currentOriginalUser);
-          console.log('💾 Usuário original salvo:', currentOriginalUser);
         } else {
-          // Fallback para dados do Auth se não conseguir do profile
           currentOriginalUser = {
             id: user.id,
             name: user.user_metadata?.full_name || null,
@@ -178,59 +132,28 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
             artistic_name: null,
             role: userRole as 'user' | 'moderator' | 'admin'
           };
-          setOriginalUser(currentOriginalUser);
-          console.log('💾 Usuário original salvo (fallback):', currentOriginalUser);
         }
+        setOriginalUser(currentOriginalUser);
       }
-
-      // Definir estados de impersonação
-      console.log('🎯 Definindo estado de impersonação...');
       setImpersonatedUser(targetUser);
       setIsImpersonating(true);
-
-      // Salvar no localStorage IMEDIATAMENTE
-      const impersonationData = {
+      localStorage.setItem('impersonation_data', JSON.stringify({
         targetUser,
         originalUser: currentOriginalUser,
         timestamp: Date.now()
-      };
-      localStorage.setItem('impersonation_data', JSON.stringify(impersonationData));
-      console.log('💾 Dados salvos no localStorage:', impersonationData);
-
-      console.log('✅ Impersonação iniciada com sucesso!', {
-        isImpersonating: true,
-        targetUser,
-        originalUser: currentOriginalUser
-      });
-
+      }));
       toast.success(`Operando como ${targetUser.name || targetUser.email}`);
-
     } catch (error) {
-      console.error('❌ Erro ao iniciar impersonação:', error);
       toast.error('Erro ao iniciar impersonação');
     }
   };
 
-  // Parar impersonação
-  const stopImpersonation = () => {
-    setImpersonatedUser(null);
-    setIsImpersonating(false);
-    
-    // Remover do localStorage
-    localStorage.removeItem('impersonation_data');
-    
-    console.log('🎭 Impersonação finalizada');
-  };
-
-  // Sincronizar com localStorage na inicialização
   useEffect(() => {
     const syncFromStorage = () => {
       try {
         const storedData = localStorage.getItem('impersonation_data');
         if (storedData && !isImpersonating && user) {
           const parsedData = JSON.parse(storedData);
-          console.log('🔄 Sincronizando impersonação do localStorage:', parsedData);
-          
           if (parsedData.targetUser) {
             setImpersonatedUser(parsedData.targetUser);
             setIsImpersonating(true);
@@ -238,29 +161,26 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
               setOriginalUser(parsedData.originalUser);
             }
           } else {
-            // Formato antigo - compatibilidade
             setImpersonatedUser(parsedData);
             setIsImpersonating(true);
           }
         }
       } catch (error) {
-        console.error('Erro ao sincronizar impersonação:', error);
         localStorage.removeItem('impersonation_data');
       }
     };
-
     if (user) {
       syncFromStorage();
     }
   }, [user, isImpersonating]);
 
-  // Limpar estado quando usuário deslogar
   useEffect(() => {
     if (!user) {
       setImpersonatedUser(null);
       setOriginalUser(null);
       setIsImpersonating(false);
       setUserRole(null);
+      setManagedUserIds([]);
       localStorage.removeItem('impersonation_data');
     }
   }, [user]);
@@ -269,9 +189,10 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
     isImpersonating,
     impersonatedUser,
     originalUser,
-    startImpersonation,
-    stopImpersonation,
-    canImpersonate,
+  startImpersonation,
+  stopImpersonation,
+  canImpersonate,
+  managedUserIds // DEBUG: expor para debug
   };
 
   return (

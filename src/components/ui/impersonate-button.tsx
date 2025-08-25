@@ -33,7 +33,18 @@ export const ImpersonateButton = ({
 
   const handleImpersonate = async () => {
     console.log('🔘 Botão impersonar clicado:', targetUser);
-    
+    // Debug extra: mostrar managedUserIds e targetUser.id
+    if (window && window.__IMP_DEBUG__ !== false) {
+      try {
+        // @ts-ignore
+        const ctx = require('@/context/ImpersonationContext');
+        // @ts-ignore
+        const managedUserIds = ctx?.useImpersonation?.()?.managedUserIds;
+        console.log('🟢 managedUserIds:', managedUserIds, 'targetUser.id:', targetUser.id);
+      } catch (e) {
+        // ignore
+      }
+    }
     try {
       await startImpersonation({
         id: targetUser.id,
@@ -47,7 +58,7 @@ export const ImpersonateButton = ({
       // Aguardar um pouco para garantir que o contexto seja atualizado
       setTimeout(() => {
         console.log('🚀 Redirecionando para dashboard do usuário comum');
-        navigate('/dashboard/home', { replace: true });
+        navigate('/dashboard', { replace: true });
       }, 500);
       
     } catch (error) {

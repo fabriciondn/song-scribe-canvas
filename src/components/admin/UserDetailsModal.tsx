@@ -8,8 +8,47 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
   User, Music, Edit, FileText, Download, Calendar, 
   MapPin, Phone, Mail, CreditCard, Activity, Shield,
-  UserX, ArrowLeft
+  UserX, ArrowLeft, KeyRound
 } from 'lucide-react';
+import { resetUserPassword, addPasswordHistory, getPasswordHistory } from '@/services/userPasswordService';
+import { nanoid } from 'nanoid';
+  const [passwordHistory, setPasswordHistory] = useState<any[]>([]);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [newPassword, setNewPassword] = useState<string | null>(null);
+  useEffect(() => {
+    if (isOpen && userId) {
+      fetchPasswordHistory();
+    }
+  }, [isOpen, userId]);
+
+  const fetchPasswordHistory = async () => {
+    try {
+      const history = await getPasswordHistory(userId);
+      setPasswordHistory(history);
+    } catch (e) {
+      setPasswordHistory([]);
+    }
+  };
+  const handleResetPassword = async () => {
+    if (!user) return;
+    setResetLoading(true);
+    setNewPassword(null);
+    try {
+      // Gerar nova senha aleatória
+      const generated = nanoid(10);
+      // Atualizar senha no auth
+      await resetUserPassword(user.id, generated);
+      // Salvar no histórico (em produção, salve o hash!)
+      await addPasswordHistory(user.id, generated);
+      setNewPassword(generated);
+      toast.success('Senha redefinida com sucesso!');
+      fetchPasswordHistory();
+    } catch (e: any) {
+      toast.error('Erro ao resetar senha: ' + (e.message || ''));
+    } finally {
+      setResetLoading(false);
+    }
+  };
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useImpersonation } from '@/context/ImpersonationContext';
@@ -506,6 +545,32 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex flex-col gap-3">
+                    <Button
+                      onClick={handleResetPassword}
+                      className="w-full justify-start"
+                      variant="outline"
+                      disabled={resetLoading}
+                    >
+                      <KeyRound className="h-4 w-4 mr-2" />
+                      {resetLoading ? 'Resetando...' : 'Resetar senha'}
+                    </Button>
+                    {newPassword && (
+                      <div className="bg-green-100 text-green-900 rounded p-2 text-xs mt-2">
+                        Nova senha: <b>{newPassword}</b>
+                      </div>
+                    )}
+                  {passwordHistory.length > 0 && (
+                    <div className="mt-4">
+                      <div className="font-semibold text-xs mb-1">Histórico de Senhas</div>
+                      <ul className="text-xs space-y-1 max-h-32 overflow-y-auto">
+                        {passwordHistory.map((h) => (
+                          <li key={h.id} className="truncate">
+                            {h.password_hash} <span className="text-muted-foreground">({formatDate(h.changed_at)})</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                     <Button
                       onClick={handleImpersonateUser}
                       className="w-full justify-start"
