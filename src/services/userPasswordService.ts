@@ -1,11 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// Chama a edge function para resetar senha de forma segura
 export async function resetUserPassword(userId: string, newPassword: string) {
-  // Atualiza a senha do usuário no Supabase Auth
-  const { error } = await supabase.auth.admin.updateUserById(userId, {
-    password: newPassword,
+  const res = await fetch('/functions/v1/reset-user-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, newPassword })
   });
-  if (error) throw error;
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Erro ao resetar senha');
 }
 
 export async function addPasswordHistory(userId: string, password: string) {
