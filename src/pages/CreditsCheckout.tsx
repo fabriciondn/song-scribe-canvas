@@ -215,7 +215,8 @@ export default function CreditsCheckout() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (showQRCode && !paymentConfirmed && pixData?.payment_id) {
-      interval = setInterval(checkPaymentStatus, 5000);
+      // Aumentar intervalo para 10 segundos (menos agressivo)
+      interval = setInterval(checkPaymentStatus, 10000);
     }
     return () => {
       if (interval) clearInterval(interval);
