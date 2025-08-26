@@ -1,4 +1,5 @@
-project_id = "hnencfkdsyiwtvktdvzy"
+[project]
+id = "hnencfkdsyiwtvktdvzy"
 
 [functions.create-user-by-moderator]
 verify_jwt = false

@@ -179,77 +179,65 @@ serve(async (req) => {
     // Handle payment confirmation based on type
     const paymentType = body.type || 'subscription'; // Default to subscription for backwards compatibility
 
-  if (isPaymentConfirmed && user) {
-      console.log('[CHECK-PAYMENT-STATUS] Payment confirmed, processing...', { paymentType, userId: user.id });
-      
-  if (paymentType === 'credits') {
-        // Handle credit purchase confirmation
-        console.log('[CHECK-PAYMENT-STATUS] Processing credit purchase...');
-        
-        // Get credit transaction details
-        // Buscar transação por payment_id OU externalId (compatibilidade)
-        let { data: transaction, error: transactionError } = await supabaseServiceClient
-          .from('credit_transactions')
-          .select('*')
-          .eq('payment_id', paymentId)
-          .eq('user_id', user.id)
+  if (isPaymentConfirmed) {
+    console.log('[CHECK-PAYMENT-STATUS] Payment confirmed, processing...', { paymentType, userId: user?.id });
+    if (paymentType === 'credits') {
+      // Buscar transação pelo payment_id
+      let { data: transaction, error: transactionError } = await supabaseServiceClient
+        .from('credit_transactions')
+        .select('*')
+        .eq('payment_id', paymentId)
+        .maybeSingle();
+      if (transactionError || !transaction) {
+        console.error('[CHECK-PAYMENT-STATUS] Credit transaction not found:', transactionError);
+      } else {
+        const totalCredits = transaction.credits_purchased + (transaction.bonus_credits || 0);
+        // Buscar perfil do usuário pelo user_id da transação
+        const { data: currentProfile, error: profileError } = await supabaseServiceClient
+          .from('profiles')
+          .select('credits')
+          .eq('id', transaction.user_id)
           .single();
-        if ((!transaction || transactionError) && paymentId) {
-          // Tentar buscar por externalId salvo em metadata
-          const { data: tx2, error: tx2err } = await supabaseServiceClient
-            .from('credit_transactions')
-            .select('*')
-            .eq('user_id', user.id)
-            .contains('metadata', { externalId: paymentId })
-            .maybeSingle();
-          if (tx2) transaction = tx2;
-        }
-        
-        if (transactionError || !transaction) {
-          console.error('[CHECK-PAYMENT-STATUS] Credit transaction not found:', transactionError);
-        } else {
-          const totalCredits = transaction.credits_purchased + (transaction.bonus_credits || 0);
-          
-          // Get current user credits
-          const { data: currentProfile, error: profileError } = await supabaseServiceClient
+        if (!profileError && currentProfile) {
+          const newCreditsTotal = (currentProfile.credits || 0) + totalCredits;
+          // Atualizar créditos do usuário
+          const { error: creditsError } = await supabaseServiceClient
             .from('profiles')
-            .select('credits')
-            .eq('id', user.id)
-            .single();
-          
-          if (!profileError && currentProfile) {
-            const newCreditsTotal = (currentProfile.credits || 0) + totalCredits;
-            
-            // Update user credits
-            const { error: creditsError } = await supabaseServiceClient
-              .from('profiles')
-              .update({ credits: newCreditsTotal })
-              .eq('id', user.id);
-            
-            if (creditsError) {
-              console.error('[CHECK-PAYMENT-STATUS] Error adding credits:', creditsError);
+            .update({ credits: newCreditsTotal })
+            .eq('id', transaction.user_id);
+          if (creditsError) {
+            console.error('[CHECK-PAYMENT-STATUS] Error adding credits:', creditsError);
+          } else {
+            // Atualizar status da transação
+            const { error: transactionUpdateError } = await supabaseServiceClient
+              .from('credit_transactions')
+              .update({
+                status: 'completed',
+                completed_at: new Date().toISOString()
+              })
+              .eq('id', transaction.id);
+            if (transactionUpdateError) {
+              console.error('[CHECK-PAYMENT-STATUS] Failed to update transaction status:', transactionUpdateError);
             } else {
-              // Update transaction status
-              await supabaseServiceClient
-                .from('credit_transactions')
-                .update({
-                  status: 'completed',
-                  completed_at: new Date().toISOString()
-                })
-                .eq('id', transaction.id);
-              
-              console.log('[CHECK-PAYMENT-STATUS] Credits added successfully:', { totalCredits, newCreditsTotal });
+              console.log('[CHECK-PAYMENT-STATUS] Transaction status updated successfully');
             }
+            console.log('[CHECK-PAYMENT-STATUS] Credits added successfully:', { totalCredits, newCreditsTotal });
           }
         }
-      } else {
-        // Handle subscription confirmation (existing logic)
-        console.log('[CHECK-PAYMENT-STATUS] Processing subscription...');
-        
-        const now = new Date().toISOString();
-        const expiresAt = new Date();
-        expiresAt.setMonth(expiresAt.getMonth() + 1); // Add 1 month
-        
+      }
+    } else {
+      // Processar assinatura
+      console.log('[CHECK-PAYMENT-STATUS] Processing subscription...');
+      const now = new Date().toISOString();
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1); // Add 1 month
+      // Buscar assinatura pelo payment_id
+      const { data: subscription } = await supabaseServiceClient
+        .from('subscriptions')
+        .select('user_id')
+        .eq('payment_provider_subscription_id', paymentId)
+        .maybeSingle();
+      if (subscription && subscription.user_id) {
         const { error: updateError } = await supabaseServiceClient
           .from('subscriptions')
           .update({ 
@@ -263,8 +251,7 @@ serve(async (req) => {
             currency: 'BRL',
             updated_at: now
           })
-          .eq('user_id', user.id);
-
+          .eq('user_id', subscription.user_id);
         if (updateError) {
           console.error('[CHECK-PAYMENT-STATUS] Failed to update subscription', updateError);
           return new Response(
@@ -272,90 +259,10 @@ serve(async (req) => {
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-
         console.log('[CHECK-PAYMENT-STATUS] Subscription activated successfully');
       }
-              console.log('[CHECK-PAYMENT-STATUS] Payment confirmed, processing...', { paymentType, userId: user?.id });
-              if (paymentType === 'credits') {
-                // Handle credit purchase confirmation
-                console.log('[CHECK-PAYMENT-STATUS] Processing credit purchase...');
-                // Buscar transação apenas pelo payment_id
-                let { data: transaction, error: transactionError } = await supabaseServiceClient
-                  .from('credit_transactions')
-                  .select('*')
-                  .eq('payment_id', paymentId)
-                  .maybeSingle();
-                if (transactionError || !transaction) {
-                  console.error('[CHECK-PAYMENT-STATUS] Credit transaction not found:', transactionError);
-                } else {
-                  const totalCredits = transaction.credits_purchased + (transaction.bonus_credits || 0);
-                  // Buscar perfil do usuário pelo user_id da transação
-                  const { data: currentProfile, error: profileError } = await supabaseServiceClient
-                    .from('profiles')
-                    .select('credits')
-                    .eq('id', transaction.user_id)
-                    .single();
-                  if (!profileError && currentProfile) {
-                    const newCreditsTotal = (currentProfile.credits || 0) + totalCredits;
-                    // Update user credits
-                    const { error: creditsError } = await supabaseServiceClient
-                      .from('profiles')
-                      .update({ credits: newCreditsTotal })
-                      .eq('id', transaction.user_id);
-                    if (creditsError) {
-                      console.error('[CHECK-PAYMENT-STATUS] Error adding credits:', creditsError);
-                    } else {
-                      // Update transaction status
-                      await supabaseServiceClient
-                        .from('credit_transactions')
-                        .update({
-                          status: 'completed',
-                          completed_at: new Date().toISOString()
-                        })
-                        .eq('id', transaction.id);
-                      console.log('[CHECK-PAYMENT-STATUS] Credits added successfully:', { totalCredits, newCreditsTotal });
-                    }
-                  }
-                }
-              } else {
-                // Handle subscription confirmation (existing logic)
-                console.log('[CHECK-PAYMENT-STATUS] Processing subscription...');
-                const now = new Date().toISOString();
-                const expiresAt = new Date();
-                expiresAt.setMonth(expiresAt.getMonth() + 1); // Add 1 month
-                // Buscar assinatura pelo payment_id
-                const { data: subscription } = await supabaseServiceClient
-                  .from('subscriptions')
-                  .select('user_id')
-                  .eq('payment_provider_subscription_id', paymentId)
-                  .maybeSingle();
-                if (subscription && subscription.user_id) {
-                  const { error: updateError } = await supabaseServiceClient
-                    .from('subscriptions')
-                    .update({ 
-                      status: 'active',
-                      plan_type: 'pro',
-                      started_at: now,
-                      expires_at: expiresAt.toISOString(),
-                      payment_provider: 'abacate_pay',
-                      payment_provider_subscription_id: paymentId,
-                      amount: 14.99,
-                      currency: 'BRL',
-                      updated_at: now
-                    })
-                    .eq('user_id', subscription.user_id);
-                  if (updateError) {
-                    console.error('[CHECK-PAYMENT-STATUS] Failed to update subscription', updateError);
-                    return new Response(
-                      JSON.stringify({ error: 'Failed to update subscription' }),
-                      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                    );
-                  }
-                  console.log('[CHECK-PAYMENT-STATUS] Subscription activated successfully');
-                }
-    } else if (isPaymentConfirmed && !user) {
-      console.log('[CHECK-PAYMENT-STATUS] Payment confirmed but no user authenticated - not updated');
     }
+  }
 
     return new Response(
       JSON.stringify({
@@ -366,16 +273,5 @@ serve(async (req) => {
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
-  catch (error) {
-    console.error('[CHECK-PAYMENT-STATUS] Unexpected error:', error, error?.stack);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        details: error.message,
-        stack: error?.stack
-      }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
   }
-})
+});
