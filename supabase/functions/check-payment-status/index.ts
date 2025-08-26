@@ -1,57 +1,39 @@
 // Função utilitária para checar status do pagamento com retries
-async function verificarStatusPagamento(pixId: string, token: string, tentativas = 3, intervalo = 2000): Promise<{status: string, data: any}> {
+async function verificarStatusPagamento(pixId: string, token: string, tentativas = 5, intervalo = 3000): Promise<{status: string, data: any}> {
   for (let i = 0; i < tentativas; i++) {
     try {
-      // URL corrigida para usar /info em vez de /check
-      const url = `https://api.abacatepay.com/v1/pixQrCode/info/${pixId}`;
-      console.log(`[verificarStatusPagamento] Tentativa ${i+1}/${tentativas} - URL: ${url}`);
-      
-      const response = await fetch(url, {
+      const url = `https://api.abacatepay.com/v1/pixQrCode/check?id=${pixId}`;
+      const tokenPreview = token ? `${token.slice(0, 4)}...${token.slice(-4)}` : 'undefined';
+      console.log(`[verificarStatusPagamento] Tentativa ${i+1} - URL: ${url}`);
+      console.log(`[verificarStatusPagamento] Token (prefix/suffix): ${tokenPreview}`);
+      const options = {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`
         }
-      });
-      
+      };
+      const response = await fetch(url, options);
       const data = await response.json();
-      console.log(`[verificarStatusPagamento] Resposta da API (tentativa ${i+1}):`, {
-        status: response.status,
-        ok: response.ok,
-        data: data
-      });
-      
-      if (response.ok && data.data) {
-        const paymentStatus = data.data.status;
-        console.log(`[verificarStatusPagamento] Status do pagamento: ${paymentStatus}`);
-        
-        if (paymentStatus === "PAID") {
-          console.log("[verificarStatusPagamento] ✅ Pagamento confirmado!");
+      console.log(`[verificarStatusPagamento] Resposta completa da API:`, data);
+      if (response.ok) {
+        if (data.data && data.data.status === "PAID") {
+          console.log("[verificarStatusPagamento] Pagamento confirmado!");
           return { status: "PAID", data };
         } else {
-          console.log(`[verificarStatusPagamento] ⏳ Pagamento pendente (${paymentStatus})`);
+          console.log(`[verificarStatusPagamento] Tentativa ${i+1}: Pagamento pendente. Status: ${data.data ? data.data.status : 'Status não encontrado'}`);
         }
       } else {
-        console.error(`[verificarStatusPagamento] ❌ Erro na API: ${response.status}`, data);
-        if (i === tentativas - 1) {
-          return { status: "ERROR", data };
-        }
+        console.error(`[verificarStatusPagamento] Erro na requisição: status ${response.status} -`, data.error || response.statusText);
+        return { status: "ERROR", data };
       }
     } catch (error) {
-      console.error(`[verificarStatusPagamento] ❌ Erro na requisição (tentativa ${i+1}):`, error);
-      if (i === tentativas - 1) {
-        return { status: "ERROR", data: error };
-      }
+      console.error("[verificarStatusPagamento] Erro ao fazer a requisição:", error);
+      return { status: "ERROR", data: error };
     }
-    
-    // Aguarda antes de tentar novamente (exceto na última tentativa)
-    if (i < tentativas - 1) {
-      console.log(`[verificarStatusPagamento] ⏱️ Aguardando ${intervalo}ms antes da próxima tentativa...`);
-      await new Promise(resolve => setTimeout(resolve, intervalo));
-    }
+    // Aguarda antes de tentar novamente
+    await new Promise(resolve => setTimeout(resolve, intervalo));
   }
-  
-  console.log("[verificarStatusPagamento] ⚠️ Número máximo de tentativas atingido. Pagamento ainda pendente.");
+  console.log("[verificarStatusPagamento] Número máximo de tentativas atingido. Pagamento não confirmado.");
   return { status: "PENDING", data: null };
 }
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
@@ -63,7 +45,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  console.log('[CHECK-PAYMENT-STATUS] 🚀 Function started');
+  console.log('[CHECK-PAYMENT-STATUS] Function started');
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -71,28 +53,53 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize service role client for database operations
+    // Initialize service role client for database operations (always available)
     const supabaseServiceClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { auth: { persistSession: false } }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('[CHECK-PAYMENT-STATUS] 📝 Service client initialized');
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    let user = null;
+
+    if (authHeader) {
+      // Initialize Supabase client with user session for authentication
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        {
+          global: {
+            headers: { Authorization: authHeader },
+          },
+        }
+      );
+
+      // Get the user from the authorization header
+      const { data: { user: authUser }, error: userError } = await supabaseClient.auth.getUser();
+      
+      if (authUser && !userError) {
+        user = authUser;
+        console.log('[CHECK-PAYMENT-STATUS] User authenticated', { userId: user.id });
+      } else {
+        console.log('[CHECK-PAYMENT-STATUS] Authentication failed, but continuing...', userError?.message);
+      }
+    } else {
+      console.log('[CHECK-PAYMENT-STATUS] No authorization header, continuing without auth...');
+    }
 
     // Parse request body
     const body = await req.json();
     const { paymentId, simulate } = body;
 
     if (!paymentId) {
-      console.log('[CHECK-PAYMENT-STATUS] ❌ Missing payment ID');
       return new Response(
         JSON.stringify({ error: 'Payment ID is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('[CHECK-PAYMENT-STATUS] 💳 Checking payment status', { paymentId, simulate });
+    console.log('[CHECK-PAYMENT-STATUS] Checking payment status', { paymentId, simulate });
 
     // Check payment status with Abacate Pay API
     const abacateApiKey = Deno.env.get('ABACATE_API_KEY');
@@ -130,27 +137,23 @@ serve(async (req) => {
       isPaymentConfirmed = true;
     } else {
       // Usar função com tentativas e logs detalhados
-      console.log('[CHECK-PAYMENT-STATUS] 🔍 Verificando status do pagamento via API...');
-      const resultado = await verificarStatusPagamento(paymentId, abacateApiKey, 3, 2000);
-      
+      const resultado = await verificarStatusPagamento(paymentId, abacateApiKey, 5, 3000);
       if (resultado.status === "PAID") {
-        console.log('[CHECK-PAYMENT-STATUS] ✅ Pagamento confirmado pela API');
         payment = {
           id: paymentId,
           status: "PAID",
-          amount: resultado.data?.data?.amount || 0,
+          amount: resultado.data?.data?.amount,
           expiresAt: resultado.data?.data?.expiresAt
         };
         isPaymentConfirmed = true;
       } else if (resultado.status === "PENDING") {
-        console.log('[CHECK-PAYMENT-STATUS] ⏳ Pagamento ainda pendente');
         payment = {
           id: paymentId,
           status: "PENDING"
         };
         isPaymentConfirmed = false;
       } else {
-        console.log('[CHECK-PAYMENT-STATUS] ❌ Erro ao verificar pagamento:', resultado.data);
+        // erro
         return new Response(
           JSON.stringify({
             success: false,
@@ -177,110 +180,51 @@ serve(async (req) => {
     const paymentType = body.type || 'subscription'; // Default to subscription for backwards compatibility
 
   if (isPaymentConfirmed) {
-    console.log('[CHECK-PAYMENT-STATUS] 💰 Pagamento confirmado, processando créditos...');
-    
+    console.log('[CHECK-PAYMENT-STATUS] Payment confirmed, processing...', { paymentType, userId: user?.id });
     if (paymentType === 'credits') {
       // Buscar transação pelo payment_id
-      console.log('[CHECK-PAYMENT-STATUS] 🔍 Buscando transação no banco...');
-      const { data: transaction, error: transactionError } = await supabaseServiceClient
+      let { data: transaction, error: transactionError } = await supabaseServiceClient
         .from('credit_transactions')
         .select('*')
         .eq('payment_id', paymentId)
         .maybeSingle();
-        
-      if (transactionError) {
-        console.error('[CHECK-PAYMENT-STATUS] ❌ Erro ao buscar transação:', transactionError);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Transaction not found in database' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      if (transactionError || !transaction) {
+        console.error('[CHECK-PAYMENT-STATUS] Credit transaction not found:', transactionError);
+      } else {
+        const totalCredits = transaction.credits_purchased + (transaction.bonus_credits || 0);
+        // Buscar perfil do usuário pelo user_id da transação
+        const { data: currentProfile, error: profileError } = await supabaseServiceClient
+          .from('profiles')
+          .select('credits')
+          .eq('id', transaction.user_id)
+          .single();
+        if (!profileError && currentProfile) {
+          const newCreditsTotal = (currentProfile.credits || 0) + totalCredits;
+          // Atualizar créditos do usuário
+          const { error: creditsError } = await supabaseServiceClient
+            .from('profiles')
+            .update({ credits: newCreditsTotal })
+            .eq('id', transaction.user_id);
+          if (creditsError) {
+            console.error('[CHECK-PAYMENT-STATUS] Error adding credits:', creditsError);
+          } else {
+            // Atualizar status da transação
+            const { error: transactionUpdateError } = await supabaseServiceClient
+              .from('credit_transactions')
+              .update({
+                status: 'completed',
+                completed_at: new Date().toISOString()
+              })
+              .eq('id', transaction.id);
+            if (transactionUpdateError) {
+              console.error('[CHECK-PAYMENT-STATUS] Failed to update transaction status:', transactionUpdateError);
+            } else {
+              console.log('[CHECK-PAYMENT-STATUS] Transaction status updated successfully');
+            }
+            console.log('[CHECK-PAYMENT-STATUS] Credits added successfully:', { totalCredits, newCreditsTotal });
+          }
+        }
       }
-      
-      if (!transaction) {
-        console.error('[CHECK-PAYMENT-STATUS] ❌ Transação não encontrada para payment_id:', paymentId);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Transaction not found' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      if (transaction.status === 'completed') {
-        console.log('[CHECK-PAYMENT-STATUS] ✅ Transação já foi processada anteriormente');
-        return new Response(
-          JSON.stringify({ success: true, paymentStatus: 'PAID', isPaid: true, message: 'Already processed' }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      const totalCredits = transaction.credits_purchased + (transaction.bonus_credits || 0);
-      console.log('[CHECK-PAYMENT-STATUS] 💳 Processando créditos:', {
-        userId: transaction.user_id,
-        creditsPurchased: transaction.credits_purchased,
-        bonusCredits: transaction.bonus_credits || 0,
-        totalCredits
-      });
-      
-      // Buscar perfil do usuário
-      const { data: currentProfile, error: profileError } = await supabaseServiceClient
-        .from('profiles')
-        .select('credits')
-        .eq('id', transaction.user_id)
-        .single();
-        
-      if (profileError) {
-        console.error('[CHECK-PAYMENT-STATUS] ❌ Erro ao buscar perfil do usuário:', profileError);
-        return new Response(
-          JSON.stringify({ success: false, error: 'User profile not found' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      const currentCredits = currentProfile.credits || 0;
-      const newCreditsTotal = currentCredits + totalCredits;
-      
-      console.log('[CHECK-PAYMENT-STATUS] 📊 Atualizando créditos:', {
-        currentCredits,
-        totalCredits,
-        newCreditsTotal
-      });
-      
-      // Atualizar créditos do usuário
-      const { error: creditsError } = await supabaseServiceClient
-        .from('profiles')
-        .update({ credits: newCreditsTotal })
-        .eq('id', transaction.user_id);
-        
-      if (creditsError) {
-        console.error('[CHECK-PAYMENT-STATUS] ❌ Erro ao atualizar créditos:', creditsError);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Failed to update credits' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      // Atualizar status da transação
-      const { error: transactionUpdateError } = await supabaseServiceClient
-        .from('credit_transactions')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString()
-        })
-        .eq('id', transaction.id);
-        
-      if (transactionUpdateError) {
-        console.error('[CHECK-PAYMENT-STATUS] ❌ Erro ao atualizar status da transação:', transactionUpdateError);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Failed to update transaction status' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      console.log('[CHECK-PAYMENT-STATUS] ✅ Créditos adicionados com sucesso!', {
-        userId: transaction.user_id,
-        creditsAdded: totalCredits,
-        newTotal: newCreditsTotal
-      });
-      
     } else {
       // Processar assinatura
       console.log('[CHECK-PAYMENT-STATUS] Processing subscription...');
@@ -328,22 +272,6 @@ serve(async (req) => {
         expiresAt: payment ? payment.expiresAt : null
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-    
-  } catch (error) {
-    console.error('[CHECK-PAYMENT-STATUS] ❌ Function error:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: error.message || 'Internal server error'
-      }),
-      {
-        headers: { 
-          ...corsHeaders, 
-          "Content-Type": "application/json" 
-        },
-        status: 500,
-      }
     );
   }
 });
