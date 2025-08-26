@@ -329,5 +329,21 @@ serve(async (req) => {
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+    
+  } catch (error) {
+    console.error('[CHECK-PAYMENT-STATUS] ❌ Function error:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false,
+        error: error.message || 'Internal server error'
+      }),
+      {
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json" 
+        },
+        status: 500,
+      }
+    );
   }
 });
