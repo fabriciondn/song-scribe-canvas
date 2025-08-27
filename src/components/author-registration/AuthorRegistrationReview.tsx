@@ -42,12 +42,28 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
-  // Função melhorada para upload de áudio
+  // Função melhorada para upload de áudio com validações
   const uploadAudioFile = async (audioFile: File): Promise<string | null> => {
     try {
-      console.log('Iniciando upload do arquivo:', audioFile.name);
-      console.log('Tamanho do arquivo:', audioFile.size, 'bytes');
-      console.log('Tipo do arquivo:', audioFile.type);
+      console.log('🎵 Iniciando upload do arquivo:', audioFile.name);
+      console.log('📊 Tamanho do arquivo:', (audioFile.size / 1024 / 1024).toFixed(2), 'MB');
+      console.log('🎧 Tipo do arquivo:', audioFile.type);
+
+      // Validação de tamanho do arquivo (50MB)
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (audioFile.size > maxSize) {
+        throw new Error('Arquivo muito grande. O tamanho máximo é de 50MB.');
+      }
+
+      // Validação de tipo de arquivo
+      const allowedTypes = [
+        'audio/mpeg', 'audio/mp3', 'audio/wav', 
+        'audio/m4a', 'audio/ogg', 'audio/flac', 'audio/x-m4a'
+      ];
+      
+      if (!allowedTypes.includes(audioFile.type) && !audioFile.name.match(/\.(mp3|wav|m4a|ogg|flac)$/i)) {
+        throw new Error('Tipo de arquivo não suportado. Use MP3, WAV, M4A, OGG ou FLAC.');
+      }
       
       // Gerar nome único para o arquivo
       const fileExt = audioFile.name.split('.').pop()?.toLowerCase() || 'mp3';
@@ -55,9 +71,9 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       const randomString = Math.random().toString(36).substring(2, 15);
       const fileName = `${currentUserId}/${timestamp}_${randomString}.${fileExt}`;
       
-      console.log('Nome do arquivo gerado:', fileName);
+      console.log('📁 Nome do arquivo gerado:', fileName);
       
-      // Fazer upload do arquivo diretamente
+      // Fazer upload do arquivo
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('author-registrations')
         .upload(fileName, audioFile, {
@@ -67,20 +83,30 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         });
 
       if (uploadError) {
-        console.error('Erro detalhado no upload:', uploadError);
-        throw new Error(`Erro no upload: ${uploadError.message}`);
+        console.error('❌ Erro detalhado no upload:', uploadError);
+        
+        // Tratamento específico de erros
+        if (uploadError.message.includes('Payload too large')) {
+          throw new Error('Arquivo muito grande. Reduza o tamanho e tente novamente.');
+        } else if (uploadError.message.includes('Invalid mime type')) {
+          throw new Error('Tipo de arquivo não permitido. Use apenas arquivos de áudio.');
+        } else if (uploadError.message.includes('Policy')) {
+          throw new Error('Erro de permissão. Verifique se você está logado corretamente.');
+        } else {
+          throw new Error(`Erro no upload: ${uploadError.message}`);
+        }
       }
 
       if (!uploadData?.path) {
-        console.error('Upload realizado mas path não retornado:', uploadData);
-        throw new Error('Upload incompleto - path não disponível');
+        console.error('❌ Upload realizado mas path não retornado:', uploadData);
+        throw new Error('Upload incompleto - caminho do arquivo não disponível');
       }
 
-      console.log('Upload realizado com sucesso:', uploadData.path);
+      console.log('✅ Upload realizado com sucesso:', uploadData.path);
       return uploadData.path;
       
     } catch (error) {
-      console.error('Erro completo no upload:', error);
+      console.error('❌ Erro completo no upload:', error);
       throw error;
     }
   };
@@ -98,25 +124,25 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
     setIsRegistering(true);
 
     try {
-      console.log('Iniciando processo de registro...');
+      console.log('🚀 Iniciando processo de registro...');
       
       // Gerar hash SHA-256 da letra
       const hash = await gerarHash(data.lyrics);
-      console.log('Hash gerado:', hash);
+      console.log('🔒 Hash gerado:', hash);
 
       // Upload do arquivo de áudio se existir
       let audioFilePath = null;
       
       if (data.audioFile) {
-        console.log('Iniciando upload do arquivo de áudio...', data.audioFile.name);
+        console.log('🎵 Iniciando upload do arquivo de áudio...', data.audioFile.name);
         try {
           audioFilePath = await uploadAudioFile(data.audioFile);
-          console.log('Upload concluído, path:', audioFilePath);
+          console.log('✅ Upload concluído, path:', audioFilePath);
         } catch (uploadError) {
-          console.error('Erro no upload do áudio:', uploadError);
+          console.error('❌ Erro no upload do áudio:', uploadError);
           toast({
             title: 'Erro no upload',
-            description: 'Não foi possível fazer upload do arquivo de áudio. Tente novamente.',
+            description: uploadError instanceof Error ? uploadError.message : 'Não foi possível fazer upload do arquivo de áudio. Tente novamente.',
             variant: 'destructive',
           });
           return;
@@ -124,7 +150,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       }
 
       // Decrementar crédito do usuário IMEDIATAMENTE
-      console.log('Atualizando créditos do usuário...');
+      console.log('💳 Atualizando créditos do usuário...');
       const { data: profileData } = await supabase
         .from('profiles')
         .select('credits')
@@ -139,11 +165,11 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
           .eq('id', currentUserId);
         
         if (creditError) {
-          console.error('Erro ao atualizar créditos:', creditError);
+          console.error('❌ Erro ao atualizar créditos:', creditError);
           throw new Error('Erro ao atualizar créditos');
         }
         
-        console.log('Créditos atualizados:', newCredits);
+        console.log('✅ Créditos atualizados:', newCredits);
       }
 
       // Refresh dos créditos para mostrar a atualização em tempo real
@@ -152,7 +178,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       // Criar registro no banco de dados com status "em análise"
       const analysisStartedAt = new Date().toISOString();
       
-      console.log('Criando registro no banco de dados...');
+      console.log('📝 Criando registro no banco de dados...');
       const { data: registrationData, error: insertError } = await supabase
         .from('author_registrations')
         .insert({
@@ -179,11 +205,11 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         .single();
 
       if (insertError) {
-        console.error('Erro ao inserir registro:', insertError);
+        console.error('❌ Erro ao inserir registro:', insertError);
         throw new Error(`Erro ao registrar a música: ${insertError.message}`);
       }
 
-      console.log('Registro criado com sucesso:', registrationData);
+      console.log('✅ Registro criado com sucesso:', registrationData);
 
       // Mostrar mensagem de sucesso e redirecionar
       toast({
@@ -201,7 +227,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
 
       onRegister();
     } catch (error) {
-      console.error('Erro ao registrar música:', error);
+      console.error('❌ Erro ao registrar música:', error);
       toast({
         title: 'Erro',
         description: error instanceof Error ? error.message : 'Erro ao registrar a música',
@@ -217,7 +243,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       // Gerar tempo aleatório entre 1 e 5 minutos (60000ms a 300000ms)
       const randomTime = Math.floor(Math.random() * (300000 - 60000 + 1)) + 60000;
       
-      console.log(`Iniciando análise para registro ${registrationId}. Tempo estimado: ${Math.floor(randomTime / 1000 / 60)}m${Math.floor((randomTime / 1000) % 60)}s`);
+      console.log(`🔍 Iniciando análise para registro ${registrationId}. Tempo estimado: ${Math.floor(randomTime / 1000 / 60)}m${Math.floor((randomTime / 1000) % 60)}s`);
       
       // Simular o processamento da análise
       setTimeout(async () => {
@@ -234,19 +260,19 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
             .eq('id', registrationId);
 
           if (updateError) {
-            console.error('Erro ao atualizar status do registro:', updateError);
+            console.error('❌ Erro ao atualizar status do registro:', updateError);
             return;
           }
 
-          console.log(`Registro ${registrationId} atualizado para 'registered' em:`, analysisCompletedAt);
+          console.log(`✅ Registro ${registrationId} atualizado para 'registered' em:`, analysisCompletedAt);
 
         } catch (error) {
-          console.error('Erro ao finalizar análise:', error);
+          console.error('❌ Erro ao finalizar análise:', error);
         }
       }, randomTime);
       
     } catch (error) {
-      console.error('Erro na simulação da análise:', error);
+      console.error('❌ Erro na simulação da análise:', error);
     }
   };
 
