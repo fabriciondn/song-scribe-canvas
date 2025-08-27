@@ -46,38 +46,23 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   const uploadAudioFile = async (audioFile: File): Promise<string | null> => {
     try {
       console.log('Iniciando upload do arquivo:', audioFile.name);
-      
-      // Verificar se o bucket existe e é acessível
-      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
-      console.log('Buckets disponíveis:', buckets);
-      
-      if (bucketError) {
-        console.error('Erro ao listar buckets:', bucketError);
-        throw new Error('Erro ao acessar armazenamento');
-      }
-      
-      const authorRegistrationsBucket = buckets?.find(bucket => bucket.name === 'author-registrations');
-      if (!authorRegistrationsBucket) {
-        console.error('Bucket author-registrations não encontrado');
-        throw new Error('Bucket de armazenamento não encontrado');
-      }
+      console.log('Tamanho do arquivo:', audioFile.size, 'bytes');
+      console.log('Tipo do arquivo:', audioFile.type);
       
       // Gerar nome único para o arquivo
-      const fileExt = audioFile.name.split('.').pop() || 'mp3';
+      const fileExt = audioFile.name.split('.').pop()?.toLowerCase() || 'mp3';
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 15);
       const fileName = `${currentUserId}/${timestamp}_${randomString}.${fileExt}`;
       
       console.log('Nome do arquivo gerado:', fileName);
-      console.log('Tamanho do arquivo:', audioFile.size, 'bytes');
-      console.log('Tipo do arquivo:', audioFile.type);
       
-      // Fazer upload do arquivo
+      // Fazer upload do arquivo diretamente
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('author-registrations')
         .upload(fileName, audioFile, {
           cacheControl: '3600',
-          upsert: false, // Não sobrescrever arquivo existente
+          upsert: false,
           contentType: audioFile.type || 'audio/mpeg'
         });
 
@@ -124,8 +109,18 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       
       if (data.audioFile) {
         console.log('Iniciando upload do arquivo de áudio...', data.audioFile.name);
-        audioFilePath = await uploadAudioFile(data.audioFile);
-        console.log('Upload concluído, path:', audioFilePath);
+        try {
+          audioFilePath = await uploadAudioFile(data.audioFile);
+          console.log('Upload concluído, path:', audioFilePath);
+        } catch (uploadError) {
+          console.error('Erro no upload do áudio:', uploadError);
+          toast({
+            title: 'Erro no upload',
+            description: 'Não foi possível fazer upload do arquivo de áudio. Tente novamente.',
+            variant: 'destructive',
+          });
+          return;
+        }
       }
 
       // Decrementar crédito do usuário IMEDIATAMENTE
