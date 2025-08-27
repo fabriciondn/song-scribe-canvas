@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Users, BarChart3, User, Moon, Sun, LogOut, UserCircle, Receipt, Bug } from 'lucide-react';
+import { Users, BarChart3, User, Moon, Sun, LogOut, UserCircle, Receipt, Bug, FileText } from 'lucide-react';
 import { 
   Sidebar, 
   SidebarContent, 
@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 const moderatorNavItems = [
   { title: 'Visão Geral', url: '/moderator', icon: BarChart3 },
   { title: 'Usuários', url: '/moderator/users', icon: Users },
+  { title: 'Formulários', url: '/moderator/forms', icon: FileText },
   { title: 'Transações', url: '/moderator/transactions', icon: Receipt },
   { title: 'Perfil', url: '/moderator/profile', icon: UserCircle },
   { title: 'Debug Acesso', url: '/moderator/debug', icon: Bug },

@@ -1,197 +1,217 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Search, Copy, RefreshCw, Eye, EyeOff, DollarSign, User, Receipt, FileText } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Plus, Edit, Trash2, Key, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { getManagedUsers, updateManagedUserCredits, createUserForModerator, registerUserCreatedByModerator } from '@/services/moderatorService';
-import { useUserCredits } from '@/hooks/useUserCredits';
-import { ImpersonateButton } from '@/components/ui/impersonate-button';
-import { TransactionForm } from './TransactionForm';
-import { UserTransactionsList } from './UserTransactionsList';
-import { UserNotesModal } from './UserNotesModal';
-import { DataMask } from '@/components/ui/data-mask';
+import { getManagedUsers, createUserForModerator, updateManagedUserCredits } from '@/services/moderatorService';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ModeratorUsers = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
-  const [newCredits, setNewCredits] = useState<number>(0);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [createdUserCredentials, setCreatedUserCredentials] = useState<{email: string, password: string} | null>(null);
-  const [editingUserData, setEditingUserData] = useState<any>(null);
-  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
-  const [editUserForm, setEditUserForm] = useState({
-    name: '',
-    email: '',
-    artistic_name: ''
-  });
-  const [selectedUserForTransaction, setSelectedUserForTransaction] = useState<any>(null);
-  const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
-  const [transactionRefreshTrigger, setTransactionRefreshTrigger] = useState(0);
-  const [selectedTransactionUser, setSelectedTransactionUser] = useState<any>(null);
-  const [selectedNotesUser, setSelectedNotesUser] = useState<any>(null);
-  const [newUser, setNewUser] = useState({
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  
+  const [newUserData, setNewUserData] = useState({
     name: '',
     email: '',
     password: '',
     artistic_name: ''
   });
 
-  // Função para gerar senha forte aleatória
-  const generateStrongPassword = () => {
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    let password = "";
-    for (let i = 0; i < 12; i++) {
-      password += charset.charAt(Math.floor(Math.random() * charset.length));
-    }
-    return password;
-  };
+  const [editUserData, setEditUserData] = useState({
+    name: '',
+    email: '',
+    credits: 0
+  });
 
-  // Gerar senha automaticamente quando o diálogo abrir
-  useEffect(() => {
-    if (isCreateDialogOpen) {
-      const autoPassword = generateStrongPassword();
-      setNewUser(prev => ({ ...prev, password: autoPassword }));
-    }
-  }, [isCreateDialogOpen]);
+  const [newPassword, setNewPassword] = useState('');
 
-  const { credits: moderatorCredits } = useUserCredits();
   const queryClient = useQueryClient();
 
-  const { data: users = [], isLoading } = useQuery({
+  const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['managed-users'],
     queryFn: getManagedUsers,
   });
 
-  const updateCreditsMutation = useMutation({
-    mutationFn: ({ userId, credits }: { userId: string; credits: number }) =>
-      updateManagedUserCredits(userId, credits),
-    onSuccess: () => {
-      toast.success('Créditos atualizados com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['managed-users'] });
-      queryClient.invalidateQueries({ queryKey: ['moderator-dashboard-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['user-credits'] });
-      setIsEditDialogOpen(false);
-      setEditingUser(null);
-    },
-    onError: (error: any) => {
-      toast.error(error.message || 'Erro ao atualizar créditos');
-    },
-  });
-
   const createUserMutation = useMutation({
     mutationFn: createUserForModerator,
-    onSuccess: (data) => {
-      console.log('✅ Usuário criado com sucesso:', data);
-      
-      // Guardar credenciais para mostrar ao moderador
-      setCreatedUserCredentials({
-        email: newUser.email,
-        password: newUser.password
-      });
-      
-      toast.success('Usuário criado com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['managed-users'] });
-      queryClient.invalidateQueries({ queryKey: ['moderator-dashboard-stats'] });
-      setIsCreateDialogOpen(false);
-      setIsCredentialsDialogOpen(true);
-      setNewUser({ name: '', email: '', password: '', artistic_name: '' });
+    onSuccess: () => {
+      toast.success('Usuário criado com sucesso');
+      setIsCreateModalOpen(false);
+      setNewUserData({ name: '', email: '', password: '', artistic_name: '' });
+      refetch();
     },
     onError: (error: any) => {
-      console.error('❌ Erro ao criar usuário:', error);
+      console.error('Erro ao criar usuário:', error);
       toast.error(error.message || 'Erro ao criar usuário');
     },
   });
 
-  const filteredUsers = users.filter(user =>
-    user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.artistic_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleEditCredits = (user: any) => {
-    setEditingUser(user);
-    setNewCredits(user.credits);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleUpdateCredits = () => {
-    if (editingUser) {
-      updateCreditsMutation.mutate({
-        userId: editingUser.id,
-        credits: newCredits
-      });
-    }
-  };
-
-  const handleCreateUser = () => {
-    createUserMutation.mutate(newUser);
-  };
-
-  const handleEditUserData = (user: any) => {
-    setEditingUserData(user);
-    setEditUserForm({
-      name: user.name || '',
-      email: user.email || '',
-      artistic_name: user.artistic_name || ''
-    });
-    setIsEditUserDialogOpen(true);
-  };
-
-  const handleUpdateUserData = async () => {
-    if (!editingUserData) return;
-    
-    try {
+  const updateUserMutation = useMutation({
+    mutationFn: async (userData: { id: string; name: string; email: string; credits: number }) => {
       const { error } = await supabase
         .from('profiles')
         .update({
-          name: editUserForm.name,
-          email: editUserForm.email,
-          artistic_name: editUserForm.artistic_name || null
+          name: userData.name,
+          email: userData.email,
+          credits: userData.credits
         })
-        .eq('id', editingUserData.id);
+        .eq('id', userData.id);
 
       if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Usuário atualizado com sucesso');
+      setIsEditModalOpen(false);
+      setEditingUser(null);
+      refetch();
+    },
+    onError: (error: any) => {
+      console.error('Erro ao atualizar usuário:', error);
+      toast.error(error.message || 'Erro ao atualizar usuário');
+    },
+  });
 
-      toast.success('Dados do usuário atualizados com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['managed-users'] });
-      setIsEditUserDialogOpen(false);
-      setEditingUserData(null);
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao atualizar dados do usuário');
+  const changePasswordMutation = useMutation({
+    mutationFn: async (userData: { userId: string; newPassword: string }) => {
+      const { data, error } = await supabase.functions.invoke('reset-user-password', {
+        body: {
+          user_id: userData.userId,
+          new_password: userData.newPassword
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Senha alterada com sucesso');
+      setIsPasswordModalOpen(false);
+      setNewPassword('');
+      setSelectedUser(null);
+    },
+    onError: (error: any) => {
+      console.error('Erro ao alterar senha:', error);
+      toast.error(error.message || 'Erro ao alterar senha');
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      // Log da atividade antes de excluir
+      await supabase
+        .from('user_activity_logs')
+        .insert({
+          user_id: userId,
+          action: 'user_deleted_by_moderator',
+          metadata: {
+            moderator_user_id: (await supabase.auth.getUser()).data.user?.id,
+            deleted_at: new Date().toISOString()
+          }
+        });
+
+      // Remover da tabela moderator_users
+      const { error: moderatorError } = await supabase
+        .from('moderator_users')
+        .delete()
+        .eq('user_id', userId);
+
+      if (moderatorError) throw moderatorError;
+
+      // Remover da tabela auth.users via edge function seria o ideal
+      // Por enquanto, vamos desativar o usuário atualizando o perfil
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          email: `deleted_${Date.now()}@deleted.com`,
+          name: '[USUÁRIO EXCLUÍDO]'
+        })
+        .eq('id', userId);
+
+      if (profileError) throw profileError;
+    },
+    onSuccess: () => {
+      toast.success('Usuário excluído com sucesso');
+      setSelectedUser(null);
+      setDeleteConfirmText('');
+      refetch();
+    },
+    onError: (error: any) => {
+      console.error('Erro ao excluir usuário:', error);
+      toast.error(error.message || 'Erro ao excluir usuário');
+    },
+  });
+
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUserData.name || !newUserData.email || !newUserData.password) {
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
     }
+    createUserMutation.mutate(newUserData);
   };
 
-  const handleOpenTransactionDialog = (user: any) => {
-    setSelectedUserForTransaction(user);
-    setIsTransactionDialogOpen(true);
+  const handleEditUser = (user: any) => {
+    setEditingUser(user);
+    setEditUserData({
+      name: user.name || '',
+      email: user.email || '',
+      credits: user.credits || 0
+    });
+    setIsEditModalOpen(true);
   };
 
-  const handleTransactionCreated = () => {
-    setTransactionRefreshTrigger(prev => prev + 1);
+  const handleUpdateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    
+    updateUserMutation.mutate({
+      id: editingUser.id,
+      ...editUserData
+    });
   };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Usuários Gerenciados</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-6">Carregando usuários...</div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const handleChangePassword = (user: any) => {
+    setSelectedUser(user);
+    setNewPassword('');
+    setIsPasswordModalOpen(true);
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser || !newPassword) return;
+    
+    changePasswordMutation.mutate({
+      userId: selectedUser.id,
+      newPassword: newPassword
+    });
+  };
+
+  const handleDeleteUser = () => {
+    if (!selectedUser || deleteConfirmText !== selectedUser.name) return;
+    
+    deleteUserMutation.mutate(selectedUser.id);
+  };
+
+  const generateRandomPassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setNewPassword(password);
+  };
 
   return (
     <div className="space-y-6">
@@ -199,412 +219,294 @@ export const ModeratorUsers = () => {
         <div>
           <h2 className="text-2xl font-bold">Usuários Gerenciados</h2>
           <p className="text-muted-foreground">
-            Gerencie os usuários que você criou e seus créditos
+            Gerencie os usuários que você criou
           </p>
         </div>
-        
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               Criar Usuário
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Criar Novo Usuário</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Nome Completo</Label>
+            <form onSubmit={handleCreateUser} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome Completo *</Label>
                 <Input
                   id="name"
-                  value={newUser.name}
-                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                  placeholder="Nome do usuário"
+                  value={newUserData.name}
+                  onChange={(e) => setNewUserData({ ...newUserData, name: e.target.value })}
+                  placeholder="Nome completo"
+                  required
                 />
               </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
                   type="email"
-                  value={newUser.email}
-                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  value={newUserData.email}
+                  onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
                   placeholder="email@exemplo.com"
+                  required
                 />
               </div>
-              <div>
-                <Label htmlFor="password">Senha (Gerada Automaticamente)</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={newUser.password}
-                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                    placeholder="Senha do usuário"
-                    readOnly
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setNewUser({ ...newUser, password: generateStrongPassword() })}
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Uma senha forte foi gerada automaticamente. Use os botões para visualizar ou gerar uma nova.
-                </p>
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={newUserData.password}
+                  onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+                  placeholder="Senha do usuário"
+                  required
+                />
               </div>
-              <div>
-                <Label htmlFor="artistic_name">Nome Artístico (Opcional)</Label>
+              <div className="space-y-2">
+                <Label htmlFor="artistic_name">Nome Artístico</Label>
                 <Input
                   id="artistic_name"
-                  value={newUser.artistic_name}
-                  onChange={(e) => setNewUser({ ...newUser, artistic_name: e.target.value })}
-                  placeholder="Nome artístico"
+                  value={newUserData.artistic_name}
+                  onChange={(e) => setNewUserData({ ...newUserData, artistic_name: e.target.value })}
+                  placeholder="Nome artístico (opcional)"
                 />
               </div>
-              <div className="flex justify-end space-x-2">
+              <DialogFooter>
                 <Button
+                  type="button"
                   variant="outline"
-                  onClick={() => setIsCreateDialogOpen(false)}
+                  onClick={() => setIsCreateModalOpen(false)}
                 >
                   Cancelar
                 </Button>
                 <Button
-                  onClick={handleCreateUser}
-                  disabled={createUserMutation.isPending || !newUser.name || !newUser.email || !newUser.password}
+                  type="submit"
+                  disabled={createUserMutation.isPending}
                 >
                   {createUserMutation.isPending ? 'Criando...' : 'Criar Usuário'}
                 </Button>
-              </div>
-            </div>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
 
+      {/* Lista de Usuários */}
       <Card>
         <CardHeader>
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4" />
-            <Input
-              placeholder="Buscar usuários..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
+          <CardTitle>Usuários Cadastrados</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 p-3 bg-muted rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              Seus créditos disponíveis: <span className="font-semibold">{moderatorCredits || 0}</span>
-            </p>
-          </div>
-
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Nome Artístico</TableHead>
-                <TableHead>Créditos</TableHead>
-                <TableHead>Data de Criação</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-6">
-                    {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário gerenciado ainda'}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      {user.name || 'Não informado'}
-                    </TableCell>
-                    <TableCell>
-                      <DataMask data={user.email} type="email" />
-                    </TableCell>
-                    <TableCell>
-                      {user.artistic_name ? (
-                        <Badge variant="secondary">{user.artistic_name}</Badge>
-                      ) : (
-                        'Não informado'
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{user.credits} créditos</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(user.created_at).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                     <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditUserData(user)}
-                          >
-                            <User className="h-4 w-4 mr-1" />
-                            Editar Cadastro
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedNotesUser(user)}
-                          >
-                            <FileText className="h-4 w-4 mr-1" />
-                            Notas
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditCredits(user)}
-                          >
-                            <DollarSign className="h-4 w-4 mr-1" />
-                            Editar Créditos
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOpenTransactionDialog(user)}
-                          >
-                            <Receipt className="h-4 w-4 mr-1" />
-                            Lançar Valor
-                          </Button>
-                          <ImpersonateButton 
-                            targetUser={user} 
-                            targetRole="user" 
-                          />
-                        </div>
-                     </TableCell>
+          {isLoading ? (
+            <div className="text-center py-8">Carregando usuários...</div>
+          ) : users && users.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Nome Artístico</TableHead>
+                    <TableHead>Créditos</TableHead>
+                    <TableHead>Criado em</TableHead>
+                    <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>{user.name || '-'}</TableCell>
+                      <TableCell>{user.email || '-'}</TableCell>
+                      <TableCell>{user.artistic_name || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{user.credits}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2 justify-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditUser(user)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleChangePassword(user)}
+                          >
+                            <Key className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedUser(user)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="flex items-center gap-2">
+                                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                                  Excluir Usuário
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta ação é irreversível. Para confirmar, digite o nome completo do usuário: <strong>{user.name}</strong>
+                                  <Input
+                                    className="mt-2"
+                                    placeholder="Digite o nome do usuário"
+                                    value={deleteConfirmText}
+                                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                                  />
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel onClick={() => {
+                                  setSelectedUser(null);
+                                  setDeleteConfirmText('');
+                                }}>
+                                  Cancelar
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={handleDeleteUser}
+                                  disabled={deleteConfirmText !== user.name || deleteUserMutation.isPending}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  {deleteUserMutation.isPending ? 'Excluindo...' : 'Excluir'}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum usuário encontrado
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+      {/* Modal de Edição */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Editar Créditos</DialogTitle>
+            <DialogTitle>Editar Usuário</DialogTitle>
           </DialogHeader>
-          {editingUser && (
-            <div className="space-y-4">
-              <div>
-                <Label>Usuário</Label>
-                <p className="text-sm text-muted-foreground">
-                  {editingUser.name} ({editingUser.email})
-                </p>
-              </div>
-              <div>
-                <Label htmlFor="credits">Novos Créditos</Label>
-                <Input
-                  id="credits"
-                  type="number"
-                  min="0"
-                  value={newCredits}
-                  onChange={(e) => setNewCredits(Number(e.target.value))}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Créditos atuais: {editingUser.credits}
-                </p>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsEditDialogOpen(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleUpdateCredits}
-                  disabled={updateCreditsMutation.isPending}
-                >
-                  {updateCreditsMutation.isPending ? 'Salvando...' : 'Salvar'}
-                </Button>
-              </div>
+          <form onSubmit={handleUpdateUser} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Nome</Label>
+              <Input
+                id="edit-name"
+                value={editUserData.name}
+                onChange={(e) => setEditUserData({ ...editUserData, name: e.target.value })}
+                placeholder="Nome do usuário"
+                required
+              />
             </div>
-          )}
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editUserData.email}
+                onChange={(e) => setEditUserData({ ...editUserData, email: e.target.value })}
+                placeholder="email@exemplo.com"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-credits">Créditos</Label>
+              <Input
+                id="edit-credits"
+                type="number"
+                min="0"
+                value={editUserData.credits}
+                onChange={(e) => setEditUserData({ ...editUserData, credits: Number(e.target.value) })}
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditModalOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={updateUserMutation.isPending}
+              >
+                {updateUserMutation.isPending ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
-      {/* Diálogo para editar dados do usuário */}
-      <Dialog open={isEditUserDialogOpen} onOpenChange={setIsEditUserDialogOpen}>
-        <DialogContent>
+      {/* Modal de Trocar Senha */}
+      <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Editar Dados do Usuário</DialogTitle>
+            <DialogTitle>Trocar Senha do Usuário</DialogTitle>
           </DialogHeader>
-          {editingUserData && (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="edit-name">Nome Completo</Label>
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Nova Senha</Label>
+              <div className="flex gap-2">
                 <Input
-                  id="edit-name"
-                  value={editUserForm.name}
-                  onChange={(e) => setEditUserForm({ ...editUserForm, name: e.target.value })}
-                  placeholder="Nome do usuário"
+                  id="new-password"
+                  type="text"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Digite a nova senha"
+                  required
                 />
-              </div>
-              <div>
-                <Label htmlFor="edit-email">Email</Label>
-                <Input
-                  id="edit-email"
-                  type="email"
-                  value={editUserForm.email}
-                  onChange={(e) => setEditUserForm({ ...editUserForm, email: e.target.value })}
-                  placeholder="email@exemplo.com"
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-artistic-name">Nome Artístico</Label>
-                <Input
-                  id="edit-artistic-name"
-                  value={editUserForm.artistic_name}
-                  onChange={(e) => setEditUserForm({ ...editUserForm, artistic_name: e.target.value })}
-                  placeholder="Nome artístico"
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
                 <Button
+                  type="button"
                   variant="outline"
-                  onClick={() => setIsEditUserDialogOpen(false)}
+                  onClick={generateRandomPassword}
                 >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleUpdateUserData}
-                >
-                  Salvar Alterações
+                  Gerar
                 </Button>
               </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Diálogo para mostrar credenciais do usuário criado */}
-      <Dialog open={isCredentialsDialogOpen} onOpenChange={setIsCredentialsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Usuário Criado com Sucesso!</DialogTitle>
-          </DialogHeader>
-          {createdUserCredentials && (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                As credenciais do usuário foram geradas. Anote essas informações em local seguro:
+              <p className="text-xs text-muted-foreground">
+                Clique em "Gerar" para criar uma senha aleatória segura
               </p>
-              
-              <div className="space-y-3 p-4 bg-muted rounded-lg">
-                <div>
-                  <Label className="text-sm font-medium">Email:</Label>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <Input
-                      value={createdUserCredentials.email}
-                      readOnly
-                      className="bg-background"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        navigator.clipboard.writeText(createdUserCredentials.email);
-                        toast.success('Email copiado!');
-                      }}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                
-                <div>
-                  <Label className="text-sm font-medium">Senha:</Label>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <Input
-                      value={createdUserCredentials.password}
-                      readOnly
-                      className="bg-background font-mono"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        navigator.clipboard.writeText(createdUserCredentials.password);
-                        toast.success('Senha copiada!');
-                      }}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <p className="text-xs text-yellow-800">
-                  <strong>Importante:</strong> Guarde essas credenciais em local seguro. 
-                  Você pode agora usar o botão "Operar como" para acessar a conta deste usuário.
-                </p>
-              </div>
-              
-              <div className="flex justify-end">
-                <Button onClick={() => {
-                  setIsCredentialsDialogOpen(false);
-                  setCreatedUserCredentials(null);
-                }}>
-                  Entendido
-                </Button>
-              </div>
             </div>
-          )}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsPasswordModalOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={changePasswordMutation.isPending}
+              >
+                {changePasswordMutation.isPending ? 'Alterando...' : 'Alterar Senha'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
-
-      {/* Diálogo para lançamento de valores */}
-      <Dialog open={isTransactionDialogOpen} onOpenChange={setIsTransactionDialogOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Lançar Valores - {selectedUserForTransaction?.name}</DialogTitle>
-          </DialogHeader>
-          {selectedUserForTransaction && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <TransactionForm
-                userId={selectedUserForTransaction.id}
-                userName={selectedUserForTransaction.name || selectedUserForTransaction.email}
-                onTransactionCreated={handleTransactionCreated}
-              />
-              <UserTransactionsList
-                userId={selectedUserForTransaction.id}
-                userName={selectedUserForTransaction.name || selectedUserForTransaction.email}
-                refreshTrigger={transactionRefreshTrigger}
-              />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal de Notas */}
-      <UserNotesModal
-        isOpen={!!selectedNotesUser}
-        onClose={() => setSelectedNotesUser(null)}
-        user={selectedNotesUser || { id: '', name: '', email: '' }}
-      />
     </div>
   );
 };
