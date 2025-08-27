@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,7 +10,7 @@ export const RoleRedirect = () => {
   const { userRole, isRoleLoading } = useRoleBasedNavigation();
   const { isAuthenticated } = useAuth();
   const { isImpersonating } = useImpersonation();
-  const { reportAuthIssue } = useRegionalAuth(); // Monitor de problemas regionais
+  const { reportAuthIssue } = useRegionalAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -25,17 +26,23 @@ export const RoleRedirect = () => {
 
     const currentPath = location.pathname;
     
-    // Se o usuário está na página inicial e tem role específico, redirecionar
-    if (currentPath === '/' || currentPath === '/dashboard') {
-      if (userRole.role === 'moderator') {
-        console.log('🔄 Redirecionando moderador para painel específico');
-        navigate('/moderator', { replace: true });
-      } else if (userRole.role === 'admin' && currentPath === '/') {
+    // CRÍTICO: NÃO redirecionar se estiver no admin ou moderator
+    if (currentPath.startsWith('/admin') || currentPath.startsWith('/moderator')) {
+      console.log('🛡️ Usuário no painel admin/moderator - não redirecionando');
+      return;
+    }
+    
+    // Se o usuário está na página inicial e tem role específico, redirecionar APENAS da raiz
+    if (currentPath === '/') {
+      if (userRole.role === 'admin') {
         console.log('👑 Redirecionando admin para painel administrativo');
         navigate('/admin', { replace: true });
+      } else if (userRole.role === 'moderator') {
+        console.log('🔄 Redirecionando moderador para painel específico');
+        navigate('/moderator', { replace: true });
       }
     }
   }, [userRole, isRoleLoading, isAuthenticated, isImpersonating, location.pathname, navigate]);
 
-  return null; // Este componente não renderiza nada
+  return null;
 };

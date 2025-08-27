@@ -98,7 +98,7 @@ export const useRoleBasedNavigation = () => {
     };
   }, [isAuthenticated, user?.id, isLoading, debouncedFetchUserRole]);
 
-  // Redirecionamento automático baseado no role - MODIFICADO para não interferir no admin
+  // Função de redirecionamento simplificada - REMOVIDO redirecionamentos automáticos para admin
   const redirectBasedOnRole = (currentUserRole: UserRole, currentPath: string, isImpersonating: boolean = false) => {
     console.log('🧭 Navegação baseada em role:', { 
       userRole: currentUserRole.role, 
@@ -118,7 +118,7 @@ export const useRoleBasedNavigation = () => {
       return;
     }
 
-    // Se o usuário está tentando acessar uma área restrita SEM impersonação
+    // Se o usuário está tentando acessar uma área restrita SEM permissão
     if (currentPath.startsWith('/admin') && currentUserRole.role !== 'admin') {
       console.log('❌ Acesso negado ao admin, redirecionando...');
       if (currentUserRole.role === 'moderator') {
@@ -129,16 +129,6 @@ export const useRoleBasedNavigation = () => {
       return;
     }
 
-    // Se moderador tenta acessar dashboard SEM impersonação E NÃO está no admin - redirecionar
-    if (currentUserRole.role === 'moderator' && 
-        currentPath === '/dashboard' && 
-        !isImpersonating && 
-        !currentPath.startsWith('/admin')) {
-      console.log('🔄 Redirecionando moderador para área específica (sem impersonação)...');
-      navigate('/moderator', { replace: true });
-      return;
-    }
-
     // Se o usuário está em uma área de moderador sem permissão
     if (currentPath.startsWith('/moderator') && !['admin', 'moderator'].includes(currentUserRole.role)) {
       console.log('❌ Acesso negado ao moderador, redirecionando...');
@@ -146,11 +136,13 @@ export const useRoleBasedNavigation = () => {
       return;
     }
 
-    // Para outras situações, não fazer redirecionamento automático
+    // REMOVIDO: redirecionamento automático de moderador para /moderator
+    // Isso estava causando problemas no admin
+    
     console.log('✅ Navegação permitida sem redirecionamento');
   };
 
-  // useEffect para chamar a função de redirecionamento - MODIFICADO
+  // useEffect para chamar a função de redirecionamento - MODIFICADO para não interferir no admin
   useEffect(() => {
     if (isLoading || isRoleLoading || !isAuthenticated) {
       return;
@@ -161,8 +153,8 @@ export const useRoleBasedNavigation = () => {
       ? { role: impersonatedUser.role }
       : userRole || { role: 'user' };
 
-    // APENAS fazer redirecionamento se NÃO estiver no admin
-    if (!location.pathname.startsWith('/admin')) {
+    // APENAS fazer redirecionamento se NÃO estiver no admin OU moderator
+    if (!location.pathname.startsWith('/admin') && !location.pathname.startsWith('/moderator')) {
       redirectBasedOnRole(effectiveRole, location.pathname, isImpersonating);
     }
   }, [userRole, isRoleLoading, isAuthenticated, isLoading, location.pathname, isImpersonating, impersonatedUser, navigate]);
