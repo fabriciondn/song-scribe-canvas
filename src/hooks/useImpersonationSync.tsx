@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useImpersonation } from '@/context/ImpersonationContext';
 
@@ -7,10 +8,10 @@ export const useImpersonationSync = () => {
   // Sincronizar estado de impersonação via localStorage
   useEffect(() => {
     const syncImpersonation = () => {
-      const storedImpersonation = localStorage.getItem('impersonation_data');
-      
-      if (storedImpersonation && !isImpersonating) {
-        try {
+      try {
+        const storedImpersonation = localStorage.getItem('impersonation_data');
+        
+        if (storedImpersonation && !isImpersonating) {
           const impersonationData = JSON.parse(storedImpersonation);
           console.log('🔄 Sincronizando impersonação entre abas:', impersonationData);
           
@@ -21,15 +22,12 @@ export const useImpersonationSync = () => {
             // Compatibilidade com formato antigo
             startImpersonation(impersonationData);
           }
-        } catch (error) {
-          console.error('Erro ao sincronizar impersonação:', error);
-          localStorage.removeItem('impersonation_data');
         }
+      } catch (error) {
+        console.error('Erro ao sincronizar impersonação:', error);
+        localStorage.removeItem('impersonation_data');
       }
     };
-
-    // Executar na inicialização
-    syncImpersonation();
 
     // Escutar mudanças no localStorage
     const handleStorageChange = (e: StorageEvent) => {
@@ -40,6 +38,9 @@ export const useImpersonationSync = () => {
         localStorage.removeItem('stop_impersonation');
       }
     };
+
+    // Executar na inicialização apenas se necessário
+    syncImpersonation();
 
     window.addEventListener('storage', handleStorageChange);
 

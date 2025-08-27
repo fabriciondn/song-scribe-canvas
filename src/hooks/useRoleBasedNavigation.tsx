@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -100,7 +101,7 @@ export const useRoleBasedNavigation = () => {
     return () => {
       debouncedFetchUserRole.cancel();
     };
-  }, [isAuthenticated, user?.id, isLoading]);
+  }, [isAuthenticated, user?.id, isLoading, debouncedFetchUserRole]);
 
   // Redirecionamento automático baseado no role
   const redirectBasedOnRole = (currentUserRole: UserRole, currentPath: string, isImpersonating: boolean = false) => {

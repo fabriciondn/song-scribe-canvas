@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { useImpersonation } from '@/context/ImpersonationContext';
@@ -56,7 +57,7 @@ export const useUserCredits = () => {
 
   useEffect(() => {
     // Evitar requisições desnecessárias se o userId não mudou
-    if (lastUserIdRef.current === currentUserId) {
+    if (lastUserIdRef.current === currentUserId && currentUserId) {
       return;
     }
 
@@ -75,10 +76,14 @@ export const useUserCredits = () => {
     setIsLoading(true);
     setError(null);
     
+    if (!currentUserId) {
+      setCredits(0);
+      setIsLoading(false);
+      return;
+    }
+
     // Buscar créditos imediatamente
     fetchCredits();
-
-    if (!currentUserId) return;
 
     // Configurar polling mais agressivo para garantir atualizações em tempo real
     pollingIntervalRef.current = setInterval(() => {
@@ -129,11 +134,11 @@ export const useUserCredits = () => {
     };
   }, []);
 
-  const refreshCredits = async () => {
+  const refreshCredits = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     await fetchCredits();
-  };
+  }, [fetchCredits]);
 
   return {
     credits,
