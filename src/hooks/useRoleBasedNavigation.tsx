@@ -24,21 +24,19 @@ export const useRoleBasedNavigation = () => {
     try {
       console.log('🔍 Verificando role do usuário:', userId);
 
-      // Uma única chamada para buscar role e permissões juntos
       const result = await withRateLimit(
         `user_role_complete_${userId}`,
         async () => {
-          // Tenta buscar dados de admin primeiro
           const adminResult = await supabase
             .from('admin_users')
             .select('role, permissions')
             .eq('user_id', userId)
-            .maybeSingle(); // maybeSingle não dá erro se não encontrar
+            .maybeSingle();
 
           return adminResult;
         },
-        15, // Max 15 calls por janela
-        120000 // 2 minutos
+        15,
+        120000
       );
 
       if (!result) {
@@ -54,7 +52,6 @@ export const useRoleBasedNavigation = () => {
       let permissions: string[] = [];
 
       if (adminData && !error) {
-        // Usuário tem entrada na tabela admin_users
         role = adminData.role || 'user';
         permissions = Array.isArray(adminData.permissions) 
           ? adminData.permissions 
@@ -62,7 +59,6 @@ export const useRoleBasedNavigation = () => {
              ? JSON.parse(adminData.permissions || '[]')
              : []);
       } else if (!error) {
-        // Não há erro mas também não encontrou dados = usuário comum
         role = 'user';
       } else {
         console.warn('Erro ao buscar dados de admin, assumindo usuário comum:', error);
@@ -71,7 +67,6 @@ export const useRoleBasedNavigation = () => {
 
       console.log('👤 Role encontrado:', role, 'Permissões:', permissions);
 
-      // Mapear role para o formato esperado pelo frontend
       const mappedRole = role === 'super_admin' ? 'admin' : role as ('admin' | 'moderator' | 'user');
 
       setUserRole({ 
@@ -86,7 +81,7 @@ export const useRoleBasedNavigation = () => {
       setUserRole({ role: 'user' });
       setIsRoleLoading(false);
     }
-  }, 500); // Reduzido para 500ms
+  }, 500);
 
   // Buscar role do usuário
   useEffect(() => {
@@ -103,7 +98,7 @@ export const useRoleBasedNavigation = () => {
     };
   }, [isAuthenticated, user?.id, isLoading, debouncedFetchUserRole]);
 
-  // Redirecionamento automático baseado no role
+  // Redirecionamento automático baseado no role - MODIFICADO para não interferir no admin
   const redirectBasedOnRole = (currentUserRole: UserRole, currentPath: string, isImpersonating: boolean = false) => {
     console.log('🧭 Navegação baseada em role:', { 
       userRole: currentUserRole.role, 
@@ -111,9 +106,15 @@ export const useRoleBasedNavigation = () => {
       isImpersonating
     });
 
-    // Se está impersonando, BLOQUEAR qualquer redirecionamento automático
+    // CRÍTICO: Se está impersonando, BLOQUEAR qualquer redirecionamento automático
     if (isImpersonating) {
       console.log('🎭 IMPERSONAÇÃO ATIVA - Bloqueando redirecionamentos automáticos');
+      return;
+    }
+
+    // CRÍTICO: Se está no painel admin, NÃO redirecionar automaticamente
+    if (currentPath.startsWith('/admin')) {
+      console.log('🛡️ NO PAINEL ADMIN - Bloqueando redirecionamentos automáticos');
       return;
     }
 
@@ -128,8 +129,11 @@ export const useRoleBasedNavigation = () => {
       return;
     }
 
-    // Se moderador tenta acessar dashboard SEM impersonação - redirecionar
-    if (currentUserRole.role === 'moderator' && currentPath === '/dashboard' && !isImpersonating) {
+    // Se moderador tenta acessar dashboard SEM impersonação E NÃO está no admin - redirecionar
+    if (currentUserRole.role === 'moderator' && 
+        currentPath === '/dashboard' && 
+        !isImpersonating && 
+        !currentPath.startsWith('/admin')) {
       console.log('🔄 Redirecionando moderador para área específica (sem impersonação)...');
       navigate('/moderator', { replace: true });
       return;
@@ -146,7 +150,7 @@ export const useRoleBasedNavigation = () => {
     console.log('✅ Navegação permitida sem redirecionamento');
   };
 
-  // useEffect para chamar a função de redirecionamento
+  // useEffect para chamar a função de redirecionamento - MODIFICADO
   useEffect(() => {
     if (isLoading || isRoleLoading || !isAuthenticated) {
       return;
@@ -157,11 +161,13 @@ export const useRoleBasedNavigation = () => {
       ? { role: impersonatedUser.role }
       : userRole || { role: 'user' };
 
-    redirectBasedOnRole(effectiveRole, location.pathname, isImpersonating);
+    // APENAS fazer redirecionamento se NÃO estiver no admin
+    if (!location.pathname.startsWith('/admin')) {
+      redirectBasedOnRole(effectiveRole, location.pathname, isImpersonating);
+    }
   }, [userRole, isRoleLoading, isAuthenticated, isLoading, location.pathname, isImpersonating, impersonatedUser, navigate]);
 
   const getDefaultDashboard = () => {
-    // Se estiver impersonando, usar o role do usuário impersonado
     const effectiveRole = isImpersonating && impersonatedUser
       ? impersonatedUser.role
       : userRole?.role;
@@ -177,7 +183,6 @@ export const useRoleBasedNavigation = () => {
   };
 
   const canAccess = (requiredRole: 'admin' | 'moderator' | 'user') => {
-    // Se estiver impersonando, usar o role do usuário impersonado
     const effectiveRole = isImpersonating && impersonatedUser
       ? impersonatedUser.role
       : userRole?.role;
@@ -189,7 +194,6 @@ export const useRoleBasedNavigation = () => {
       user: 1
     };
 
-    // Admin pode acessar tudo, incluindo painel moderador
     if (effectiveRole === 'admin') return true;
 
     return roleHierarchy[effectiveRole] >= roleHierarchy[requiredRole];
