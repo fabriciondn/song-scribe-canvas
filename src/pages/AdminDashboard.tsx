@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,11 +26,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useProfile } from '@/hooks/useProfile';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Shield, Users, BarChart3, AlertTriangle, CheckCircle, Clock, Activity } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAdmin, isLoading } = useUserRole();
   const [activeTab, setActiveTab] = useState('overview');
   const [systemHealth, setSystemHealth] = useState({
     status: 'healthy',
@@ -44,58 +43,18 @@ const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      console.log('🔍 AdminDashboard: Verificando status de admin...');
+    if (!isLoading && isAdmin) {
+      console.log('✅ AdminDashboard: Usuário confirmado como admin');
       
-      try {
-        // Verificar se há usuário autenticado
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        console.log('📊 Sessão atual:', { session: !!session, user: session?.user?.id });
-        
-        if (sessionError || !session?.user) {
-          console.log('❌ Nenhuma sessão ativa encontrada');
-          setIsAdmin(false);
-          setIsLoading(false);
-          return;
-        }
-
-        // Verificar se o usuário é admin
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        console.log('📋 Resultado da verificação admin:', { data, error });
-        
-        if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
-          console.error('❌ Erro ao verificar admin:', error);
-          setIsAdmin(false);
-        } else if (data) {
-          console.log('✅ Usuário é admin com role:', data.role);
-          setIsAdmin(true);
-          
-          // Simular dados de saúde do sistema
-          setSystemHealth({
-            status: 'healthy',
-            uptime: '99.9%',
-            activeUsers: Math.floor(Math.random() * 50) + 10,
-            responseTime: Math.floor(Math.random() * 50) + 100 + 'ms'
-          });
-        } else {
-          console.log('❌ Usuário não é admin');
-          setIsAdmin(false);
-        }
-      } catch (error) {
-        console.error('❌ Erro na verificação:', error);
-        setIsAdmin(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAdminStatus();
-  }, []);
+      // Simular dados de saúde do sistema
+      setSystemHealth({
+        status: 'healthy',
+        uptime: '99.9%',
+        activeUsers: Math.floor(Math.random() * 50) + 10,
+        responseTime: Math.floor(Math.random() * 50) + 100 + 'ms'
+      });
+    }
+  }, [isAdmin, isLoading]);
 
   if (isLoading) {
     return (
@@ -109,6 +68,7 @@ const AdminDashboard: React.FC = () => {
   }
 
   if (!isAdmin) {
+    console.log('❌ AdminDashboard: Usuário não é admin, redirecionando...');
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -229,7 +189,6 @@ const AdminDashboard: React.FC = () => {
           {/* Conteúdo Principal */}
           <main className="flex-1 p-2 md:p-6 bg-gradient-to-br from-background to-secondary/20">
             <div className="space-y-4 md:space-y-6">
-              {/* Métricas removidas do conteúdo principal, agora exibidas no topo */}
               {/* Conteúdo da Aba Ativa */}
               <Card className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <CardContent className="p-2 md:p-6">

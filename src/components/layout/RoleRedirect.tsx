@@ -1,26 +1,25 @@
 
 import { useEffect } from 'react';
-import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useImpersonation } from '@/context/ImpersonationContext';
-import { useRegionalAuth } from '@/hooks/useRegionalAuth';
+import { useUserRole } from '@/hooks/useUserRole'; // Hook unificado
 
 export const RoleRedirect = () => {
-  const { userRole, isRoleLoading } = useRoleBasedNavigation();
   const { isAuthenticated } = useAuth();
   const { isImpersonating } = useImpersonation();
-  const { reportAuthIssue } = useRegionalAuth();
+  const { role, isLoading } = useUserRole(); // Usar hook unificado
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (!isAuthenticated || isRoleLoading || !userRole) {
+    if (!isAuthenticated || isLoading) {
       return;
     }
 
     // Se está impersonando, não redirecionar automaticamente
     if (isImpersonating) {
+      console.log('🎭 Impersonação ativa - sem redirecionamento automático');
       return;
     }
 
@@ -32,17 +31,17 @@ export const RoleRedirect = () => {
       return;
     }
     
-    // Se o usuário está na página inicial e tem role específico, redirecionar APENAS da raiz
+    // Redirecionamento apenas da página inicial "/"
     if (currentPath === '/') {
-      if (userRole.role === 'admin') {
+      if (role === 'admin') {
         console.log('👑 Redirecionando admin para painel administrativo');
         navigate('/admin', { replace: true });
-      } else if (userRole.role === 'moderator') {
+      } else if (role === 'moderator') {
         console.log('🔄 Redirecionando moderador para painel específico');
         navigate('/moderator', { replace: true });
       }
     }
-  }, [userRole, isRoleLoading, isAuthenticated, isImpersonating, location.pathname, navigate]);
+  }, [role, isLoading, isAuthenticated, isImpersonating, location.pathname, navigate]);
 
   return null;
 };

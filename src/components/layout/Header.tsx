@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,11 +8,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useTheme } from '@/hooks/useTheme';
-import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
-// import { logUserActivity } from '@/services/userActivityService'; // Removido para melhorar performance
+import { useUserRole } from '@/hooks/useUserRole'; // Hook unificado
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, LogOut, Music, Home, CreditCard, Plus, Moon, Sun, Shield, Settings } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Menu, LogOut, Home, CreditCard, Plus, Moon, Sun, Shield, Settings } from 'lucide-react';
 
 export const Header = ({
   toggleSidebar
@@ -20,17 +18,14 @@ export const Header = ({
   toggleSidebar: () => void;
 }) => {
   const navigate = useNavigate();
-  const {
-    user,
-    logout
-  } = useAuth();
-  const {
-    profile
-  } = useProfile();
-  const {
-    credits,
-    refreshCredits
-  } = useUserCredits();
+  const { user, logout } = useAuth();
+  const { profile } = useProfile();
+  const { credits, refreshCredits } = useUserCredits();
+  const { theme, toggleTheme } = useTheme();
+  
+  // Usar apenas o hook unificado para evitar conflitos
+  const { isAdmin, isModerator, role, isLoading: roleLoading } = useUserRole();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   // Adicionar listener para mudanças nos créditos via window events
   useEffect(() => {
@@ -42,17 +37,10 @@ export const Header = ({
     window.addEventListener('credits-updated', handleCreditsUpdate);
     return () => window.removeEventListener('credits-updated', handleCreditsUpdate);
   }, [refreshCredits]);
-  const {
-    theme,
-    toggleTheme
-  } = useTheme();
-  const { userRole, getDefaultDashboard } = useRoleBasedNavigation();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      // Removido logUserActivity para melhorar performance
       await logout();
     } catch (error) {
       console.error('Error logging out:', error);
@@ -62,10 +50,49 @@ export const Header = ({
   };
 
   const handleDashboardClick = () => {
-    const defaultDashboard = getDefaultDashboard();
-    navigate(defaultDashboard);
+    // Navegação baseada no role atual
+    if (isAdmin) {
+      navigate('/admin');
+    } else if (isModerator) {
+      navigate('/moderator');
+    } else {
+      navigate('/dashboard');
+    }
   };
-  return <header className="bg-background border-b border-border py-3 px-6 flex items-center justify-between">
+
+  // Determinar qual dashboard mostrar no menu - com fallback para evitar flickering
+  const getDashboardMenuItem = () => {
+    if (roleLoading) {
+      return {
+        icon: Home,
+        text: 'Dashboard'
+      };
+    }
+
+    if (isAdmin) {
+      return {
+        icon: Settings,
+        text: 'Painel Admin'
+      };
+    }
+
+    if (isModerator) {
+      return {
+        icon: Shield,
+        text: 'Painel Moderador'
+      };
+    }
+
+    return {
+      icon: Home,
+      text: 'Dashboard'
+    };
+  };
+
+  const dashboardMenuItem = getDashboardMenuItem();
+
+  return (
+    <header className="bg-background border-b border-border py-3 px-6 flex items-center justify-between">
       <div className="flex items-center flex-1 mx-[68px]">
         <Button variant="ghost" size="icon" className="mr-2 lg:hidden" onClick={toggleSidebar}>
           <Menu className="h-5 w-5" />
@@ -77,11 +104,10 @@ export const Header = ({
             className="h-9" 
           />
         </Link>
-        
       </div>
       
-      {user ? <div className="flex items-center gap-3">
-          
+      {user ? (
+        <div className="flex items-center gap-3">
           {/* Theme toggle */}
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="mr-2">
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -123,30 +149,16 @@ export const Header = ({
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               
-              {/* Dashboard navigation based on role */}
+              {/* Dashboard navigation based on role - sempre disponível */}
               <DropdownMenuItem onClick={handleDashboardClick}>
-                {userRole?.role === 'admin' ? (
-                  <>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Painel Admin</span>
-                  </>
-                ) : userRole?.role === 'moderator' ? (
-                  <>
-                    <Shield className="mr-2 h-4 w-4" />
-                    <span>Painel Moderador</span>
-                  </>
-                ) : (
-                  <>
-                    <Home className="mr-2 h-4 w-4" />
-                    <span>Dashboard</span>
-                  </>
-                )}
+                <dashboardMenuItem.icon className="mr-2 h-4 w-4" />
+                <span>{dashboardMenuItem.text}</span>
               </DropdownMenuItem>
               
-               <DropdownMenuItem onClick={() => navigate('/credits-checkout')}>
-                 <CreditCard className="mr-2 h-4 w-4" />
-                 <span>Adicionar Créditos</span>
-               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/credits-checkout')}>
+                <CreditCard className="mr-2 h-4 w-4" />
+                <span>Adicionar Créditos</span>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem disabled={isLoggingOut} onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
@@ -154,8 +166,12 @@ export const Header = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div> : <Link to="/">
+        </div>
+      ) : (
+        <Link to="/">
           <Button size="sm">Entrar</Button>
-        </Link>}
-    </header>;
+        </Link>
+      )}
+    </header>
+  );
 };

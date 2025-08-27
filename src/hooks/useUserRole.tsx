@@ -1,5 +1,6 @@
+
 import { useImpersonation } from '@/context/ImpersonationContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +10,7 @@ interface UserRole {
   isAdmin: boolean;
   isModerator: boolean;
   isLoading: boolean;
+  role: 'admin' | 'moderator' | 'user';
 }
 
 export const useUserRole = (): UserRole => {
@@ -20,62 +22,86 @@ export const useUserRole = (): UserRole => {
     isAdmin: false,
     isModerator: false,
     isLoading: true,
+    role: 'user'
   });
 
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      const currentUserId = isImpersonating && impersonatedUser?.id ? impersonatedUser.id : user?.id;
-      if (!currentUserId) {
+  const fetchUserRole = useCallback(async (userId: string) => {
+    if (!userId) {
+      setRole({
+        isPro: false,
+        isAdmin: false,
+        isModerator: false,
+        isLoading: false,
+        role: 'user'
+      });
+      return;
+    }
+
+    try {
+      console.log('🔍 useUserRole: Verificando role para usuário:', userId);
+      
+      // Verificar se é admin/moderator na tabela admin_users
+      const { data: adminData, error } = await supabase
+        .from('admin_users')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (adminData && !error) {
+        // Normalizar super_admin para admin
+        const normalizedRole = adminData.role === 'super_admin' ? 'admin' : adminData.role;
+        
+        console.log('✅ useUserRole: Usuário tem role administrativo:', normalizedRole);
+        
         setRole({
-          isPro: false,
-          isAdmin: false,
-          isModerator: false,
+          isPro: true, // Admins/moderators sempre têm acesso Pro
+          isAdmin: normalizedRole === 'admin',
+          isModerator: normalizedRole === 'moderator',
           isLoading: false,
+          role: normalizedRole as 'admin' | 'moderator' | 'user'
         });
         return;
       }
 
-      try {
-        // Verificar se é admin
-        const { data: adminData } = await supabase
-          .from('admin_users')
-          .select('role')
-          .eq('user_id', currentUserId)
-          .single();
-
-        if (adminData) {
-          setRole({
-            isPro: true, // Admins sempre têm acesso Pro
-            isAdmin: adminData.role === 'admin',
-            isModerator: adminData.role === 'moderator',
-            isLoading: false,
-          });
-          return;
-        }
-
-        // Para usuários normais, verificar subscription
-        if (!subscriptionLoading) {
-          setRole({
-            isPro: subscriptionIsPro,
-            isAdmin: false,
-            isModerator: false,
-            isLoading: false,
-          });
-        }
-
-      } catch (error) {
-        console.error('Erro ao buscar role do usuário:', error);
+      // Usuário normal - verificar subscription
+      if (!subscriptionLoading) {
+        console.log('📋 useUserRole: Usuário comum, isPro:', subscriptionIsPro);
         setRole({
-          isPro: false,
+          isPro: subscriptionIsPro,
           isAdmin: false,
           isModerator: false,
           isLoading: false,
+          role: 'user'
         });
       }
-    };
 
-    fetchUserRole();
-  }, [user?.id, isImpersonating, impersonatedUser?.id, subscriptionIsPro, subscriptionLoading]);
+    } catch (error) {
+      console.error('❌ useUserRole: Erro ao buscar role:', error);
+      setRole({
+        isPro: false,
+        isAdmin: false,
+        isModerator: false,
+        isLoading: false,
+        role: 'user'
+      });
+    }
+  }, [subscriptionIsPro, subscriptionLoading]);
+
+  useEffect(() => {
+    const currentUserId = isImpersonating && impersonatedUser?.id ? impersonatedUser.id : user?.id;
+    
+    if (currentUserId) {
+      fetchUserRole(currentUserId);
+    } else {
+      setRole({
+        isPro: false,
+        isAdmin: false,
+        isModerator: false,
+        isLoading: false,
+        role: 'user'
+      });
+    }
+  }, [user?.id, isImpersonating, impersonatedUser?.id, fetchUserRole]);
 
   return role;
 };
