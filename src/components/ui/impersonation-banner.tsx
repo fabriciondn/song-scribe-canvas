@@ -11,6 +11,18 @@ export const ImpersonationBanner = () => {
   const { isImpersonating, impersonatedUser, originalUser } = useImpersonation();
   const { stopImpersonationGlobally } = useImpersonationSync();
 
+  // Definir altura do banner via CSS custom property - SEMPRE executar os hooks
+  const bannerHeight = '60px';
+  
+  React.useEffect(() => {
+    document.documentElement.style.setProperty('--impersonation-banner-height', bannerHeight);
+    
+    return () => {
+      document.documentElement.style.removeProperty('--impersonation-banner-height');
+    };
+  }, [bannerHeight]);
+
+  // Early return APÓS todos os hooks
   if (!isImpersonating || !impersonatedUser || !originalUser) {
     return null;
   }
@@ -47,17 +59,6 @@ export const ImpersonationBanner = () => {
         return 'outline';
     }
   };
-
-  // Definir altura do banner via CSS custom property
-  const bannerHeight = '60px';
-  
-  React.useEffect(() => {
-    document.documentElement.style.setProperty('--impersonation-banner-height', bannerHeight);
-    
-    return () => {
-      document.documentElement.style.removeProperty('--impersonation-banner-height');
-    };
-  }, [bannerHeight]);
 
   return (
     <div 
