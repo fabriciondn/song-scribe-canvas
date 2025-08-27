@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useNavigate } from 'react-router-dom';
-import { useImpersonation } from '@/context/ImpersonationContext';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface AuthorRegistrationReviewProps {
   data: AuthorRegistrationData;
@@ -27,7 +27,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   const { user } = useAuth();
   const { refreshCredits } = useUserCredits();
   const navigate = useNavigate();
-  const { isImpersonating, impersonatedUser } = useImpersonation();
+  const currentUser = useCurrentUser();
 
   // Função para gerar hash SHA-256
   const gerarHash = async (texto: string): Promise<string> => {
@@ -111,21 +111,19 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   const handleRegister = async () => {
     console.log('🚀 Iniciando processo de registro...');
     
-    // 1. VALIDAÇÃO ROBUSTA DE AUTENTICAÇÃO
+    // Validação robusta de autenticação
     console.log('🔍 Debug de autenticação:', {
       user: user ? { id: user.id, email: user.email } : null,
-      isImpersonating,
-      impersonatedUser: impersonatedUser ? { id: impersonatedUser.id, email: impersonatedUser.email } : null
+      currentUser: currentUser ? { id: currentUser.id, email: currentUser.email } : null
     });
 
-    // Determinar o usuário atual correto
-    const currentUserId = isImpersonating && impersonatedUser ? impersonatedUser.id : user?.id;
+    // Usar o hook useCurrentUser que já resolve corretamente a impersonação
+    const targetUserId = currentUser?.id;
     
-    console.log('👤 Current User ID calculado:', currentUserId);
+    console.log('👤 Target User ID:', targetUserId);
     
-    // Validação crítica - sem user ID não podemos continuar
-    if (!currentUserId) {
-      console.error('❌ ERRO CRÍTICO: Usuário não autenticado');
+    if (!targetUserId || !user) {
+      console.error('❌ ERRO CRÍTICO: Usuário não autenticado ou target user não encontrado');
       toast({
         title: 'Erro de Autenticação',
         description: 'Usuário não está autenticado. Faça login novamente.',
@@ -134,18 +132,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       return;
     }
 
-    // Validação adicional do user object
-    if (!user) {
-      console.error('❌ ERRO: Objeto user é null');
-      toast({
-        title: 'Erro de Sessão',
-        description: 'Sessão de usuário inválida. Faça login novamente.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // 2. VERIFICAR SESSÃO ATIVA NO SUPABASE
+    // Verificar sessão ativa no Supabase
     try {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       console.log('🔐 Verificação de sessão:', {
@@ -163,14 +150,6 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         });
         return;
       }
-
-      // Verificar se o user ID da sessão bate com o calculado
-      if (sessionData.session.user.id !== currentUserId) {
-        console.error('❌ Inconsistência entre sessão e user ID:', {
-          sessionUserId: sessionData.session.user.id,
-          currentUserId
-        });
-      }
     } catch (error) {
       console.error('❌ Erro ao verificar sessão:', error);
       toast({
@@ -184,18 +163,18 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
     setIsRegistering(true);
 
     try {
-      // 3. GERAR HASH DA LETRA
+      // Gerar hash da letra
       console.log('🔒 Gerando hash da letra...');
       const hash = await gerarHash(data.lyrics);
       console.log('✅ Hash gerado:', hash);
 
-      // 4. UPLOAD DO ARQUIVO DE ÁUDIO (se existir)
+      // Upload do arquivo de áudio (se existir)
       let audioFilePath = null;
       
       if (data.audioFile) {
         console.log('🎵 Iniciando upload do arquivo de áudio...');
         try {
-          audioFilePath = await uploadAudioFile(data.audioFile, currentUserId);
+          audioFilePath = await uploadAudioFile(data.audioFile, targetUserId);
           console.log('✅ Upload concluído, path:', audioFilePath);
         } catch (uploadError) {
           console.error('❌ Erro no upload do áudio:', uploadError);
@@ -208,12 +187,12 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         }
       }
 
-      // 5. ATUALIZAÇÃO DE CRÉDITOS (primeiro)
+      // Atualização de créditos (primeiro)
       console.log('💳 Atualizando créditos do usuário...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('credits')
-        .eq('id', currentUserId)
+        .eq('id', targetUserId)
         .single();
 
       if (profileError) {
@@ -226,7 +205,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         const { error: creditError } = await supabase
           .from('profiles')
           .update({ credits: newCredits })
-          .eq('id', currentUserId);
+          .eq('id', targetUserId);
         
         if (creditError) {
           console.error('❌ Erro ao atualizar créditos:', creditError);
@@ -239,11 +218,11 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       // Refresh dos créditos
       refreshCredits();
 
-      // 6. INSERÇÃO NO BANCO DE DADOS
+      // Inserção no banco de dados
       const analysisStartedAt = new Date().toISOString();
       
       console.log('📝 Preparando dados para inserção:', {
-        user_id: currentUserId,
+        user_id: targetUserId,
         title: data.title,
         author: data.author,
         hash: hash.substring(0, 20) + '...' // Log apenas parte do hash
@@ -252,7 +231,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       const { data: registrationData, error: insertError } = await supabase
         .from('author_registrations')
         .insert({
-          user_id: currentUserId, // CRÍTICO: garantir que user_id é válido
+          user_id: targetUserId, // Usar o targetUserId correto (pode ser impersonado)
           title: data.title,
           author: data.author,
           other_authors: JSON.stringify({
@@ -282,9 +261,9 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
           hint: insertError.hint
         });
         
-        // Tratamento específico para erro de RLS
+        // Tratamento específico para diferentes tipos de erro
         if (insertError.message.includes('row-level security')) {
-          throw new Error('Erro de permissão: Não foi possível registrar a música. Verifique se você está logado corretamente.');
+          throw new Error('Erro de permissão: Não foi possível registrar a música. Verifique suas permissões.');
         }
         
         throw new Error(`Erro ao registrar a música: ${insertError.message}`);

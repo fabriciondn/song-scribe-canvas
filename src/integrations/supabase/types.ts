@@ -1076,6 +1076,10 @@ export type Database = {
         Args: { new_credits: number; target_user_id: string }
         Returns: undefined
       }
+      can_moderator_manage_user: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       check_admin_access: {
         Args: Record<PropertyKey, never>
         Returns: boolean
