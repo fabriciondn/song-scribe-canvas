@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,7 +20,7 @@ export const AdminUsers: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState<any>(null);
   const [newCredits, setNewCredits] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -96,9 +97,13 @@ export const AdminUsers: React.FC = () => {
     }
   };
 
-  const handleViewDetails = (userId: string) => {
-    setSelectedUserId(userId);
+  const handleViewDetails = (user: any) => {
+    setSelectedUserForDetails(user);
     setIsDetailsModalOpen(true);
+  };
+
+  const handleUserUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin-users'] });
   };
 
   if (isLoading) {
@@ -155,7 +160,7 @@ export const AdminUsers: React.FC = () => {
                     <span><b>Registro:</b> {new Date(user.created_at).toLocaleDateString('pt-BR')}</span>
                   </div>
                   <div className="flex flex-wrap gap-2 pt-1">
-                    <Button variant="outline" size="sm" onClick={() => handleViewDetails(user.id)}>
+                    <Button variant="outline" size="sm" onClick={() => handleViewDetails(user)}>
                       <Eye className="h-4 w-4 mr-1" />Detalhes
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => handleEditCredits(user)}>
@@ -208,7 +213,7 @@ export const AdminUsers: React.FC = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleViewDetails(user.id)}
+                            onClick={() => handleViewDetails(user)}
                           >
                             <Eye className="h-4 w-4 mr-1" />
                             Detalhes
@@ -284,9 +289,10 @@ export const AdminUsers: React.FC = () => {
 
       {/* Modal de detalhes do usuário */}
       <UserDetailsModal 
+        user={selectedUserForDetails}
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
-        userId={selectedUserId || ''}
+        onUserUpdate={handleUserUpdate}
       />
     </div>
   );
