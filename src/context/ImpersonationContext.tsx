@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AuthContext } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,14 +83,40 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
     fetchUserRoleAndManagedUsers();
   }, [user]);
 
+  const logImpersonationActivity = async (impersonatedUserId: string, impersonatedRole: string, action: string) => {
+    try {
+      // Log diretamente na tabela user_activity_logs usando insert
+      await supabase
+        .from('user_activity_logs')
+        .insert([
+          {
+            user_id: impersonatedUserId,
+            action: action,
+            metadata: {
+              impersonated_by: user?.id,
+              impersonated_role: impersonatedRole,
+              timestamp: new Date().toISOString()
+            }
+          },
+          {
+            user_id: user?.id,
+            action: action === 'impersonation_started' ? 'started_impersonating' : 'stopped_impersonating',
+            metadata: {
+              target_user_id: impersonatedUserId,
+              target_role: impersonatedRole,
+              timestamp: new Date().toISOString()
+            }
+          }
+        ]);
+    } catch (error) {
+      console.error('Erro ao registrar atividade de impersonação:', error);
+    }
+  };
+
   const stopImpersonation = () => {
     if (impersonatedUser) {
       // Log parada da impersonação
-      supabase.rpc('log_impersonation_activity', {
-        p_impersonated_user_id: impersonatedUser.id,
-        p_impersonated_role: impersonatedUser.role,
-        p_action: 'impersonation_stopped'
-      });
+      logImpersonationActivity(impersonatedUser.id, impersonatedUser.role, 'impersonation_stopped');
     }
     
     setImpersonatedUser(null);
@@ -155,11 +182,7 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
       }
       
       // Log início da impersonação
-      await supabase.rpc('log_impersonation_activity', {
-        p_impersonated_user_id: targetUser.id,
-        p_impersonated_role: targetUser.role,
-        p_action: 'impersonation_started'
-      });
+      await logImpersonationActivity(targetUser.id, targetUser.role, 'impersonation_started');
       
       setImpersonatedUser(targetUser);
       setIsImpersonating(true);

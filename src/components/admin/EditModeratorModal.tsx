@@ -51,14 +51,33 @@ export const EditModeratorModal: React.FC<EditModeratorModalProps> = ({
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.rpc('admin_update_moderator', {
-        target_moderator_id: moderator.user_id,
-        new_name: formData.name,
-        new_email: formData.email,
-        new_credits: formData.credits
-      });
+      // Atualizar perfil diretamente na tabela profiles
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          name: formData.name,
+          email: formData.email,
+          credits: formData.credits
+        })
+        .eq('id', moderator.user_id);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
+
+      // Log da atividade
+      await supabase
+        .from('user_activity_logs')
+        .insert({
+          user_id: moderator.user_id,
+          action: 'moderator_updated_by_admin',
+          metadata: {
+            admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+            updated_fields: {
+              name: formData.name,
+              email: formData.email,
+              credits: formData.credits
+            }
+          }
+        });
 
       toast({
         title: 'Sucesso',

@@ -51,9 +51,32 @@ export const AdminModerators = () => {
 
   const handleDeleteModerator = async (moderatorId: string) => {
     try {
-      const { error } = await supabase.rpc('admin_delete_moderator', {
-        target_moderator_id: moderatorId
-      });
+      // Buscar perfil do moderador para log
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('name, email')
+        .eq('id', moderatorId)
+        .single();
+
+      // Log da atividade antes de excluir
+      await supabase
+        .from('user_activity_logs')
+        .insert({
+          user_id: moderatorId,
+          action: 'moderator_deleted_by_admin',
+          metadata: {
+            admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+            deleted_at: new Date().toISOString(),
+            moderator_profile: profile
+          }
+        });
+
+      // Remover da tabela admin_users
+      const { error } = await supabase
+        .from('admin_users')
+        .delete()
+        .eq('user_id', moderatorId)
+        .eq('role', 'moderator');
 
       if (error) throw error;
 
