@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ModeratorDashboardStats {
@@ -65,7 +66,7 @@ export const getModeratorDashboardStats = async (): Promise<ModeratorDashboardSt
   }
 };
 
-// Buscar usuários gerenciados pelo moderador
+// Buscar usuários gerenciados pelo moderador (filtrar usuários excluídos)
 export const getManagedUsers = async (): Promise<ManagedUserData[]> => {
   try {
     console.log('👥 Fetching managed users...');
@@ -93,7 +94,9 @@ export const getManagedUsers = async (): Promise<ManagedUserData[]> => {
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, name, email, artistic_name, credits')
-      .in('id', userIds);
+      .in('id', userIds)
+      // Filtrar usuários que não foram excluídos (nome não contém "[USUÁRIO EXCLUÍDO]")
+      .not('name', 'like', '%[USUÁRIO EXCLUÍDO]%');
 
     if (profilesError) {
       console.error('❌ Error fetching profiles:', profilesError);
@@ -110,20 +113,22 @@ export const getManagedUsers = async (): Promise<ManagedUserData[]> => {
 
     console.log('✅ Found profiles:', profiles?.length || 0);
 
-    // Combinar os dados
-    const combinedData = moderatorUsers.map(mu => {
-      const profile = profiles?.find(p => p.id === mu.user_id);
-      return {
-        id: mu.user_id,
-        name: profile?.name || null,
-        email: profile?.email || null,
-        artistic_name: profile?.artistic_name || null,
-        credits: profile?.credits || 0,
-        created_at: mu.created_at
-      };
-    });
+    // Combinar os dados apenas para usuários que ainda existem no profiles
+    const combinedData = moderatorUsers
+      .filter(mu => profiles?.some(p => p.id === mu.user_id))
+      .map(mu => {
+        const profile = profiles.find(p => p.id === mu.user_id);
+        return {
+          id: mu.user_id,
+          name: profile?.name || null,
+          email: profile?.email || null,
+          artistic_name: profile?.artistic_name || null,
+          credits: profile?.credits || 0,
+          created_at: mu.created_at
+        };
+      });
     
-    console.log('✅ Combined managed users data:', combinedData.length);
+    console.log('✅ Combined managed users data (filtered):', combinedData.length);
     return combinedData;
     
   } catch (error) {

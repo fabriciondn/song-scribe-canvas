@@ -9,10 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Trash2, Key, AlertTriangle } from 'lucide-react';
+import { Plus, Edit, Trash2, Key, AlertTriangle, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { getManagedUsers, createUserForModerator, updateManagedUserCredits } from '@/services/moderatorService';
 import { supabase } from '@/integrations/supabase/client';
+import { ImpersonateButton } from '@/components/ui/impersonate-button';
 
 export const ModeratorUsers = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -60,6 +61,8 @@ export const ModeratorUsers = () => {
 
   const updateUserMutation = useMutation({
     mutationFn: async (userData: { id: string; name: string; email: string; credits: number }) => {
+      console.log('🔧 Atualizando usuário:', userData);
+      
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -69,7 +72,12 @@ export const ModeratorUsers = () => {
         })
         .eq('id', userData.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro na atualização:', error);
+        throw error;
+      }
+      
+      console.log('✅ Usuário atualizado com sucesso');
     },
     onSuccess: () => {
       toast.success('Usuário atualizado com sucesso');
@@ -129,17 +137,22 @@ export const ModeratorUsers = () => {
 
       if (moderatorError) throw moderatorError;
 
-      // Remover da tabela auth.users via edge function seria o ideal
-      // Por enquanto, vamos desativar o usuário atualizando o perfil
+      // Excluir completamente o perfil
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({
-          email: `deleted_${Date.now()}@deleted.com`,
-          name: '[USUÁRIO EXCLUÍDO]'
-        })
+        .delete()
         .eq('id', userId);
 
       if (profileError) throw profileError;
+
+      // Tentar excluir do auth via edge function (opcional - pode falhar se não tiver permissões)
+      try {
+        await supabase.functions.invoke('delete-user', {
+          body: { user_id: userId }
+        });
+      } catch (error) {
+        console.log('Aviso: Não foi possível excluir do auth, mas perfil foi removido');
+      }
     },
     onSuccess: () => {
       toast.success('Usuário excluído com sucesso');
@@ -330,6 +343,18 @@ export const ModeratorUsers = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 justify-center">
+                          <ImpersonateButton
+                            targetUser={{
+                              id: user.id,
+                              name: user.name,
+                              email: user.email,
+                              artistic_name: user.artistic_name
+                            }}
+                            targetRole="user"
+                            size="sm"
+                            variant="outline"
+                          />
+                          
                           <Button
                             variant="outline"
                             size="sm"
