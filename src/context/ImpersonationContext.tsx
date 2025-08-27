@@ -18,7 +18,7 @@ interface ImpersonationContextType {
   startImpersonation: (targetUser: ImpersonationUser) => void;
   stopImpersonation: () => void;
   canImpersonate: (targetRole: 'user' | 'moderator' | 'admin', targetUserId?: string) => boolean;
-  managedUserIds: string[]; // DEBUG: expor para debug
+  managedUserIds: string[];
 }
 
 export const ImpersonationContext = createContext<ImpersonationContextType | undefined>(undefined);
@@ -52,10 +52,10 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
 
         let role: 'admin' | 'moderator' | 'user' = 'user';
         if (adminData && !adminError) {
-          if (adminData.role === 'super_admin') {
+          if (adminData.role === 'super_admin' || adminData.role === 'admin') {
             role = 'admin';
-          } else if (adminData.role === 'admin' || adminData.role === 'moderator' || adminData.role === 'user') {
-            role = adminData.role;
+          } else if (adminData.role === 'moderator') {
+            role = 'moderator';
           }
         }
         setUserRole(role);
@@ -83,6 +83,15 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
   }, [user]);
 
   const stopImpersonation = () => {
+    if (impersonatedUser) {
+      // Log parada da impersonação
+      supabase.rpc('log_impersonation_activity', {
+        p_impersonated_user_id: impersonatedUser.id,
+        p_impersonated_role: impersonatedUser.role,
+        p_action: 'impersonation_stopped'
+      });
+    }
+    
     setImpersonatedUser(null);
     setIsImpersonating(false);
     localStorage.removeItem('impersonation_data');
@@ -92,10 +101,17 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
 
   const canImpersonate = (targetRole: 'user' | 'moderator' | 'admin', targetUserId?: string): boolean => {
     if (!userRole) return false;
-    if (userRole === 'admin') return true;
+    
+    // Super Admin pode impersonar todos
+    if (userRole === 'admin') {
+      return true;
+    }
+    
+    // Moderador pode impersonar apenas usuários que ele cadastrou
     if (userRole === 'moderator' && targetRole === 'user' && targetUserId) {
       return managedUserIds.includes(targetUserId);
     }
+    
     return false;
   };
 
@@ -104,11 +120,13 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
       toast.error('Você não tem permissão para operar como este usuário.');
       return;
     }
+    
     try {
       if (isImpersonating) {
         stopImpersonation();
         await new Promise(resolve => setTimeout(resolve, 100));
       }
+      
       let currentOriginalUser = originalUser;
       if (!currentOriginalUser) {
         const { data: profileData, error } = await supabase
@@ -135,6 +153,14 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
         }
         setOriginalUser(currentOriginalUser);
       }
+      
+      // Log início da impersonação
+      await supabase.rpc('log_impersonation_activity', {
+        p_impersonated_user_id: targetUser.id,
+        p_impersonated_role: targetUser.role,
+        p_action: 'impersonation_started'
+      });
+      
       setImpersonatedUser(targetUser);
       setIsImpersonating(true);
       localStorage.setItem('impersonation_data', JSON.stringify({
@@ -142,8 +168,13 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
         originalUser: currentOriginalUser,
         timestamp: Date.now()
       }));
-      toast.success(`Operando como ${targetUser.name || targetUser.email}`);
+      
+      const displayName = targetUser.name || targetUser.email;
+      const roleDisplay = targetUser.role === 'admin' ? 'Administrador' : 
+                         targetUser.role === 'moderator' ? 'Moderador' : 'Usuário';
+      toast.success(`Operando como ${roleDisplay}: ${displayName}`);
     } catch (error) {
+      console.error('Erro ao iniciar impersonação:', error);
       toast.error('Erro ao iniciar impersonação');
     }
   };
@@ -189,10 +220,10 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
     isImpersonating,
     impersonatedUser,
     originalUser,
-  startImpersonation,
-  stopImpersonation,
-  canImpersonate,
-  managedUserIds // DEBUG: expor para debug
+    startImpersonation,
+    stopImpersonation,
+    canImpersonate,
+    managedUserIds
   };
 
   return (

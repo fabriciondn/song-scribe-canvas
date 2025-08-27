@@ -11,7 +11,7 @@ interface ImpersonateButtonProps {
     email: string | null;
     artistic_name: string | null;
   };
-  targetRole: 'user' | 'moderator';
+  targetRole: 'user' | 'moderator' | 'admin';
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'sm' | 'default';
   className?: string;
@@ -27,13 +27,12 @@ export const ImpersonateButton = ({
   const { startImpersonation, canImpersonate } = useImpersonation();
   const navigate = useNavigate();
 
-  // Novo: passar id do usuário alvo para checagem
   if (!canImpersonate(targetRole, targetUser.id)) {
     return null;
   }
 
   const handleImpersonate = async () => {
-    console.log('🔘 Botão impersonar clicado:', targetUser);
+    console.log('🔘 Botão impersonar clicado:', { targetUser, targetRole });
     
     try {
       await startImpersonation({
@@ -45,14 +44,40 @@ export const ImpersonateButton = ({
       });
       
       console.log('🚀 Aguardando 500ms antes de redirecionar...');
-      // Aguardar um pouco para garantir que o contexto seja atualizado
+      
+      // Navegação inteligente baseada no role do usuário impersonado
       setTimeout(() => {
-        console.log('🚀 Redirecionando para dashboard do usuário comum');
-        navigate('/dashboard', { replace: true });
+        switch (targetRole) {
+          case 'admin':
+            console.log('🚀 Redirecionando para dashboard do admin');
+            navigate('/admin', { replace: true });
+            break;
+          case 'moderator':
+            console.log('🚀 Redirecionando para dashboard do moderador');
+            navigate('/moderator', { replace: true });
+            break;
+          case 'user':
+          default:
+            console.log('🚀 Redirecionando para dashboard do usuário comum');
+            navigate('/dashboard', { replace: true });
+            break;
+        }
       }, 500);
       
     } catch (error) {
       console.error('❌ Erro ao impersonar:', error);
+    }
+  };
+
+  const getRoleLabel = () => {
+    switch (targetRole) {
+      case 'admin':
+        return 'Operar como Admin';
+      case 'moderator':
+        return 'Operar como Moderador';
+      case 'user':
+      default:
+        return 'Operar como';
     }
   };
 
@@ -64,7 +89,7 @@ export const ImpersonateButton = ({
       className={`flex items-center space-x-1 ${className}`}
     >
       <UserCheck className="h-4 w-4" />
-      <span>Operar como</span>
+      <span>{getRoleLabel()}</span>
     </Button>
   );
 };

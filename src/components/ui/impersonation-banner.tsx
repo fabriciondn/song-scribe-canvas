@@ -1,8 +1,8 @@
+
 import React from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { UserX, User, Crown, Shield } from 'lucide-react';
 import { useImpersonation } from '@/context/ImpersonationContext';
 import { useImpersonationSync } from '@/hooks/useImpersonationSync';
@@ -23,6 +23,17 @@ export const ImpersonationBanner = () => {
         return <Shield className="h-4 w-4" />;
       default:
         return <User className="h-4 w-4" />;
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'Administrador';
+      case 'moderator':
+        return 'Moderador';
+      default:
+        return 'Usuário';
     }
   };
 
@@ -66,21 +77,24 @@ export const ImpersonationBanner = () => {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-2 flex-wrap">
                   <span className="font-medium text-warning-foreground truncate text-sm">
-                    Operando para o cliente: {impersonatedUser.name || impersonatedUser.email}
+                    Operando como {getRoleLabel(impersonatedUser.role)}: {impersonatedUser.name || impersonatedUser.email}
                   </span>
-                  <Badge variant="outline" className="text-xs border-warning-foreground/30 text-warning-foreground flex-shrink-0">
+                  <Badge 
+                    variant="outline" 
+                    className="text-xs border-warning-foreground/30 text-warning-foreground flex-shrink-0"
+                  >
                     {getRoleIcon(impersonatedUser.role)}
-                    Cliente
+                    {getRoleLabel(impersonatedUser.role)}
                   </Badge>
                 </div>
                 <div className="text-xs text-warning-foreground/70 truncate">
-                  Moderador: {originalUser.name || originalUser.email}
+                  {originalUser.role === 'admin' ? 'Super Admin' : 'Moderador'}: {originalUser.name || originalUser.email}
                 </div>
               </div>
             </div>
           </div>
           
-            <Button
+          <Button
             variant="outline"
             size="sm"
             onClick={() => {

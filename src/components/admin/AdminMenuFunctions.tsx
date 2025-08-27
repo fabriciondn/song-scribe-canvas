@@ -1,375 +1,259 @@
-import React, { useState, useEffect } from 'react';
-import { useMenuFunctions } from '@/hooks/useMenuFunctions';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Plus, Edit, Trash2, Settings } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { MenuFunction } from '@/services/menuFunctionService';
 
-const statusLabels = {
-  available: 'Disponível',
-  beta: 'Beta',
-  coming_soon: 'Em Breve'
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { 
+  LayoutDashboard, 
+  Music, 
+  FileText, 
+  Hash, 
+  Volume2, 
+  Folder, 
+  Edit, 
+  Users, 
+  PlayCircle, 
+  Settings, 
+  Trash2, 
+  Shield, 
+  UserCheck,
+  User,
+  Crown
+} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ImpersonateButton } from '@/components/ui/impersonate-button';
+
+const iconMap: { [key: string]: any } = {
+  LayoutDashboard,
+  Music,
+  FileText,
+  Hash,
+  Volume2,
+  Folder,
+  Edit,
+  Users,
+  PlayCircle,
+  Settings,
+  Trash2,
+  Shield,
+  UserCheck,
+  User,
+  Crown
 };
 
-const statusColors = {
-  available: 'default',
-  beta: 'secondary',
-  coming_soon: 'destructive'
-} as const;
+export const AdminMenuFunctions = () => {
+  const [updatingFunction, setUpdatingFunction] = useState<string | null>(null);
 
-export function AdminMenuFunctions() {
-  const { functions, loading, updateFunctionStatus, updateFunction, createFunction, deleteFunction, refresh } = useMenuFunctions();
-  const [editingFunction, setEditingFunction] = useState<MenuFunction | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    function_key: '',
-    name: '',
-    description: '',
-    status: 'available' as MenuFunction['status'],
-    icon: '',
-    route: ''
+  // Buscar funções do sistema
+  const { data: functions, isLoading: functionsLoading, refetch: refetchFunctions } = useQuery({
+    queryKey: ['menu-functions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('menu_functions')
+        .select('*')
+        .order('name');
+      
+      if (error) {
+        console.error('Erro ao buscar funções:', error);
+        throw error;
+      }
+      
+      return data || [];
+    },
   });
 
-  // Ensure 'Cifrador Neo' always appears for management
-  useEffect(() => {
-    if (!loading && !functions.find(f => f.function_key === 'cifrador-neo')) {
-      createFunction({
-        function_key: 'cifrador-neo',
-        name: 'Cifrador Neo',
-        description: 'Novo editor de cifras',
-        status: 'beta',
-        icon: 'FileMusic',
-        route: '/cifrador-neo',
-        is_hidden: false
-      }).then(() => refresh());
+  // Buscar moderadores
+  const { data: moderators, isLoading: moderatorsLoading, refetch: refetchModerators } = useQuery({
+    queryKey: ['admin-moderators-list'],
+    queryFn: async () => {
+      const { data: mods, error } = await supabase
+        .from('admin_users')
+        .select('user_id, role, created_at')
+        .eq('role', 'moderator');
+      
+      if (error) throw error;
+      if (!mods || mods.length === 0) return [];
+      
+      const userIds = mods.map((m: any) => m.user_id);
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, name, email, avatar_url')
+        .in('id', userIds);
+      
+      if (profileError) throw profileError;
+      
+      return mods.map((mod: any) => ({
+        ...mod,
+        profile: profiles?.find((p: any) => p.id === mod.user_id) || {},
+      }));
+    },
+  });
+
+  const handleToggleFunction = async (functionKey: string, currentStatus: string) => {
+    setUpdatingFunction(functionKey);
+    
+    try {
+      const newStatus = currentStatus === 'available' ? 'maintenance' : 'available';
+      
+      const { error } = await supabase
+        .from('menu_functions')
+        .update({ status: newStatus })
+        .eq('function_key', functionKey);
+
+      if (error) throw error;
+
+      toast.success(`Status da função atualizado para: ${newStatus === 'available' ? 'Disponível' : 'Manutenção'}`);
+      refetchFunctions();
+    } catch (error) {
+      console.error('Erro ao atualizar função:', error);
+      toast.error('Erro ao atualizar status da função');
+    } finally {
+      setUpdatingFunction(null);
     }
-  }, [loading, functions]);
-
-  const handleStatusChange = async (functionId: string, newStatus: MenuFunction['status']) => {
-    await updateFunctionStatus(functionId, newStatus);
   };
 
-  const handleVisibilityChange = async (functionId: string, isHidden: boolean) => {
-    await updateFunction(functionId, { is_hidden: isHidden });
-  };
-
-  const handleCreateFunction = async () => {
-    await createFunction(formData);
-    setIsCreateDialogOpen(false);
-    resetForm();
-  };
-
-  const handleUpdateFunction = async () => {
-    if (editingFunction) {
-      await updateFunction(editingFunction.id, formData);
-      setIsEditDialogOpen(false);
-      setEditingFunction(null);
-      resetForm();
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'available':
+        return <Badge variant="default" className="bg-green-500">Disponível</Badge>;
+      case 'maintenance':
+        return <Badge variant="secondary">Manutenção</Badge>;
+      case 'disabled':
+        return <Badge variant="destructive">Desabilitado</Badge>;
+      default:
+        return <Badge variant="outline">Desconhecido</Badge>;
     }
   };
 
-  const handleDeleteFunction = async (functionId: string) => {
-    if (confirm('Tem certeza que deseja remover esta função?')) {
-      await deleteFunction(functionId);
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Crown className="h-4 w-4 text-yellow-500" />;
+      case 'moderator':
+        return <Shield className="h-4 w-4 text-blue-500" />;
+      default:
+        return <User className="h-4 w-4" />;
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      function_key: '',
-      name: '',
-      description: '',
-      status: 'available',
-      icon: '',
-      route: ''
-    });
-  };
-
-  const openEditDialog = (func: MenuFunction) => {
-    setEditingFunction(func);
-    setFormData({
-      function_key: func.function_key,
-      name: func.name,
-      description: func.description || '',
-      status: func.status,
-      icon: func.icon || '',
-      route: func.route || ''
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Carregando funções...</span>
-      </div>
-    );
+  if (functionsLoading || moderatorsLoading) {
+    return <div>Carregando...</div>;
   }
 
   return (
-  <div className="space-y-4 md:space-y-6 px-1 md:px-0">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Gerenciar Funções do Menu</h2>
-          <p className="text-muted-foreground">
-            Controle o status e disponibilidade das funções do sistema
-          </p>
-        </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Função
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Criar Nova Função</DialogTitle>
-              <DialogDescription>
-                Adicione uma nova função ao sistema
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="function_key" className="text-right">
-                  Chave
-                </Label>
-                <Input
-                  id="function_key"
-                  value={formData.function_key}
-                  onChange={(e) => setFormData({ ...formData, function_key: e.target.value })}
-                  className="col-span-3"
-                  placeholder="ex: nova-funcao"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Nome
-                </Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="col-span-3"
-                  placeholder="Nome da função"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">
-                  Descrição
-                </Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="col-span-3"
-                  placeholder="Descrição da função"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="route" className="text-right">
-                  Rota
-                </Label>
-                <Input
-                  id="route"
-                  value={formData.route}
-                  onChange={(e) => setFormData({ ...formData, route: e.target.value })}
-                  className="col-span-3"
-                  placeholder="/nova-funcao"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="icon" className="text-right">
-                  Ícone
-                </Label>
-                <Input
-                  id="icon"
-                  value={formData.icon}
-                  onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                  className="col-span-3"
-                  placeholder="Settings"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="status" className="text-right">
-                  Status
-                </Label>
-                <Select value={formData.status} onValueChange={(value: MenuFunction['status']) => setFormData({ ...formData, status: value })}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="available">Disponível</SelectItem>
-                    <SelectItem value="beta">Beta</SelectItem>
-                    <SelectItem value="coming_soon">Em Breve</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleCreateFunction}>Criar Função</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {functions.map((func) => (
-          <Card key={func.id} className="flex flex-col h-full">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <CardTitle className="text-base mb-1">{func.name}</CardTitle>
-                  <CardDescription className="text-xs line-clamp-2 min-h-[32px]">{func.description}</CardDescription>
+    <div className="space-y-6">
+      {/* Seção de Funções do Sistema */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Funções do Sistema
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {functions?.map((func) => {
+              const IconComponent = iconMap[func.icon] || Settings;
+              
+              return (
+                <div key={func.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <IconComponent className="h-5 w-5" />
+                    <div className="flex-1">
+                      <h4 className="font-medium">{func.name}</h4>
+                      <p className="text-sm text-muted-foreground">{func.description}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    {getStatusBadge(func.status)}
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={func.status === 'available'}
+                        onCheckedChange={() => handleToggleFunction(func.function_key, func.status)}
+                        disabled={updatingFunction === func.function_key}
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        {func.status === 'available' ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <Badge variant={statusColors[func.status]}>{statusLabels[func.status]}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-between gap-2">
-              <div className="space-y-1 mb-2">
-                <p className="text-xs text-muted-foreground"><strong>Chave:</strong> {func.function_key}</p>
-                {func.route && (
-                  <p className="text-xs text-muted-foreground"><strong>Rota:</strong> {func.route}</p>
-                )}
-              </div>
-              <div className="flex flex-col gap-2 mt-auto">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-muted-foreground">{func.is_hidden ? 'Oculta' : 'Visível'}</span>
-                  <Switch
-                    checked={!func.is_hidden}
-                    onCheckedChange={async (checked) => {
-                      await handleVisibilityChange(func.id, !checked);
-                    }}
-                  />
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <Label htmlFor={`status-${func.id}`} className="text-xs">Status:</Label>
-                  <Select
-                    value={func.status}
-                    onValueChange={async (value: MenuFunction['status']) => {
-                      await handleStatusChange(func.id, value);
-                    }}
-                  >
-                    <SelectTrigger className="w-24 h-8 text-xs" tabIndex={0} onClick={e => e.stopPropagation()}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="available">Disponível</SelectItem>
-                      <SelectItem value="beta">Beta</SelectItem>
-                      <SelectItem value="coming_soon">Em Breve</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center justify-end gap-2 mt-2">
-                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openEditDialog(func)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleDeleteFunction(func.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Dialog de Edição */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Função</DialogTitle>
-            <DialogDescription>
-              Modifique os dados da função
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit_function_key" className="text-right">
-                Chave
-              </Label>
-              <Input
-                id="edit_function_key"
-                value={formData.function_key}
-                onChange={(e) => setFormData({ ...formData, function_key: e.target.value })}
-                className="col-span-3"
-                disabled
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit_name" className="text-right">
-                Nome
-              </Label>
-              <Input
-                id="edit_name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit_description" className="text-right">
-                Descrição
-              </Label>
-              <Textarea
-                id="edit_description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit_route" className="text-right">
-                Rota
-              </Label>
-              <Input
-                id="edit_route"
-                value={formData.route}
-                onChange={(e) => setFormData({ ...formData, route: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit_icon" className="text-right">
-                Ícone
-              </Label>
-              <Input
-                id="edit_icon"
-                value={formData.icon}
-                onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit_status" className="text-right">
-                Status
-              </Label>
-              <Select value={formData.status} onValueChange={(value: MenuFunction['status']) => setFormData({ ...formData, status: value })}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="available">Disponível</SelectItem>
-                  <SelectItem value="beta">Beta</SelectItem>
-                  <SelectItem value="coming_soon">Em Breve</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              );
+            })}
           </div>
-          <DialogFooter>
-            <Button onClick={handleUpdateFunction}>Salvar Alterações</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </CardContent>
+      </Card>
+
+      {/* Seção de Moderadores */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserCheck className="h-5 w-5" />
+            Moderadores Ativos
+            <Badge variant="secondary">{moderators?.length || 0}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {moderators && moderators.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {moderators.map((mod: any) => (
+                <div key={mod.user_id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={mod.profile.avatar_url} alt={mod.profile.name} />
+                      <AvatarFallback>
+                        {mod.profile.name?.[0] || mod.profile.email?.[0] || 'M'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium truncate">
+                        {mod.profile.name || 'Sem nome'}
+                      </h4>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {mod.profile.email || 'Sem email'}
+                      </p>
+                    </div>
+                    {getRoleIcon(mod.role)}
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <Shield className="h-3 w-3" />
+                      Moderador
+                    </Badge>
+                    <ImpersonateButton
+                      targetUser={{
+                        id: mod.user_id,
+                        name: mod.profile.name,
+                        email: mod.profile.email,
+                        artistic_name: null
+                      }}
+                      targetRole="moderator"
+                      size="sm"
+                      variant="outline"
+                    />
+                  </div>
+                  
+                  <div className="text-xs text-muted-foreground">
+                    Criado em: {new Date(mod.created_at).toLocaleDateString('pt-BR')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <UserCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhum moderador encontrado</p>
+              <p className="text-sm">Crie moderadores na seção "Gestão de Moderadores"</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
