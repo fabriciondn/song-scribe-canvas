@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -52,6 +51,8 @@ export const ModeratorUsers = () => {
       setIsCreateModalOpen(false);
       setNewUserData({ name: '', email: '', password: '', artistic_name: '' });
       refetch();
+      // Invalidar queries relacionadas para atualizar contadores
+      queryClient.invalidateQueries({ queryKey: ['moderator-dashboard-stats'] });
     },
     onError: (error: any) => {
       console.error('Erro ao criar usuário:', error);
@@ -63,17 +64,33 @@ export const ModeratorUsers = () => {
     mutationFn: async (userData: { id: string; name: string; email: string; credits: number }) => {
       console.log('🔧 Atualizando usuário:', userData);
       
+      // Usar a função RPC para atualizar créditos que já desconta do moderador
+      if (userData.credits !== editingUser.credits) {
+        const creditDifference = userData.credits - editingUser.credits;
+        
+        // Usar moderator_update_user_credits que já verifica e desconta do moderador
+        const { error: creditError } = await supabase.rpc('moderator_update_user_credits', {
+          target_user_id: userData.id,
+          new_credits: userData.credits
+        });
+
+        if (creditError) {
+          console.error('❌ Erro na atualização de créditos:', creditError);
+          throw creditError;
+        }
+      }
+
+      // Atualizar nome e email
       const { error } = await supabase
         .from('profiles')
         .update({
           name: userData.name,
-          email: userData.email,
-          credits: userData.credits
+          email: userData.email
         })
         .eq('id', userData.id);
 
       if (error) {
-        console.error('❌ Erro na atualização:', error);
+        console.error('❌ Erro na atualização do perfil:', error);
         throw error;
       }
       
@@ -84,6 +101,8 @@ export const ModeratorUsers = () => {
       setIsEditModalOpen(false);
       setEditingUser(null);
       refetch();
+      // Atualizar créditos do moderador no hook
+      queryClient.invalidateQueries({ queryKey: ['user-credits'] });
     },
     onError: (error: any) => {
       console.error('Erro ao atualizar usuário:', error);
@@ -117,7 +136,16 @@ export const ModeratorUsers = () => {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      // Log da atividade antes de excluir
+      console.log('🗑️ Iniciando exclusão completa do usuário:', userId);
+      
+      // 1. Primeiro, buscar dados do usuário para logs
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('name, email, credits')
+        .eq('id', userId)
+        .single();
+
+      // 2. Log da atividade antes de excluir
       await supabase
         .from('user_activity_logs')
         .insert({
@@ -125,40 +153,102 @@ export const ModeratorUsers = () => {
           action: 'user_deleted_by_moderator',
           metadata: {
             moderator_user_id: (await supabase.auth.getUser()).data.user?.id,
-            deleted_at: new Date().toISOString()
+            deleted_at: new Date().toISOString(),
+            user_profile: userProfile
           }
         });
 
-      // Remover da tabela moderator_users
+      // 3. Excluir todas as tabelas relacionadas (em ordem de dependência)
+      
+      // Excluir registros de autor
+      await supabase
+        .from('author_registrations')
+        .delete()
+        .eq('user_id', userId);
+
+      // Excluir rascunhos
+      await supabase
+        .from('drafts')
+        .delete()
+        .eq('user_id', userId);
+
+      // Excluir músicas
+      await supabase
+        .from('songs')
+        .delete()
+        .eq('user_id', userId);
+
+      // Excluir templates
+      await supabase
+        .from('templates')
+        .delete()
+        .eq('user_id', userId);
+
+      // Excluir pastas
+      await supabase
+        .from('folders')
+        .delete()
+        .eq('user_id', userId);
+
+      // Excluir bases musicais
+      await supabase
+        .from('music_bases')
+        .delete()
+        .eq('user_id', userId);
+
+      // Excluir transações do moderador
+      await supabase
+        .from('moderator_transactions')
+        .delete()
+        .eq('user_id', userId);
+
+      // Excluir sessões do usuário
+      await supabase
+        .from('user_sessions')
+        .delete()
+        .eq('user_id', userId);
+
+      // 4. Remover da tabela moderator_users
       const { error: moderatorError } = await supabase
         .from('moderator_users')
         .delete()
         .eq('user_id', userId);
 
-      if (moderatorError) throw moderatorError;
+      if (moderatorError) {
+        console.error('❌ Erro ao remover de moderator_users:', moderatorError);
+        throw moderatorError;
+      }
 
-      // Excluir completamente o perfil
+      // 5. Excluir perfil do usuário
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', userId);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('❌ Erro ao excluir perfil:', profileError);
+        throw profileError;
+      }
 
-      // Tentar excluir do auth via edge function (opcional - pode falhar se não tiver permissões)
+      // 6. Tentar excluir do auth via edge function (opcional)
       try {
         await supabase.functions.invoke('delete-user', {
           body: { user_id: userId }
         });
+        console.log('✅ Usuário excluído do auth também');
       } catch (error) {
-        console.log('Aviso: Não foi possível excluir do auth, mas perfil foi removido');
+        console.log('⚠️ Aviso: Não foi possível excluir do auth, mas perfil foi removido');
       }
+
+      console.log('✅ Exclusão completa do usuário finalizada');
     },
     onSuccess: () => {
-      toast.success('Usuário excluído com sucesso');
+      toast.success('Usuário excluído completamente com sucesso');
       setSelectedUser(null);
       setDeleteConfirmText('');
       refetch();
+      // Invalidar queries relacionadas para atualizar contadores
+      queryClient.invalidateQueries({ queryKey: ['moderator-dashboard-stats'] });
     },
     onError: (error: any) => {
       console.error('Erro ao excluir usuário:', error);
@@ -311,7 +401,7 @@ export const ModeratorUsers = () => {
       {/* Lista de Usuários */}
       <Card>
         <CardHeader>
-          <CardTitle>Usuários Cadastrados</CardTitle>
+          <CardTitle>Usuários Cadastrados ({users?.length || 0})</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -383,10 +473,21 @@ export const ModeratorUsers = () => {
                               <AlertDialogHeader>
                                 <AlertDialogTitle className="flex items-center gap-2">
                                   <AlertTriangle className="h-5 w-5 text-destructive" />
-                                  Excluir Usuário
+                                  Excluir Usuário Completamente
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Esta ação é irreversível. Para confirmar, digite o nome completo do usuário: <strong>{user.name}</strong>
+                                  <div className="space-y-2">
+                                    <p><strong>ATENÇÃO:</strong> Esta ação irá excluir PERMANENTEMENTE:</p>
+                                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                                      <li>O perfil do usuário</li>
+                                      <li>Todas as músicas criadas</li>
+                                      <li>Todos os rascunhos</li>
+                                      <li>Registros de autor</li>
+                                      <li>Templates e pastas</li>
+                                      <li>Histórico de transações</li>
+                                    </ul>
+                                    <p className="mt-4">Para confirmar, digite o nome completo do usuário: <strong>{selectedUser?.name}</strong></p>
+                                  </div>
                                   <Input
                                     className="mt-2"
                                     placeholder="Digite o nome do usuário"
@@ -404,10 +505,10 @@ export const ModeratorUsers = () => {
                                 </AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={handleDeleteUser}
-                                  disabled={deleteConfirmText !== user.name || deleteUserMutation.isPending}
+                                  disabled={deleteConfirmText !== selectedUser?.name || deleteUserMutation.isPending}
                                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                 >
-                                  {deleteUserMutation.isPending ? 'Excluindo...' : 'Excluir'}
+                                  {deleteUserMutation.isPending ? 'Excluindo...' : 'Excluir Permanentemente'}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
@@ -464,6 +565,9 @@ export const ModeratorUsers = () => {
                 value={editUserData.credits}
                 onChange={(e) => setEditUserData({ ...editUserData, credits: Number(e.target.value) })}
               />
+              <p className="text-xs text-muted-foreground">
+                Atenção: Alteração de créditos será descontada/creditada dos seus créditos
+              </p>
             </div>
             <DialogFooter>
               <Button

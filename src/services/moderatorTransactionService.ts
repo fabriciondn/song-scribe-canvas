@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ModeratorTransaction {
@@ -11,8 +12,25 @@ export interface ModeratorTransaction {
 }
 
 export const moderatorTransactionService = {
-  // Criar nova transação usando a função RPC
+  // Criar nova transação e descontar créditos do moderador
   async createTransaction(userId: string, amount: number, description: string): Promise<boolean> {
+    // Primeiro, verificar se o moderador tem créditos suficientes
+    const { data: moderatorProfile, error: moderatorError } = await supabase
+      .from('profiles')
+      .select('credits')
+      .eq('id', (await supabase.auth.getUser()).data.user?.id)
+      .single();
+
+    if (moderatorError) {
+      console.error('Erro ao buscar créditos do moderador:', moderatorError);
+      throw new Error('Erro ao verificar créditos do moderador');
+    }
+
+    if (!moderatorProfile || moderatorProfile.credits < amount) {
+      throw new Error(`Créditos insuficientes. Você tem ${moderatorProfile?.credits || 0} créditos mas precisa de ${amount}.`);
+    }
+
+    // Usar a função RPC que já desconta do moderador
     const { data, error } = await supabase.rpc('update_user_credits', {
       target_user_id: userId,
       credit_amount: amount,
