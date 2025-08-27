@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { useImpersonation } from '@/context/ImpersonationContext';
@@ -77,21 +78,44 @@ export const useProfile = () => {
     if (!userId) throw new Error('Usuário não autenticado');
 
     try {
+      console.log('🔧 Atualizando perfil com dados:', updates);
+      
+      // Criar objeto apenas com campos que existem na tabela profiles
+      const profileUpdates: any = {};
+      
+      // Mapear campos permitidos
+      const allowedFields = [
+        'name', 'email', 'cpf', 'cellphone', 'address', 'avatar_url', 
+        'credits', 'artistic_name', 'birth_date', 'cep', 'street', 
+        'number', 'neighborhood', 'city', 'state'
+      ];
+      
+      allowedFields.forEach(field => {
+        if (updates.hasOwnProperty(field)) {
+          profileUpdates[field] = updates[field as keyof UserProfile];
+        }
+      });
+
+      console.log('📝 Campos a serem atualizados:', profileUpdates);
+
       const { error } = await supabase
         .from('profiles')
-        .upsert({ 
-          id: userId, 
-          ...updates 
-        });
+        .update(profileUpdates)
+        .eq('id', userId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao atualizar perfil:', error);
+        throw error;
+      }
+
+      console.log('✅ Perfil atualizado com sucesso');
 
       // Atualizar o estado local
       setProfile(prev => prev ? { ...prev, ...updates } : null);
       
       return true;
     } catch (err) {
-      console.error('Erro ao atualizar perfil:', err);
+      console.error('❌ Erro ao atualizar perfil:', err);
       throw err;
     }
   }, [userId]);
