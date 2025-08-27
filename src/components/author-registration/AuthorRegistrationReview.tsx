@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { FileAudio, User, Music, Clock, FileText, Info, Shield } from 'lucide-react';
 import { AuthorRegistrationData } from '@/pages/AuthorRegistration';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserCredits } from '@/hooks/useUserCredits';
@@ -32,8 +33,6 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   // Usar o ID do usuário correto (impersonado ou real)
   const currentUserId = isImpersonating && impersonatedUser ? impersonatedUser.id : user?.id;
 
-  // Notificações são agora tratadas globalmente pelo GlobalNotifications component
-
   // Função para gerar hash SHA-256
   const gerarHash = async (texto: string): Promise<string> => {
     const encoder = new TextEncoder();
@@ -41,6 +40,64 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  // Função melhorada para upload de áudio
+  const uploadAudioFile = async (audioFile: File): Promise<string | null> => {
+    try {
+      console.log('Iniciando upload do arquivo:', audioFile.name);
+      
+      // Verificar se o bucket existe e é acessível
+      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+      console.log('Buckets disponíveis:', buckets);
+      
+      if (bucketError) {
+        console.error('Erro ao listar buckets:', bucketError);
+        throw new Error('Erro ao acessar armazenamento');
+      }
+      
+      const authorRegistrationsBucket = buckets?.find(bucket => bucket.name === 'author-registrations');
+      if (!authorRegistrationsBucket) {
+        console.error('Bucket author-registrations não encontrado');
+        throw new Error('Bucket de armazenamento não encontrado');
+      }
+      
+      // Gerar nome único para o arquivo
+      const fileExt = audioFile.name.split('.').pop() || 'mp3';
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const fileName = `${currentUserId}/${timestamp}_${randomString}.${fileExt}`;
+      
+      console.log('Nome do arquivo gerado:', fileName);
+      console.log('Tamanho do arquivo:', audioFile.size, 'bytes');
+      console.log('Tipo do arquivo:', audioFile.type);
+      
+      // Fazer upload do arquivo
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('author-registrations')
+        .upload(fileName, audioFile, {
+          cacheControl: '3600',
+          upsert: false, // Não sobrescrever arquivo existente
+          contentType: audioFile.type || 'audio/mpeg'
+        });
+
+      if (uploadError) {
+        console.error('Erro detalhado no upload:', uploadError);
+        throw new Error(`Erro no upload: ${uploadError.message}`);
+      }
+
+      if (!uploadData?.path) {
+        console.error('Upload realizado mas path não retornado:', uploadData);
+        throw new Error('Upload incompleto - path não disponível');
+      }
+
+      console.log('Upload realizado com sucesso:', uploadData.path);
+      return uploadData.path;
+      
+    } catch (error) {
+      console.error('Erro completo no upload:', error);
+      throw error;
+    }
   };
 
   const handleRegister = async () => {
@@ -56,28 +113,23 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
     setIsRegistering(true);
 
     try {
+      console.log('Iniciando processo de registro...');
+      
       // Gerar hash SHA-256 da letra
       const hash = await gerarHash(data.lyrics);
+      console.log('Hash gerado:', hash);
 
-      // Upload do arquivo de áudio
+      // Upload do arquivo de áudio se existir
       let audioFilePath = null;
       
       if (data.audioFile) {
-        const fileExt = data.audioFile.name.split('.').pop();
-        const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('author-registrations')
-          .upload(fileName, data.audioFile);
-
-        if (uploadError) {
-          throw new Error('Erro ao fazer upload do arquivo de áudio');
-        }
-
-        audioFilePath = uploadData.path;
+        console.log('Iniciando upload do arquivo de áudio...', data.audioFile.name);
+        audioFilePath = await uploadAudioFile(data.audioFile);
+        console.log('Upload concluído, path:', audioFilePath);
       }
 
       // Decrementar crédito do usuário IMEDIATAMENTE
+      console.log('Atualizando créditos do usuário...');
       const { data: profileData } = await supabase
         .from('profiles')
         .select('credits')
@@ -86,10 +138,17 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
 
       if (profileData) {
         const newCredits = Math.max((profileData.credits || 0) - 1, 0);
-        await supabase
+        const { error: creditError } = await supabase
           .from('profiles')
           .update({ credits: newCredits })
           .eq('id', currentUserId);
+        
+        if (creditError) {
+          console.error('Erro ao atualizar créditos:', creditError);
+          throw new Error('Erro ao atualizar créditos');
+        }
+        
+        console.log('Créditos atualizados:', newCredits);
       }
 
       // Refresh dos créditos para mostrar a atualização em tempo real
@@ -98,6 +157,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       // Criar registro no banco de dados com status "em análise"
       const analysisStartedAt = new Date().toISOString();
       
+      console.log('Criando registro no banco de dados...');
       const { data: registrationData, error: insertError } = await supabase
         .from('author_registrations')
         .insert({
@@ -124,8 +184,11 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         .single();
 
       if (insertError) {
-        throw new Error('Erro ao registrar a música');
+        console.error('Erro ao inserir registro:', insertError);
+        throw new Error(`Erro ao registrar a música: ${insertError.message}`);
       }
+
+      console.log('Registro criado com sucesso:', registrationData);
 
       // Mostrar mensagem de sucesso e redirecionar
       toast({
