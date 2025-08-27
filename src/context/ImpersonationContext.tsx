@@ -37,13 +37,15 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
   const [userRole, setUserRole] = useState<'admin' | 'moderator' | 'user' | null>(null);
   const [managedUserIds, setManagedUserIds] = useState<string[]>([]);
 
+  // Fetch user role and managed users - simplified to avoid loops
   useEffect(() => {
+    if (!user?.id) {
+      setUserRole(null);
+      setManagedUserIds([]);
+      return;
+    }
+
     const fetchUserRoleAndManagedUsers = async () => {
-      if (!user) {
-        setUserRole(null);
-        setManagedUserIds([]);
-        return;
-      }
       try {
         const { data: adminData, error: adminError } = await supabase
           .from('admin_users')
@@ -80,8 +82,9 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
         setManagedUserIds([]);
       }
     };
+
     fetchUserRoleAndManagedUsers();
-  }, [user]);
+  }, [user?.id]); // Only depend on user.id to avoid loops
 
   const logImpersonationActivity = async (impersonatedUserId: string, impersonatedRole: string, action: string) => {
     try {
@@ -122,8 +125,6 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
     setImpersonatedUser(null);
     setIsImpersonating(false);
     localStorage.removeItem('impersonation_data');
-    setUserRole(null);
-    setManagedUserIds([]);
   };
 
   const canImpersonate = (targetRole: 'user' | 'moderator' | 'admin', targetUserId?: string): boolean => {
@@ -202,11 +203,14 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
     }
   };
 
+  // Sync from localStorage - only run once when user changes
   useEffect(() => {
+    if (!user) return;
+
     const syncFromStorage = () => {
       try {
         const storedData = localStorage.getItem('impersonation_data');
-        if (storedData && !isImpersonating && user) {
+        if (storedData && !isImpersonating) {
           const parsedData = JSON.parse(storedData);
           if (parsedData.targetUser) {
             setImpersonatedUser(parsedData.targetUser);
@@ -223,11 +227,11 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
         localStorage.removeItem('impersonation_data');
       }
     };
-    if (user) {
-      syncFromStorage();
-    }
-  }, [user, isImpersonating]);
 
+    syncFromStorage();
+  }, [user?.id]); // Only sync when user changes, not when isImpersonating changes
+
+  // Clear state when user logs out
   useEffect(() => {
     if (!user) {
       setImpersonatedUser(null);
