@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4'
 
 const corsHeaders = {
@@ -42,6 +43,7 @@ Deno.serve(async (req) => {
     );
 
     if (userError || !user) {
+      console.error('❌ Erro ao verificar usuário:', userError);
       return new Response(
         JSON.stringify({ error: 'Token inválido' }),
         { 
@@ -60,6 +62,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (moderatorError || !moderatorCheck) {
+      console.error('❌ Erro ao verificar moderador:', moderatorError);
       return new Response(
         JSON.stringify({ error: 'Acesso negado. Privilégios de moderador necessários.' }),
         { 
@@ -84,6 +87,32 @@ Deno.serve(async (req) => {
 
     console.log('🔧 Criando usuário:', { name, email });
 
+    // Verificar se email já existe antes de tentar criar
+    const { data: existingUser, error: checkError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (checkError) {
+      console.error('❌ Erro ao verificar usuários existentes:', checkError);
+      return new Response(
+        JSON.stringify({ error: 'Erro interno ao verificar usuários' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const emailExists = existingUser.users.some(u => u.email === email);
+    if (emailExists) {
+      console.log('⚠️ Email já existe:', email);
+      return new Response(
+        JSON.stringify({ error: 'Este email já está em uso. Escolha outro email.' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     // Criar usuário no Auth
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -97,8 +126,20 @@ Deno.serve(async (req) => {
 
     if (authError) {
       console.error('❌ Erro ao criar usuário no Auth:', authError);
+      
+      // Tratar erro de email já existente
+      if (authError.message?.includes('already been registered')) {
+        return new Response(
+          JSON.stringify({ error: 'Este email já está registrado. Use outro email.' }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
       return new Response(
-        JSON.stringify({ error: authError.message }),
+        JSON.stringify({ error: authError.message || 'Erro ao criar usuário' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -106,13 +147,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('✅ Usuário criado no Auth:', authData.user?.id);
+    if (!authData.user) {
+      console.error('❌ Usuário não foi criado');
+      return new Response(
+        JSON.stringify({ error: 'Falha ao criar usuário' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    console.log('✅ Usuário criado no Auth:', authData.user.id);
 
     // Atualizar/criar perfil do usuário
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .upsert({
-        id: authData.user!.id,
+        id: authData.user.id,
         name,
         email,
         artistic_name: artistic_name || null,
@@ -123,7 +175,12 @@ Deno.serve(async (req) => {
       console.error('❌ Erro ao criar perfil:', profileError);
       
       // Reverter criação do usuário se o perfil falhar
-      await supabaseAdmin.auth.admin.deleteUser(authData.user!.id);
+      try {
+        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+        console.log('🔄 Usuário revertido devido a erro no perfil');
+      } catch (deleteError) {
+        console.error('❌ Erro ao reverter usuário:', deleteError);
+      }
       
       return new Response(
         JSON.stringify({ error: 'Erro ao criar perfil do usuário' }),
@@ -141,7 +198,7 @@ Deno.serve(async (req) => {
       .from('moderator_users')
       .insert({
         moderator_id: user.id,
-        user_id: authData.user!.id,
+        user_id: authData.user.id,
       });
 
     if (moderatorUserError) {
@@ -149,14 +206,32 @@ Deno.serve(async (req) => {
       
       // Não reverter a criação por esse erro, apenas logar
       console.log('⚠️ Usuário criado mas não registrado como criado por moderador');
+    } else {
+      console.log('✅ Usuário registrado como criado por moderador');
     }
 
-    console.log('✅ Usuário registrado como criado por moderador');
+    // Log de atividade
+    try {
+      await supabaseAdmin
+        .from('user_activity_logs')
+        .insert({
+          user_id: authData.user.id,
+          action: 'user_created_by_moderator',
+          metadata: {
+            moderator_id: user.id,
+            moderator_email: user.email,
+            created_at: new Date().toISOString()
+          }
+        });
+    } catch (logError) {
+      console.error('⚠️ Erro ao registrar log de atividade:', logError);
+      // Não falhar por causa do log
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        userId: authData.user!.id,
+        userId: authData.user.id,
         message: 'Usuário criado com sucesso'
       }),
       {
