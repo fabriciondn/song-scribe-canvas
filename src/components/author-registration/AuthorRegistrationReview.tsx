@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,9 +28,6 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   const { refreshCredits } = useUserCredits();
   const navigate = useNavigate();
   const { isImpersonating, impersonatedUser } = useImpersonation();
-  
-  // Usar o ID do usuário correto (impersonado ou real)
-  const currentUserId = isImpersonating && impersonatedUser ? impersonatedUser.id : user?.id;
 
   // Função para gerar hash SHA-256
   const gerarHash = async (texto: string): Promise<string> => {
@@ -43,11 +39,12 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   };
 
   // Função melhorada para upload de áudio com validações
-  const uploadAudioFile = async (audioFile: File): Promise<string | null> => {
+  const uploadAudioFile = async (audioFile: File, userId: string): Promise<string | null> => {
     try {
       console.log('🎵 Iniciando upload do arquivo:', audioFile.name);
       console.log('📊 Tamanho do arquivo:', (audioFile.size / 1024 / 1024).toFixed(2), 'MB');
       console.log('🎧 Tipo do arquivo:', audioFile.type);
+      console.log('👤 User ID para upload:', userId);
 
       // Validação de tamanho do arquivo (50MB)
       const maxSize = 50 * 1024 * 1024; // 50MB
@@ -69,7 +66,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       const fileExt = audioFile.name.split('.').pop()?.toLowerCase() || 'mp3';
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 15);
-      const fileName = `${currentUserId}/${timestamp}_${randomString}.${fileExt}`;
+      const fileName = `${userId}/${timestamp}_${randomString}.${fileExt}`;
       
       console.log('📁 Nome do arquivo gerado:', fileName);
       
@@ -112,10 +109,73 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   };
 
   const handleRegister = async () => {
+    console.log('🚀 Iniciando processo de registro...');
+    
+    // 1. VALIDAÇÃO ROBUSTA DE AUTENTICAÇÃO
+    console.log('🔍 Debug de autenticação:', {
+      user: user ? { id: user.id, email: user.email } : null,
+      isImpersonating,
+      impersonatedUser: impersonatedUser ? { id: impersonatedUser.id, email: impersonatedUser.email } : null
+    });
+
+    // Determinar o usuário atual correto
+    const currentUserId = isImpersonating && impersonatedUser ? impersonatedUser.id : user?.id;
+    
+    console.log('👤 Current User ID calculado:', currentUserId);
+    
+    // Validação crítica - sem user ID não podemos continuar
     if (!currentUserId) {
+      console.error('❌ ERRO CRÍTICO: Usuário não autenticado');
       toast({
-        title: 'Erro',
-        description: 'Usuário não autenticado',
+        title: 'Erro de Autenticação',
+        description: 'Usuário não está autenticado. Faça login novamente.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validação adicional do user object
+    if (!user) {
+      console.error('❌ ERRO: Objeto user é null');
+      toast({
+        title: 'Erro de Sessão',
+        description: 'Sessão de usuário inválida. Faça login novamente.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // 2. VERIFICAR SESSÃO ATIVA NO SUPABASE
+    try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      console.log('🔐 Verificação de sessão:', {
+        hasSession: !!sessionData.session,
+        sessionUserId: sessionData.session?.user?.id,
+        sessionError
+      });
+
+      if (sessionError || !sessionData.session) {
+        console.error('❌ Sessão Supabase inválida:', sessionError);
+        toast({
+          title: 'Sessão Expirada',
+          description: 'Sua sessão expirou. Faça login novamente.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Verificar se o user ID da sessão bate com o calculado
+      if (sessionData.session.user.id !== currentUserId) {
+        console.error('❌ Inconsistência entre sessão e user ID:', {
+          sessionUserId: sessionData.session.user.id,
+          currentUserId
+        });
+      }
+    } catch (error) {
+      console.error('❌ Erro ao verificar sessão:', error);
+      toast({
+        title: 'Erro de Conexão',
+        description: 'Não foi possível verificar sua sessão. Tente novamente.',
         variant: 'destructive',
       });
       return;
@@ -124,19 +184,18 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
     setIsRegistering(true);
 
     try {
-      console.log('🚀 Iniciando processo de registro...');
-      
-      // Gerar hash SHA-256 da letra
+      // 3. GERAR HASH DA LETRA
+      console.log('🔒 Gerando hash da letra...');
       const hash = await gerarHash(data.lyrics);
-      console.log('🔒 Hash gerado:', hash);
+      console.log('✅ Hash gerado:', hash);
 
-      // Upload do arquivo de áudio se existir
+      // 4. UPLOAD DO ARQUIVO DE ÁUDIO (se existir)
       let audioFilePath = null;
       
       if (data.audioFile) {
-        console.log('🎵 Iniciando upload do arquivo de áudio...', data.audioFile.name);
+        console.log('🎵 Iniciando upload do arquivo de áudio...');
         try {
-          audioFilePath = await uploadAudioFile(data.audioFile);
+          audioFilePath = await uploadAudioFile(data.audioFile, currentUserId);
           console.log('✅ Upload concluído, path:', audioFilePath);
         } catch (uploadError) {
           console.error('❌ Erro no upload do áudio:', uploadError);
@@ -149,13 +208,18 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         }
       }
 
-      // Decrementar crédito do usuário IMEDIATAMENTE
+      // 5. ATUALIZAÇÃO DE CRÉDITOS (primeiro)
       console.log('💳 Atualizando créditos do usuário...');
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('credits')
         .eq('id', currentUserId)
         .single();
+
+      if (profileError) {
+        console.error('❌ Erro ao buscar perfil:', profileError);
+        throw new Error('Erro ao verificar créditos do usuário');
+      }
 
       if (profileData) {
         const newCredits = Math.max((profileData.credits || 0) - 1, 0);
@@ -169,20 +233,26 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
           throw new Error('Erro ao atualizar créditos');
         }
         
-        console.log('✅ Créditos atualizados:', newCredits);
+        console.log('✅ Créditos atualizados para:', newCredits);
       }
 
-      // Refresh dos créditos para mostrar a atualização em tempo real
+      // Refresh dos créditos
       refreshCredits();
 
-      // Criar registro no banco de dados com status "em análise"
+      // 6. INSERÇÃO NO BANCO DE DADOS
       const analysisStartedAt = new Date().toISOString();
       
-      console.log('📝 Criando registro no banco de dados...');
+      console.log('📝 Preparando dados para inserção:', {
+        user_id: currentUserId,
+        title: data.title,
+        author: data.author,
+        hash: hash.substring(0, 20) + '...' // Log apenas parte do hash
+      });
+
       const { data: registrationData, error: insertError } = await supabase
         .from('author_registrations')
         .insert({
-          user_id: currentUserId,
+          user_id: currentUserId, // CRÍTICO: garantir que user_id é válido
           title: data.title,
           author: data.author,
           other_authors: JSON.stringify({
@@ -205,13 +275,24 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         .single();
 
       if (insertError) {
-        console.error('❌ Erro ao inserir registro:', insertError);
+        console.error('❌ Erro detalhado na inserção:', {
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint
+        });
+        
+        // Tratamento específico para erro de RLS
+        if (insertError.message.includes('row-level security')) {
+          throw new Error('Erro de permissão: Não foi possível registrar a música. Verifique se você está logado corretamente.');
+        }
+        
         throw new Error(`Erro ao registrar a música: ${insertError.message}`);
       }
 
       console.log('✅ Registro criado com sucesso:', registrationData);
 
-      // Mostrar mensagem de sucesso e redirecionar
+      // Mostrar mensagem de sucesso
       toast({
         title: 'Registro enviado para análise!',
         description: 'Recebemos seu pedido de registro, em breve notificaremos sobre seu pedido de registro.',
@@ -227,10 +308,10 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
 
       onRegister();
     } catch (error) {
-      console.error('❌ Erro ao registrar música:', error);
+      console.error('❌ Erro completo ao registrar música:', error);
       toast({
-        title: 'Erro',
-        description: error instanceof Error ? error.message : 'Erro ao registrar a música',
+        title: 'Erro no Registro',
+        description: error instanceof Error ? error.message : 'Erro desconhecido ao registrar a música',
         variant: 'destructive',
       });
     } finally {
