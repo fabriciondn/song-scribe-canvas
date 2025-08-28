@@ -340,9 +340,6 @@ const DashboardHome = () => {
           </Card>
         )}
       </div>
-
-      {/* Transaction Card */}
-      <TransactionCard />
     </div>
   );
 };
