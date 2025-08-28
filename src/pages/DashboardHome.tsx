@@ -64,7 +64,7 @@ const DashboardHome = () => {
         <div className="max-w-6xl mx-auto mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-semibold text-foreground">
+              <h1 className="text-lg font-semibold text-foreground py-[25px]">
                 {getGreeting()}, {displayName}! 👋
               </h1>
               <p className="text-sm text-muted-foreground mt-1 py-[10px]">
