@@ -10,26 +10,19 @@ import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
+
 interface PixData {
   qr_code: string;
   qr_code_url: string;
   payment_id: string;
 }
+
 export default function CreditsCheckout() {
   const navigate = useNavigate();
-  const {
-    user
-  } = useAuth();
-  const {
-    profile,
-    loadProfile
-  } = useProfile();
-  const {
-    toast
-  } = useToast();
-  const {
-    theme
-  } = useTheme();
+  const { user } = useAuth();
+  const { profile, loadProfile } = useProfile();
+  const { toast } = useToast();
+  const { theme } = useTheme();
   const [credits, setCredits] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [pixData, setPixData] = useState<PixData | null>(null);
@@ -47,10 +40,12 @@ export default function CreditsCheckout() {
       }
     }
   }, [theme]);
+
   const calculatePricing = (creditAmount: number) => {
     let unitPrice = 1.00; // Temporarily changed from 30.00 to 1.00 for testing
     let bonusCredits = 0;
     let savings = 0;
+
     // Promoção de 10 créditos
     if (creditAmount === 10) {
       unitPrice = 1.00; // Temporarily changed from 25.00 to 1.00 for testing
@@ -61,8 +56,10 @@ export default function CreditsCheckout() {
       unitPrice = 1.00; // Temporarily changed from 25.00 to 1.00 for testing
       savings = (1 - 1) * 5; // Adjusted for new price
     }
+
     let totalAmount = creditAmount * unitPrice;
     let originalPrice = 1 * creditAmount; // Adjusted for new price
+
     return {
       unitPrice,
       totalAmount,
@@ -72,7 +69,9 @@ export default function CreditsCheckout() {
       finalCredits: creditAmount + bonusCredits
     };
   };
+
   const pricing = calculatePricing(credits);
+
   const handleProcessPayment = async () => {
     if (!user) {
       toast({
@@ -93,16 +92,18 @@ export default function CreditsCheckout() {
       navigate('/settings');
       return;
     }
-    console.log('🔄 Iniciando processamento de pagamento...', {
+
+    console.log('🔄 Iniciando processamento de pagamento com Mercado Pago...', {
       credits: credits,
       bonusCredits: pricing.bonusCredits,
       unitPrice: pricing.unitPrice,
       totalAmount: pricing.totalAmount,
       userId: user.id
     });
+
     setIsProcessing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-credits-payment', {
+      const { data, error } = await supabase.functions.invoke('create-mercadopago-payment', {
         body: {
           credits: credits,
           bonusCredits: pricing.bonusCredits,
@@ -116,17 +117,17 @@ export default function CreditsCheckout() {
           }
         }
       });
-      console.log('📡 Resposta da Edge Function:', { data, error });
+
+      console.log('📡 Resposta da Edge Function (Mercado Pago):', { data, error });
+
       if (error) {
-        // Tenta extrair mensagem detalhada do backend (Supabase Functions)
         let errorMsg = error.message || error.error_description || error.error || 'Não foi possível processar o pagamento.';
-        // Se vier um JSON stringificado, tenta parsear
+        
         try {
           const parsed = JSON.parse(errorMsg);
           if (parsed?.error) errorMsg = parsed.error;
         } catch {}
 
-        // Supabase Functions: erro detalhado pode vir em error.context.response.body
         if (error.context && error.context.response && error.context.response.body) {
           try {
             const backend = JSON.parse(error.context.response.body);
@@ -134,6 +135,7 @@ export default function CreditsCheckout() {
             else if (backend?.message) errorMsg = backend.message;
           } catch {}
         }
+
         toast({
           title: "Erro no Pagamento",
           description: errorMsg,
@@ -141,6 +143,7 @@ export default function CreditsCheckout() {
         });
         return;
       }
+
       if (data?.qr_code && data?.payment_id) {
         setPixData({
           qr_code: data.qr_code,
@@ -150,7 +153,7 @@ export default function CreditsCheckout() {
         setShowQRCode(true);
         toast({
           title: "PIX Gerado!",
-          description: "Use o QR Code para realizar o pagamento."
+          description: "Use o QR Code para realizar o pagamento via Mercado Pago."
         });
       } else {
         toast({
@@ -170,23 +173,24 @@ export default function CreditsCheckout() {
       setIsProcessing(false);
     }
   };
+
   const checkPaymentStatus = async () => {
     if (!pixData?.payment_id) return;
+
     setIsCheckingPayment(true);
     try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('check-payment-status', {
+      const { data, error } = await supabase.functions.invoke('check-payment-status', {
         body: {
           paymentId: pixData.payment_id,
           type: 'credits'
         }
       });
+
       if (error) {
         console.error('Erro ao verificar pagamento:', error);
         return;
       }
+
       if (data?.isPaid || data?.paid) {
         setPaymentConfirmed(true);
         setIsCheckingPayment(false);
@@ -198,10 +202,12 @@ export default function CreditsCheckout() {
             loadProfile();
           }, 500); // pequeno delay para garantir update no backend
         }
+
         toast({
           title: "Pagamento Confirmado!",
           description: `Parabéns! você recarregou ${pricing.finalCredits} créditos.`
         });
+
         setTimeout(() => {
           navigate('/dashboard');
         }, 3000);
@@ -212,32 +218,24 @@ export default function CreditsCheckout() {
       setIsCheckingPayment(false);
     }
   };
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (showQRCode && !paymentConfirmed && pixData?.payment_id) {
-      interval = setInterval(checkPaymentStatus, 5000);
+      interval = setInterval(() => {
+        if (!isCheckingPayment) {
+          checkPaymentStatus();
+        }
+      }, 5000);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [showQRCode, paymentConfirmed, pixData?.payment_id]);
-    useEffect(() => {
-      let interval: NodeJS.Timeout;
-      if (showQRCode && !paymentConfirmed && pixData?.payment_id) {
-        interval = setInterval(() => {
-          if (!isCheckingPayment) {
-            checkPaymentStatus();
-          }
-        }, 5000);
-      }
-      return () => {
-        if (interval) clearInterval(interval);
-      };
-    }, [showQRCode, paymentConfirmed, pixData?.payment_id, isCheckingPayment]);
+  }, [showQRCode, paymentConfirmed, pixData?.payment_id, isCheckingPayment]);
+
   if (!user) {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex items-center justify-center">
         <div className="w-full max-w-md mx-auto">
-          {/* Logo Centralizado */}
           <div className="text-center mb-8">
             <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
             <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
@@ -257,10 +255,10 @@ export default function CreditsCheckout() {
         </div>
       </div>;
   }
+
   if (paymentConfirmed) {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex items-center justify-center">
         <div className="w-full max-w-md mx-auto">
-          {/* Logo Centralizado */}
           <div className="text-center mb-8">
             <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
             <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
@@ -283,10 +281,10 @@ export default function CreditsCheckout() {
         </div>
       </div>;
   }
+
   if (showQRCode && pixData) {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
         <div className="max-w-2xl mx-auto">
-          {/* Logo Centralizado */}
           <div className="text-center mb-8">
             <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
             <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
@@ -299,7 +297,7 @@ export default function CreditsCheckout() {
 
           <Card className="w-full">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-foreground">Pagamento PIX</CardTitle>
+              <CardTitle className="text-2xl text-foreground">Pagamento PIX - Mercado Pago</CardTitle>
               <p className="text-muted-foreground">
                 Escaneie o QR Code ou copie o código PIX para realizar o pagamento
               </p>
@@ -312,7 +310,12 @@ export default function CreditsCheckout() {
                 <div className="w-full">
                   <Label htmlFor="pix-code">Código PIX</Label>
                   <div className="flex gap-2 mt-1">
-                    <Input id="pix-code" value={pixData.qr_code} readOnly className="font-mono text-xs" />
+                    <Input 
+                      id="pix-code" 
+                      value={pixData.qr_code} 
+                      readOnly 
+                      className="font-mono text-xs" 
+                    />
                     <Button variant="outline" onClick={() => {
                       navigator.clipboard.writeText(pixData.qr_code);
                       toast({
@@ -347,9 +350,9 @@ export default function CreditsCheckout() {
         </div>
       </div>;
   }
+
   return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
       <div className="max-w-4xl mx-auto">
-        {/* Logo Centralizado */}
         <div className="text-center mb-8">
           <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
           <p className="text-muted-foreground text-sm mt-1">Checkout</p>
@@ -372,7 +375,15 @@ export default function CreditsCheckout() {
             <CardContent className="space-y-6">
               <div>
                 <Label htmlFor="credits">Quantidade de Créditos</Label>
-                <Input id="credits" type="number" min="1" max="100" value={credits} onChange={e => setCredits(Math.max(1, parseInt(e.target.value) || 1))} className="text-lg font-semibold" />
+                <Input 
+                  id="credits" 
+                  type="number" 
+                  min="1" 
+                  max="100" 
+                  value={credits} 
+                  onChange={e => setCredits(Math.max(1, parseInt(e.target.value) || 1))} 
+                  className="text-lg font-semibold" 
+                />
               </div>
 
               <div className="bg-muted p-4 rounded-lg">
@@ -408,9 +419,7 @@ export default function CreditsCheckout() {
             </CardContent>
           </Card>
 
-          {/* Order Bump Banners */}
           <div className="space-y-4">
-            {/* 5 Credits Order Bump */}
             <Card className={`border-2 cursor-pointer transition-all ${credits === 5 ? 'border-orange-500 bg-orange-50 dark:bg-orange-950' : 'border-orange-200 hover:border-orange-300'}`} onClick={() => setCredits(5)}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -431,7 +440,6 @@ export default function CreditsCheckout() {
               </CardContent>
             </Card>
 
-            {/* 10 Credits Order Bump */}
             <Card className={`border-2 cursor-pointer transition-all ${credits === 10 ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-green-200 hover:border-green-300'}`} onClick={() => setCredits(10)}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -453,7 +461,6 @@ export default function CreditsCheckout() {
             </Card>
           </div>
 
-          {/* User Summary */}
           <Card>
             <CardHeader>
               <CardTitle className="text-foreground">Resumo do Pedido</CardTitle>
@@ -504,11 +511,19 @@ export default function CreditsCheckout() {
                 </div>
               </div>
 
-              <Button onClick={handleProcessPayment} disabled={isProcessing} className="w-full" size="lg">
-                {isProcessing ? <div className="flex items-center gap-2">
+              <Button 
+                onClick={handleProcessPayment} 
+                disabled={isProcessing} 
+                className="w-full" 
+                size="lg"
+              >
+                {isProcessing ? 
+                  <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     Processando...
-                  </div> : `Finalizar Compra - R$ ${pricing.totalAmount.toFixed(2)}`}
+                  </div> : 
+                  `Finalizar Compra - R$ ${pricing.totalAmount.toFixed(2)}`
+                }
               </Button>
             </CardContent>
           </Card>
