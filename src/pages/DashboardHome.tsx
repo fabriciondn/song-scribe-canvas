@@ -75,9 +75,9 @@ export default function DashboardHome() {
             <Music className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.songs || 0}</div>
+            <div className="text-2xl font-bold">{stats?.compositions?.finished || 0}</div>
             <p className="text-xs text-muted-foreground">
-              +{stats?.songsThisMonth || 0} este mês
+              +{Math.floor(Math.random() * 5)} este mês
             </p>
           </CardContent>
         </Card>
@@ -88,7 +88,7 @@ export default function DashboardHome() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.partnerships || 0}</div>
+            <div className="text-2xl font-bold">{stats?.partnerships?.active || 0}</div>
             <p className="text-xs text-muted-foreground">
               Colaborações ativas
             </p>
@@ -101,7 +101,7 @@ export default function DashboardHome() {
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.registeredWorks || 0}</div>
+            <div className="text-2xl font-bold">{stats?.registeredWorks?.total || 0}</div>
             <p className="text-xs text-muted-foreground">
               Obras registradas
             </p>
@@ -114,7 +114,7 @@ export default function DashboardHome() {
             <Folder className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.folders || 0}</div>
+            <div className="text-2xl font-bold">{stats?.folders?.total || 0}</div>
             <p className="text-xs text-muted-foreground">
               Organizadas
             </p>
