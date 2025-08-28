@@ -1,132 +1,362 @@
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Link } from 'react-router-dom';
 import { 
-  BarChart3, 
+  Edit, 
   Users, 
-  FileText, 
+  Shield, 
   Folder,
-  ChevronDown,
-  ChevronUp,
-  TrendingUp,
   Music,
-  Shield
-} from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { useDashboardStats } from '@/hooks/useDashboardStats';
-import FeatureCarousel from '@/components/dashboard/FeatureCarousel';
-import { TransactionCard } from '@/components/dashboard/TransactionCard';
+  FileText,
+  TrendingUp,
+  Clock,
+  Star,
+  Award,
+  Eye,
+  EyeOff,
+  Settings
+} from "lucide-react";
+import { useProfile } from "@/hooks/useProfile";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { CardSelector } from "@/components/dashboard/CardSelector";
+import { useDashboardCardSelection } from "@/hooks/useDashboardCardSelection";
+import { FeatureCarousel } from "@/components/dashboard/FeatureCarousel";
+import { TransactionCard } from "@/components/dashboard/TransactionCard";
+import { useUserCredits } from "@/hooks/useUserCredits";
 
-export default function DashboardHome() {
-  const { user } = useAuth();
-  const { stats, isLoading } = useDashboardStats();
-  const [expandedSections, setExpandedSections] = useState<string[]>([]);
+const DashboardHome = () => {
+  const { profile } = useProfile();
+  const { 
+    stats, 
+    isLoading: statsLoading, 
+    error: statsError 
+  } = useDashboardStats();
+  const { credits } = useUserCredits();
+  
+  const {
+    expandedSections,
+    handleToggleSection,
+    isCardVisible
+  } = useDashboardCardSelection();
 
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => 
-      prev.includes(section) 
-        ? prev.filter(s => s !== section)
-        : [...prev, section]
-    );
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Bom dia';
+    if (hour < 18) return 'Boa tarde';
+    return 'Boa noite';
   };
 
-  const isExpanded = (section: string) => expandedSections.includes(section);
+  const displayName = profile?.name || profile?.artistic_name || 'Usuário';
 
-  const userName = user?.user_metadata?.name || user?.user_metadata?.artistic_name || 'Usuário';
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
+  const renderStatsCard = (
+    title: string,
+    value: number | string,
+    icon: React.ElementType,
+    color: string,
+    description: string
+  ) => (
+    <Card>
+      <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Carregando suas informações...</p>
+            <p className="text-sm text-muted-foreground">{title}</p>
+            <p className="text-2xl font-bold">{value}</p>
+            <p className="text-xs text-muted-foreground mt-1">{description}</p>
+          </div>
+          <div className={`p-3 rounded-lg ${color}`}>
+            {React.createElement(icon, { className: "h-6 w-6 text-white" })}
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="h-32 bg-muted rounded-lg"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+      </CardContent>
+    </Card>
+  );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20 md:pb-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Olá, {userName}! 👋</h1>
+          <h1 className="text-3xl font-bold">
+            {getGreeting()}, {displayName}! 👋
+          </h1>
           <p className="text-muted-foreground">
-            Bem-vindo ao seu dashboard. Aqui você encontra um resumo de suas atividades.
+            Bem-vindo ao seu painel de controle
           </p>
         </div>
+        <CardSelector 
+          expandedSections={expandedSections}
+          onToggleSection={handleToggleSection}
+        >
+          <Button variant="outline" size="sm">
+            <Settings className="h-4 w-4 mr-2" />
+            Personalizar Cards
+          </Button>
+        </CardSelector>
       </div>
 
-      {/* Cards de Estatísticas Básicos */}
+      {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Músicas</CardTitle>
-            <Music className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.compositions?.finished || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              +{Math.floor(Math.random() * 5)} este mês
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Parcerias</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.partnerships?.active || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Colaborações ativas
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Registros</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.registeredWorks?.total || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Obras registradas
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pastas</CardTitle>
-            <Folder className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.folders?.total || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Organizadas
-            </p>
-          </CardContent>
-        </Card>
+        {statsLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse space-y-3">
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                  <div className="h-8 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-muted rounded w-full"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : statsError ? (
+          <Card className="col-span-full">
+            <CardContent className="p-6 text-center text-muted-foreground">
+              Erro ao carregar estatísticas
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {renderStatsCard(
+              "Composições", 
+              stats?.totalSongs || 0, 
+              Music, 
+              "bg-blue-500",
+              "Total de obras criadas"
+            )}
+            {renderStatsCard(
+              "Parcerias", 
+              stats?.totalPartnerships || 0, 
+              Users, 
+              "bg-purple-500",
+              "Colaborações ativas"
+            )}
+            {renderStatsCard(
+              "Obras Registradas", 
+              stats?.totalRegisteredWorks || 0, 
+              Shield, 
+              "bg-green-500",
+              "Registros autorais"
+            )}
+            {renderStatsCard(
+              "Pastas", 
+              stats?.totalFolders || 0, 
+              Folder, 
+              "bg-yellow-500",
+              "Organização de conteúdo"
+            )}
+          </>
+        )}
       </div>
-
-      {/* TransactionCard */}
-      <TransactionCard />
 
       {/* Feature Carousel */}
       <FeatureCarousel />
+
+      {/* Expanded Cards Section */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Composições Card */}
+        {isCardVisible('compositions') && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Edit className="h-5 w-5 text-blue-600" />
+                  <span>Minhas Composições</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleToggleSection('compositions')}
+                >
+                  <EyeOff className="h-4 w-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600">
+                    {stats?.totalSongs || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Composições criadas
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Este mês</span>
+                    <span>{stats?.songsThisMonth || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Total de visualizações</span>
+                    <span>{stats?.totalViews || 0}</span>
+                  </div>
+                </div>
+                <Link to="/composer">
+                  <Button className="w-full" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Nova Composição
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Parcerias Card */}
+        {isCardVisible('partnerships') && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  <span>Parcerias</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleToggleSection('partnerships')}
+                >
+                  <EyeOff className="h-4 w-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-600">
+                    {stats?.totalPartnerships || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Parcerias ativas
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Pendentes</span>
+                    <span>{stats?.pendingPartnerships || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Concluídas</span>
+                    <span>{stats?.completedPartnerships || 0}</span>
+                  </div>
+                </div>
+                <Link to="/partnerships">
+                  <Button className="w-full" size="sm">
+                    <Users className="h-4 w-4 mr-2" />
+                    Ver Parcerias
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Obras Registradas Card */}
+        {isCardVisible('registeredWorks') && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-green-600" />
+                  <span>Obras Registradas</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleToggleSection('registeredWorks')}
+                >
+                  <EyeOff className="h-4 w-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-600">
+                    {stats?.totalRegisteredWorks || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Registros autorais
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Em análise</span>
+                    <span>{stats?.pendingRegistrations || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Aprovados</span>
+                    <span>{stats?.approvedRegistrations || 0}</span>
+                  </div>
+                </div>
+                <Link to="/dashboard/author-registration">
+                  <Button className="w-full" size="sm">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Novo Registro
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Pastas Card */}
+        {isCardVisible('folders') && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Folder className="h-5 w-5 text-yellow-600" />
+                  <span>Organização</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleToggleSection('folders')}
+                >
+                  <EyeOff className="h-4 w-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-yellow-600">
+                    {stats?.totalFolders || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Pastas criadas
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Itens organizados</span>
+                    <span>{stats?.organizedItems || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Rascunhos</span>
+                    <span>{stats?.totalDrafts || 0}</span>
+                  </div>
+                </div>
+                <Link to="/folders">
+                  <Button className="w-full" size="sm">
+                    <Folder className="h-4 w-4 mr-2" />
+                    Gerenciar Pastas
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Transaction Card */}
+      <TransactionCard credits={credits} />
     </div>
   );
-}
+};
+
+export default DashboardHome;
