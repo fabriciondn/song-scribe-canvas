@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,33 +10,46 @@ import { useTheme } from '@/hooks/useTheme';
 import { useUserRole } from '@/hooks/useUserRole'; // Hook unificado
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, LogOut, Home, CreditCard, Plus, Moon, Sun, Shield, Settings } from 'lucide-react';
-
 export const Header = ({
   toggleSidebar
 }: {
   toggleSidebar: () => void;
 }) => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const { profile } = useProfile();
-  const { credits, refreshCredits } = useUserCredits();
-  const { theme, toggleTheme } = useTheme();
-  
+  const {
+    user,
+    logout
+  } = useAuth();
+  const {
+    profile
+  } = useProfile();
+  const {
+    credits,
+    refreshCredits
+  } = useUserCredits();
+  const {
+    theme,
+    toggleTheme
+  } = useTheme();
+
   // Usar apenas o hook unificado para evitar conflitos
-  const { isAdmin, isModerator, role, isLoading: roleLoading } = useUserRole();
+  const {
+    isAdmin,
+    isModerator,
+    role,
+    isLoading: roleLoading
+  } = useUserRole();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  
+
   // Adicionar listener para mudanças nos créditos via window events
   useEffect(() => {
     const handleCreditsUpdate = () => {
       console.log('🔄 Evento de atualização de créditos detectado');
       refreshCredits();
     };
-    
     window.addEventListener('credits-updated', handleCreditsUpdate);
     return () => window.removeEventListener('credits-updated', handleCreditsUpdate);
   }, [refreshCredits]);
-  
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
@@ -48,7 +60,6 @@ export const Header = ({
       setIsLoggingOut(false);
     }
   };
-
   const handleDashboardClick = () => {
     // Navegação baseada no role atual
     if (isAdmin) {
@@ -68,46 +79,35 @@ export const Header = ({
         text: 'Dashboard'
       };
     }
-
     if (isAdmin) {
       return {
         icon: Settings,
         text: 'Painel Admin'
       };
     }
-
     if (isModerator) {
       return {
         icon: Shield,
         text: 'Painel Moderador'
       };
     }
-
     return {
       icon: Home,
       text: 'Dashboard'
     };
   };
-
   const dashboardMenuItem = getDashboardMenuItem();
-
-  return (
-    <header className="bg-background border-b border-border py-2 px-6 flex items-center justify-between">
+  return <header className="bg-background border-b border-border flex items-center justify-between px-[25px] mx-[9px] my-0 py-0">
       <div className="flex items-center flex-1 mx-[68px]">
         <Button variant="ghost" size="icon" className="mr-2 lg:hidden" onClick={toggleSidebar}>
           <Menu className="h-5 w-5" />
         </Button>
         <Link to="/" className="flex items-center gap-2 mr-12">
-          <img 
-            src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} 
-            alt="Logo" 
-            className="h-9" 
-          />
+          <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Logo" className="h-9" />
         </Link>
       </div>
       
-      {user ? (
-        <div className="flex items-center gap-3">
+      {user ? <div className="flex items-center gap-3">
           {/* Theme toggle */}
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="mr-2">
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -166,12 +166,8 @@ export const Header = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      ) : (
-        <Link to="/">
+        </div> : <Link to="/">
           <Button size="sm">Entrar</Button>
-        </Link>
-      )}
-    </header>
-  );
+        </Link>}
+    </header>;
 };
