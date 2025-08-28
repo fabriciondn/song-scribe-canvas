@@ -10,6 +10,7 @@ import { NotificationProvider } from "@/components/ui/notification";
 import { ImpersonationBanner } from "@/components/ui/impersonation-banner";
 import { RoleRedirect } from "@/components/layout/RoleRedirect";
 import { GlobalNotifications } from "@/components/GlobalNotifications";
+import Purchases from "./pages/Purchases";
 
 import { PageFunctionStatusWrapper } from "@/components/layout/FunctionStatusWrapper";
 import Index from "./pages/Index";
@@ -58,62 +59,63 @@ const AppContent = () => {
         <RoleRedirect />
         <PageFunctionStatusWrapper>
           <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/dashboard" element={<Dashboard />}>
-          <Route index element={<DashboardHome />} />
-          <Route path="composer" element={<Composer />} />
-          <Route path="cifrador" element={<Cifrador />} />
-          <Route path="bases" element={<Bases />} />
-          <Route path="templates" element={<Templates />} />
-          <Route path="folders/*" element={<Folders />} />
-          <Route path="drafts" element={<Drafts />} />
-          <Route path="partnerships" element={<Partnerships />} />
-          <Route path="author-registration" element={<AuthorRegistration />} />
-          <Route path="registered-works" element={<RegisteredWorks />} />
-          <Route path="tutorials" element={<Tutorials />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="trash" element={<Trash />} />
-        </Route>
-        <Route path="/composer" element={<Dashboard />}>
-          <Route index element={<Composer />} />
-        </Route>
-        <Route path="/cifrador" element={<Dashboard />}>
-          <Route index element={<Cifrador />} />
-        </Route>
-        <Route path="/cifrador-neo" element={<Dashboard />}>
-          <Route index element={<CifradorNeo />} />
-        </Route>
-        <Route path="/bases" element={<Dashboard />}>
-          <Route index element={<Bases />} />
-        </Route>
-        <Route path="/templates" element={<Dashboard />}>
-          <Route index element={<Templates />} />
-        </Route>
-        <Route path="/folders/*" element={<Dashboard />}>
-          <Route path="*" element={<Folders />} />
-        </Route>
-        <Route path="/drafts" element={<Dashboard />}>
-          <Route index element={<Drafts />} />
-        </Route>
-        <Route path="/partnerships" element={<Dashboard />}>
-          <Route index element={<Partnerships />} />
-        </Route>
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/moderator" element={<ModeratorDashboard />} />
-        <Route path="/moderator/users" element={<ModeratorDashboard />} />
-        <Route path="/moderator/transactions" element={<ModeratorDashboard />} />
-        <Route path="/moderator/profile" element={<ModeratorDashboard />} />
-        <Route path="/moderator/debug" element={<ModeratorDashboard />} />
-        <Route path="/moderator-auth" element={<ModeratorAuth />} />
-        <Route path="/formulario" element={<PublicRegistrationForm />} />
-        <Route path="/plans" element={<Dashboard />}>
-          <Route index element={<Plans />} />
-        </Route>
-        <Route path="/checkout" element={<Dashboard />}>
-          <Route index element={<Checkout />} />
-        </Route>
-        <Route path="/credits-checkout" element={<CreditsCheckout />} />
-        <Route path="*" element={<NotFound />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />}>
+              <Route index element={<DashboardHome />} />
+              <Route path="composer" element={<Composer />} />
+              <Route path="cifrador" element={<Cifrador />} />
+              <Route path="bases" element={<Bases />} />
+              <Route path="templates" element={<Templates />} />
+              <Route path="folders/*" element={<Folders />} />
+              <Route path="drafts" element={<Drafts />} />
+              <Route path="partnerships" element={<Partnerships />} />
+              <Route path="author-registration" element={<AuthorRegistration />} />
+              <Route path="registered-works" element={<RegisteredWorks />} />
+              <Route path="tutorials" element={<Tutorials />} />
+              <Route path="purchases" element={<Purchases />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="trash" element={<Trash />} />
+            </Route>
+            <Route path="/composer" element={<Dashboard />}>
+              <Route index element={<Composer />} />
+            </Route>
+            <Route path="/cifrador" element={<Dashboard />}>
+              <Route index element={<Cifrador />} />
+            </Route>
+            <Route path="/cifrador-neo" element={<Dashboard />}>
+              <Route index element={<CifradorNeo />} />
+            </Route>
+            <Route path="/bases" element={<Dashboard />}>
+              <Route index element={<Bases />} />
+            </Route>
+            <Route path="/templates" element={<Dashboard />}>
+              <Route index element={<Templates />} />
+            </Route>
+            <Route path="/folders/*" element={<Dashboard />}>
+              <Route path="*" element={<Folders />} />
+            </Route>
+            <Route path="/drafts" element={<Dashboard />}>
+              <Route index element={<Drafts />} />
+            </Route>
+            <Route path="/partnerships" element={<Dashboard />}>
+              <Route index element={<Partnerships />} />
+            </Route>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/moderator" element={<ModeratorDashboard />} />
+            <Route path="/moderator/users" element={<ModeratorDashboard />} />
+            <Route path="/moderator/transactions" element={<ModeratorDashboard />} />
+            <Route path="/moderator/profile" element={<ModeratorDashboard />} />
+            <Route path="/moderator/debug" element={<ModeratorDashboard />} />
+            <Route path="/moderator-auth" element={<ModeratorAuth />} />
+            <Route path="/formulario" element={<PublicRegistrationForm />} />
+            <Route path="/plans" element={<Dashboard />}>
+              <Route index element={<Plans />} />
+            </Route>
+            <Route path="/checkout" element={<Dashboard />}>
+              <Route index element={<Checkout />} />
+            </Route>
+            <Route path="/credits-checkout" element={<CreditsCheckout />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </PageFunctionStatusWrapper>
       </div>
