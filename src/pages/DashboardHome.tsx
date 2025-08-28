@@ -92,15 +92,13 @@ const DashboardHome = () => {
   return (
     <NextUIProvider>
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-        {/* Header fixo com carousel */}
-        <div className="sticky top-0 z-10 backdrop-blur-xl bg-background/80 border-b border-border/50">
-          <div className="h-20 flex items-center justify-center px-4">
+        {/* Conteúdo principal - removido header fixo e ajustado padding */}
+        <div className="px-4 md:px-8 py-4 space-y-6">
+          {/* Carousel de features - movido para cá e com menos espaçamento */}
+          <div className="max-w-7xl mx-auto">
             <ModernFeatureCarousel />
           </div>
-        </div>
 
-        {/* Conteúdo principal */}
-        <div className="px-4 md:px-8 py-8 space-y-8">
           {/* Seção de boas-vindas moderna */}
           <div className="max-w-7xl mx-auto">
             <ModernWelcomeSection 
