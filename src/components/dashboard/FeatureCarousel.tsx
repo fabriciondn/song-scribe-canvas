@@ -56,13 +56,13 @@ const FeatureCarousel: React.FC = () => {
             const IconComponent = banner.icon;
             return (
               <CarouselItem key={banner.id}>
-                <div className="relative h-48 w-full overflow-hidden rounded-lg group cursor-pointer">
+                <div className="relative h-56 w-full rounded-lg group cursor-pointer">
                   <img 
                     src={banner.image} 
                     alt={banner.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                    className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-500" 
                   />
-                  <div className={`absolute inset-0 bg-gradient-to-r ${banner.gradient}`} />
+                  <div className={`absolute inset-0 bg-gradient-to-r ${banner.gradient} rounded-lg`} />
                   <div className="absolute inset-0 flex items-center justify-between p-6">
                     <div className="flex items-center space-x-4 flex-1">
                       <div className="p-3 bg-white/10 backdrop-blur-sm rounded-full flex-shrink-0">
