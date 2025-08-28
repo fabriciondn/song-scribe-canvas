@@ -1,5 +1,6 @@
 
 import type { Config } from "tailwindcss";
+import { nextui } from "@nextui-org/react";
 
 export default {
 	darkMode: ["class"],
@@ -8,6 +9,7 @@ export default {
 		"./components/**/*.{ts,tsx}",
 		"./app/**/*.{ts,tsx}",
 		"./src/**/*.{ts,tsx}",
+		"./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}",
 	],
 	prefix: "",
 	theme: {
@@ -100,5 +102,35 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		nextui({
+			themes: {
+				light: {
+					colors: {
+						primary: {
+							DEFAULT: "#00bd4b",
+							foreground: "#ffffff"
+						},
+						secondary: {
+							DEFAULT: "#9333ea",
+							foreground: "#ffffff"
+						}
+					}
+				},
+				dark: {
+					colors: {
+						primary: {
+							DEFAULT: "#00bd4b",
+							foreground: "#ffffff"
+						},
+						secondary: {
+							DEFAULT: "#a855f7",
+							foreground: "#ffffff"
+						}
+					}
+				}
+			}
+		})
+	],
 } satisfies Config;
