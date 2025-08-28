@@ -11,7 +11,6 @@ import { ImpersonationBanner } from "@/components/ui/impersonation-banner";
 import { RoleRedirect } from "@/components/layout/RoleRedirect";
 import { GlobalNotifications } from "@/components/GlobalNotifications";
 import Purchases from "./pages/Purchases";
-
 import { PageFunctionStatusWrapper } from "@/components/layout/FunctionStatusWrapper";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -37,25 +36,23 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ModeratorDashboard from "./pages/ModeratorDashboard";
 import ModeratorAuth from "./pages/ModeratorAuth";
 import PublicRegistrationForm from "./pages/PublicRegistrationForm";
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
+      refetchOnWindowFocus: false
+    }
+  }
 });
-
 const AppContent = () => {
   useImpersonationSync();
-  
-  return (
-    <div className="flex flex-col min-h-screen">
+  return <div className="flex flex-col min-h-screen">
       <ImpersonationBanner />
       <GlobalNotifications />
       
-      <div className="flex-1" style={{ paddingTop: 'var(--impersonation-banner-height, 0px)' }}>
+      <div style={{
+      paddingTop: 'var(--impersonation-banner-height, 0px)'
+    }} className="flex-1 py-0">
         <RoleRedirect />
         <PageFunctionStatusWrapper>
           <Routes>
@@ -119,13 +116,10 @@ const AppContent = () => {
           </Routes>
         </PageFunctionStatusWrapper>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 const App = () => {
-  return (
-    <QueryClientProvider client={queryClient}>
+  return <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ImpersonationProvider>
           <LoginMessageProvider>
@@ -141,8 +135,6 @@ const App = () => {
       </LoginMessageProvider>
     </ImpersonationProvider>
   </AuthProvider>
-  </QueryClientProvider>
-);
+  </QueryClientProvider>;
 };
-
 export default App;
