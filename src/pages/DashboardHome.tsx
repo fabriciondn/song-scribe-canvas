@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Link } from 'react-router-dom';
 import { 
   Edit, 
@@ -10,10 +11,21 @@ import {
   Folder,
   Music,
   FileText,
-  Plus
+  TrendingUp,
+  Clock,
+  Star,
+  Award,
+  Eye,
+  EyeOff,
+  Settings
 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { CardSelector } from "@/components/dashboard/CardSelector";
+import { useDashboardCardSelection } from "@/hooks/useDashboardCardSelection";
+import { FeatureCarousel } from "@/components/dashboard/FeatureCarousel";
+import { TransactionCard } from "@/components/dashboard/TransactionCard";
+import { useUserCredits } from "@/hooks/useUserCredits";
 
 const DashboardHome = () => {
   const { profile } = useProfile();
@@ -22,200 +34,327 @@ const DashboardHome = () => {
     isLoading: statsLoading, 
     error: statsError 
   } = useDashboardStats();
+  const { credits } = useUserCredits();
+  
+  const {
+    expandedSections,
+    handleToggleSection,
+    isCardVisible
+  } = useDashboardCardSelection();
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Bom dia';
+    if (hour < 18) return 'Boa tarde';
+    return 'Boa noite';
+  };
 
   const displayName = profile?.name || profile?.artistic_name || 'Usuário';
 
-  if (statsLoading) {
-    return (
-      <div className="space-y-6">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} className="bg-card/50">
-            <CardContent className="p-6">
-              <div className="animate-pulse space-y-3">
-                <div className="h-4 bg-muted rounded w-1/3"></div>
-                <div className="h-8 bg-muted rounded w-1/2"></div>
-                <div className="h-3 bg-muted rounded w-full"></div>
+  const renderStatsCard = (
+    title: string,
+    value: number | string,
+    icon: React.ElementType,
+    color: string,
+    description: string
+  ) => (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">{title}</p>
+            <p className="text-2xl font-bold">{value}</p>
+            <p className="text-xs text-muted-foreground mt-1">{description}</p>
+          </div>
+          <div className={`p-3 rounded-lg ${color}`}>
+            {React.createElement(icon, { className: "h-6 w-6 text-white" })}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <div className="space-y-6 pb-20 md:pb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">
+            {getGreeting()}, {displayName}! 👋
+          </h1>
+          <p className="text-muted-foreground">
+            Bem-vindo ao seu painel de controle
+          </p>
+        </div>
+        <CardSelector 
+          expandedSections={expandedSections}
+          onToggleSection={handleToggleSection}
+        >
+          <Button variant="outline" size="sm">
+            <Settings className="h-4 w-4 mr-2" />
+            Personalizar Cards
+          </Button>
+        </CardSelector>
+      </div>
+
+      {/* Stats Overview */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {statsLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse space-y-3">
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                  <div className="h-8 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-muted rounded w-full"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : statsError ? (
+          <Card className="col-span-full">
+            <CardContent className="p-6 text-center text-muted-foreground">
+              Erro ao carregar estatísticas
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {renderStatsCard(
+              "Composições", 
+              stats?.totalSongs || 0, 
+              Music, 
+              "bg-blue-500",
+              "Total de obras criadas"
+            )}
+            {renderStatsCard(
+              "Parcerias", 
+              stats?.totalPartnerships || 0, 
+              Users, 
+              "bg-purple-500",
+              "Colaborações ativas"
+            )}
+            {renderStatsCard(
+              "Obras Registradas", 
+              stats?.totalRegisteredWorks || 0, 
+              Shield, 
+              "bg-green-500",
+              "Registros autorais"
+            )}
+            {renderStatsCard(
+              "Pastas", 
+              stats?.totalFolders || 0, 
+              Folder, 
+              "bg-yellow-500",
+              "Organização de conteúdo"
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Feature Carousel */}
+      <FeatureCarousel />
+
+      {/* Expanded Cards Section */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Composições Card */}
+        {isCardVisible('compositions') && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Edit className="h-5 w-5 text-blue-600" />
+                  <span>Minhas Composições</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleToggleSection('compositions')}
+                >
+                  <EyeOff className="h-4 w-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600">
+                    {stats?.totalSongs || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Composições criadas
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Este mês</span>
+                    <span>{stats?.songsThisMonth || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Total de visualizações</span>
+                    <span>{stats?.totalViews || 0}</span>
+                  </div>
+                </div>
+                <Link to="/composer">
+                  <Button className="w-full" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Nova Composição
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
-    );
-  }
+        )}
 
-  if (statsError) {
-    return (
-      <Card>
-        <CardContent className="p-6 text-center text-muted-foreground">
-          Erro ao carregar estatísticas do dashboard
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Resumo de Composições */}
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 rounded-lg bg-blue-500/10">
-              <Music className="h-6 w-6 text-blue-500" />
-            </div>
-            Resumo de Composições
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-foreground">
-                {stats?.compositions?.total || 0}
-              </div>
-              <p className="text-sm text-muted-foreground">Total de Letras</p>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-500">
-                {stats?.compositions?.finished || 0}
-              </div>
-              <p className="text-sm text-muted-foreground">Finalizadas</p>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-500">
-                {stats?.compositions?.drafts || 0}
-              </div>
-              <p className="text-sm text-muted-foreground">Rascunhos</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Link to="/composer" className="flex-1">
-              <Button className="w-full bg-blue-500 hover:bg-blue-600">
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Composição
-              </Button>
-            </Link>
-            <Link to="/drafts" className="flex-1">
-              <Button variant="outline" className="w-full">
-                <FileText className="h-4 w-4 mr-2" />
-                Ver Rascunhos
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Parcerias */}
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 rounded-lg bg-purple-500/10">
-              <Users className="h-6 w-6 text-purple-500" />
-            </div>
-            Parcerias
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold text-foreground">
-                {stats?.partnerships?.active || 0}
-              </div>
-              <p className="text-sm text-muted-foreground">Colaborações Ativas</p>
-            </div>
-            <div className="text-right">
-              <div className="text-lg font-semibold text-muted-foreground">
-                {stats?.partnerships?.recent?.length || 0}
-              </div>
-              <p className="text-sm text-muted-foreground">Recentes</p>
-            </div>
-          </div>
-          <Link to="/partnerships">
-            <Button className="w-full bg-purple-500 hover:bg-purple-600">
-              <Users className="h-4 w-4 mr-2" />
-              Gerenciar Parcerias
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
-
-      {/* Obras Registradas */}
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 rounded-lg bg-green-500/10">
-              <Shield className="h-6 w-6 text-green-500" />
-            </div>
-            Obras Registradas
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold text-foreground">
-                {stats?.registeredWorks?.total || 0}
-              </div>
-              <p className="text-sm text-muted-foreground">Obras Protegidas</p>
-            </div>
-            {stats?.registeredWorks?.lastRegistered && (
-              <div className="text-right">
-                <div className="text-sm font-medium text-foreground truncate max-w-[120px]">
-                  {stats.registeredWorks.lastRegistered.title}
+        {/* Parcerias Card */}
+        {isCardVisible('partnerships') && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  <span>Parcerias</span>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {stats.registeredWorks.lastRegistered.date}
-                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleToggleSection('partnerships')}
+                >
+                  <EyeOff className="h-4 w-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-600">
+                    {stats?.totalPartnerships || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Parcerias ativas
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Pendentes</span>
+                    <span>{stats?.pendingPartnerships || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Concluídas</span>
+                    <span>{stats?.completedPartnerships || 0}</span>
+                  </div>
+                </div>
+                <Link to="/partnerships">
+                  <Button className="w-full" size="sm">
+                    <Users className="h-4 w-4 mr-2" />
+                    Ver Parcerias
+                  </Button>
+                </Link>
               </div>
-            )}
-          </div>
-          <div className="flex gap-3">
-            <Link to="/dashboard/author-registration" className="flex-1">
-              <Button className="w-full bg-green-500 hover:bg-green-600">
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Registro
-              </Button>
-            </Link>
-            <Link to="/registered-works" className="flex-1">
-              <Button variant="outline" className="w-full">
-                <Shield className="h-4 w-4 mr-2" />
-                Ver Registros
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Organização de Pastas */}
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 rounded-lg bg-yellow-500/10">
-              <Folder className="h-6 w-6 text-yellow-500" />
-            </div>
-            Organização de Pastas
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold text-foreground">
-                {stats?.folders?.total || 0}
+        {/* Obras Registradas Card */}
+        {isCardVisible('registeredWorks') && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-green-600" />
+                  <span>Obras Registradas</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleToggleSection('registeredWorks')}
+                >
+                  <EyeOff className="h-4 w-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-600">
+                    {stats?.totalRegisteredWorks || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Registros autorais
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Em análise</span>
+                    <span>{stats?.pendingRegistrations || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Aprovados</span>
+                    <span>{stats?.approvedRegistrations || 0}</span>
+                  </div>
+                </div>
+                <Link to="/dashboard/author-registration">
+                  <Button className="w-full" size="sm">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Novo Registro
+                  </Button>
+                </Link>
               </div>
-              <p className="text-sm text-muted-foreground">Total de Pastas</p>
-            </div>
-            <div className="text-right">
-              <div className="text-lg font-semibold text-muted-foreground">
-                {stats?.folders?.breakdown?.length || 0}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Pastas Card */}
+        {isCardVisible('folders') && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Folder className="h-5 w-5 text-yellow-600" />
+                  <span>Organização</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleToggleSection('folders')}
+                >
+                  <EyeOff className="h-4 w-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-yellow-600">
+                    {stats?.totalFolders || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Pastas criadas
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Itens organizados</span>
+                    <span>{stats?.organizedItems || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Rascunhos</span>
+                    <span>{stats?.totalDrafts || 0}</span>
+                  </div>
+                </div>
+                <Link to="/folders">
+                  <Button className="w-full" size="sm">
+                    <Folder className="h-4 w-4 mr-2" />
+                    Gerenciar Pastas
+                  </Button>
+                </Link>
               </div>
-              <p className="text-sm text-muted-foreground">Com Conteúdo</p>
-            </div>
-          </div>
-          <Link to="/folders">
-            <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-black">
-              <Folder className="h-4 w-4 mr-2" />
-              Gerenciar Pastas
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Transaction Card */}
+      <TransactionCard credits={credits} />
     </div>
   );
 };
