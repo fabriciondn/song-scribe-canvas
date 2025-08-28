@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 
@@ -8,11 +8,27 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
+  const toggleCollapse = () => {
+    setIsSidebarCollapsed(prev => !prev);
+  };
+
   return (
     <div className="flex h-screen">
-      <Sidebar />
+      <Sidebar 
+        isOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        isCollapsed={isSidebarCollapsed}
+        toggleCollapse={toggleCollapse}
+      />
       <div className="flex-1 flex flex-col">
-        <Header />
+        <Header toggleSidebar={toggleSidebar} />
         <main className="flex-1 overflow-auto p-6">
           {children}
         </main>
