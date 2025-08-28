@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 
 const STORAGE_KEY = 'dashboard-card-selection';
@@ -17,7 +18,7 @@ export const useDashboardCardSelection = () => {
     }
   }, []);
 
-  const toggleSection = (section: string) => {
+  const handleToggleSection = (section: string) => {
     const newSections = expandedSections.includes(section) 
       ? expandedSections.filter(s => s !== section)
       : [...expandedSections, section];
@@ -29,9 +30,13 @@ export const useDashboardCardSelection = () => {
   const isExpanded = (section: string) => 
     expandedSections.includes('all') || expandedSections.includes(section);
 
+  const isCardVisible = (section: string) => 
+    expandedSections.includes('all') || expandedSections.includes(section);
+
   return {
     expandedSections,
-    toggleSection,
+    handleToggleSection,
+    isCardVisible,
     isExpanded
   };
 };
