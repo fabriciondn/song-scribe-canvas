@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -20,14 +21,16 @@ const Dashboard: React.FC = () => {
   const { userRole, isRoleLoading } = useRoleBasedNavigation();
   const { isImpersonating } = useImpersonation();
   const { isMobile } = useMobileDetection();
-  const { reportAuthIssue } = useRegionalAuth();
+  const { reportAuthIssue } = useRegionalAuth(); // Monitor de problemas regionais
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // Usar o hook para sincronizar impersonação entre abas
   useImpersonationSync();
 
   console.log('🏠 Dashboard - Role check:', { userRole, isRoleLoading });
 
+  // Redirecionar moderador para /moderator após login
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       navigate('/', { replace: true });
@@ -64,6 +67,7 @@ const Dashboard: React.FC = () => {
     return null;
   }
 
+  // Layout mobile otimizado
   if (isMobile) {
     return (
       <MobileLayout toggleSidebar={toggleSidebar}>
@@ -75,6 +79,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  // Layout desktop
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header toggleSidebar={toggleSidebar} />
@@ -88,7 +93,7 @@ const Dashboard: React.FC = () => {
         />
         
         <main className={cn(
-          "flex-1 p-4 transition-all duration-200 overflow-y-auto",
+          "flex-1 p-6 transition-all duration-200 overflow-y-auto",
           isSidebarOpen && !isSidebarCollapsed && "lg:pl-64",
           isSidebarOpen && isSidebarCollapsed && "lg:pl-16"
         )}>

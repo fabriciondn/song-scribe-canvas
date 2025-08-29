@@ -1,9 +1,8 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, LoginMessageProvider } from "./context/AuthContext";
 import { ImpersonationProvider } from "./context/ImpersonationContext";
 import { useImpersonationSync } from "./hooks/useImpersonationSync";
@@ -12,6 +11,7 @@ import { ImpersonationBanner } from "@/components/ui/impersonation-banner";
 import { RoleRedirect } from "@/components/layout/RoleRedirect";
 import { GlobalNotifications } from "@/components/GlobalNotifications";
 import Purchases from "./pages/Purchases";
+
 import { PageFunctionStatusWrapper } from "@/components/layout/FunctionStatusWrapper";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -42,9 +42,9 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      refetchOnWindowFocus: false
-    }
-  }
+      refetchOnWindowFocus: false,
+    },
+  },
 });
 
 const AppContent = () => {
@@ -55,9 +55,7 @@ const AppContent = () => {
       <ImpersonationBanner />
       <GlobalNotifications />
       
-      <div style={{
-        paddingTop: 'var(--impersonation-banner-height, 0px)'
-      }} className="flex-1 py-0">
+      <div className="flex-1" style={{ paddingTop: 'var(--impersonation-banner-height, 0px)' }}>
         <RoleRedirect />
         <PageFunctionStatusWrapper>
           <Routes>
@@ -132,17 +130,19 @@ const App = () => {
         <ImpersonationProvider>
           <LoginMessageProvider>
             <NotificationProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <AppContent />
-              </TooltipProvider>
-            </NotificationProvider>
-          </LoginMessageProvider>
-        </ImpersonationProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  );
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </TooltipProvider>
+        </NotificationProvider>
+      </LoginMessageProvider>
+    </ImpersonationProvider>
+  </AuthProvider>
+  </QueryClientProvider>
+);
 };
 
 export default App;

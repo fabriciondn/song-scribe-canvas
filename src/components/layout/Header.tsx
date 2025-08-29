@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useTheme } from '@/hooks/useTheme';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useUserRole } from '@/hooks/useUserRole'; // Hook unificado
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, LogOut, Home, CreditCard, Plus, Moon, Sun, Shield, Settings } from 'lucide-react';
 
@@ -21,19 +22,22 @@ export const Header = ({
   const { profile } = useProfile();
   const { credits, refreshCredits } = useUserCredits();
   const { theme, toggleTheme } = useTheme();
+  
+  // Usar apenas o hook unificado para evitar conflitos
   const { isAdmin, isModerator, role, isLoading: roleLoading } = useUserRole();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
+  
   // Adicionar listener para mudanças nos créditos via window events
   useEffect(() => {
     const handleCreditsUpdate = () => {
       console.log('🔄 Evento de atualização de créditos detectado');
       refreshCredits();
     };
+    
     window.addEventListener('credits-updated', handleCreditsUpdate);
     return () => window.removeEventListener('credits-updated', handleCreditsUpdate);
   }, [refreshCredits]);
-
+  
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
@@ -46,6 +50,7 @@ export const Header = ({
   };
 
   const handleDashboardClick = () => {
+    // Navegação baseada no role atual
     if (isAdmin) {
       navigate('/admin');
     } else if (isModerator) {
@@ -55,58 +60,66 @@ export const Header = ({
     }
   };
 
+  // Determinar qual dashboard mostrar no menu - com fallback para evitar flickering
   const getDashboardMenuItem = () => {
     if (roleLoading) {
-      return { icon: Home, text: 'Dashboard' };
+      return {
+        icon: Home,
+        text: 'Dashboard'
+      };
     }
+
     if (isAdmin) {
-      return { icon: Settings, text: 'Painel Admin' };
+      return {
+        icon: Settings,
+        text: 'Painel Admin'
+      };
     }
+
     if (isModerator) {
-      return { icon: Shield, text: 'Painel Moderador' };
+      return {
+        icon: Shield,
+        text: 'Painel Moderador'
+      };
     }
-    return { icon: Home, text: 'Dashboard' };
+
+    return {
+      icon: Home,
+      text: 'Dashboard'
+    };
   };
 
   const dashboardMenuItem = getDashboardMenuItem();
 
   return (
-    <header className="bg-background border-b border-border flex items-center justify-between px-4 py-2 h-14">
-      <div className="flex items-center flex-1">
+    <header className="bg-background border-b border-border py-2 px-6 flex items-center justify-between">
+      <div className="flex items-center flex-1 mx-[68px]">
         <Button variant="ghost" size="icon" className="mr-2 lg:hidden" onClick={toggleSidebar}>
           <Menu className="h-5 w-5" />
         </Button>
-        <Link to="/" className="flex items-center gap-2 mr-8">
+        <Link to="/" className="flex items-center gap-2 mr-12">
           <img 
-            src={theme === 'dark' 
-              ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" 
-              : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"
-            } 
+            src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} 
             alt="Logo" 
-            className="h-8" 
+            className="h-9" 
           />
         </Link>
       </div>
       
       {user ? (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Theme toggle */}
-          <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
+          <Button variant="ghost" size="icon" onClick={toggleTheme} className="mr-2">
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
 
           {/* Exibição dos créditos */}
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+            <Badge variant="secondary" className="flex items-center gap-1">
               <CreditCard className="h-3 w-3" />
               {credits || 0} créditos
             </Badge>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="h-8 px-2 text-xs" 
-              onClick={() => navigate('/credits-checkout')}
-            >
+            <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => navigate('/credits-checkout')}>
               <Plus className="h-3 w-3 mr-1" />
               Adicionar
             </Button>
@@ -115,9 +128,9 @@ export const Header = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-9 w-9">
                   <AvatarImage src={profile?.avatar_url || ""} alt={profile?.name || user.email || "User"} />
-                  <AvatarFallback className="text-xs">
+                  <AvatarFallback>
                     {profile?.name ? profile.name.charAt(0).toUpperCase() : user.email ? user.email.charAt(0).toUpperCase() : "U"}
                   </AvatarFallback>
                 </Avatar>
@@ -136,6 +149,7 @@ export const Header = ({
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               
+              {/* Dashboard navigation based on role - sempre disponível */}
               <DropdownMenuItem onClick={handleDashboardClick}>
                 <dashboardMenuItem.icon className="mr-2 h-4 w-4" />
                 <span>{dashboardMenuItem.text}</span>
