@@ -92,7 +92,7 @@ export const Header = ({
   const dashboardMenuItem = getDashboardMenuItem();
 
   return (
-    <header className="bg-background border-b border-border py-2 px-6 flex items-center justify-between">
+    <header className="bg-background border-b border-border py-3 px-6 flex items-center justify-between">
       <div className="flex items-center flex-1 mx-[68px]">
         <Button variant="ghost" size="icon" className="mr-2 lg:hidden" onClick={toggleSidebar}>
           <Menu className="h-5 w-5" />

@@ -190,7 +190,6 @@ export type Database = {
           credits_purchased: number
           id: string
           payment_id: string | null
-          payment_provider: string
           status: string
           total_amount: number
           unit_price: number
@@ -204,7 +203,6 @@ export type Database = {
           credits_purchased: number
           id?: string
           payment_id?: string | null
-          payment_provider?: string
           status?: string
           total_amount: number
           unit_price: number
@@ -218,7 +216,6 @@ export type Database = {
           credits_purchased?: number
           id?: string
           payment_id?: string | null
-          payment_provider?: string
           status?: string
           total_amount?: number
           unit_price?: number
