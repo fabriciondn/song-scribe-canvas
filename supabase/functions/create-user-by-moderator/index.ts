@@ -27,9 +27,10 @@ Deno.serve(async (req) => {
 
     // Obter o token de autenticação do header
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('❌ Token de autorização inválido ou ausente');
       return new Response(
-        JSON.stringify({ error: 'Token de autorização não encontrado' }),
+        JSON.stringify({ error: 'Token de autorização não encontrado ou inválido' }),
         { 
           status: 401, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -37,21 +38,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verificar se o usuário atual é um moderador
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
+    const token = authHeader.replace('Bearer ', '');
+    console.log('🔍 Verificando token de usuário...');
+
+    // Verificar se o usuário atual é um moderador usando o token
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
 
     if (userError || !user) {
-      console.error('❌ Erro ao verificar usuário:', userError);
+      console.error('❌ Erro ao verificar usuário:', userError?.message || 'Usuário não encontrado');
       return new Response(
-        JSON.stringify({ error: 'Token inválido' }),
+        JSON.stringify({ error: 'Token inválido ou expirado' }),
         { 
           status: 401, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
+
+    console.log('✅ Usuário autenticado:', user.id);
 
     // Verificar se o usuário é um moderador
     const { data: moderatorCheck, error: moderatorError } = await supabaseAdmin
@@ -62,7 +66,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (moderatorError || !moderatorCheck) {
-      console.error('❌ Erro ao verificar moderador:', moderatorError);
+      console.error('❌ Erro ao verificar moderador:', moderatorError?.message || 'Usuário não é moderador');
       return new Response(
         JSON.stringify({ error: 'Acesso negado. Privilégios de moderador necessários.' }),
         { 
@@ -72,10 +76,14 @@ Deno.serve(async (req) => {
       );
     }
 
+    console.log('✅ Usuário confirmado como moderador');
+
     // Obter dados do body da requisição
-    const { name, email, password, artistic_name } = await req.json();
+    const requestBody = await req.json();
+    const { name, email, password, artistic_name } = requestBody;
 
     if (!name || !email || !password) {
+      console.error('❌ Dados obrigatórios ausentes');
       return new Response(
         JSON.stringify({ error: 'Nome, email e senha são obrigatórios' }),
         { 
@@ -88,10 +96,10 @@ Deno.serve(async (req) => {
     console.log('🔧 Criando usuário:', { name, email });
 
     // Verificar se email já existe antes de tentar criar
-    const { data: existingUser, error: checkError } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: existingUsers, error: checkError } = await supabaseAdmin.auth.admin.listUsers();
     
     if (checkError) {
-      console.error('❌ Erro ao verificar usuários existentes:', checkError);
+      console.error('❌ Erro ao verificar usuários existentes:', checkError.message);
       return new Response(
         JSON.stringify({ error: 'Erro interno ao verificar usuários' }),
         { 
@@ -101,7 +109,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const emailExists = existingUser.users.some(u => u.email === email);
+    const emailExists = existingUsers.users.some(u => u.email === email);
     if (emailExists) {
       console.log('⚠️ Email já existe:', email);
       return new Response(
@@ -125,7 +133,7 @@ Deno.serve(async (req) => {
     });
 
     if (authError) {
-      console.error('❌ Erro ao criar usuário no Auth:', authError);
+      console.error('❌ Erro ao criar usuário no Auth:', authError.message);
       
       // Tratar erro de email já existente
       if (authError.message?.includes('already been registered')) {
@@ -172,7 +180,7 @@ Deno.serve(async (req) => {
       });
 
     if (profileError) {
-      console.error('❌ Erro ao criar perfil:', profileError);
+      console.error('❌ Erro ao criar perfil:', profileError.message);
       
       // Reverter criação do usuário se o perfil falhar
       try {
@@ -202,7 +210,7 @@ Deno.serve(async (req) => {
       });
 
     if (moderatorUserError) {
-      console.error('❌ Erro ao registrar usuário criado por moderador:', moderatorUserError);
+      console.error('❌ Erro ao registrar usuário criado por moderador:', moderatorUserError.message);
       
       // Não reverter a criação por esse erro, apenas logar
       console.log('⚠️ Usuário criado mas não registrado como criado por moderador');
@@ -241,7 +249,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('❌ Erro geral:', error);
+    console.error('❌ Erro geral:', error.message || error);
     return new Response(
       JSON.stringify({ error: 'Erro interno do servidor' }),
       { 

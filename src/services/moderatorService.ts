@@ -159,8 +159,19 @@ export const createUserForModerator = async (userData: {
 }): Promise<{ userId: string }> => {
   console.log('🔧 Criando usuário via edge function:', userData.email);
   
+  // Obter o token de acesso da sessão atual
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError || !session?.access_token) {
+    console.error('❌ Erro ao obter sessão:', sessionError);
+    throw new Error('Erro de autenticação. Faça login novamente.');
+  }
+
   const { data, error } = await supabase.functions.invoke('create-user-by-moderator', {
-    body: userData
+    body: userData,
+    headers: {
+      Authorization: `Bearer ${session.access_token}`
+    }
   });
 
   if (error) {
