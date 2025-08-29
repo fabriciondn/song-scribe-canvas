@@ -23,7 +23,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { CardSelector } from "@/components/dashboard/CardSelector";
 import { useDashboardCardSelection } from "@/hooks/useDashboardCardSelection";
-import { FeatureCarousel } from "@/components/dashboard/FeatureCarousel";
+import FeatureCarousel from "@/components/dashboard/FeatureCarousel";
 import { TransactionCard } from "@/components/dashboard/TransactionCard";
 import { useUserCredits } from "@/hooks/useUserCredits";
 
@@ -121,28 +121,28 @@ const DashboardHome = () => {
           <>
             {renderStatsCard(
               "Composições", 
-              stats?.totalSongs || 0, 
+              stats?.compositions?.total || 0, 
               Music, 
               "bg-blue-500",
               "Total de obras criadas"
             )}
             {renderStatsCard(
               "Parcerias", 
-              stats?.totalPartnerships || 0, 
+              stats?.partnerships?.active || 0, 
               Users, 
               "bg-purple-500",
               "Colaborações ativas"
             )}
             {renderStatsCard(
               "Obras Registradas", 
-              stats?.totalRegisteredWorks || 0, 
+              stats?.registeredWorks?.total || 0, 
               Shield, 
               "bg-green-500",
               "Registros autorais"
             )}
             {renderStatsCard(
               "Pastas", 
-              stats?.totalFolders || 0, 
+              stats?.folders?.total || 0, 
               Folder, 
               "bg-yellow-500",
               "Organização de conteúdo"
@@ -178,7 +178,7 @@ const DashboardHome = () => {
               <div className="space-y-4">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-blue-600">
-                    {stats?.totalSongs || 0}
+                    {stats?.compositions?.total || 0}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Composições criadas
@@ -186,12 +186,12 @@ const DashboardHome = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Este mês</span>
-                    <span>{stats?.songsThisMonth || 0}</span>
+                    <span>Finalizadas</span>
+                    <span>{stats?.compositions?.finished || 0}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Total de visualizações</span>
-                    <span>{stats?.totalViews || 0}</span>
+                    <span>Rascunhos</span>
+                    <span>{stats?.compositions?.drafts || 0}</span>
                   </div>
                 </div>
                 <Link to="/composer">
@@ -227,7 +227,7 @@ const DashboardHome = () => {
               <div className="space-y-4">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-purple-600">
-                    {stats?.totalPartnerships || 0}
+                    {stats?.partnerships?.active || 0}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Parcerias ativas
@@ -235,12 +235,8 @@ const DashboardHome = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Pendentes</span>
-                    <span>{stats?.pendingPartnerships || 0}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Concluídas</span>
-                    <span>{stats?.completedPartnerships || 0}</span>
+                    <span>Colaboradores</span>
+                    <span>{stats?.partnerships?.recent?.length || 0}</span>
                   </div>
                 </div>
                 <Link to="/partnerships">
@@ -276,21 +272,19 @@ const DashboardHome = () => {
               <div className="space-y-4">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-green-600">
-                    {stats?.totalRegisteredWorks || 0}
+                    {stats?.registeredWorks?.total || 0}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Registros autorais
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Em análise</span>
-                    <span>{stats?.pendingRegistrations || 0}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Aprovados</span>
-                    <span>{stats?.approvedRegistrations || 0}</span>
-                  </div>
+                  {stats?.registeredWorks?.lastRegistered && (
+                    <div className="flex justify-between text-sm">
+                      <span>Último registro</span>
+                      <span>{stats.registeredWorks.lastRegistered.date}</span>
+                    </div>
+                  )}
                 </div>
                 <Link to="/dashboard/author-registration">
                   <Button className="w-full" size="sm">
@@ -325,7 +319,7 @@ const DashboardHome = () => {
               <div className="space-y-4">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-yellow-600">
-                    {stats?.totalFolders || 0}
+                    {stats?.folders?.total || 0}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Pastas criadas
@@ -333,12 +327,8 @@ const DashboardHome = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Itens organizados</span>
-                    <span>{stats?.organizedItems || 0}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Rascunhos</span>
-                    <span>{stats?.totalDrafts || 0}</span>
+                    <span>Estrutura</span>
+                    <span>{stats?.folders?.breakdown?.length || 0} categorias</span>
                   </div>
                 </div>
                 <Link to="/folders">
@@ -354,7 +344,7 @@ const DashboardHome = () => {
       </div>
 
       {/* Transaction Card */}
-      <TransactionCard credits={credits} />
+      <TransactionCard />
     </div>
   );
 };
