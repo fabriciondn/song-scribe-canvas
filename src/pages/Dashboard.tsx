@@ -82,7 +82,11 @@ const Dashboard: React.FC = () => {
   // Layout desktop com header fixo
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header toggleSidebar={toggleSidebar} />
+      <Header 
+        toggleSidebar={toggleSidebar} 
+        isSidebarOpen={isSidebarOpen}
+        isSidebarCollapsed={isSidebarCollapsed}
+      />
       
       <div className="flex flex-1 pt-16 overflow-hidden">
         <Sidebar 

@@ -12,11 +12,17 @@ import { useUserRole } from '@/hooks/useUserRole'; // Hook unificado
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, LogOut, Home, CreditCard, Plus, Moon, Sun, Shield, Settings } from 'lucide-react';
 
-export const Header = ({
-  toggleSidebar
-}: {
+interface HeaderProps {
   toggleSidebar: () => void;
-}) => {
+  isSidebarOpen?: boolean;
+  isSidebarCollapsed?: boolean;
+}
+
+export const Header = ({
+  toggleSidebar,
+  isSidebarOpen = true,
+  isSidebarCollapsed = false
+}: HeaderProps) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { profile } = useProfile();
@@ -91,19 +97,24 @@ export const Header = ({
 
   const dashboardMenuItem = getDashboardMenuItem();
 
+  // Determinar se deve mostrar o logo baseado no estado do sidebar
+  const shouldShowLogo = isSidebarCollapsed || !isSidebarOpen;
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border py-3 px-6 flex items-center justify-between">
       <div className="flex items-center flex-1 mx-[68px]">
         <Button variant="ghost" size="icon" className="mr-2 lg:hidden" onClick={toggleSidebar}>
           <Menu className="h-5 w-5" />
         </Button>
-        <Link to="/" className="flex items-center gap-2 mr-12">
-          <img 
-            src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} 
-            alt="Logo" 
-            className="h-9" 
-          />
-        </Link>
+        {shouldShowLogo && (
+          <Link to="/" className="flex items-center gap-2 mr-12">
+            <img 
+              src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} 
+              alt="Logo" 
+              className="h-9" 
+            />
+          </Link>
+        )}
       </div>
       
       {user ? (
