@@ -42,23 +42,23 @@ export default function CreditsCheckout() {
   }, [theme]);
 
   const calculatePricing = (creditAmount: number) => {
-    let unitPrice = 1.00; // Temporarily changed from 30.00 to 1.00 for testing
+    let unitPrice = 1.00;
     let bonusCredits = 0;
     let savings = 0;
 
     // Promoção de 10 créditos
     if (creditAmount === 10) {
-      unitPrice = 1.00; // Temporarily changed from 25.00 to 1.00 for testing
+      unitPrice = 1.00;
       bonusCredits = 2;
-      savings = (1 - 1) * 10 + 2 * 1; // Adjusted for new price
+      savings = (1 - 1) * 10 + 2 * 1;
     // Promoção de 5 créditos
     } else if (creditAmount === 5) {
-      unitPrice = 1.00; // Temporarily changed from 25.00 to 1.00 for testing
-      savings = (1 - 1) * 5; // Adjusted for new price
+      unitPrice = 1.00;
+      savings = (1 - 1) * 5;
     }
 
     let totalAmount = creditAmount * unitPrice;
-    let originalPrice = 1 * creditAmount; // Adjusted for new price
+    let originalPrice = 1 * creditAmount;
 
     return {
       unitPrice,
@@ -121,19 +121,28 @@ export default function CreditsCheckout() {
       console.log('📡 Resposta da Edge Function (Mercado Pago):', { data, error });
 
       if (error) {
-        let errorMsg = error.message || error.error_description || error.error || 'Não foi possível processar o pagamento.';
+        console.error('❌ Erro na Edge Function:', error);
         
-        try {
-          const parsed = JSON.parse(errorMsg);
-          if (parsed?.error) errorMsg = parsed.error;
-        } catch {}
-
-        if (error.context && error.context.response && error.context.response.body) {
+        let errorMsg = 'Não foi possível processar o pagamento.';
+        
+        // Tentar extrair erro mais específico
+        if (error.message) {
+          errorMsg = error.message;
+        }
+        
+        // Se há contexto de resposta, tentar extrair erro do backend
+        if (error.context?.response?.body) {
           try {
-            const backend = JSON.parse(error.context.response.body);
-            if (backend?.error) errorMsg = backend.error;
-            else if (backend?.message) errorMsg = backend.message;
-          } catch {}
+            const responseBody = typeof error.context.response.body === 'string' 
+              ? JSON.parse(error.context.response.body) 
+              : error.context.response.body;
+            
+            if (responseBody?.error) {
+              errorMsg = responseBody.error;
+            }
+          } catch (parseError) {
+            console.error('Erro ao parsear resposta:', parseError);
+          }
         }
 
         toast({
@@ -144,10 +153,10 @@ export default function CreditsCheckout() {
         return;
       }
 
-      if (data?.qr_code && data?.payment_id) {
+      if (data?.success && data?.qr_code && data?.payment_id) {
         setPixData({
           qr_code: data.qr_code,
-          qr_code_url: data.qr_code_url,
+          qr_code_url: data.qr_code_url || '',
           payment_id: data.payment_id
         });
         setShowQRCode(true);
@@ -156,6 +165,7 @@ export default function CreditsCheckout() {
           description: "Use o QR Code para realizar o pagamento via Mercado Pago."
         });
       } else {
+        console.error('❌ Resposta inválida:', data);
         toast({
           title: "Erro na Resposta",
           description: "Resposta inválida do servidor. Tente novamente.",
@@ -200,7 +210,7 @@ export default function CreditsCheckout() {
         if (typeof loadProfile === 'function') {
           setTimeout(() => {
             loadProfile();
-          }, 500); // pequeno delay para garantir update no backend
+          }, 500);
         }
 
         toast({
@@ -304,9 +314,11 @@ export default function CreditsCheckout() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex flex-col items-center space-y-4">
-                <div className="bg-white p-4 rounded-lg">
-                  <img src={pixData.qr_code_url} alt="QR Code PIX" className="w-64 h-64" />
-                </div>
+                {pixData.qr_code_url && (
+                  <div className="bg-white p-4 rounded-lg">
+                    <img src={pixData.qr_code_url} alt="QR Code PIX" className="w-64 h-64" />
+                  </div>
+                )}
                 <div className="w-full">
                   <Label htmlFor="pix-code">Código PIX</Label>
                   <div className="flex gap-2 mt-1">

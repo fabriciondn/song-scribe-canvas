@@ -82,48 +82,77 @@ serve(async (req) => {
 
     console.log('🔄 Criando pagamento PIX no Mercado Pago...');
     
+    // Limpar e validar CPF
+    const cleanCpf = customerData.cpf.replace(/\D/g, '');
+    if (cleanCpf.length !== 11) {
+      throw new Error("CPF deve ter 11 dígitos");
+    }
+
     // Preparar dados para o Mercado Pago
-    const [firstName, ...lastNameParts] = customerData.name.split(' ');
-    const lastName = lastNameParts.join(' ') || firstName;
+    const [firstName, ...lastNameParts] = customerData.name.trim().split(' ');
+    const lastName = lastNameParts.length > 0 ? lastNameParts.join(' ') : firstName;
     
     const mercadoPagoPayload = {
-      transaction_amount: totalAmount,
+      transaction_amount: Number(totalAmount),
       description: `${credits} Crédito${credits > 1 ? 's' : ''} - Sistema Compuse`,
       payment_method_id: "pix",
       payer: {
-        email: customerData.email,
-        first_name: firstName,
-        last_name: lastName,
+        email: customerData.email.trim(),
+        first_name: firstName.substring(0, 30), // Limite do MP
+        last_name: lastName.substring(0, 30), // Limite do MP
         identification: {
           type: "CPF",
-          number: customerData.cpf.replace(/\D/g, '')
+          number: cleanCpf
         }
       },
-      notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`
+      notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`,
+      external_reference: `compuse_${user.id}_${Date.now()}`
     };
 
-    console.log('📡 Enviando para Mercado Pago:', mercadoPagoPayload);
+    console.log('📡 Enviando para Mercado Pago:', {
+      ...mercadoPagoPayload,
+      payer: {
+        ...mercadoPagoPayload.payer,
+        identification: { type: "CPF", number: "***masked***" }
+      }
+    });
 
     const mercadoPagoResponse = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${mercadoPagoAccessToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Idempotency-Key': `compuse_${user.id}_${Date.now()}`
       },
       body: JSON.stringify(mercadoPagoPayload)
     });
 
     const mercadoPagoData = await mercadoPagoResponse.json();
-    console.log('📡 Resposta do Mercado Pago:', mercadoPagoData);
+    console.log('📡 Resposta do Mercado Pago:', {
+      status: mercadoPagoResponse.status,
+      id: mercadoPagoData.id,
+      status_detail: mercadoPagoData.status_detail,
+      point_of_interaction: !!mercadoPagoData.point_of_interaction
+    });
 
     if (!mercadoPagoResponse.ok) {
       console.error('❌ Erro no Mercado Pago:', mercadoPagoData);
+      
+      // Mapear erros específicos do Mercado Pago
+      let errorMessage = 'Erro ao processar pagamento';
+      if (mercadoPagoData.message) {
+        errorMessage = mercadoPagoData.message;
+      } else if (mercadoPagoData.cause && mercadoPagoData.cause.length > 0) {
+        errorMessage = mercadoPagoData.cause[0].description || errorMessage;
+      }
+      
       return new Response(
         JSON.stringify({ 
-          error: mercadoPagoData.message || mercadoPagoData.error || 'Erro ao processar pagamento' 
+          error: errorMessage,
+          details: mercadoPagoData
         }),
         { 
-          status: mercadoPagoResponse.status, 
+          status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -157,19 +186,24 @@ serve(async (req) => {
     const qrCodeBase64 = mercadoPagoData.point_of_interaction?.transaction_data?.qr_code_base64;
 
     if (!qrCodeData) {
+      console.error('❌ QR Code não encontrado na resposta:', mercadoPagoData);
       throw new Error('QR Code não gerado pelo Mercado Pago');
     }
 
+    console.log('✅ Pagamento criado com sucesso:', mercadoPagoData.id);
+
     return new Response(
       JSON.stringify({
+        success: true,
         payment_id: mercadoPagoData.id.toString(),
         qr_code: qrCodeData,
-        qr_code_url: `data:image/png;base64,${qrCodeBase64}`,
+        qr_code_url: qrCodeBase64 ? `data:image/png;base64,${qrCodeBase64}` : null,
         amount: totalAmount,
         credits,
         bonusCredits,
         finalCredits: credits + bonusCredits,
-        provider: 'mercadopago'
+        provider: 'mercadopago',
+        status: mercadoPagoData.status
       }),
       { 
         status: 200, 
@@ -181,7 +215,8 @@ serve(async (req) => {
     console.error('❌ Function error:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Internal server error'
+        error: error.message || 'Internal server error',
+        details: error
       }),
       {
         headers: { 
