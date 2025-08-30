@@ -126,6 +126,7 @@ export const AdminUsers = () => {
           setIsUserModalOpen(false);
           setSelectedUser(null);
         }}
+        onUserUpdate={refetch}
       />
 
       {/* Lista de usuários */}

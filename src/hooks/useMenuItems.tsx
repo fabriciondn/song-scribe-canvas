@@ -80,7 +80,7 @@ export const useMenuItems = () => {
         isPro: true
       },
       {
-  label: 'Rascunho',
+        label: 'Rascunho',
         icon: BookText,
         path: '/drafts',
         functionKey: 'drafts',
@@ -133,7 +133,7 @@ export const useMenuItems = () => {
         icon: Shield,
         path: '/moderator',
         functionKey: 'moderator',
-        iPro: false
+        isPro: false
       }
     ];
 
