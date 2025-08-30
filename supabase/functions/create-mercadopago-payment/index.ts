@@ -1,4 +1,5 @@
 
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -137,7 +138,8 @@ serve(async (req) => {
     const envVars = Object.keys(Deno.env.toObject());
     console.log('📊 Variáveis de ambiente disponíveis:', envVars);
     
-    const mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
+    // CORREÇÃO: Usar let ao invés de const para permitir reatribuição
+    let mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
     
     if (!mercadoPagoAccessToken) {
       console.error('❌ MERCADO_PAGO_ACCESS_TOKEN não encontrado');
@@ -145,23 +147,21 @@ serve(async (req) => {
       
       // Tentar outras possíveis variações do nome
       const possibleNames = [
-        "MERCADO_PAGO_ACCESS_TOKEN",
         "MERCADOPAGO_ACCESS_TOKEN", 
         "MP_ACCESS_TOKEN",
         "Access Token mercado pago"
       ];
       
-      let foundToken = null;
       for (const name of possibleNames) {
         const token = Deno.env.get(name);
         if (token) {
           console.log(`✅ Token encontrado com nome: ${name}`);
-          foundToken = token;
+          mercadoPagoAccessToken = token;
           break;
         }
       }
       
-      if (!foundToken) {
+      if (!mercadoPagoAccessToken) {
         console.error('❌ Nenhum token do Mercado Pago encontrado em nenhuma variação');
         return new Response(
           JSON.stringify({ 
@@ -171,9 +171,6 @@ serve(async (req) => {
           { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      
-      // Usar o token encontrado
-      mercadoPagoAccessToken = foundToken;
     }
 
     console.log('✅ Token do Mercado Pago encontrado');
@@ -385,3 +382,4 @@ serve(async (req) => {
     );
   }
 });
+
