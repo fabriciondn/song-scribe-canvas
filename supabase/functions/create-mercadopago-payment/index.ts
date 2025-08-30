@@ -41,6 +41,7 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.error('❌ Authorization header missing');
       throw new Error("Authorization header is required");
     }
 
@@ -56,6 +57,12 @@ serve(async (req) => {
     console.log('✅ User authenticated:', user.id);
 
     const body: CreditPaymentRequest = await req.json();
+    console.log('📥 Request body received:', {
+      credits: body.credits,
+      totalAmount: body.totalAmount,
+      hasCustomerData: !!body.customerData
+    });
+
     const { credits, bonusCredits, unitPrice, totalAmount, customerData } = body;
 
     console.log('💳 Payment details:', {
@@ -66,18 +73,43 @@ serve(async (req) => {
       totalAmount
     });
 
-    if (!credits || credits < 1 || !totalAmount || totalAmount < 0) {
-      throw new Error("Invalid payment details");
+    // Validação básica dos dados de pagamento
+    if (!credits || credits < 1) {
+      console.error('❌ Invalid credits:', credits);
+      throw new Error("Quantidade de créditos inválida");
     }
 
+    if (!totalAmount || totalAmount <= 0) {
+      console.error('❌ Invalid total amount:', totalAmount);
+      throw new Error("Valor total inválido");
+    }
+
+    // Verificar token do Mercado Pago
     const mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
     if (!mercadoPagoAccessToken) {
       console.error('❌ Missing MERCADO_PAGO_ACCESS_TOKEN');
       throw new Error("Erro de configuração do serviço de pagamento. Contate o administrador.");
     }
 
-    if (!customerData || !customerData.cpf || !customerData.name || !customerData.email) {
-      throw new Error("Nome, email e CPF são obrigatórios para gerar o pagamento.");
+    // Validação dos dados do cliente (mais flexível)
+    if (!customerData) {
+      console.error('❌ Customer data missing');
+      throw new Error("Dados do cliente são obrigatórios");
+    }
+
+    if (!customerData.name || customerData.name.trim().length === 0) {
+      console.error('❌ Customer name missing or empty');
+      throw new Error("Nome é obrigatório");
+    }
+
+    if (!customerData.email || customerData.email.trim().length === 0) {
+      console.error('❌ Customer email missing or empty');
+      throw new Error("Email é obrigatório");
+    }
+
+    if (!customerData.cpf || customerData.cpf.trim().length === 0) {
+      console.error('❌ Customer CPF missing or empty');
+      throw new Error("CPF é obrigatório");
     }
 
     console.log('🔄 Criando pagamento PIX no Mercado Pago...');
@@ -85,6 +117,7 @@ serve(async (req) => {
     // Limpar e validar CPF
     const cleanCpf = customerData.cpf.replace(/\D/g, '');
     if (cleanCpf.length !== 11) {
+      console.error('❌ Invalid CPF length:', cleanCpf.length);
       throw new Error("CPF deve ter 11 dígitos");
     }
 
@@ -92,6 +125,16 @@ serve(async (req) => {
     const [firstName, ...lastNameParts] = customerData.name.trim().split(' ');
     const lastName = lastNameParts.length > 0 ? lastNameParts.join(' ') : firstName;
     
+    // Telefone opcional - usar um padrão se não fornecido
+    const phone = customerData.phone && customerData.phone.trim() !== '' 
+      ? customerData.phone.replace(/\D/g, '') 
+      : '11999999999'; // telefone padrão se não fornecido
+
+    console.log('📱 Phone processed:', { 
+      original: customerData.phone, 
+      processed: phone 
+    });
+
     const mercadoPagoPayload = {
       transaction_amount: Number(totalAmount),
       description: `${credits} Crédito${credits > 1 ? 's' : ''} - Sistema Compuse`,
@@ -110,11 +153,11 @@ serve(async (req) => {
     };
 
     console.log('📡 Enviando para Mercado Pago:', {
-      ...mercadoPagoPayload,
-      payer: {
-        ...mercadoPagoPayload.payer,
-        identification: { type: "CPF", number: "***masked***" }
-      }
+      transaction_amount: mercadoPagoPayload.transaction_amount,
+      description: mercadoPagoPayload.description,
+      payer_email: mercadoPagoPayload.payer.email,
+      payer_name: `${mercadoPagoPayload.payer.first_name} ${mercadoPagoPayload.payer.last_name}`,
+      external_reference: mercadoPagoPayload.external_reference
     });
 
     const mercadoPagoResponse = await fetch('https://api.mercadopago.com/v1/payments', {
@@ -130,13 +173,18 @@ serve(async (req) => {
     const mercadoPagoData = await mercadoPagoResponse.json();
     console.log('📡 Resposta do Mercado Pago:', {
       status: mercadoPagoResponse.status,
+      ok: mercadoPagoResponse.ok,
       id: mercadoPagoData.id,
       status_detail: mercadoPagoData.status_detail,
-      point_of_interaction: !!mercadoPagoData.point_of_interaction
+      has_qr_code: !!mercadoPagoData.point_of_interaction?.transaction_data?.qr_code
     });
 
     if (!mercadoPagoResponse.ok) {
-      console.error('❌ Erro no Mercado Pago:', mercadoPagoData);
+      console.error('❌ Erro no Mercado Pago:', {
+        status: mercadoPagoResponse.status,
+        statusText: mercadoPagoResponse.statusText,
+        data: mercadoPagoData
+      });
       
       // Mapear erros específicos do Mercado Pago
       let errorMessage = 'Erro ao processar pagamento';
@@ -159,10 +207,12 @@ serve(async (req) => {
     }
 
     if (!mercadoPagoData.id) {
+      console.error('❌ Resposta inválida do Mercado Pago - ID ausente:', mercadoPagoData);
       throw new Error('Resposta inválida do Mercado Pago: ID ausente');
     }
 
     // Salvar transação no banco
+    console.log('💾 Salvando transação no banco...');
     const { error: insertError } = await supabaseService
       .from('credit_transactions')
       .insert({
@@ -186,11 +236,18 @@ serve(async (req) => {
     const qrCodeBase64 = mercadoPagoData.point_of_interaction?.transaction_data?.qr_code_base64;
 
     if (!qrCodeData) {
-      console.error('❌ QR Code não encontrado na resposta:', mercadoPagoData);
+      console.error('❌ QR Code não encontrado na resposta:', {
+        has_point_of_interaction: !!mercadoPagoData.point_of_interaction,
+        has_transaction_data: !!mercadoPagoData.point_of_interaction?.transaction_data
+      });
       throw new Error('QR Code não gerado pelo Mercado Pago');
     }
 
-    console.log('✅ Pagamento criado com sucesso:', mercadoPagoData.id);
+    console.log('✅ Pagamento criado com sucesso:', {
+      payment_id: mercadoPagoData.id,
+      status: mercadoPagoData.status,
+      has_qr_code: !!qrCodeData
+    });
 
     return new Response(
       JSON.stringify({
@@ -212,11 +269,16 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('❌ Function error:', error);
+    console.error('❌ Function error:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Internal server error',
-        details: error
+        error: error.message || 'Erro interno do servidor',
+        type: error.name || 'UnknownError'
       }),
       {
         headers: { 
