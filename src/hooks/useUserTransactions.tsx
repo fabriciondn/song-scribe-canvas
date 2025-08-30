@@ -33,7 +33,21 @@ export const useUserTransactions = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return (data || []) as UserTransaction[];
+      
+      // Mapear os dados da tabela para a interface UserTransaction
+      return (data || []).map(transaction => ({
+        id: transaction.id,
+        user_id: transaction.user_id,
+        amount: transaction.total_amount,
+        bonus_credits: transaction.bonus_credits || 0,
+        total_credits: transaction.credits_purchased + (transaction.bonus_credits || 0),
+        payment_id: transaction.payment_id || '',
+        payment_method: transaction.payment_provider,
+        status: transaction.status as 'pending' | 'completed' | 'failed',
+        created_at: transaction.created_at,
+        completed_at: transaction.completed_at,
+        metadata: {}
+      })) as UserTransaction[];
     },
     enabled: !!user?.id,
   });
