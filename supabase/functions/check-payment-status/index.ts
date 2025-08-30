@@ -1,219 +1,191 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   console.log('[CHECK-PAYMENT-STATUS] Function started');
-
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseService = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
+  );
+
   try {
-    const supabaseServiceClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    const authHeader = req.headers.get('Authorization');
-    let user = null;
-
+    // Verificar autenticação opcional
+    let userId: string | null = null;
+    const authHeader = req.headers.get("Authorization");
+    
     if (authHeader) {
-      const supabaseClient = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-        {
-          global: {
-            headers: { Authorization: authHeader },
-          },
-        }
-      );
-
-      const { data: { user: authUser }, error: userError } = await supabaseClient.auth.getUser();
-      
-      if (authUser && !userError) {
-        user = authUser;
-        console.log('[CHECK-PAYMENT-STATUS] User authenticated', { userId: user.id });
-      } else {
-        console.log('[CHECK-PAYMENT-STATUS] Authentication failed, but continuing...', userError?.message);
+      try {
+        const supabaseClient = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+        );
+        
+        const token = authHeader.replace("Bearer ", "");
+        const { data } = await supabaseClient.auth.getUser(token);
+        userId = data.user?.id || null;
+      } catch (authError) {
+        console.log('[CHECK-PAYMENT-STATUS] Authentication failed, but continuing...', authError?.message || 'Auth session missing!');
       }
     } else {
-      console.log('[CHECK-PAYMENT-STATUS] No authorization header, continuing without auth...');
+      console.log('[CHECK-PAYMENT-STATUS] Authentication failed, but continuing...', 'Auth session missing!');
     }
 
     const body = await req.json();
     const { paymentId, simulate } = body;
 
+    console.log('[CHECK-PAYMENT-STATUS] Checking payment status', { paymentId, simulate });
+
     if (!paymentId) {
       return new Response(
-        JSON.stringify({ error: 'Payment ID is required' }),
+        JSON.stringify({ error: "Payment ID is required" }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('[CHECK-PAYMENT-STATUS] Checking payment status', { paymentId, simulate });
-
-    const mercadoPagoAccessToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
-    if (!mercadoPagoAccessToken) {
-      console.error('[CHECK-PAYMENT-STATUS] Missing MERCADO_PAGO_ACCESS_TOKEN');
+    // Se for simulação, retornar pagamento como pago
+    if (simulate === true) {
+      console.log('[CHECK-PAYMENT-STATUS] Simulation mode - returning paid status');
       return new Response(
-        JSON.stringify({ error: 'Payment service configuration error' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ isPaid: true, paid: true, status: 'approved' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    type Payment = {
-      id: string;
-      status: string;
-      amount?: number;
-      date_approved?: string;
-    };
-    let payment: Payment | null = null;
-    let isPaymentConfirmed = false;
-
-    console.log('[CHECK-PAYMENT-STATUS] Processing payment check', { paymentId, simulate });
-
-    if (simulate) {
-      console.log('[CHECK-PAYMENT-STATUS] Using simulation mode - creating mock paid payment');
+    // Verificar se é um payment ID do Mercado Pago (começa com número)
+    const isMercadoPagoPayment = /^\d+$/.test(paymentId.toString());
+    
+    if (isMercadoPagoPayment) {
+      console.log('[CHECK-PAYMENT-STATUS] Processing Mercado Pago payment check');
       
-      payment = {
-        id: paymentId,
-        status: 'approved',
-        amount: 14.99,
-        date_approved: new Date().toISOString()
-      };
-      isPaymentConfirmed = true;
-    } else {
-      // Consultar pagamento no Mercado Pago
-      try {
-        console.log('[CHECK-PAYMENT-STATUS] Consultando Mercado Pago API...');
-        const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${mercadoPagoAccessToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        const paymentData = await paymentResponse.json();
-        console.log('[CHECK-PAYMENT-STATUS] Resposta do Mercado Pago:', paymentData);
-
-        if (paymentResponse.ok && paymentData.id) {
-          payment = {
-            id: paymentData.id.toString(),
-            status: paymentData.status,
-            amount: paymentData.transaction_amount,
-            date_approved: paymentData.date_approved
-          };
-          isPaymentConfirmed = paymentData.status === 'approved';
-        } else {
-          console.error('[CHECK-PAYMENT-STATUS] Erro na consulta:', paymentData);
-          return new Response(
-            JSON.stringify({
-              success: false,
-              error: 'Failed to check payment status',
-              details: paymentData
-            }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-      } catch (error) {
-        console.error('[CHECK-PAYMENT-STATUS] Erro na requisição:', error);
+      const mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
+      if (!mercadoPagoAccessToken) {
+        console.error('[CHECK-PAYMENT-STATUS] Missing MERCADO_PAGO_ACCESS_TOKEN');
         return new Response(
-          JSON.stringify({
-            success: false,
-            error: 'Network error checking payment',
-            details: error.message
+          JSON.stringify({ 
+            error: "Serviço de verificação temporariamente indisponível",
+            isPaid: false,
+            paid: false 
+          }),
+          { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Consultar status do pagamento no Mercado Pago
+      const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${mercadoPagoAccessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!paymentResponse.ok) {
+        console.error('[CHECK-PAYMENT-STATUS] Error fetching payment from Mercado Pago:', paymentResponse.status);
+        return new Response(
+          JSON.stringify({ 
+            error: "Erro ao consultar status do pagamento",
+            isPaid: false,
+            paid: false 
           }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-    }
 
-    if (payment) {
-      console.log('[CHECK-PAYMENT-STATUS] Payment found', { 
-        paymentId: payment.id,
-        status: payment.status,
-        amount: payment.amount,
-        isPaymentConfirmed
-      });
-    } else {
-      console.log('[CHECK-PAYMENT-STATUS] Payment not found');
-    }
-    
-    const paymentType = body.type || 'credits';
+      const paymentData = await paymentResponse.json();
+      console.log('[CHECK-PAYMENT-STATUS] Mercado Pago payment status:', paymentData.status);
 
-    if (isPaymentConfirmed) {
-      console.log('[CHECK-PAYMENT-STATUS] Payment confirmed, processing...', { paymentType, userId: user?.id });
+      const isPaid = paymentData.status === 'approved';
       
-      if (paymentType === 'credits') {
-        const { data: transaction, error: transactionError } = await supabaseServiceClient
-          .from('credit_transactions')
-          .select('*')
-          .eq('payment_id', paymentId)
-          .eq('status', 'pending')
-          .maybeSingle();
-
-        if (transactionError || !transaction) {
-          console.log('[CHECK-PAYMENT-STATUS] Transaction not found or already processed:', transactionError);
-        } else {
-          const totalCredits = transaction.credits_purchased + (transaction.bonus_credits || 0);
-          
-          const { data: currentProfile, error: profileError } = await supabaseServiceClient
-            .from('profiles')
-            .select('credits')
-            .eq('id', transaction.user_id)
-            .single();
-
-          if (!profileError && currentProfile) {
-            const newCreditsTotal = (currentProfile.credits || 0) + totalCredits;
-            
-            const { error: creditsError } = await supabaseServiceClient
-              .from('profiles')
-              .update({ credits: newCreditsTotal })
-              .eq('id', transaction.user_id);
-
-            if (creditsError) {
-              console.error('[CHECK-PAYMENT-STATUS] Error adding credits:', creditsError);
-            } else {
-              const { error: transactionUpdateError } = await supabaseServiceClient
-                .from('credit_transactions')
-                .update({
-                  status: 'completed',
-                  completed_at: new Date().toISOString()
-                })
-                .eq('id', transaction.id);
-
-              if (transactionUpdateError) {
-                console.error('[CHECK-PAYMENT-STATUS] Failed to update transaction status:', transactionUpdateError);
-              } else {
-                console.log('[CHECK-PAYMENT-STATUS] Transaction status updated successfully');
-              }
-              console.log('[CHECK-PAYMENT-STATUS] Credits added successfully:', { totalCredits, newCreditsTotal });
-            }
+      return new Response(
+        JSON.stringify({ 
+          isPaid, 
+          paid: isPaid, 
+          status: paymentData.status,
+          mercadoPagoData: {
+            id: paymentData.id,
+            status: paymentData.status,
+            status_detail: paymentData.status_detail
           }
-        }
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } else {
+      // Assumir que é Abacate Pay (formato diferente de ID)
+      console.log('[CHECK-PAYMENT-STATUS] Processing Abacate Pay payment check');
+      
+      const abacatePayApiToken = Deno.env.get("ABACATE_PAY_API_TOKEN");
+      if (!abacatePayApiToken) {
+        console.error('[CHECK-PAYMENT-STATUS] Missing ABACATE_PAY_API_TOKEN');
+        return new Response(
+          JSON.stringify({ 
+            error: "Serviço de verificação temporariamente indisponível",
+            isPaid: false,
+            paid: false 
+          }),
+          { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
+
+      // Consultar status do pagamento no Abacate Pay
+      const paymentResponse = await fetch(`https://api.abacatepay.com/billing/${paymentId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${abacatePayApiToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!paymentResponse.ok) {
+        console.error('[CHECK-PAYMENT-STATUS] Error fetching payment from Abacate Pay:', paymentResponse.status);
+        return new Response(
+          JSON.stringify({ 
+            error: "Erro ao consultar status do pagamento",
+            isPaid: false,
+            paid: false 
+          }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const paymentData = await paymentResponse.json();
+      console.log('[CHECK-PAYMENT-STATUS] Abacate Pay payment status:', paymentData.status);
+
+      const isPaid = paymentData.status === 'PAID';
+      
+      return new Response(
+        JSON.stringify({ 
+          isPaid, 
+          paid: isPaid, 
+          status: paymentData.status,
+          abacateData: {
+            id: paymentData.id,
+            status: paymentData.status
+          }
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        paymentStatus: payment ? payment.status : 'NOT_FOUND',
-        isPaid: isPaymentConfirmed,
-        date_approved: payment ? payment.date_approved : null
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
   } catch (error) {
-    console.error('[CHECK-PAYMENT-STATUS] Error:', error);
+    console.error('[CHECK-PAYMENT-STATUS] Function error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ 
+        error: 'Erro interno do servidor',
+        isPaid: false,
+        paid: false 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

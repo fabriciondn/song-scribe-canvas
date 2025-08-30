@@ -93,7 +93,7 @@ export default function CreditsCheckout() {
       return;
     }
 
-    console.log('🔄 Iniciando processamento de pagamento com Abacate Pay...', {
+    console.log('🔄 Iniciando processamento de pagamento com Mercado Pago...', {
       credits: credits,
       bonusCredits: pricing.bonusCredits,
       unitPrice: pricing.unitPrice,
@@ -103,7 +103,7 @@ export default function CreditsCheckout() {
 
     setIsProcessing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-credits-payment', {
+      const { data, error } = await supabase.functions.invoke('create-mercadopago-payment', {
         body: {
           credits: credits,
           bonusCredits: pricing.bonusCredits,
@@ -118,14 +118,31 @@ export default function CreditsCheckout() {
         }
       });
 
-      console.log('📡 Resposta da Edge Function (Abacate Pay):', { data, error });
+      console.log('📡 Resposta da Edge Function (Mercado Pago):', { data, error });
 
       if (error) {
         console.error('❌ Erro na Edge Function:', error);
         
         let errorMsg = 'Não foi possível processar o pagamento.';
+        
+        // Tentar extrair erro mais específico
         if (error.message) {
           errorMsg = error.message;
+        }
+        
+        // Se há contexto de resposta, tentar extrair erro do backend
+        if (error.context?.response?.body) {
+          try {
+            const responseBody = typeof error.context.response.body === 'string' 
+              ? JSON.parse(error.context.response.body) 
+              : error.context.response.body;
+            
+            if (responseBody?.error) {
+              errorMsg = responseBody.error;
+            }
+          } catch (parseError) {
+            console.error('Erro ao parsear resposta:', parseError);
+          }
         }
 
         toast({
@@ -136,7 +153,7 @@ export default function CreditsCheckout() {
         return;
       }
 
-      if (data?.payment_id && data?.qr_code) {
+      if (data?.success && data?.qr_code && data?.payment_id) {
         setPixData({
           qr_code: data.qr_code,
           qr_code_url: data.qr_code_url || '',
@@ -145,7 +162,7 @@ export default function CreditsCheckout() {
         setShowQRCode(true);
         toast({
           title: "PIX Gerado!",
-          description: "Use o QR Code para realizar o pagamento via Abacate Pay."
+          description: "Use o QR Code para realizar o pagamento via Mercado Pago."
         });
       } else {
         console.error('❌ Resposta inválida:', data);
