@@ -34,13 +34,17 @@ export const AdminModerators = () => {
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select('id, name, email, avatar_url, credits')
-        .in('id', userIds);
+        .in('id', userIds)
+        // Filtrar moderadores que não foram deletados (nome não contém "[USUÁRIO EXCLUÍDO]")
+        .not('name', 'like', '%[USUÁRIO EXCLUÍDO]%');
       if (profileError) throw profileError;
       
-      return mods.map((mod: any) => ({
-        ...mod,
-        profile: profiles?.find((p: any) => p.id === mod.user_id) || {},
-      }));
+      return mods
+        .filter((mod: any) => profiles?.some((p: any) => p.id === mod.user_id))
+        .map((mod: any) => ({
+          ...mod,
+          profile: profiles?.find((p: any) => p.id === mod.user_id) || {},
+        }));
     },
   });
 
@@ -70,6 +74,15 @@ export const AdminModerators = () => {
             moderator_profile: profile
           }
         });
+
+      // Marcar moderador como excluído alterando o nome no perfil
+      await supabase
+        .from('profiles')
+        .update({ 
+          name: `[USUÁRIO EXCLUÍDO] - ${profile?.name || 'Moderador'}`,
+          email: `deleted_moderator_${moderatorId}@deleted.com`
+        })
+        .eq('id', moderatorId);
 
       // Remover da tabela admin_users
       const { error } = await supabase

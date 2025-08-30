@@ -1,299 +1,232 @@
 
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { getAllUsers, updateUserCredits } from '@/services/adminService';
+import { Input } from '@/components/ui/input';
+import { Search, Users, UserPlus, Edit, Trash2, AlertTriangle } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { UserDetailsModal } from './UserDetailsModal';
-import { useToast } from '@/components/ui/use-toast';
-import { Edit, Search, Coins, Eye } from 'lucide-react';
-import { DataMask } from '@/components/ui/data-mask';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-export const AdminUsers: React.FC = () => {
+export const AdminUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [selectedUserForDetails, setSelectedUserForDetails] = useState<any>(null);
-  const [newCredits, setNewCredits] = useState('');
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const { data: users, isLoading } = useQuery({
+  // Buscar todos os usuários
+  const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['admin-users'],
-    queryFn: getAllUsers,
-    refetchInterval: 30000,
-  });
-
-  const updateCreditsMutation = useMutation({
-    mutationFn: ({ userId, credits }: { userId: string; credits: number }) =>
-      updateUserCredits(userId, credits),
-    onSuccess: () => {
-      toast({
-        title: 'Sucesso',
-        description: 'Créditos atualizados com sucesso!',
-      });
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        // Filtrar usuários que não foram deletados (nome não contém "[USUÁRIO EXCLUÍDO]")
+        .not('name', 'like', '%[USUÁRIO EXCLUÍDO]%')
+        .order('created_at', { ascending: false });
       
-      // Invalidar múltiplas queries relacionadas
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['online-users-count'] });
-      
-      // Também forçar atualização em outros componentes que podem usar créditos
-      queryClient.refetchQueries({ queryKey: ['user-credits'] });
-      
-      // Disparar evento customizado para atualizar créditos em tempo real
-      window.dispatchEvent(new CustomEvent('credits-updated', { 
-        detail: { userId: selectedUser?.id, newCredits } 
-      }));
-      
-      setIsEditModalOpen(false);
-      setSelectedUser(null);
-      setNewCredits('');
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao atualizar créditos',
-        variant: 'destructive',
-      });
+      if (error) throw error;
+      return data || [];
     },
   });
 
-  const filteredUsers = users?.filter(user =>
-    user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.artistic_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
-
-  const handleEditCredits = (user: any) => {
+  const handleViewUser = (user: any) => {
     setSelectedUser(user);
-    setNewCredits(user.credits.toString());
-    setIsEditModalOpen(true);
+    setIsUserModalOpen(true);
   };
 
-  const handleUpdateCredits = () => {
-    if (selectedUser && newCredits) {
-      const credits = parseInt(newCredits);
-      if (isNaN(credits) || credits < 0) {
-        toast({
-          title: 'Erro',
-          description: 'Por favor, insira um número válido de créditos',
-          variant: 'destructive',
-        });
-        return;
-      }
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    try {
+      // Marcar usuário como excluído alterando o nome
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          name: `[USUÁRIO EXCLUÍDO] - ${userName || 'Sem nome'}`,
+          email: `deleted_user_${userId}@deleted.com`
+        })
+        .eq('id', userId);
 
-      updateCreditsMutation.mutate({
-        userId: selectedUser.id,
-        credits: credits,
+      if (error) throw error;
+
+      // Log da atividade
+      await supabase
+        .from('user_activity_logs')
+        .insert({
+          user_id: userId,
+          action: 'user_deleted_by_admin',
+          metadata: {
+            admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+            deleted_at: new Date().toISOString(),
+            original_name: userName
+          }
+        });
+
+      toast({
+        title: 'Sucesso',
+        description: 'Usuário excluído com sucesso',
+      });
+
+      refetch();
+    } catch (error: any) {
+      console.error('Erro ao excluir usuário:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao excluir usuário',
+        variant: 'destructive',
       });
     }
   };
 
-  const handleViewDetails = (user: any) => {
-    setSelectedUserForDetails(user);
-    setIsDetailsModalOpen(true);
-  };
-
-  const handleUserUpdate = () => {
-    queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-  };
-
-  if (isLoading) {
+  // Filtrar usuários baseado no termo de busca
+  const filteredUsers = users?.filter(user => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-      </div>
+      user.name?.toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower) ||
+      user.artistic_name?.toLowerCase().includes(searchLower)
     );
-  }
+  }) || [];
 
   return (
-  <div className="space-y-4 md:space-y-6 px-1 md:px-0">
-      <Card>
-        <CardHeader>
-          <CardTitle>Gerenciamento de Usuários</CardTitle>
-          <CardDescription>
+    <div className="space-y-4 md:space-y-6 px-1 md:px-0">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Users className="h-6 w-6" />
+            Gestão de Usuários
+          </h2>
+          <p className="text-muted-foreground">
             Visualize e gerencie todos os usuários da plataforma
-          </CardDescription>
-        </CardHeader>
-    <CardContent className="overflow-x-auto">
-          {/* Barra de Pesquisa */}
-          <div className="mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Pesquisar usuários por nome, email ou nome artístico..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="relative flex-1 md:w-80">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Buscar usuários..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
+        </div>
+      </div>
 
-          {/* Tabela de Usuários */}
-          <div className="rounded-md border min-w-[350px] text-xs md:text-base">
-            {/* Mobile: cards empilhados, Desktop: tabela */}
-            <div className="block md:hidden divide-y divide-border">
-              {filteredUsers.length === 0 && (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    {searchTerm ? 'Nenhum usuário encontrado com o termo pesquisado' : 'Nenhum usuário encontrado'}
-                  </p>
-                </div>
-              )}
-              {filteredUsers.map((user) => (
-                <div key={user.id} className="py-3 px-2 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold">{user.name || 'Nome não informado'}</span>
-                    <Badge variant="outline">{user.artistic_name || '-'}</Badge>
-                  </div>
-                  <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-                    <span><b>E-mail:</b> <DataMask data={user.email} type="email" /></span>
-                    <span><b>Créditos:</b> <span className="inline-flex items-center gap-1"><Coins className="h-4 w-4 text-yellow-600" />{user.credits}</span></span>
-                    <span><b>Registro:</b> {new Date(user.created_at).toLocaleDateString('pt-BR')}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <Button variant="outline" size="sm" onClick={() => handleViewDetails(user)}>
-                      <Eye className="h-4 w-4 mr-1" />Detalhes
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleEditCredits(user)}>
-                      <Edit className="h-4 w-4 mr-1" />Editar Créditos
-                    </Button>
-                    <ImpersonateButton targetUser={user} targetRole="user" />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="hidden md:block">
-              <Table className="min-w-[350px] text-xs md:text-base">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Nome Artístico</TableHead>
-                    <TableHead>Créditos</TableHead>
-                    <TableHead>Data de Registro</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">
-                        {user.name || 'Nome não informado'}
-                      </TableCell>
-                      <TableCell>
-                        <DataMask data={user.email} type="email" />
-                      </TableCell>
-                      <TableCell>
-                        {user.artistic_name ? (
-                          <Badge variant="outline">{user.artistic_name}</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Coins className="h-4 w-4 text-yellow-600" />
-                          {user.credits}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(user.created_at).toLocaleDateString('pt-BR')}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2 flex-wrap gap-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewDetails(user)}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Detalhes
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditCredits(user)}
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Editar Créditos
-                          </Button>
-                          <ImpersonateButton 
-                            targetUser={user} 
-                            targetRole="user" 
-                          />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {filteredUsers.length === 0 && (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    {searchTerm ? 'Nenhum usuário encontrado com o termo pesquisado' : 'Nenhum usuário encontrado'}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Modal de Edição de Créditos */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Créditos do Usuário</DialogTitle>
-            <DialogDescription>
-              Altere a quantidade de créditos para {selectedUser?.name || selectedUser?.email}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="credits">Quantidade de Créditos</Label>
-              <Input
-                id="credits"
-                type="number"
-                min="0"
-                value={newCredits}
-                onChange={(e) => setNewCredits(e.target.value)}
-                placeholder="Digite a quantidade de créditos"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditModalOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleUpdateCredits}
-              disabled={updateCreditsMutation.isPending}
-            >
-              {updateCreditsMutation.isPending ? 'Salvando...' : 'Salvar'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal de detalhes do usuário */}
-      <UserDetailsModal 
-        user={selectedUserForDetails}
-        isOpen={isDetailsModalOpen}
-        onClose={() => setIsDetailsModalOpen(false)}
-        onUserUpdate={handleUserUpdate}
+      <UserDetailsModal
+        user={selectedUser}
+        isOpen={isUserModalOpen}
+        onClose={() => {
+          setIsUserModalOpen(false);
+          setSelectedUser(null);
+        }}
       />
+
+      {/* Lista de usuários */}
+      <div className="mt-4 md:mt-8">
+        <div className="mb-4 flex items-center gap-2">
+          <Badge variant="secondary">
+            {filteredUsers.length} usuário{filteredUsers.length !== 1 ? 's' : ''} encontrado{filteredUsers.length !== 1 ? 's' : ''}
+          </Badge>
+        </div>
+
+        {isLoading ? (
+          <div className="text-muted-foreground">Carregando usuários...</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table className="min-w-[350px] text-xs md:text-base">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Foto</TableHead>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Nome Artístico</TableHead>
+                  <TableHead>Créditos</TableHead>
+                  <TableHead>Criado em</TableHead>
+                  <TableHead className="text-center">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user: any) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={user.avatar_url} alt={user.name} />
+                        <AvatarFallback>{user.name?.[0] || user.email?.[0] || 'U'}</AvatarFallback>
+                      </Avatar>
+                    </TableCell>
+                    <TableCell>{user.name || '-'}</TableCell>
+                    <TableCell>{user.email || '-'}</TableCell>
+                    <TableCell>{user.artistic_name || '-'}</TableCell>
+                    <TableCell>{user.credits || 0}</TableCell>
+                    <TableCell>
+                      {user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2 justify-center">
+                        <ImpersonateButton
+                          targetUser={{
+                            id: user.id,
+                            name: user.name,
+                            email: user.email,
+                            artistic_name: user.artistic_name
+                          }}
+                          targetRole="user"
+                          size="sm"
+                          variant="outline"
+                        />
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewUser(user)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="flex items-center gap-2">
+                                <AlertTriangle className="h-5 w-5 text-destructive" />
+                                Excluir Usuário
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja excluir o usuário <strong>{user.name || user.email}</strong>?
+                                Esta ação marcará o usuário como excluído e ele não aparecerá mais na lista de usuários.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteUser(user.id, user.name)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Excluir
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { useMenuFunctions } from '@/hooks/useMenuFunctions';
 import { 
@@ -132,18 +133,20 @@ export const useMenuItems = () => {
         icon: Shield,
         path: '/moderator',
         functionKey: 'moderator',
-        isPro: false
+        iPro: false
       }
     ];
 
-    // Map function visibility from database
-    return baseItems.map(item => {
-      const func = functions.find(f => f.function_key === item.functionKey);
-      return {
-        ...item,
-        isHidden: func?.is_hidden || false
-      };
-    });
+    // Filtrar itens baseado no status das funções
+    return baseItems
+      .map(item => {
+        const func = functions.find(f => f.function_key === item.functionKey);
+        return {
+          ...item,
+          isHidden: func?.is_hidden || func?.status !== 'available' || false
+        };
+      })
+      .filter(item => !item.isHidden); // Remove itens ocultos ou inativos do menu
   }, [functions]);
 
   return {

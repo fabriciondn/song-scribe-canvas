@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Edit, FileText, Folder, BookText, Users, Menu, X, FileMusic, ListMusic, DollarSign, BarChart3, Trash2, Shield, User, Settings, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -45,18 +45,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return true;
   };
 
-  // Filter out hidden functions for non-admin users
+  // Filter menu items by admin access and user access
   const visibleMenuItems = useMemo(() => {
     let items = menuItems;
     
     // Filter by admin status
     if (!isAdmin) {
       items = items.filter(item => !['admin', 'moderator'].includes(item.functionKey));
-    }
-    
-    // Filter hidden functions for non-admin users
-    if (!isAdmin) {
-      items = items.filter(item => !item.isHidden);
     }
     
     return items;

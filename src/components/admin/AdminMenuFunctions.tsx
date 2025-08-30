@@ -66,7 +66,7 @@ export const AdminMenuFunctions = () => {
     },
   });
 
-  // Buscar moderadores
+  // Buscar moderadores (filtrar deletados)
   const { data: moderators, isLoading: moderatorsLoading, refetch: refetchModerators } = useQuery({
     queryKey: ['admin-moderators-list'],
     queryFn: async () => {
@@ -82,14 +82,18 @@ export const AdminMenuFunctions = () => {
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select('id, name, email, avatar_url')
-        .in('id', userIds);
+        .in('id', userIds)
+        // Filtrar moderadores que não foram deletados
+        .not('name', 'like', '%[USUÁRIO EXCLUÍDO]%');
       
       if (profileError) throw profileError;
       
-      return mods.map((mod: any) => ({
-        ...mod,
-        profile: profiles?.find((p: any) => p.id === mod.user_id) || {},
-      }));
+      return mods
+        .filter((mod: any) => profiles?.some((p: any) => p.id === mod.user_id))
+        .map((mod: any) => ({
+          ...mod,
+          profile: profiles?.find((p: any) => p.id === mod.user_id) || {},
+        }));
     },
   });
 
