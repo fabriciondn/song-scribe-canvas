@@ -105,7 +105,7 @@ serve(async (req) => {
       );
     }
 
-    // Validações mais específicas
+    // Validações mais específicas dos dados do cliente
     if (!customerData.name?.trim()) {
       console.error('❌ Customer name missing or empty');
       return new Response(
@@ -130,16 +130,53 @@ serve(async (req) => {
       );
     }
 
-    // Verificar token do Mercado Pago
+    // Verificar token do Mercado Pago com logging detalhado
+    console.log('🔍 Verificando configuração do Mercado Pago...');
+    
+    // Listar todas as variáveis de ambiente disponíveis (sem mostrar valores)
+    const envVars = Object.keys(Deno.env.toObject());
+    console.log('📊 Variáveis de ambiente disponíveis:', envVars);
+    
     const mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
+    
     if (!mercadoPagoAccessToken) {
-      console.error('❌ Missing MERCADO_PAGO_ACCESS_TOKEN');
-      return new Response(
-        JSON.stringify({ error: "Serviço de pagamento temporariamente indisponível. Tente novamente em alguns minutos." }),
-        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.error('❌ MERCADO_PAGO_ACCESS_TOKEN não encontrado');
+      console.log('🔍 Tentando outras variações de nome...');
+      
+      // Tentar outras possíveis variações do nome
+      const possibleNames = [
+        "MERCADO_PAGO_ACCESS_TOKEN",
+        "MERCADOPAGO_ACCESS_TOKEN", 
+        "MP_ACCESS_TOKEN",
+        "Access Token mercado pago"
+      ];
+      
+      let foundToken = null;
+      for (const name of possibleNames) {
+        const token = Deno.env.get(name);
+        if (token) {
+          console.log(`✅ Token encontrado com nome: ${name}`);
+          foundToken = token;
+          break;
+        }
+      }
+      
+      if (!foundToken) {
+        console.error('❌ Nenhum token do Mercado Pago encontrado em nenhuma variação');
+        return new Response(
+          JSON.stringify({ 
+            error: "Token do Mercado Pago não configurado. Configure o secret 'MERCADO_PAGO_ACCESS_TOKEN' no Supabase.",
+            availableVars: envVars.filter(v => v.includes('MERCADO') || v.includes('MP_'))
+          }),
+          { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // Usar o token encontrado
+      mercadoPagoAccessToken = foundToken;
     }
 
+    console.log('✅ Token do Mercado Pago encontrado');
     console.log('🔄 Processando dados do cliente...');
     
     // Limpar e validar CPF
@@ -165,9 +202,11 @@ serve(async (req) => {
       }
     }
 
-    console.log('📱 Phone processed:', { 
-      original: customerData.phone, 
-      processed: phone 
+    console.log('📱 Dados processados:', { 
+      firstName: firstName.substring(0, 30),
+      lastName: lastName.substring(0, 30),
+      cpf: cleanCpf,
+      phone: phone 
     });
 
     const mercadoPagoPayload = {
@@ -187,11 +226,10 @@ serve(async (req) => {
       external_reference: `compuse_${user.id}_${Date.now()}`
     };
 
-    console.log('📡 Enviando para Mercado Pago:', {
+    console.log('📡 Enviando pagamento para Mercado Pago:', {
       transaction_amount: mercadoPagoPayload.transaction_amount,
       description: mercadoPagoPayload.description,
       payer_email: mercadoPagoPayload.payer.email,
-      payer_name: `${mercadoPagoPayload.payer.first_name} ${mercadoPagoPayload.payer.last_name}`,
       external_reference: mercadoPagoPayload.external_reference
     });
 
