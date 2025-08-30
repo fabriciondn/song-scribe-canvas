@@ -10,6 +10,8 @@ import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
+import { PaymentSuccessModal } from '@/components/checkout/PaymentSuccessModal';
+import { usePaymentConfirmation } from '@/hooks/usePaymentConfirmation';
 
 interface PixData {
   qr_code: string;
@@ -27,8 +29,27 @@ export default function CreditsCheckout() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [pixData, setPixData] = useState<PixData | null>(null);
   const [showQRCode, setShowQRCode] = useState(false);
-  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [creditsAdded, setCreditsAdded] = useState(0);
+
+  const { isChecking } = usePaymentConfirmation({
+    paymentId: pixData?.payment_id || null,
+    isActive: showQRCode && !paymentConfirmed,
+    onPaymentConfirmed: (credits) => {
+      setCreditsAdded(credits);
+      setPaymentConfirmed(true);
+      setShowQRCode(false);
+      setShowSuccessModal(true);
+      
+      // Recarregar perfil após confirmação
+      if (typeof loadProfile === 'function') {
+        setTimeout(() => {
+          loadProfile();
+        }, 1000);
+      }
+    }
+  });
 
   // Force theme consistency
   useEffect(() => {
@@ -125,12 +146,10 @@ export default function CreditsCheckout() {
         
         let errorMsg = 'Não foi possível processar o pagamento.';
         
-        // Tentar extrair erro mais específico
         if (error.message) {
           errorMsg = error.message;
         }
         
-        // Se há contexto de resposta, tentar extrair erro do backend
         if (error.context?.response?.body) {
           try {
             const responseBody = typeof error.context.response.body === 'string' 
@@ -184,64 +203,10 @@ export default function CreditsCheckout() {
     }
   };
 
-  const checkPaymentStatus = async () => {
-    if (!pixData?.payment_id) return;
-
-    setIsCheckingPayment(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('check-payment-status', {
-        body: {
-          paymentId: pixData.payment_id,
-          type: 'credits'
-        }
-      });
-
-      if (error) {
-        console.error('Erro ao verificar pagamento:', error);
-        return;
-      }
-
-      if (data?.isPaid || data?.paid) {
-        setPaymentConfirmed(true);
-        setIsCheckingPayment(false);
-
-        // Atualiza créditos globalmente e força recarregar perfil
-        window.dispatchEvent(new CustomEvent('credits-updated'));
-        if (typeof loadProfile === 'function') {
-          setTimeout(() => {
-            loadProfile();
-          }, 500);
-        }
-
-        toast({
-          title: "Pagamento Confirmado!",
-          description: `Parabéns! você recarregou ${pricing.finalCredits} créditos.`
-        });
-
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 3000);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar status:', error);
-    } finally {
-      setIsCheckingPayment(false);
-    }
+  const handleSuccessModalContinue = () => {
+    setShowSuccessModal(false);
+    navigate('/dashboard');
   };
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (showQRCode && !paymentConfirmed && pixData?.payment_id) {
-      interval = setInterval(() => {
-        if (!isCheckingPayment) {
-          checkPaymentStatus();
-        }
-      }, 5000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [showQRCode, paymentConfirmed, pixData?.payment_id, isCheckingPayment]);
 
   if (!user) {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex items-center justify-center">
@@ -260,32 +225,6 @@ export default function CreditsCheckout() {
               <Button onClick={() => navigate('/dashboard')} className="w-full">
                 Ir para Login
               </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>;
-  }
-
-  if (paymentConfirmed) {
-    return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex items-center justify-center">
-        <div className="w-full max-w-md mx-auto">
-          <div className="text-center mb-8">
-            <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
-            <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
-          </div>
-          
-          <Card className="w-full">
-            <CardContent className="pt-6 text-center">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Check className="h-10 w-10 text-green-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Pagamento Confirmado!</h2>
-            <p className="text-muted-foreground mb-6">
-              {pricing.finalCredits} créditos foram adicionados à sua conta com sucesso.
-            </p>
-            <Button onClick={() => navigate('/dashboard')} className="w-full">
-              Voltar ao Dashboard
-            </Button>
             </CardContent>
           </Card>
         </div>
@@ -347,19 +286,40 @@ export default function CreditsCheckout() {
                     {pricing.finalCredits} créditos ({credits} + {pricing.bonusCredits} bônus)
                   </p>
                 </div>
-                <Button className="mt-4" onClick={checkPaymentStatus} disabled={isCheckingPayment}>
-                  {isCheckingPayment ? 'Verificando pagamento...' : 'Já efetuei o pagamento'}
-                </Button>
-                {isCheckingPayment && <div className="text-center">
+
+                {/* Status de verificação */}
+                {isChecking && <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
                     <p className="text-sm text-muted-foreground">
-                      Verificando pagamento...
+                      Aguardando confirmação do pagamento...
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Verificação automática em andamento
                     </p>
                   </div>}
+
+                {!isChecking && (
+                  <div className="text-center space-y-2">
+                    <div className="flex items-center justify-center gap-2 text-orange-600">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm">Aguardando pagamento...</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Após realizar o pagamento, os créditos serão liberados automaticamente
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Success Modal */}
+        <PaymentSuccessModal 
+          isOpen={showSuccessModal}
+          creditsAdded={creditsAdded}
+          onContinue={handleSuccessModalContinue}
+        />
       </div>;
   }
 
@@ -541,5 +501,12 @@ export default function CreditsCheckout() {
           </Card>
         </div>
       </div>
+
+      {/* Success Modal */}
+      <PaymentSuccessModal 
+        isOpen={showSuccessModal}
+        creditsAdded={creditsAdded}
+        onContinue={handleSuccessModalContinue}
+      />
     </div>;
 }
