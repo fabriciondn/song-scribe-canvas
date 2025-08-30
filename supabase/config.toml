@@ -11,6 +11,9 @@ verify_jwt = false
 [functions.abacate-webhook]
 verify_jwt = false
 
+[functions.mercadopago-webhook]
+verify_jwt = false
+
 [functions.check-payment-status]
 verify_jwt = true
 

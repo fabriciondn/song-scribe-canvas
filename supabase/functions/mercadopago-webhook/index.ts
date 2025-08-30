@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log('🔔 mercadopago-webhook function called');
+  console.log('🔔 Mercado Pago webhook called');
   
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -22,29 +22,36 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log('📨 Webhook recebido:', body);
+    console.log('📨 Webhook payload:', JSON.stringify(body, null, 2));
 
     // Mercado Pago envia notificações de diferentes tipos
     if (body.type !== 'payment') {
-      console.log('⏭️ Webhook ignorado - não é do tipo payment');
-      return new Response('OK', { status: 200, headers: corsHeaders });
+      console.log('⏭️ Webhook ignored - not payment type, type:', body.type);
+      return new Response('OK - Not payment type', { status: 200, headers: corsHeaders });
     }
 
     const paymentId = body.data?.id;
     if (!paymentId) {
-      console.log('⚠️ Payment ID não encontrado no webhook');
+      console.log('⚠️ Payment ID not found in webhook');
       return new Response('Payment ID missing', { status: 400, headers: corsHeaders });
     }
 
-    console.log('🔍 Consultando pagamento no Mercado Pago:', paymentId);
+    console.log('🔍 Processing payment:', paymentId);
 
-    // Consultar detalhes do pagamento no Mercado Pago
-    const mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
+    // Buscar token do Mercado Pago
+    let mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
     if (!mercadoPagoAccessToken) {
-      console.error('❌ Token do Mercado Pago não configurado');
-      throw new Error("Token do Mercado Pago não configurado");
+      mercadoPagoAccessToken = Deno.env.get("Access Token mercado pago");
+    }
+    
+    if (!mercadoPagoAccessToken) {
+      console.error('❌ Mercado Pago token not configured');
+      return new Response('Token not configured', { status: 503, headers: corsHeaders });
     }
 
+    // Consultar detalhes do pagamento no Mercado Pago
+    console.log('📡 Consulting Mercado Pago API for payment:', paymentId);
+    
     const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
       method: 'GET',
       headers: {
@@ -53,21 +60,28 @@ serve(async (req) => {
       }
     });
 
-    const paymentData = await paymentResponse.json();
-    console.log('💳 Dados do pagamento:', paymentData);
-
     if (!paymentResponse.ok) {
-      console.error('❌ Erro ao consultar pagamento:', paymentData);
-      throw new Error('Erro ao consultar pagamento no Mercado Pago');
+      console.error('❌ Error consulting payment:', paymentResponse.status, paymentResponse.statusText);
+      const errorText = await paymentResponse.text();
+      console.error('❌ Error details:', errorText);
+      return new Response(`Payment query failed: ${paymentResponse.status}`, { status: 500, headers: corsHeaders });
     }
+
+    const paymentData = await paymentResponse.json();
+    console.log('💳 Payment data:', {
+      id: paymentData.id,
+      status: paymentData.status,
+      status_detail: paymentData.status_detail,
+      external_reference: paymentData.external_reference
+    });
 
     // Verificar se o pagamento foi aprovado
     if (paymentData.status !== 'approved') {
-      console.log(`⏳ Pagamento ainda não aprovado. Status: ${paymentData.status}`);
+      console.log(`⏳ Payment not approved yet. Status: ${paymentData.status}`);
       return new Response('Payment not approved yet', { status: 200, headers: corsHeaders });
     }
 
-    console.log('✅ Pagamento aprovado! Processando créditos...');
+    console.log('✅ Payment approved! Processing credits...');
 
     // Buscar transação no banco
     const { data: transaction, error: transactionError } = await supabaseService
@@ -75,17 +89,25 @@ serve(async (req) => {
       .select('*')
       .eq('payment_id', paymentId.toString())
       .eq('status', 'pending')
-      .maybeSingle();
+      .single();
 
     if (transactionError) {
-      console.error('❌ Erro ao buscar transação:', transactionError);
-      throw new Error('Erro ao buscar transação');
+      console.error('❌ Error finding transaction:', transactionError);
+      // Ainda retornar 200 para não ficar reprocessando
+      return new Response('Transaction not found', { status: 200, headers: corsHeaders });
     }
 
     if (!transaction) {
-      console.log('⚠️ Transação não encontrada ou já processada:', paymentId);
+      console.log('⚠️ Transaction not found or already processed:', paymentId);
       return new Response('Transaction not found or already processed', { status: 200, headers: corsHeaders });
     }
+
+    console.log('📋 Found transaction:', {
+      id: transaction.id,
+      user_id: transaction.user_id,
+      credits_purchased: transaction.credits_purchased,
+      bonus_credits: transaction.bonus_credits
+    });
 
     const totalCredits = transaction.credits_purchased + (transaction.bonus_credits || 0);
 
@@ -97,11 +119,18 @@ serve(async (req) => {
       .single();
 
     if (profileError) {
-      console.error('❌ Erro ao buscar perfil:', profileError);
-      throw new Error('Erro ao buscar perfil do usuário');
+      console.error('❌ Error finding user profile:', profileError);
+      return new Response('User profile not found', { status: 500, headers: corsHeaders });
     }
 
     const newCreditsTotal = (currentProfile.credits || 0) + totalCredits;
+
+    console.log('💰 Updating credits:', {
+      userId: transaction.user_id,
+      currentCredits: currentProfile.credits || 0,
+      creditsToAdd: totalCredits,
+      newTotal: newCreditsTotal
+    });
 
     // Atualizar créditos do usuário
     const { error: creditsError } = await supabaseService
@@ -110,8 +139,8 @@ serve(async (req) => {
       .eq('id', transaction.user_id);
 
     if (creditsError) {
-      console.error('❌ Erro ao atualizar créditos:', creditsError);
-      throw new Error('Erro ao atualizar créditos');
+      console.error('❌ Error updating credits:', creditsError);
+      return new Response('Error updating credits', { status: 500, headers: corsHeaders });
     }
 
     // Atualizar status da transação
@@ -124,20 +153,21 @@ serve(async (req) => {
       .eq('id', transaction.id);
 
     if (transactionUpdateError) {
-      console.error('❌ Erro ao atualizar transação:', transactionUpdateError);
-      throw new Error('Erro ao atualizar status da transação');
+      console.error('❌ Error updating transaction:', transactionUpdateError);
+      return new Response('Error updating transaction', { status: 500, headers: corsHeaders });
     }
 
-    console.log('🎉 Créditos adicionados com sucesso!', {
+    console.log('🎉 Credits successfully added!', {
       userId: transaction.user_id,
       creditsAdded: totalCredits,
-      newTotal: newCreditsTotal
+      newTotal: newCreditsTotal,
+      transactionId: transaction.id
     });
 
     return new Response('OK', { status: 200, headers: corsHeaders });
 
   } catch (error) {
-    console.error('❌ Erro no webhook:', error);
+    console.error('❌ Webhook error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

@@ -29,7 +29,7 @@ export const useUserCredits = () => {
     }
 
     try {
-      console.log('🔍 Buscando créditos para usuário:', currentUserId, isImpersonating ? '(impersonado)' : '(real)');
+      console.log('🔍 Fetching credits for user:', currentUserId, isImpersonating ? '(impersonated)' : '(real)');
       
       const { data, error } = await supabase
         .from('profiles')
@@ -38,22 +38,36 @@ export const useUserCredits = () => {
         .single();
 
       if (error) {
-        console.error('❌ Erro ao buscar créditos:', error);
+        console.error('❌ Error fetching credits:', error);
         setError('Erro ao carregar créditos');
         setCredits(0);
       } else {
-        console.log('✅ Créditos encontrados:', data?.credits || 0);
-        setCredits(data?.credits || 0);
+        const newCredits = data?.credits || 0;
+        console.log('✅ Credits found:', newCredits);
+        
+        // Se houve mudança significativa nos créditos, disparar evento
+        if (credits !== null && newCredits > credits) {
+          console.log('💰 Credits increased! Dispatching event');
+          window.dispatchEvent(new CustomEvent('credits-increased', { 
+            detail: { 
+              oldCredits: credits, 
+              newCredits,
+              difference: newCredits - credits
+            }
+          }));
+        }
+        
+        setCredits(newCredits);
         setError(null);
       }
     } catch (err) {
-      console.error('❌ Erro inesperado:', err);
+      console.error('❌ Unexpected error:', err);
       setError('Erro ao carregar créditos');
       setCredits(0);
     } finally {
       setIsLoading(false);
     }
-  }, [currentUserId, isImpersonating]);
+  }, [currentUserId, isImpersonating, credits]);
 
   useEffect(() => {
     // Evitar requisições desnecessárias se o userId não mudou
@@ -61,7 +75,7 @@ export const useUserCredits = () => {
       return;
     }
 
-    console.log('🔄 useUserCredits: currentUserId mudou:', currentUserId, 'isImpersonating:', isImpersonating);
+    console.log('🔄 useUserCredits: currentUserId changed:', currentUserId, 'isImpersonating:', isImpersonating);
     
     // Limpar intervalo anterior se existir
     if (pollingIntervalRef.current) {
@@ -85,15 +99,14 @@ export const useUserCredits = () => {
     // Buscar créditos imediatamente
     fetchCredits();
 
-    // Configurar polling mais agressivo para garantir atualizações em tempo real
+    // Configurar polling mais agressivo durante pagamentos
     pollingIntervalRef.current = setInterval(() => {
       if (lastUserIdRef.current === currentUserId) {
-        console.log('🔄 Polling: verificando créditos automaticamente...');
         fetchCredits();
       }
-    }, 2000); // Verificar a cada 2 segundos para ser mais responsivo
+    }, 3000); // Verificar a cada 3 segundos
 
-    // Configurar realtime listener como adicional
+    // Configurar realtime listener
     const channel = supabase
       .channel(`credits-live-${currentUserId}`)
       .on(
@@ -105,23 +118,45 @@ export const useUserCredits = () => {
           filter: `id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log('💳 Mudança detectada na tabela profiles:', payload);
+          console.log('💳 Credits change detected via realtime:', payload);
           if (payload.new && 'credits' in payload.new) {
-            console.log('💰 Atualizando créditos via realtime:', payload.new.credits);
-            setCredits(payload.new.credits || 0);
+            const newCredits = payload.new.credits || 0;
+            console.log('💰 Updating credits via realtime:', newCredits);
+            
+            // Disparar evento se houve aumento
+            if (credits !== null && newCredits > credits) {
+              window.dispatchEvent(new CustomEvent('credits-increased', { 
+                detail: { 
+                  oldCredits: credits, 
+                  newCredits,
+                  difference: newCredits - credits
+                }
+              }));
+            }
+            
+            setCredits(newCredits);
             setError(null);
           }
         }
       )
       .subscribe((status) => {
-        console.log('📡 Status do canal realtime:', status);
+        console.log('📡 Realtime channel status:', status);
       });
+
+    // Listener para eventos customizados de atualização
+    const handleCreditsUpdate = () => {
+      console.log('🔄 Manual credits update requested');
+      fetchCredits();
+    };
+
+    window.addEventListener('credits-updated', handleCreditsUpdate);
 
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
       supabase.removeChannel(channel);
+      window.removeEventListener('credits-updated', handleCreditsUpdate);
     };
   }, [currentUserId, fetchCredits, isImpersonating]);
 
