@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { useMenuFunctions } from '@/hooks/useMenuFunctions';
 import { 
@@ -13,7 +12,8 @@ import {
   User, 
   Crown, 
   Trash2, 
-  Settings 
+  Settings,
+  CreditCard
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -35,6 +35,13 @@ export const useMenuItems = () => {
         icon: BarChart3,
         path: '/dashboard',
         functionKey: 'dashboard',
+        isPro: false
+      },
+      {
+        label: 'Minhas Compras',
+        icon: CreditCard,
+        path: '/dashboard/my-purchases',
+        functionKey: 'my-purchases',
         isPro: false
       },
       {
