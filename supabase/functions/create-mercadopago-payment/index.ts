@@ -73,7 +73,7 @@ serve(async (req) => {
     const mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
     if (!mercadoPagoAccessToken) {
       console.error('❌ Missing MERCADO_PAGO_ACCESS_TOKEN');
-      throw new Error("Payment service configuration error");
+      throw new Error("Erro de configuração do serviço de pagamento. Contate o administrador.");
     }
 
     if (!customerData || !customerData.cpf || !customerData.name || !customerData.email) {
