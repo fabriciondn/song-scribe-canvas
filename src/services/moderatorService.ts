@@ -179,9 +179,15 @@ export const createUserForModerator = async (userData: {
     throw new Error(error.message || 'Erro ao criar usuário');
   }
 
-  if (!data?.userId) {
+  // Verificar se a resposta contém erro mesmo quando status é 200
+  if (data?.error) {
+    console.error('❌ Erro retornado pela edge function:', data.error);
+    throw new Error(data.error);
+  }
+
+  if (!data?.success || !data?.userId) {
     console.error('❌ Resposta inválida da edge function:', data);
-    throw new Error('Resposta inválida do servidor');
+    throw new Error(data?.error || 'Resposta inválida do servidor');
   }
 
   console.log('✅ Usuário criado via edge function:', data.userId);
