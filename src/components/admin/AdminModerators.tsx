@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CreateModeratorModal } from './CreateModeratorModal';
 import { EditModeratorModal } from './EditModeratorModal';
-import { UserPlus, Edit, Trash2, AlertTriangle } from 'lucide-react';
+import { ModeratorUsersModal } from './ModeratorUsersModal';
+import { UserPlus, Edit, Trash2, AlertTriangle, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -16,6 +17,8 @@ export const AdminModerators = () => {
   const [isCreateModeratorModalOpen, setIsCreateModeratorModalOpen] = useState(false);
   const [editingModerator, setEditingModerator] = useState<any>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedModerator, setSelectedModerator] = useState<any>(null);
+  const [isUsersModalOpen, setIsUsersModalOpen] = useState(false);
   const { toast } = useToast();
 
   // Buscar todos os moderadores e seus perfis
@@ -51,6 +54,11 @@ export const AdminModerators = () => {
   const handleEditModerator = (moderator: any) => {
     setEditingModerator(moderator);
     setIsEditModalOpen(true);
+  };
+
+  const handleViewUsers = (moderator: any) => {
+    setSelectedModerator(moderator);
+    setIsUsersModalOpen(true);
   };
 
   const handleDeleteModerator = async (moderatorId: string) => {
@@ -141,6 +149,15 @@ export const AdminModerators = () => {
         onModeratorUpdated={refetch}
       />
 
+      <ModeratorUsersModal
+        moderator={selectedModerator}
+        isOpen={isUsersModalOpen}
+        onClose={() => {
+          setIsUsersModalOpen(false);
+          setSelectedModerator(null);
+        }}
+      />
+
       {/* Lista de moderadores */}
       <div className="mt-4 md:mt-8">
         <h3 className="text-base md:text-lg font-semibold mb-2">Moderadores cadastrados</h3>
@@ -174,6 +191,15 @@ export const AdminModerators = () => {
                     <TableCell>{new Date(mod.created_at).toLocaleDateString('pt-BR')}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 justify-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewUsers(mod)}
+                          title="Ver usuários gerenciados"
+                        >
+                          <Users className="h-4 w-4" />
+                        </Button>
+
                         <ImpersonateButton
                           targetUser={{
                             id: mod.user_id,

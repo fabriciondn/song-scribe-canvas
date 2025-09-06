@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { UserDetailsModal } from './UserDetailsModal';
+import { AdvancedUserModal } from './AdvancedUserModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,6 +18,7 @@ export const AdminUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [isAdvancedModalOpen, setIsAdvancedModalOpen] = useState(false);
   const { toast } = useToast();
 
   // Buscar todos os usuários
@@ -37,7 +39,7 @@ export const AdminUsers = () => {
 
   const handleViewUser = (user: any) => {
     setSelectedUser(user);
-    setIsUserModalOpen(true);
+    setIsAdvancedModalOpen(true);
   };
 
   const handleDeleteUser = async (userId: string, userName: string) => {
@@ -119,11 +121,11 @@ export const AdminUsers = () => {
         </div>
       </div>
 
-      <UserDetailsModal
+      <AdvancedUserModal
         user={selectedUser}
-        isOpen={isUserModalOpen}
+        isOpen={isAdvancedModalOpen}
         onClose={() => {
-          setIsUserModalOpen(false);
+          setIsAdvancedModalOpen(false);
           setSelectedUser(null);
         }}
         onUserUpdate={refetch}
