@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
@@ -351,16 +352,19 @@ export default function CreditsCheckout() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="credits" className="text-sm">Quantidade de Créditos</Label>
-                    <Input 
-                      id="credits" 
-                      type="number" 
-                      min="1" 
-                      max="100" 
-                      value={credits} 
-                      onChange={e => setCredits(Math.max(1, parseInt(e.target.value) || 1))} 
-                      className="text-base font-semibold mt-1" 
-                    />
+                    <Label className="text-sm">Quantidade de Créditos</Label>
+                    <Select value={credits.toString()} onValueChange={(value) => setCredits(parseInt(value))}>
+                      <SelectTrigger className="text-base font-semibold mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} {num === 1 ? 'crédito' : 'créditos'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="bg-muted p-3 rounded-lg text-sm">

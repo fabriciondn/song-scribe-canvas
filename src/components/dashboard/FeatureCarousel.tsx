@@ -51,23 +51,41 @@ const FeatureCarousel: React.FC = () => {
           {banners.map(banner => {
           const IconComponent = banner.icon;
           return <CarouselItem key={banner.id}>
-                <div className="relative h-64 md:h-64 lg:h-64 w-full overflow-hidden rounded-lg group cursor-pointer sm:h-40">
+                <div className="relative h-32 md:h-64 lg:h-64 w-full overflow-hidden rounded-lg group cursor-pointer">
                   <img src={banner.image} alt={banner.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className={`absolute inset-0 bg-gradient-to-r ${banner.gradient}`} />
-                  <div className="absolute inset-0 flex items-center justify-between p-4 sm:p-3 md:p-8">
-                    <div className="flex items-center space-x-3 sm:space-x-2 md:space-x-6 flex-1">
-                      <div className="p-2 sm:p-2 md:p-4 bg-white/10 backdrop-blur-sm rounded-full flex-shrink-0">
-                        <IconComponent className="h-6 w-6 sm:h-6 sm:w-6 md:h-12 md:w-12 text-white" />
+                  <div className="absolute inset-0 flex md:items-center md:justify-between p-4 sm:p-3 md:p-8">
+                    {/* Layout mobile - empilhado verticalmente */}
+                    <div className="md:hidden flex flex-col justify-center items-center w-full h-full space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="p-1.5 bg-white/10 backdrop-blur-sm rounded-full flex-shrink-0">
+                          <IconComponent className="h-4 w-4 text-white" />
+                        </div>
+                        <div className="text-center">
+                          <h2 className="text-sm font-bold text-white leading-tight">{banner.title}</h2>
+                          <p className="text-white/90 text-xs line-clamp-1">{banner.subtitle}</p>
+                        </div>
+                      </div>
+                      <Button asChild size="sm" className="bg-white text-gray-900 hover:bg-white/90 shadow-lg text-xs px-3 py-1">
+                        <Link to={banner.link}>
+                          Ver
+                        </Link>
+                      </Button>
+                    </div>
+                    
+                    {/* Layout desktop - horizontal */}
+                    <div className="hidden md:flex items-center space-x-6 flex-1">
+                      <div className="p-4 bg-white/10 backdrop-blur-sm rounded-full flex-shrink-0">
+                        <IconComponent className="h-12 w-12 text-white" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h2 className="text-lg sm:text-xl md:text-3xl font-bold text-white mb-1 sm:mb-1 md:mb-2 leading-tight">{banner.title}</h2>
-                        <p className="text-white/90 text-sm sm:text-sm md:text-lg line-clamp-2">{banner.subtitle}</p>
+                        <h2 className="text-3xl font-bold text-white mb-2 leading-tight">{banner.title}</h2>
+                        <p className="text-white/90 text-lg line-clamp-2">{banner.subtitle}</p>
                       </div>
                     </div>
-                    <Button asChild size="sm" className="bg-white text-gray-900 hover:bg-white/90 shadow-lg text-xs sm:text-xs md:text-sm px-2 sm:px-3 md:px-4 py-1 sm:py-2 md:py-2 flex-shrink-0 ml-2">
+                    <Button asChild size="sm" className="hidden md:block bg-white text-gray-900 hover:bg-white/90 shadow-lg text-sm px-4 py-2 flex-shrink-0 ml-2">
                       <Link to={banner.link} className="mx-[30px]">
-                        <span className="hidden sm:inline">{banner.action}</span>
-                        <span className="sm:hidden">Ver</span>
+                        {banner.action}
                       </Link>
                     </Button>
                   </div>
