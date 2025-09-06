@@ -63,23 +63,23 @@ export default function CreditsCheckout() {
   }, [theme]);
 
   const calculatePricing = (creditAmount: number) => {
-    let unitPrice = 1.00;
+    let unitPrice = 29.99;
     let bonusCredits = 0;
     let savings = 0;
+    let originalPrice = 29.99 * creditAmount;
 
     // Promoção de 10 créditos
     if (creditAmount === 10) {
-      unitPrice = 1.00;
+      unitPrice = 25.00;
       bonusCredits = 2;
-      savings = (1 - 1) * 10 + 2 * 1;
+      savings = (29.99 - 25.00) * 10 + 2 * 29.99;
     // Promoção de 5 créditos
     } else if (creditAmount === 5) {
-      unitPrice = 1.00;
-      savings = (1 - 1) * 5;
+      unitPrice = 25.00;
+      savings = (29.99 - 25.00) * 5;
     }
 
     let totalAmount = creditAmount * unitPrice;
-    let originalPrice = 1 * creditAmount;
 
     return {
       unitPrice,
@@ -401,12 +401,12 @@ export default function CreditsCheckout() {
                     </div>
                      <div>
                        <h3 className="font-semibold text-orange-800 dark:text-orange-200">Oferta Especial - 5 Créditos</h3>
-                       <p className="text-sm text-orange-700 dark:text-orange-300">De R$ 1,00 por apenas R$ 1,00 cada</p>
+                       <p className="text-sm text-orange-700 dark:text-orange-300">De R$ 29,99 por apenas R$ 25,00 cada</p>
                      </div>
                    </div>
                    <div className="text-right">
-                     <div className="text-sm text-orange-600 dark:text-orange-400 line-through">R$ {(1*5).toFixed(2)}</div>
-                     <div className="text-lg font-bold text-orange-800 dark:text-orange-200">R$ {(1*5).toFixed(2)}</div>
+                     <div className="text-sm text-orange-600 dark:text-orange-400 line-through">R$ {(29.99*5).toFixed(2)}</div>
+                     <div className="text-lg font-bold text-orange-800 dark:text-orange-200">R$ {(25.00*5).toFixed(2)}</div>
                   </div>
                 </div>
               </CardContent>
@@ -421,12 +421,12 @@ export default function CreditsCheckout() {
                     </div>
                      <div>
                        <h3 className="font-semibold text-green-800 dark:text-green-200">Super Oferta - recarregue 10 Créditos e ganhe +2 Registros GRÁTIS</h3>
-                       <p className="text-sm text-green-700 dark:text-green-300">12 créditos por R$ 1,00 cada (apenas os 10)</p>
+                       <p className="text-sm text-green-700 dark:text-green-300">12 créditos por R$ 25,00 cada (apenas os 10)</p>
                      </div>
                    </div>
                    <div className="text-right">
-                     <div className="text-sm text-green-600 dark:text-green-400 line-through">R$ {(1*12).toFixed(2)}</div>
-                     <div className="text-lg font-bold text-green-800 dark:text-green-200">R$ {(1*10).toFixed(2)}</div>
+                     <div className="text-sm text-green-600 dark:text-green-400 line-through">R$ {(29.99*12).toFixed(2)}</div>
+                     <div className="text-lg font-bold text-green-800 dark:text-green-200">R$ {(25.00*10).toFixed(2)}</div>
                   </div>
                 </div>
               </CardContent>
