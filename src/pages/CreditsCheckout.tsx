@@ -323,190 +323,386 @@ export default function CreditsCheckout() {
       </div>;
   }
 
-  return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
-          <p className="text-muted-foreground text-sm mt-1">Checkout</p>
-        </div>
+  return (
+    <>
+      {/* Hook para detectar mobile */}
+      <div className="block md:hidden">
+        {/* Layout Mobile */}
+        <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
+          <div className="max-w-md mx-auto">
+            <div className="text-center mb-6">
+              <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-8 mx-auto" />
+              <p className="text-muted-foreground text-xs mt-1">Checkout</p>
+            </div>
 
-        <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar ao Dashboard
-        </Button>
+            <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-4 text-sm">
+              <ArrowLeft className="mr-1 h-3 w-3" />
+              Voltar ao Dashboard
+            </Button>
 
-        <div className="space-y-6">
-          {/* Credit Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-foreground">
-                <Coins className="h-5 w-5" />
-                Comprar Créditos
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="credits">Quantidade de Créditos</Label>
-                <Input 
-                  id="credits" 
-                  type="number" 
-                  min="1" 
-                  max="100" 
-                  value={credits} 
-                  onChange={e => setCredits(Math.max(1, parseInt(e.target.value) || 1))} 
-                  className="text-lg font-semibold" 
-                />
-              </div>
-
-              <div className="bg-muted p-4 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-muted-foreground">Créditos base:</span>
-                  <span className="font-medium">{credits}</span>
-                </div>
-                {pricing.bonusCredits > 0 && (
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-muted-foreground">Créditos bônus:</span>
-                    <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
+            <div className="space-y-4">
+              {/* Mobile Credit Selection */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-foreground text-lg">
+                    <Coins className="h-4 w-4" />
+                    Comprar Créditos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="credits" className="text-sm">Quantidade de Créditos</Label>
+                    <Input 
+                      id="credits" 
+                      type="number" 
+                      min="1" 
+                      max="100" 
+                      value={credits} 
+                      onChange={e => setCredits(Math.max(1, parseInt(e.target.value) || 1))} 
+                      className="text-base font-semibold mt-1" 
+                    />
                   </div>
-                )}
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-muted-foreground">Total de créditos:</span>
-                  <span className="font-bold text-primary">{pricing.finalCredits}</span>
-                </div>
-                <hr className="my-2" />
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold">Valor total:</span>
-                  <div className="text-right">
-                    {pricing.savings > 0 && (
-                      <div className="text-xs text-muted-foreground line-through">
-                        R$ {pricing.originalPrice.toFixed(2)}
+
+                  <div className="bg-muted p-3 rounded-lg text-sm">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-muted-foreground">Créditos base:</span>
+                      <span className="font-medium">{credits}</span>
+                    </div>
+                    {pricing.bonusCredits > 0 && (
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-muted-foreground">Créditos bônus:</span>
+                        <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
                       </div>
                     )}
-                    <div className="text-lg font-bold text-foreground">
-                      R$ {pricing.totalAmount.toFixed(2)}
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-muted-foreground">Total de créditos:</span>
+                      <span className="font-bold text-primary">{pricing.finalCredits}</span>
+                    </div>
+                    <hr className="my-2" />
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold">Valor total:</span>
+                      <div className="text-right">
+                        {pricing.savings > 0 && (
+                          <div className="text-xs text-muted-foreground line-through">
+                            R$ {pricing.originalPrice.toFixed(2)}
+                          </div>
+                        )}
+                        <div className="text-base font-bold text-foreground">
+                          R$ {pricing.totalAmount.toFixed(2)}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+
+              {/* Mobile Order Bumps */}
+              <div className="space-y-3">
+                <Card className={`border-2 cursor-pointer transition-all ${credits === 5 ? 'border-orange-500 bg-orange-50 dark:bg-orange-950' : 'border-orange-200 hover:border-orange-300'}`} onClick={() => setCredits(5)}>
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-orange-100 p-1.5 rounded-full">
+                          <Gift className="h-3 w-3 text-orange-600" />
+                        </div>
+                         <div>
+                           <h3 className="font-semibold text-orange-800 dark:text-orange-200 text-sm">Oferta Especial - 5 Créditos</h3>
+                           <p className="text-xs text-orange-700 dark:text-orange-300">De R$ 29,99 por apenas R$ 25,00 cada</p>
+                         </div>
+                       </div>
+                       <div className="text-right">
+                         <div className="text-xs text-orange-600 dark:text-orange-400 line-through">R$ {(29.99*5).toFixed(2)}</div>
+                         <div className="text-sm font-bold text-orange-800 dark:text-orange-200">R$ {(25.00*5).toFixed(2)}</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className={`border-2 cursor-pointer transition-all ${credits === 10 ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-green-200 hover:border-green-300'}`} onClick={() => setCredits(10)}>
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-green-100 p-1.5 rounded-full">
+                          <Gift className="h-3 w-3 text-green-600" />
+                        </div>
+                         <div>
+                           <h3 className="font-semibold text-green-800 dark:text-green-200 text-sm">Super Oferta - 10 + 2 GRÁTIS</h3>
+                           <p className="text-xs text-green-700 dark:text-green-300">12 créditos por R$ 25,00 cada (apenas os 10)</p>
+                         </div>
+                       </div>
+                       <div className="text-right">
+                         <div className="text-xs text-green-600 dark:text-green-400 line-through">R$ {(29.99*12).toFixed(2)}</div>
+                         <div className="text-sm font-bold text-green-800 dark:text-green-200">R$ {(25.00*10).toFixed(2)}</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
 
-          <div className="space-y-4">
-            <Card className={`border-2 cursor-pointer transition-all ${credits === 5 ? 'border-orange-500 bg-orange-50 dark:bg-orange-950' : 'border-orange-200 hover:border-orange-300'}`} onClick={() => setCredits(5)}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-orange-100 p-2 rounded-full">
-                      <Gift className="h-5 w-5 text-orange-600" />
+              {/* Mobile Summary */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-foreground text-lg">Resumo do Pedido</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Nome:</span>
+                      <span className="font-medium">{profile?.name || 'Não informado'}</span>
                     </div>
-                     <div>
-                       <h3 className="font-semibold text-orange-800 dark:text-orange-200">Oferta Especial - 5 Créditos</h3>
-                       <p className="text-sm text-orange-700 dark:text-orange-300">De R$ 29,99 por apenas R$ 25,00 cada</p>
-                     </div>
-                   </div>
-                   <div className="text-right">
-                     <div className="text-sm text-orange-600 dark:text-orange-400 line-through">R$ {(29.99*5).toFixed(2)}</div>
-                     <div className="text-lg font-bold text-orange-800 dark:text-orange-200">R$ {(25.00*5).toFixed(2)}</div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Email:</span>
+                      <span className="font-medium">{user.email}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">CPF:</span>
+                      <span className="font-medium">{profile?.cpf || 'Não informado'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Telefone:</span>
+                      <span className="font-medium">{profile?.cellphone || 'Não informado'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Créditos atuais:</span>
+                      <span className="font-medium">{profile?.credits || 0}</span>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card className={`border-2 cursor-pointer transition-all ${credits === 10 ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-green-200 hover:border-green-300'}`} onClick={() => setCredits(10)}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-green-100 p-2 rounded-full">
-                      <Gift className="h-5 w-5 text-green-600" />
+                  <hr />
+
+                  <div className="space-y-1 text-sm">
+                    <h4 className="font-semibold text-foreground">Detalhes da Compra</h4>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Quantidade:</span>
+                      <span className="font-medium">{credits} créditos</span>
                     </div>
-                     <div>
-                       <h3 className="font-semibold text-green-800 dark:text-green-200">Super Oferta - recarregue 10 Créditos e ganhe +2 Registros GRÁTIS</h3>
-                       <p className="text-sm text-green-700 dark:text-green-300">12 créditos por R$ 25,00 cada (apenas os 10)</p>
-                     </div>
-                   </div>
-                   <div className="text-right">
-                     <div className="text-sm text-green-600 dark:text-green-400 line-through">R$ {(29.99*12).toFixed(2)}</div>
-                     <div className="text-lg font-bold text-green-800 dark:text-green-200">R$ {(25.00*10).toFixed(2)}</div>
+                    {pricing.bonusCredits > 0 && <div className="flex justify-between">
+                        <span className="text-muted-foreground">Créditos bônus:</span>
+                        <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
+                      </div>}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total de créditos:</span>
+                      <span className="font-bold text-primary">{pricing.finalCredits}</span>
+                    </div>
+                    <div className="flex justify-between text-base">
+                      <span className="font-bold">Valor total:</span>
+                      <span className="font-bold text-primary">R$ {pricing.totalAmount.toFixed(2)}</span>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+
+                  <Button 
+                    onClick={handleProcessPayment} 
+                    disabled={isProcessing} 
+                    className="w-full" 
+                    size="lg"
+                  >
+                    {isProcessing ? 
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Processando...
+                      </div> : 
+                      `Finalizar Compra - R$ ${pricing.totalAmount.toFixed(2)}`
+                    }
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-foreground">Resumo do Pedido</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Nome:</span>
-                  <span className="font-medium">{profile?.name || 'Não informado'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Email:</span>
-                  <span className="font-medium">{user.email}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">CPF:</span>
-                  <span className="font-medium">{profile?.cpf || 'Não informado'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Telefone:</span>
-                  <span className="font-medium">{profile?.cellphone || 'Não informado'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Créditos atuais:</span>
-                  <span className="font-medium">{profile?.credits || 0}</span>
-                </div>
-              </div>
-
-              <hr />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold text-foreground">Detalhes da Compra</h4>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Quantidade:</span>
-                  <span className="font-medium">{credits} créditos</span>
-                </div>
-                {pricing.bonusCredits > 0 && <div className="flex justify-between">
-                    <span className="text-muted-foreground">Créditos bônus:</span>
-                    <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
-                  </div>}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total de créditos:</span>
-                  <span className="font-bold text-primary">{pricing.finalCredits}</span>
-                </div>
-                <div className="flex justify-between text-lg">
-                  <span className="font-bold">Valor total:</span>
-                  <span className="font-bold text-primary">R$ {pricing.totalAmount.toFixed(2)}</span>
-                </div>
-              </div>
-
-              <Button 
-                onClick={handleProcessPayment} 
-                disabled={isProcessing} 
-                className="w-full" 
-                size="lg"
-              >
-                {isProcessing ? 
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Processando...
-                  </div> : 
-                  `Finalizar Compra - R$ ${pricing.totalAmount.toFixed(2)}`
-                }
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
 
+      {/* Layout Desktop */}
+      <div className="hidden md:block">
+        <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-8">
+              <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
+              <p className="text-muted-foreground text-sm mt-1">Checkout</p>
+            </div>
+
+            <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-6">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar ao Dashboard
+            </Button>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-h-[calc(100vh-200px)]">
+              {/* Left Column - Credit Selection */}
+              <div className="lg:col-span-2 space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-foreground">
+                      <Coins className="h-5 w-5" />
+                      Comprar Créditos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div>
+                      <Label htmlFor="credits">Quantidade de Créditos</Label>
+                      <Input 
+                        id="credits" 
+                        type="number" 
+                        min="1" 
+                        max="100" 
+                        value={credits} 
+                        onChange={e => setCredits(Math.max(1, parseInt(e.target.value) || 1))} 
+                        className="text-lg font-semibold" 
+                      />
+                    </div>
+
+                    <div className="bg-muted p-4 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-muted-foreground">Créditos base:</span>
+                        <span className="font-medium">{credits}</span>
+                      </div>
+                      {pricing.bonusCredits > 0 && (
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-muted-foreground">Créditos bônus:</span>
+                          <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-muted-foreground">Total de créditos:</span>
+                        <span className="font-bold text-primary">{pricing.finalCredits}</span>
+                      </div>
+                      <hr className="my-2" />
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold">Valor total:</span>
+                        <div className="text-right">
+                          {pricing.savings > 0 && (
+                            <div className="text-xs text-muted-foreground line-through">
+                              R$ {pricing.originalPrice.toFixed(2)}
+                            </div>
+                          )}
+                          <div className="text-lg font-bold text-foreground">
+                            R$ {pricing.totalAmount.toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Desktop Order Bumps - Two separate cards */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <Card className={`border-2 cursor-pointer transition-all ${credits === 5 ? 'border-orange-500 bg-orange-50 dark:bg-orange-950' : 'border-orange-200 hover:border-orange-300'}`} onClick={() => setCredits(5)}>
+                    <CardContent className="p-4">
+                      <div className="text-center space-y-3">
+                        <div className="bg-orange-100 p-3 rounded-full w-fit mx-auto">
+                          <Gift className="h-6 w-6 text-orange-600" />
+                        </div>
+                         <div>
+                           <h3 className="font-semibold text-orange-800 dark:text-orange-200 text-lg">Oferta Especial</h3>
+                           <p className="text-orange-700 dark:text-orange-300 font-medium">5 Créditos</p>
+                           <p className="text-sm text-orange-600 dark:text-orange-400">De R$ 29,99 por apenas R$ 25,00 cada</p>
+                         </div>
+                         <div className="text-center">
+                           <div className="text-sm text-orange-600 dark:text-orange-400 line-through">R$ {(29.99*5).toFixed(2)}</div>
+                           <div className="text-xl font-bold text-orange-800 dark:text-orange-200">R$ {(25.00*5).toFixed(2)}</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className={`border-2 cursor-pointer transition-all ${credits === 10 ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-green-200 hover:border-green-300'}`} onClick={() => setCredits(10)}>
+                    <CardContent className="p-4">
+                      <div className="text-center space-y-3">
+                        <div className="bg-green-100 p-3 rounded-full w-fit mx-auto">
+                          <Gift className="h-6 w-6 text-green-600" />
+                        </div>
+                         <div>
+                           <h3 className="font-semibold text-green-800 dark:text-green-200 text-lg">Super Oferta</h3>
+                           <p className="text-green-700 dark:text-green-300 font-medium">10 Créditos + 2 GRÁTIS</p>
+                           <p className="text-sm text-green-600 dark:text-green-400">12 créditos por R$ 25,00 cada (apenas os 10)</p>
+                         </div>
+                         <div className="text-center">
+                           <div className="text-sm text-green-600 dark:text-green-400 line-through">R$ {(29.99*12).toFixed(2)}</div>
+                           <div className="text-xl font-bold text-green-800 dark:text-green-200">R$ {(25.00*10).toFixed(2)}</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Right Column - Order Summary */}
+              <div className="lg:col-span-1">
+                <Card className="sticky top-6">
+                  <CardHeader>
+                    <CardTitle className="text-foreground">Resumo do Pedido</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Nome:</span>
+                        <span className="font-medium">{profile?.name || 'Não informado'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Email:</span>
+                        <span className="font-medium">{user.email}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">CPF:</span>
+                        <span className="font-medium">{profile?.cpf || 'Não informado'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Telefone:</span>
+                        <span className="font-medium">{profile?.cellphone || 'Não informado'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Créditos atuais:</span>
+                        <span className="font-medium">{profile?.credits || 0}</span>
+                      </div>
+                    </div>
+
+                    <hr />
+
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-foreground">Detalhes da Compra</h4>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Quantidade:</span>
+                        <span className="font-medium">{credits} créditos</span>
+                      </div>
+                      {pricing.bonusCredits > 0 && <div className="flex justify-between">
+                          <span className="text-muted-foreground">Créditos bônus:</span>
+                          <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
+                        </div>}
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total de créditos:</span>
+                        <span className="font-bold text-primary">{pricing.finalCredits}</span>
+                      </div>
+                      <div className="flex justify-between text-lg">
+                        <span className="font-bold">Valor total:</span>
+                        <span className="font-bold text-primary">R$ {pricing.totalAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={handleProcessPayment} 
+                      disabled={isProcessing} 
+                      className="w-full" 
+                      size="lg"
+                    >
+                      {isProcessing ? 
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Processando...
+                        </div> : 
+                        `Finalizar Compra - R$ ${pricing.totalAmount.toFixed(2)}`
+                      }
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       {/* Success Modal */}
       <PaymentSuccessModal 
         isOpen={showSuccessModal}
         creditsAdded={creditsAdded}
         onContinue={handleSuccessModalContinue}
       />
-    </div>;
+    </>
+  );
 }
