@@ -44,6 +44,21 @@ export const Header = ({
     return () => window.removeEventListener('credits-updated', handleCreditsUpdate);
   }, [refreshCredits]);
   
+  const getUserInitials = (name?: string, email?: string) => {
+    if (name) {
+      return name
+        .split(' ')
+        .map(word => word.charAt(0))
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    if (email) {
+      return email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
@@ -142,7 +157,7 @@ export const Header = ({
                 <Avatar className="h-9 w-9">
                   <AvatarImage src={profile?.avatar_url || ""} alt={profile?.name || user.email || "User"} />
                   <AvatarFallback>
-                    {profile?.name ? profile.name.charAt(0).toUpperCase() : user.email ? user.email.charAt(0).toUpperCase() : "U"}
+                    {getUserInitials(profile?.name, user.email)}
                   </AvatarFallback>
                 </Avatar>
               </Button>
