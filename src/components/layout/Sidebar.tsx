@@ -30,7 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { menuItems, isLoading: menuLoading } = useMenuItems();
 
   // Funções disponíveis para usuários básicos (não-PRO)
-  const basicFunctions = ['author-registration', 'settings', 'dashboard'];
+  const basicFunctions = ['author-registration', 'settings', 'dashboard', 'trash', 'plans', 'my-purchases'];
   
   // Verificar se a função deve ser acessível baseado no papel do usuário
   const canAccessFunction = (functionKey: string) => {

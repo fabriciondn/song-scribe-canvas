@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Play, MessageCircle, Heart, Share2, Clock, Eye } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Tutorial {
   id: string;
@@ -27,10 +29,6 @@ interface Comment {
   timestamp: string;
   type: 'suggestion' | 'doubt';
 }
-
-import { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
 
 const mockComments: Comment[] = [
   {
