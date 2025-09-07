@@ -51,7 +51,7 @@ export const ProOnlyWrapper: React.FC<ProOnlyWrapperProps> = ({
             </p>
           </div>
           
-          <Button size="lg" className="w-full" onClick={() => navigate('/plans')}>
+          <Button size="lg" className="w-full" onClick={() => navigate('/subscription-checkout')}>
             <Crown className="mr-2 h-4 w-4" />
             Fazer Upgrade para Pro
           </Button>

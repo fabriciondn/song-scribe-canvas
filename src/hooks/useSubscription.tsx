@@ -47,28 +47,12 @@ export const useSubscription = () => {
 
         if (error) throw error;
 
-        // Se não tem subscription, criar uma free
-        if (!data) {
-          const { data: newSub, error: createError } = await supabase
-            .from('subscriptions')
-            .insert({
-              user_id: currentUserId,
-              status: 'free',
-              plan_type: 'free',
-              auto_renew: false,
-              currency: 'BRL'
-            })
-            .select()
-            .single();
-
-          if (createError) throw createError;
-          setSubscription(newSub);
-        } else {
-          // Verificar se subscription expirou
+        if (data) {
+          // Verificar se subscription expirou (incluindo trial)
           const now = new Date();
           const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
           
-          if (expiresAt && now > expiresAt && data.status === 'active') {
+          if (expiresAt && now > expiresAt && (data.status === 'active' || data.status === 'trial')) {
             // Marcar como expirada
             const { data: updatedSub, error: updateError } = await supabase
               .from('subscriptions')
@@ -82,6 +66,18 @@ export const useSubscription = () => {
           } else {
             setSubscription(data);
           }
+        } else {
+          // Se não tem subscription, o trigger já deve ter criado uma trial
+          // Mas vamos verificar novamente
+          const { data: retryData } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', currentUserId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          setSubscription(retryData);
         }
       } catch (err) {
         console.error('Erro ao buscar subscription:', err);
@@ -119,7 +115,11 @@ export const useSubscription = () => {
     isLoading,
     error,
     refreshSubscription,
-    isPro: subscription?.status === 'active' && subscription?.plan_type === 'pro',
-    isFree: !subscription || subscription.plan_type === 'free' || subscription.status !== 'active'
+    isPro: subscription?.status === 'active' || subscription?.status === 'trial',
+    isFree: !subscription || subscription.status === 'expired' || subscription.status === 'free',
+    isTrialActive: subscription?.status === 'trial',
+    trialDaysRemaining: subscription?.status === 'trial' && subscription.expires_at 
+      ? Math.max(0, Math.ceil((new Date(subscription.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))
+      : 0
   };
 };

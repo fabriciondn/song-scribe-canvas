@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import FeatureCarousel from '@/components/dashboard/FeatureCarousel';
 import { CardSelector } from '@/components/dashboard/CardSelector';
 import { TransactionCard } from '@/components/dashboard/TransactionCard';
+import { TrialBanner } from '@/components/ui/TrialBanner';
 import { 
   Edit, 
   DollarSign, 
@@ -59,6 +60,9 @@ const DashboardHome: React.FC = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
+      {/* Trial Banner */}
+      <TrialBanner />
+      
       {/* Banner Carousel Moderno */}
       <FeatureCarousel />
       

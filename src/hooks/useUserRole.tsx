@@ -63,11 +63,11 @@ export const useUserRole = (): UserRole => {
         return;
       }
 
-      // Usuário normal - verificar subscription
+      // Usuário normal - verificar subscription (incluindo trial)
       if (!subscriptionLoading) {
         console.log('📋 useUserRole: Usuário comum, isPro:', subscriptionIsPro);
         setRole({
-          isPro: subscriptionIsPro,
+          isPro: subscriptionIsPro, // isPro já inclui trial no useSubscription
           isAdmin: false,
           isModerator: false,
           isLoading: false,

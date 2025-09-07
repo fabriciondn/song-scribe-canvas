@@ -23,6 +23,7 @@ import Templates from "./pages/Templates";
 import Plans from "./pages/Plans";
 import Checkout from "./pages/Checkout";
 import CreditsCheckout from "./pages/CreditsCheckout";
+import SubscriptionCheckout from "./pages/SubscriptionCheckout";
 import Folders from "./pages/Folders";
 import Drafts from "./pages/Drafts";
 import Partnerships from "./pages/Partnerships";
@@ -116,6 +117,7 @@ const AppContent = () => {
               <Route index element={<Checkout />} />
             </Route>
             <Route path="/credits-checkout" element={<CreditsCheckout />} />
+            <Route path="/subscription-checkout" element={<SubscriptionCheckout />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </PageFunctionStatusWrapper>

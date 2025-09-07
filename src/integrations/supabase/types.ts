@@ -1087,6 +1087,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      check_subscription_expiry: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       cleanup_old_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined

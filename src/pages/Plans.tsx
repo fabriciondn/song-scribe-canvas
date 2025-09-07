@@ -70,7 +70,7 @@ const Plans = () => {
       setShowProfileWarning(true);
       return;
     }
-    navigate('/checkout');
+    navigate('/subscription-checkout');
   };
 
   if (isLoading) {
