@@ -35,19 +35,29 @@ export const useUserTransactions = () => {
       if (error) throw error;
       
       // Mapear os dados da tabela para a interface UserTransaction
-      return (data || []).map(transaction => ({
-        id: transaction.id,
-        user_id: transaction.user_id,
-        amount: transaction.total_amount,
-        bonus_credits: transaction.bonus_credits || 0,
-        total_credits: transaction.credits_purchased + (transaction.bonus_credits || 0),
-        payment_id: transaction.payment_id || '',
-        payment_method: transaction.payment_provider,
-        status: transaction.status as 'pending' | 'completed' | 'failed',
-        created_at: transaction.created_at,
-        completed_at: transaction.completed_at,
-        metadata: {}
-      })) as UserTransaction[];
+      return (data || []).map(transaction => {
+        // Determinar o método de pagamento baseado no payment_id
+        let paymentMethod = 'Mercado Pago';
+        if (transaction.payment_id && transaction.payment_id.startsWith('pix_')) {
+          paymentMethod = 'PIX';
+        } else if (transaction.payment_provider === 'mercadopago') {
+          paymentMethod = 'Mercado Pago';
+        }
+
+        return {
+          id: transaction.id,
+          user_id: transaction.user_id,
+          amount: transaction.total_amount,
+          bonus_credits: transaction.bonus_credits || 0,
+          total_credits: transaction.credits_purchased + (transaction.bonus_credits || 0),
+          payment_id: transaction.payment_id || '',
+          payment_method: paymentMethod,
+          status: transaction.status as 'pending' | 'completed' | 'failed',
+          created_at: transaction.created_at,
+          completed_at: transaction.completed_at,
+          metadata: {}
+        };
+      }) as UserTransaction[];
     },
     enabled: !!user?.id,
   });
@@ -69,7 +79,7 @@ export const useUserTransactions = () => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(value / 100); // Convertendo de centavos para reais
+    }).format(value); // Valor já está em reais
   };
 
   const formatDate = (dateString: string) => {
