@@ -25,46 +25,53 @@ export const useUserRole = (): UserRole => {
     role: 'user'
   });
 
-  const fetchUserRole = useCallback(async (userId: string) => {
-    if (!userId) {
-      setRole({
-        isPro: false,
-        isAdmin: false,
-        isModerator: false,
-        isLoading: false,
-        role: 'user'
-      });
-      return;
-    }
-
-    try {
-      console.log('🔍 useUserRole: Verificando role para usuário:', userId);
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      const currentUserId = isImpersonating && impersonatedUser?.id ? impersonatedUser.id : user?.id;
       
-      // Verificar se é admin/moderator na tabela admin_users
-      const { data: adminData, error } = await supabase
-        .from('admin_users')
-        .select('role')
-        .eq('user_id', userId)
-        .single();
-
-      if (adminData && !error) {
-        // Normalizar super_admin para admin
-        const normalizedRole = adminData.role === 'super_admin' ? 'admin' : adminData.role;
-        
-        console.log('✅ useUserRole: Usuário tem role administrativo:', normalizedRole);
-        
+      if (!currentUserId) {
         setRole({
-          isPro: normalizedRole === 'admin' ? true : subscriptionIsPro, // Apenas admins têm acesso Pro automático
-          isAdmin: normalizedRole === 'admin',
-          isModerator: normalizedRole === 'moderator',
+          isPro: false,
+          isAdmin: false,
+          isModerator: false,
           isLoading: false,
-          role: normalizedRole as 'admin' | 'moderator' | 'user'
+          role: 'user'
         });
         return;
       }
 
-      // Usuário normal - verificar subscription (incluindo trial)
-      if (!subscriptionLoading) {
+      // Aguardar subscription carregar
+      if (subscriptionLoading) {
+        return;
+      }
+
+      try {
+        console.log('🔍 useUserRole: Verificando role para usuário:', currentUserId);
+        
+        // Verificar se é admin/moderator na tabela admin_users
+        const { data: adminData, error } = await supabase
+          .from('admin_users')
+          .select('role')
+          .eq('user_id', currentUserId)
+          .single();
+
+        if (adminData && !error) {
+          // Normalizar super_admin para admin
+          const normalizedRole = adminData.role === 'super_admin' ? 'admin' : adminData.role;
+          
+          console.log('✅ useUserRole: Usuário tem role administrativo:', normalizedRole);
+          
+          setRole({
+            isPro: normalizedRole === 'admin' ? true : subscriptionIsPro, // Apenas admins têm acesso Pro automático
+            isAdmin: normalizedRole === 'admin',
+            isModerator: normalizedRole === 'moderator',
+            isLoading: false,
+            role: normalizedRole as 'admin' | 'moderator' | 'user'
+          });
+          return;
+        }
+
+        // Usuário normal - verificar subscription (incluindo trial)
         console.log('📋 useUserRole: Usuário comum, isPro:', subscriptionIsPro);
         setRole({
           isPro: subscriptionIsPro, // isPro já inclui trial no useSubscription
@@ -73,35 +80,21 @@ export const useUserRole = (): UserRole => {
           isLoading: false,
           role: 'user'
         });
+
+      } catch (error) {
+        console.error('❌ useUserRole: Erro ao buscar role:', error);
+        setRole({
+          isPro: false,
+          isAdmin: false,
+          isModerator: false,
+          isLoading: false,
+          role: 'user'
+        });
       }
+    };
 
-    } catch (error) {
-      console.error('❌ useUserRole: Erro ao buscar role:', error);
-      setRole({
-        isPro: false,
-        isAdmin: false,
-        isModerator: false,
-        isLoading: false,
-        role: 'user'
-      });
-    }
-  }, [subscriptionIsPro, subscriptionLoading]);
-
-  useEffect(() => {
-    const currentUserId = isImpersonating && impersonatedUser?.id ? impersonatedUser.id : user?.id;
-    
-    if (currentUserId) {
-      fetchUserRole(currentUserId);
-    } else {
-      setRole({
-        isPro: false,
-        isAdmin: false,
-        isModerator: false,
-        isLoading: false,
-        role: 'user'
-      });
-    }
-  }, [user?.id, isImpersonating, impersonatedUser?.id, fetchUserRole]);
+    fetchUserRole();
+  }, [user?.id, isImpersonating, impersonatedUser?.id, subscriptionIsPro, subscriptionLoading]);
 
   return role;
 };
