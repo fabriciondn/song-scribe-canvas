@@ -30,7 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { menuItems, isLoading: menuLoading } = useMenuItems();
 
   // Funções disponíveis para usuários básicos (não-PRO)
-  const basicFunctions = ['author-registration', 'settings', 'dashboard', 'trash', 'plans', 'my-purchases'];
+  const basicFunctions = ['author-registration', 'settings', 'dashboard', 'trash', 'plans', 'my-purchases', 'upgrade'];
   
   // Verificar se a função deve ser acessível baseado no papel do usuário
   const canAccessFunction = (functionKey: string) => {
@@ -54,8 +54,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       items = items.filter(item => !['admin', 'moderator'].includes(item.functionKey));
     }
     
+    // Show "Upgrade Pro" only for non-Pro users
+    if (isPro) {
+      items = items.filter(item => item.functionKey !== 'upgrade');
+    }
+    
     return items;
-  }, [menuItems, isAdmin]);
+  }, [menuItems, isAdmin, isPro]);
 
   return (
     <>
@@ -155,7 +160,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </nav>
 
-        <div className="pt-4 mt-auto border-t border-sidebar-border">
+        <div className="pt-4 mt-auto border-t border-sidebar-border space-y-2">
+          {isPro && !isCollapsed && (
+            <div className="flex items-center justify-center gap-2 px-3 py-2 bg-green-600/20 rounded-lg">
+              <Crown className="h-4 w-4 text-green-400" />
+              <span className="text-sm text-green-400 font-medium">Pro Ativo</span>
+            </div>
+          )}
           <p className="text-xs text-gray-400 text-center">Compuse v1.0</p>
         </div>
       </aside>

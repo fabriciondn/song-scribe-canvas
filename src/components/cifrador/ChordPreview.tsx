@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Placements } from '../../pages/ChordEditorPage';
+import type { Placements } from '@/types/cifrador';
 import { ChordChip } from './ChordChip';
 import { ChordInsertPopover } from './ChordInsertPopover';
 

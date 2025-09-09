@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChordChip } from './ChordChip';
 import { ChordInsertPopover } from './ChordInsertPopover';
-import type { Placements } from '@/pages/CifradorNeoPage';
+import type { Placements } from '@/types/cifrador';
 
 interface ChordVisualGridProps {
   lyrics: string;

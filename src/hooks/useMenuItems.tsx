@@ -13,7 +13,8 @@ import {
   Crown, 
   Trash2, 
   Settings,
-  CreditCard
+  CreditCard,
+  ArrowUp
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -112,6 +113,13 @@ export const useMenuItems = () => {
         icon: User,
         path: '/dashboard/settings',
         functionKey: 'settings',
+        isPro: false
+      },
+      {
+        label: 'Upgrade Pro',
+        icon: ArrowUp,
+        path: '/subscription-checkout',
+        functionKey: 'upgrade',
         isPro: false
       },
       {

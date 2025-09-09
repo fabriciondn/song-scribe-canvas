@@ -17,6 +17,8 @@ export default function SubscriptionCheckout() {
   const { subscription, isTrialActive, trialDaysRemaining } = useSubscription();
   const { profile } = useProfile();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [showQR, setShowQR] = useState(false);
 
   const handleSubscribe = async () => {
     if (!user) {
@@ -38,9 +40,9 @@ export default function SubscriptionCheckout() {
       if (error) throw error;
 
       if (data?.payment_url) {
-        // Abrir URL de pagamento em nova aba
-        window.open(data.payment_url, '_blank');
-        toast.success('Redirecionando para pagamento...');
+        setPaymentUrl(data.payment_url);
+        setShowQR(true);
+        toast.success('QR Code gerado! Escaneie para pagar via PIX.');
       }
     } catch (error: any) {
       console.error('Erro ao processar assinatura:', error);
@@ -197,6 +199,43 @@ export default function SubscriptionCheckout() {
             </CardContent>
           </Card>
 
+          {/* QR Code Section */}
+          {showQR && paymentUrl && (
+            <Card className="mb-8 border-green-200 bg-green-50/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-green-600" />
+                  Escaneie o QR Code para pagar
+                </CardTitle>
+                <CardDescription>
+                  Use o aplicativo do seu banco para escanear o código PIX
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center space-y-4">
+                <div className="bg-white p-4 rounded-lg shadow-sm border inline-block">
+                  <iframe
+                    src={paymentUrl}
+                    className="w-80 h-80 border-0"
+                    title="QR Code PIX"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Valor: R$ 14,99</p>
+                  <p className="text-xs text-muted-foreground">
+                    Após o pagamento, sua conta será ativada automaticamente
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => window.open(paymentUrl, '_blank')}
+                    className="mt-2"
+                  >
+                    Abrir link de pagamento
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Checkout Button */}
           <div className="text-center">
             {subscription?.status === 'active' ? (
@@ -212,6 +251,21 @@ export default function SubscriptionCheckout() {
                   Voltar ao Dashboard
                 </Button>
               </div>
+            ) : showQR ? (
+              <div className="space-y-4">
+                <p className="text-muted-foreground">
+                  Aguardando confirmação do pagamento...
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowQR(false);
+                    setPaymentUrl(null);
+                  }}
+                >
+                  Voltar
+                </Button>
+              </div>
             ) : (
               <div className="space-y-4">
                 <Button
@@ -221,7 +275,7 @@ export default function SubscriptionCheckout() {
                   disabled={isProcessing}
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
-                  {isProcessing ? 'Processando...' : 'Assinar Plano Pro'}
+                  {isProcessing ? 'Processando...' : 'Gerar QR Code PIX'}
                 </Button>
                 <p className="text-xs text-muted-foreground">
                   Pagamento seguro via PIX. Cancelamento a qualquer momento.
