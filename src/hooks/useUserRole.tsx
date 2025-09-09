@@ -1,6 +1,6 @@
 
 import { useImpersonation } from '@/context/ImpersonationContext';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,38 +17,25 @@ export const useUserRole = (): UserRole => {
   const { user } = useAuth();
   const { isImpersonating, impersonatedUser } = useImpersonation();
   const { isPro: subscriptionIsPro, isLoading: subscriptionLoading } = useSubscription();
-  const [role, setRole] = useState<UserRole>({
-    isPro: false,
-    isAdmin: false,
-    isModerator: false,
-    isLoading: true,
-    role: 'user'
-  });
+  const [adminRole, setAdminRole] = useState<string | null>(null);
+  const [adminLoading, setAdminLoading] = useState(true);
 
+  const currentUserId = useMemo(() => {
+    return isImpersonating && impersonatedUser?.id ? impersonatedUser.id : user?.id;
+  }, [user?.id, isImpersonating, impersonatedUser?.id]);
+
+  // Buscar role administrativo apenas uma vez por usuário
   useEffect(() => {
-    const fetchUserRole = async () => {
-      const currentUserId = isImpersonating && impersonatedUser?.id ? impersonatedUser.id : user?.id;
-      
-      if (!currentUserId) {
-        setRole({
-          isPro: false,
-          isAdmin: false,
-          isModerator: false,
-          isLoading: false,
-          role: 'user'
-        });
-        return;
-      }
+    if (!currentUserId) {
+      setAdminRole(null);
+      setAdminLoading(false);
+      return;
+    }
 
-      // Aguardar subscription carregar
-      if (subscriptionLoading) {
-        return;
-      }
-
+    const fetchAdminRole = async () => {
       try {
-        console.log('🔍 useUserRole: Verificando role para usuário:', currentUserId);
+        console.log('🔍 useUserRole: Verificando role administrativo para:', currentUserId);
         
-        // Verificar se é admin/moderator na tabela admin_users
         const { data: adminData, error } = await supabase
           .from('admin_users')
           .select('role')
@@ -56,45 +43,69 @@ export const useUserRole = (): UserRole => {
           .single();
 
         if (adminData && !error) {
-          // Normalizar super_admin para admin
           const normalizedRole = adminData.role === 'super_admin' ? 'admin' : adminData.role;
-          
-          console.log('✅ useUserRole: Usuário tem role administrativo:', normalizedRole);
-          
-          setRole({
-            isPro: normalizedRole === 'admin' ? true : subscriptionIsPro, // Apenas admins têm acesso Pro automático
-            isAdmin: normalizedRole === 'admin',
-            isModerator: normalizedRole === 'moderator',
-            isLoading: false,
-            role: normalizedRole as 'admin' | 'moderator' | 'user'
-          });
-          return;
+          console.log('✅ useUserRole: Role administrativo encontrado:', normalizedRole);
+          setAdminRole(normalizedRole);
+        } else {
+          console.log('📋 useUserRole: Usuário comum, sem role administrativo');
+          setAdminRole(null);
         }
-
-        // Usuário normal - verificar subscription (incluindo trial)
-        console.log('📋 useUserRole: Usuário comum, isPro:', subscriptionIsPro);
-        setRole({
-          isPro: subscriptionIsPro, // isPro já inclui trial no useSubscription
-          isAdmin: false,
-          isModerator: false,
-          isLoading: false,
-          role: 'user'
-        });
-
       } catch (error) {
-        console.error('❌ useUserRole: Erro ao buscar role:', error);
-        setRole({
-          isPro: false,
-          isAdmin: false,
-          isModerator: false,
-          isLoading: false,
-          role: 'user'
-        });
+        console.error('❌ useUserRole: Erro ao buscar role administrativo:', error);
+        setAdminRole(null);
+      } finally {
+        setAdminLoading(false);
       }
     };
 
-    fetchUserRole();
-  }, [user?.id, isImpersonating, impersonatedUser?.id, subscriptionIsPro, subscriptionLoading]);
+    fetchAdminRole();
+  }, [currentUserId]);
 
-  return role;
+  // Calcular o role final baseado nos dados carregados
+  const finalRole = useMemo((): UserRole => {
+    // Se ainda está carregando dados essenciais
+    if (!currentUserId) {
+      return {
+        isPro: false,
+        isAdmin: false,
+        isModerator: false,
+        isLoading: false,
+        role: 'user'
+      };
+    }
+
+    if (adminLoading || subscriptionLoading) {
+      return {
+        isPro: false,
+        isAdmin: false,
+        isModerator: false,
+        isLoading: true,
+        role: 'user'
+      };
+    }
+
+    const isAdmin = adminRole === 'admin';
+    const isModerator = adminRole === 'moderator';
+    
+    // Admins sempre têm acesso Pro, outros dependem da subscription
+    const isPro = isAdmin || subscriptionIsPro;
+
+    console.log('🎯 useUserRole: Estado final:', {
+      adminRole,
+      subscriptionIsPro,
+      isPro,
+      isAdmin,
+      isModerator
+    });
+
+    return {
+      isPro,
+      isAdmin,
+      isModerator,
+      isLoading: false,
+      role: adminRole as 'admin' | 'moderator' | 'user' || 'user'
+    };
+  }, [currentUserId, adminRole, adminLoading, subscriptionIsPro, subscriptionLoading]);
+
+  return finalRole;
 };

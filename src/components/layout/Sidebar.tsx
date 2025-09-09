@@ -162,12 +162,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <div className="pt-4 mt-auto border-t border-sidebar-border space-y-2">
           {!isCollapsed && (
-            <div className="flex items-center justify-center gap-2 px-3 py-2 bg-green-600/20 rounded-lg">
-              <Crown className="h-4 w-4 text-green-400" />
-              <span className="text-sm text-green-400 font-medium">
-                {isPro ? 'Pro Ativo' : 'Fazer Upgrade'}
-              </span>
-            </div>
+            <>
+              {isPro ? (
+                <div className="flex items-center justify-center gap-2 px-3 py-2 bg-green-600/20 rounded-lg">
+                  <Crown className="h-4 w-4 text-green-400" />
+                  <span className="text-sm text-green-400 font-medium">Pro Ativo</span>
+                </div>
+              ) : (
+                <Link 
+                  to="/subscription-checkout" 
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+                  onClick={() => {
+                    if (window.innerWidth < 768) {
+                      toggleSidebar();
+                    }
+                  }}
+                >
+                  <Crown className="h-4 w-4" />
+                  <span className="text-sm font-medium">Fazer Upgrade</span>
+                </Link>
+              )}
+            </>
           )}
           <p className="text-xs text-gray-400 text-center">Compuse v1.0</p>
         </div>
