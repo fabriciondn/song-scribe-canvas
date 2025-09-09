@@ -34,10 +34,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   
   // Verificar se a função deve ser acessível baseado no papel do usuário
   const canAccessFunction = (functionKey: string) => {
-    // Admins têm acesso total
+    // Apenas admins têm acesso total automático
     if (isAdmin) return true;
     
-    // Usuários básicos só têm acesso ao registro autoral, configurações e dashboard
+    // Usuários básicos (incluindo moderadores sem Pro) só têm acesso às funções básicas
     if (!isPro && !basicFunctions.includes(functionKey)) {
       return false;
     }
@@ -161,10 +161,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         <div className="pt-4 mt-auto border-t border-sidebar-border space-y-2">
-          {isPro && !isCollapsed && (
+          {!isCollapsed && (
             <div className="flex items-center justify-center gap-2 px-3 py-2 bg-green-600/20 rounded-lg">
               <Crown className="h-4 w-4 text-green-400" />
-              <span className="text-sm text-green-400 font-medium">Pro Ativo</span>
+              <span className="text-sm text-green-400 font-medium">
+                {isPro ? 'Pro Ativo' : 'Fazer Upgrade'}
+              </span>
             </div>
           )}
           <p className="text-xs text-gray-400 text-center">Compuse v1.0</p>

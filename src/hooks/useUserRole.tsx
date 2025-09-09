@@ -54,7 +54,7 @@ export const useUserRole = (): UserRole => {
         console.log('✅ useUserRole: Usuário tem role administrativo:', normalizedRole);
         
         setRole({
-          isPro: true, // Admins/moderators sempre têm acesso Pro
+          isPro: normalizedRole === 'admin' ? true : subscriptionIsPro, // Apenas admins têm acesso Pro automático
           isAdmin: normalizedRole === 'admin',
           isModerator: normalizedRole === 'moderator',
           isLoading: false,
