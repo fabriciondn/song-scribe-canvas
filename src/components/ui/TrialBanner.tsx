@@ -14,29 +14,23 @@ export const TrialBanner: React.FC = () => {
   }
 
   return (
-    <div className="w-full mb-4">
-      <div className="flex items-center justify-between py-2 px-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
-        <div className="flex items-center gap-3">
-          <Clock className="h-4 w-4 text-amber-600" />
-          <div>
-            <span className="font-medium text-amber-800 text-sm">
-              Período de teste ativo
-            </span>
-            <span className="mx-2 text-amber-600">•</span>
-            <span className="text-sm text-amber-700">
-              {trialDaysRemaining === 1 
-                ? 'Último dia do seu período gratuito!'
-                : `Restam ${trialDaysRemaining} dias do seu período gratuito`}
-            </span>
-          </div>
+    <div className="max-w-sm">
+      <div className="flex items-center justify-between py-1.5 px-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-full">
+        <div className="flex items-center gap-2">
+          <Clock className="h-3.5 w-3.5 text-amber-600" />
+          <span className="text-xs font-medium text-amber-800">
+            {trialDaysRemaining === 1 
+              ? 'Último dia gratuito!'
+              : `${trialDaysRemaining} dias restantes`}
+          </span>
         </div>
         <Button
           size="sm"
           onClick={() => navigate('/subscription-checkout')}
-          className="bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-sm"
+          className="bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-sm h-6 px-3 text-xs ml-3"
         >
-          <Crown className="mr-2 h-4 w-4" />
-          Upgrade agora
+          <Crown className="mr-1 h-3 w-3" />
+          Upgrade
         </Button>
       </div>
     </div>

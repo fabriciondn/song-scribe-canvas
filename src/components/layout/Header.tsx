@@ -4,6 +4,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TrialBanner } from '@/components/ui/TrialBanner';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserCredits } from '@/hooks/useUserCredits';
@@ -130,6 +131,11 @@ export const Header = ({
             />
           </Link>
         )}
+      </div>
+      
+      {/* Trial Banner in center of header */}
+      <div className="flex-1 flex justify-center">
+        <TrialBanner />
       </div>
       
       {user ? (
