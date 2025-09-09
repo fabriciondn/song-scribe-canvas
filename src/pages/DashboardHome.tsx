@@ -59,10 +59,7 @@ const DashboardHome: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto space-y-6">
-      {/* Trial Banner */}
-      <TrialBanner />
-      <div className="pt-6 space-y-6">
+    <div className="container mx-auto pt-6 space-y-6">
       
       {/* Banner Carousel Moderno */}
       <FeatureCarousel />
@@ -284,7 +281,6 @@ const DashboardHome: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-      </div>
     </div>
   );
 };

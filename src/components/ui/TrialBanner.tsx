@@ -14,7 +14,7 @@ export const TrialBanner: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto mb-2 mt-1">
+    <div className="w-full mb-4">
       <div className="flex items-center justify-between py-2 px-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
         <div className="flex items-center gap-3">
           <Clock className="h-4 w-4 text-amber-600" />
