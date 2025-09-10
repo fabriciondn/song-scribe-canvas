@@ -617,6 +617,45 @@ export type Database = {
         }
         Relationships: []
       }
+      partnership_parts: {
+        Row: {
+          approved_by: string | null
+          content: string
+          created_at: string
+          id: string
+          order_index: number
+          part_type: string
+          partnership_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_by?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          part_type: string
+          partnership_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_by?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          part_type?: string
+          partnership_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       partnership_tokens: {
         Row: {
           created_at: string | null

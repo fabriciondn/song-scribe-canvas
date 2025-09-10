@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Users, Mail, User, Eye, Edit as EditIcon, Copy, ExternalLink } from 'lucide-react';
+import { TokenExpirationSelector } from '@/components/partnerships/TokenExpirationSelector';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -77,6 +78,7 @@ const Partnerships: React.FC = () => {
   const [joinToken, setJoinToken] = useState('');
   const [isTokenCopied, setIsTokenCopied] = useState(false);
   const [isValidatingToken, setIsValidatingToken] = useState(false);
+  const [tokenExpirationHours, setTokenExpirationHours] = useState(168);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -180,7 +182,7 @@ const Partnerships: React.FC = () => {
   
   const handleGenerateToken = async (partnershipId: string) => {
     try {
-      const token = await generateCollaborationToken(partnershipId);
+      const token = await generateCollaborationToken(partnershipId, tokenExpirationHours);
       setCollaborationToken(token);
       setActivePartnershipId(partnershipId);
       setIsTokenDialogOpen(true);
@@ -428,6 +430,10 @@ const Partnerships: React.FC = () => {
           </DialogHeader>
           
           <div className="grid gap-3 sm:gap-4 py-3 sm:py-4">
+            <TokenExpirationSelector 
+              value={tokenExpirationHours} 
+              onChange={setTokenExpirationHours} 
+            />
             <div className="grid gap-2">
               <Label htmlFor="token" className="text-sm">Token de Colaboração</Label>
               <div className="flex flex-col sm:flex-row gap-2">
@@ -446,7 +452,7 @@ const Partnerships: React.FC = () => {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Token válido por 7 dias, uso único.
+                Token de uso único.
               </p>
             </div>
           </div>

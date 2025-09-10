@@ -1,14 +1,15 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { CollaborativeChatPanel } from '@/components/partnerships/CollaborativeChatPanel';
-import { SegmentApprovalSystem } from '@/components/partnerships/SegmentApprovalSystem';
-import { AudioRecordingPanel } from '@/components/partnerships/AudioRecordingPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Save, Wrench } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { CollaborativeChatPanel } from '../partnerships/CollaborativeChatPanel';
+import { AudioRecordingPanel } from '../partnerships/AudioRecordingPanel';
+import { SegmentApprovalSystem } from '../partnerships/SegmentApprovalSystem';
+import { MusicPartSelector, type MusicPartType } from '../partnerships/MusicPartSelector';
+import { PendingPartCard } from '../partnerships/PendingPartCard';
 
 interface Segment {
   text: string;
@@ -46,407 +47,455 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [selectedText, setSelectedText] = useState('');
   const [selectedSegmentId, setSelectedSegmentId] = useState('');
-  const [showApprovalPanel, setShowApprovalPanel] = useState(false);
-  
-  const { user } = useAuth();
+  const [selectedPart, setSelectedPart] = useState<MusicPartType>('verse');
+  const [pendingParts, setPendingParts] = useState([]);
+  const [showPartSelector, setShowPartSelector] = useState(false);
+  const [isPartnershipOwner, setIsPartnershipOwner] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+
   const { toast } = useToast();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
-  // Color palette for different authors
-  const colorPalette = [
-    '#F2FCE2', '#FEF7CD', '#FEC6A1', '#E5DEFF', 
-    '#FFDEE2', '#FDE1D3', '#D3E4FD', '#F1F0FB'
-  ];
-  
-  // Load initial content and set up real-time subscription
+
   useEffect(() => {
-    if (!partnershipId || !user?.id) return;
-    
+    if (!partnershipId) return;
+
     const loadInitialData = async () => {
       try {
-        // Load composition content
-        const { data: compositionData, error: compositionError } = await supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        setCurrentUserId(user.id);
+
+        // Check if current user is partnership owner
+        const { data: partnershipData } = await supabase
+          .from('partnerships')
+          .select('user_id')
+          .eq('id', partnershipId)
+          .single();
+
+        setIsPartnershipOwner(partnershipData?.user_id === user.id);
+
+        // Load partnership composition
+        const { data: composition, error: compError } = await supabase
           .from('partnership_compositions')
           .select('content, author_segments')
           .eq('partnership_id', partnershipId)
           .single();
-          
-        if (compositionError) throw compositionError;
-        
-        if (compositionData) {
-          const content = compositionData.content as string || '';
-          
-          // Convert Json to Segment[] with proper type casting
-          let parsedSegments: Segment[] = [];
-          if (compositionData.author_segments) {
-            const jsonSegments = compositionData.author_segments as any[];
-            parsedSegments = jsonSegments.filter(segment => 
-              typeof segment === 'object' && 
-              'text' in segment && 
-              'authorId' in segment && 
-              'startOffset' in segment && 
-              'endOffset' in segment
-            ).map(segment => ({
-              text: String(segment.text),
-              authorId: String(segment.authorId),
-              startOffset: Number(segment.startOffset),
-              endOffset: Number(segment.endOffset)
-            }));
-          }
-          
-          setContent(content);
-          setSegments(parsedSegments);
+
+        if (compError && compError.code !== 'PGRST116') {
+          console.error('Error loading composition:', compError);
+          return;
         }
-        
-        // Load collaborators info
-        const { data: collaboratorsData, error: collaboratorsError } = await supabase
+
+        // Load collaborators
+        const { data: collaboratorsData, error: collabError } = await supabase
           .from('partnership_collaborators')
-          .select(`
-            user_id,
-            public_profiles:user_id (
-              id,
-              name
-            )
-          `)
+          .select('user_id')
           .eq('partnership_id', partnershipId);
-          
-        if (collaboratorsError) throw collaboratorsError;
-        
-        // Also get partnership creator
-        const { data: partnershipData, error: partnershipError } = await supabase
-          .from('partnerships')
-          .select(`
-            user_id,
-            public_profiles:user_id (
-              id,
-              name
-            )
-          `)
-          .eq('id', partnershipId)
-          .single();
-          
-        if (partnershipError) throw partnershipError;
-        
-        // Create authors map with colors
-        const authorsMap: Record<string, AuthorInfo> = {};
-        
-        // Add partnership creator
-        if (partnershipData) {
-          const partnershipInfo = partnershipData as any;
-          if (partnershipInfo.user_id && partnershipInfo.public_profiles) {
-            const profile = partnershipInfo.public_profiles as ProfileData;
-            authorsMap[partnershipInfo.user_id] = {
-              id: partnershipInfo.user_id,
-              name: profile.name || 'Criador',
-              color: colorPalette[0]
-            };
+
+        if (collabError) {
+          console.error('Error loading collaborators:', collabError);
+          return;
+        }
+
+        // Combine all user IDs (owner + collaborators)
+        const allUserIds = [
+          partnershipData?.user_id,
+          ...(collaboratorsData?.map(c => c.user_id) || [])
+        ].filter(Boolean);
+
+        // Load user profiles for all participants
+        if (allUserIds.length > 0) {
+          const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, name, email')
+            .in('id', allUserIds);
+
+          if (profilesError) {
+            console.error('Error loading profiles:', profilesError);
+          } else {
+            const profilesMap = profilesData?.reduce((acc, profile: ProfileData) => {
+              const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57'];
+              acc[profile.id] = {
+                id: profile.id,
+                name: profile.id === user.id ? 'Você' : (profile.name || profile.email || 'Usuário'),
+                color: colors[Object.keys(acc).length % colors.length]
+              };
+              return acc;
+            }, {} as Record<string, AuthorInfo>) || {};
+            
+            setAuthors(profilesMap);
           }
         }
-        
-        // Add collaborators
-        if (collaboratorsData) {
-          (collaboratorsData as any[]).forEach((collab, index) => {
-            if (collab.user_id && collab.public_profiles) {
-              if (authorsMap[collab.user_id]) return;
-              
-              const profile = collab.public_profiles as ProfileData;
-              authorsMap[collab.user_id] = {
-                id: collab.user_id,
-                name: profile.name || `Colaborador ${index + 1}`,
-                color: colorPalette[(index + 1) % colorPalette.length]
-              };
-            }
-          });
+
+        // Set initial content and segments from composition
+        if (composition?.content) {
+          setContent(composition.content);
         }
         
-        setAuthors(authorsMap);
+        if (composition?.author_segments) {
+          setSegments(composition.author_segments as any as Segment[]);
+        }
+
+        // Load pending parts
+        loadPendingParts();
+
         setIsInitialLoad(false);
       } catch (error) {
-        console.error('Error loading collaborative editor data:', error);
+        console.error('Error in loadInitialData:', error);
         toast({
-          title: 'Erro ao carregar dados',
-          description: 'Não foi possível carregar o conteúdo da composição.',
-          variant: 'destructive',
+          title: "Erro ao carregar dados",
+          description: "Erro ao carregar dados da parceria",
+          variant: "destructive",
         });
       }
     };
-    
+
     loadInitialData();
-    
-    // Subscribe to real-time updates
+
+    // Set up real-time subscription
     const channel = supabase
-      .channel(`partnership_${partnershipId}`)
+      .channel(`partnership-${partnershipId}`)
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'partnership_compositions',
           filter: `partnership_id=eq.${partnershipId}`
         },
         (payload) => {
-          const newData = payload.new as any;
-          
-          // Only update if not from current user
-          if (newData.last_modified_by !== user.id) {
-            setContent(newData.content || '');
-            
-            // Handle author_segments with proper type casting
+          if (payload.eventType === 'UPDATE' && payload.new) {
+            const newData = payload.new as CompositionData;
+            if (newData.content !== undefined) {
+              setContent(newData.content);
+            }
             if (newData.author_segments) {
-              try {
-                const jsonSegments = newData.author_segments as any[];
-                const parsedSegments = jsonSegments
-                  .filter(segment => 
-                    typeof segment === 'object' && 
-                    'text' in segment && 
-                    'authorId' in segment && 
-                    'startOffset' in segment && 
-                    'endOffset' in segment
-                  )
-                  .map(segment => ({
-                    text: String(segment.text),
-                    authorId: String(segment.authorId),
-                    startOffset: Number(segment.startOffset),
-                    endOffset: Number(segment.endOffset)
-                  }));
-                  
-                setSegments(parsedSegments);
-              } catch (error) {
-                console.error('Error parsing segments from real-time update:', error);
-                setSegments([]);
-              }
-            } else {
-              setSegments([]);
+              setSegments(newData.author_segments as Segment[]);
             }
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'partnership_parts'
+        },
+        () => {
+          loadPendingParts();
+        }
+      )
       .subscribe();
-    
+
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [partnershipId, user?.id]);
-  
-  // Handle text changes
-  const handleContentChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (!user?.id || isInitialLoad) return;
-    
+  }, [partnershipId, toast]);
+
+  const handleContentChange = useCallback(async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (isInitialLoad) return;
+
     const newContent = e.target.value;
     const currentPosition = e.target.selectionStart;
     
     setContent(newContent);
     setLastCursorPosition(currentPosition);
-    
-    // Determine what changed
-    const previousContent = content;
-    
-    // Simple diff detection
-    let changeStart = 0;
-    const minLength = Math.min(previousContent.length, newContent.length);
-    
-    // Find where the text starts to differ
-    while (changeStart < minLength && previousContent[changeStart] === newContent[changeStart]) {
-      changeStart++;
-    }
-    
-    // If content was added
-    if (newContent.length > previousContent.length) {
-      const addedText = newContent.slice(changeStart, currentPosition);
-      
-      // Create a new segment for the added text
-      const newSegment: Segment = {
-        text: addedText,
-        authorId: user.id,
-        startOffset: changeStart,
-        endOffset: currentPosition
-      };
-      
-      // Adjust existing segments
-      const updatedSegments = segments.map(segment => {
-        if (segment.startOffset >= changeStart) {
-          return {
-            ...segment,
-            startOffset: segment.startOffset + addedText.length,
-            endOffset: segment.endOffset + addedText.length
-          };
-        } else if (segment.endOffset >= changeStart) {
-          return {
-            ...segment,
-            endOffset: segment.endOffset + addedText.length
-          };
-        }
-        return segment;
-      });
-      
-      const newSegments = [...updatedSegments, newSegment];
-      setSegments(newSegments);
-      
-      // Save to database
-      await supabase
-        .from('partnership_compositions' as any)
-        .update({
-          content: newContent,
-          author_segments: newSegments,
-          updated_at: new Date().toISOString(),
-          last_modified_by: user.id
-        })
-        .eq('partnership_id', partnershipId);
-    } 
-    // If content was deleted
-    else if (newContent.length < previousContent.length) {
-      const deletionLength = previousContent.length - newContent.length;
-      const deletionEnd = changeStart + deletionLength;
-      
-      // Update segments for deletion
-      const updatedSegments = segments
-        .map(segment => {
-          if (segment.startOffset >= deletionEnd) {
-            return {
-              ...segment,
-              startOffset: segment.startOffset - deletionLength,
-              endOffset: segment.endOffset - deletionLength
-            };
-          } else if (segment.endOffset <= changeStart) {
-            return segment;
-          } else if (segment.startOffset >= changeStart && segment.endOffset <= deletionEnd) {
-            return null;
-          } else if (segment.startOffset < changeStart && segment.endOffset > changeStart) {
-            return {
-              ...segment,
-              endOffset: segment.endOffset - Math.min(deletionLength, segment.endOffset - changeStart)
-            };
-          } else if (segment.startOffset < deletionEnd && segment.endOffset > deletionEnd) {
-            return {
-              ...segment,
-              startOffset: changeStart,
-              endOffset: segment.endOffset - deletionLength
-            };
-          } else if (segment.startOffset <= changeStart && segment.endOffset >= deletionEnd) {
-            return {
-              ...segment,
-              endOffset: segment.endOffset - deletionLength
-            };
-          }
-          return segment;
-        })
-        .filter(Boolean) as Segment[];
-      
-      setSegments(updatedSegments);
-      
-      // Save to database
-      await supabase
-        .from('partnership_compositions' as any)
-        .update({
-          content: newContent,
-          author_segments: updatedSegments,
-          updated_at: new Date().toISOString(),
-          last_modified_by: user.id
-        })
-        .eq('partnership_id', partnershipId);
-    }
-  };
 
-  const handleTextSelection = () => {
-    if (!textareaRef.current) return;
+    // Simple save to database without complex segment tracking for now
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const start = textareaRef.current.selectionStart;
-    const end = textareaRef.current.selectionEnd;
+          await supabase
+        .from('partnership_compositions')
+        .upsert({
+          partnership_id: partnershipId,
+          content: newContent,
+          author_segments: segments as any,
+          last_modified_by: user.id
+        });
+    } catch (error) {
+      console.error('Error saving content:', error);
+    }
+  }, [partnershipId, segments, isInitialLoad]);
+
+  const handleTextSelection = useCallback(() => {
+    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
 
     if (start !== end) {
       const selected = content.substring(start, end);
       setSelectedText(selected);
       setSelectedSegmentId(`segment_${start}_${end}`);
-      setShowApprovalPanel(true);
+      setShowPartSelector(true);
+    }
+  }, [content]);
+
+  const handleInsertAudio = useCallback((audioUrl: string, duration: number) => {
+    const audioMarker = `[ÁUDIO: ${duration}s](${audioUrl})`;
+    const newContent = content + '\n\n' + audioMarker;
+    setContent(newContent);
+    handleContentChange({ target: { value: newContent } } as React.ChangeEvent<HTMLTextAreaElement>);
+  }, [content, handleContentChange]);
+
+  const loadPendingParts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('partnership_parts')
+        .select(`
+          *,
+          profiles(name)
+        `)
+        .eq('partnership_id', partnershipId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setPendingParts(data || []);
+    } catch (error) {
+      console.error('Error loading pending parts:', error);
     }
   };
 
-  const handleInsertAudio = (audioInfo: { url: string; duration?: number }) => {
-    const audioMarker = `[ÁUDIO: ${audioInfo.duration ? `${audioInfo.duration}s` : 'gravação'}](${audioInfo.url})`;
-    
-    if (textareaRef.current) {
-      const cursorPosition = textareaRef.current.selectionStart;
-      const newContent = content.slice(0, cursorPosition) + audioMarker + content.slice(cursorPosition);
+  const handleSavePart = async () => {
+    if (!selectedText.trim()) {
+      toast({
+        title: "Erro",
+        description: "Selecione um texto para salvar como parte",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('partnership_parts')
+        .insert({
+          partnership_id: partnershipId,
+          user_id: user.id,
+          part_type: selectedPart,
+          content: selectedText,
+          status: isPartnershipOwner ? 'approved' : 'pending'
+        });
+
+      if (error) throw error;
+
+      if (isPartnershipOwner) {
+        // Owner's parts are auto-approved, update main content
+        handleContentChange({ target: { value: content } } as React.ChangeEvent<HTMLTextAreaElement>);
+      }
+
+      setSelectedText('');
+      setShowPartSelector(false);
       
-      // Simulate typing the audio marker
-      const event = {
-        target: {
-          value: newContent,
-          selectionStart: cursorPosition + audioMarker.length
-        }
-      } as React.ChangeEvent<HTMLTextAreaElement>;
-      
-      handleContentChange(event);
+      toast({
+        title: "Sucesso",
+        description: isPartnershipOwner 
+          ? "Parte adicionada com sucesso" 
+          : "Parte enviada para aprovação",
+      });
+    } catch (error) {
+      console.error('Error saving part:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar parte",
+        variant: "destructive",
+      });
     }
   };
-  
+
+  const handleApprovePart = async (partId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('partnership_parts')
+        .update({ status: 'approved', approved_by: user.id })
+        .eq('id', partId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Parte aprovada com sucesso",
+      });
+    } catch (error) {
+      console.error('Error approving part:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao aprovar parte",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCommentPart = (partId: string) => {
+    // This will be handled by the chat system
+    toast({
+      title: "Comentário",
+      description: "Use o chat para deixar seu comentário sobre esta parte",
+    });
+  };
+
+  const handleSaveComposition = async () => {
+    try {
+      const { error } = await supabase
+        .from('partnership_compositions')
+        .upsert({
+          partnership_id: partnershipId,
+          content,
+          author_segments: segments as any,
+          last_modified_by: currentUserId
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Composição salva com sucesso",
+      });
+    } catch (error) {
+      console.error('Error saving composition:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar composição",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <div className="h-full flex gap-4">
+    <div className="flex h-full">
       {/* Main editor area */}
-      <div className="flex-1 flex flex-col space-y-4">
-        <div className="flex-1">
-          <div className="mb-4">
-            <h3 className="text-lg font-medium mb-2">Compositor Colaborativo</h3>
-            
-            <div className="flex flex-wrap gap-2 mb-3">
-              {Object.values(authors).map(author => (
-                <div 
-                  key={author.id}
-                  className="flex items-center px-2 py-1 rounded text-xs"
-                  style={{ backgroundColor: author.color }}
-                >
-                  <span className="font-medium">{author.name}</span>
-                  {author.id === user?.id && <span className="ml-1">(você)</span>}
-                </div>
-              ))}
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Toolbar */}
+        <div className="border-b p-4 bg-background">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm">
+                <Wrench className="h-4 w-4 mr-2" />
+                Ferramentas
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleSaveComposition}>
+                <Save className="h-4 w-4 mr-2" />
+                Salvar
+              </Button>
             </div>
           </div>
-          
-          <Textarea
-            ref={textareaRef}
-            value={content}
-            onChange={handleContentChange}
-            onMouseUp={handleTextSelection}
-            className="min-h-[500px] font-mono resize-none"
-            placeholder="Comece a compor colaborativamente... Selecione o texto para aprovar ou comentar."
-          />
         </div>
 
-        {/* Approval panel */}
-        {showApprovalPanel && (
-          <SegmentApprovalSystem
-            partnershipId={partnershipId}
-            selectedText={selectedText}
-            segmentId={selectedSegmentId}
-            onClose={() => setShowApprovalPanel(false)}
-            authors={authors}
-          />
-        )}
+        <Textarea
+          value={content}
+          onChange={handleContentChange}
+          onSelect={handleTextSelection}
+          placeholder="Escreva sua composição aqui..."
+          className="flex-1 min-h-0 resize-none border-none focus:ring-0 text-base leading-relaxed"
+        />
+        
+        {/* Author information */}
+        <div className="border-t p-4 bg-muted/50">
+          <h4 className="text-sm font-medium mb-2">Autores:</h4>
+          <div className="flex flex-wrap gap-2">
+            {Object.values(authors).map((author) => (
+              <div
+                key={author.id}
+                className="flex items-center gap-2 text-xs bg-background rounded-full px-3 py-1"
+              >
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: author.color }}
+                />
+                <span>{author.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Side panel with tabs */}
-      <div className="w-80 flex-shrink-0">
-        <Tabs defaultValue="chat" className="h-full">
+      {/* Side panel */}
+      <div className="w-96 border-l bg-background flex flex-col">
+        <Tabs defaultValue="chat" className="h-full flex flex-col">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="chat">Chat</TabsTrigger>
             <TabsTrigger value="audio">Áudio</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="chat" className="h-[calc(100%-40px)]">
+          <TabsContent value="chat" className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
+            {/* Pending parts section */}
+            {pendingParts.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium mb-3">Partes Pendentes</h3>
+                {pendingParts.map((part: any) => (
+                  <PendingPartCard
+                    key={part.id}
+                    part={{
+                      ...part,
+                      user_name: part.profiles?.name || 'Usuário'
+                    }}
+                    onApprove={handleApprovePart}
+                    onComment={handleCommentPart}
+                    currentUserId={currentUserId}
+                  />
+                ))}
+              </div>
+            )}
+            
             <CollaborativeChatPanel
               partnershipId={partnershipId}
               authors={authors}
             />
           </TabsContent>
-          
-          <TabsContent value="audio" className="h-[calc(100%-40px)] overflow-y-auto">
+          <TabsContent value="audio" className="flex-1 min-h-0">
             <AudioRecordingPanel
               partnershipId={partnershipId}
-              onInsertAudio={handleInsertAudio}
+              onInsertAudio={(audioInfo) => handleInsertAudio(audioInfo.url, audioInfo.duration || 0)}
             />
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Part selector modal */}
+      {showPartSelector && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background p-6 rounded-lg w-96">
+            <h3 className="text-lg font-medium mb-4">Adicionar Parte Musical</h3>
+            <MusicPartSelector value={selectedPart} onChange={setSelectedPart} />
+            <div className="bg-muted p-3 rounded-md mt-4 mb-4">
+              <p className="text-sm">{selectedText}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowPartSelector(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSavePart}>
+                {isPartnershipOwner ? 'Adicionar' : 'Enviar para Aprovação'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Segment approval system */}
+      {selectedText && !showPartSelector && (
+        <SegmentApprovalSystem
+          partnershipId={partnershipId}
+          selectedText={selectedText}
+          segmentId={selectedSegmentId}
+          onClose={() => {
+            setSelectedText('');
+            setSelectedSegmentId('');
+          }}
+          authors={authors}
+        />
+      )}
     </div>
   );
 };

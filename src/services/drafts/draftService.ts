@@ -220,7 +220,7 @@ export const createBackup = async (title: string, content: string): Promise<void
 /**
  * Generate a unique collaboration token for a partnership
  */
-export const generateCollaborationToken = async (partnershipId: string): Promise<string> => {
+export const generateCollaborationToken = async (partnershipId: string, expirationHours: number = 168): Promise<string> => {
   try {
     // Create a unique token using nanoid
     const token = nanoid(12);
@@ -231,7 +231,7 @@ export const generateCollaborationToken = async (partnershipId: string): Promise
       .insert({
         partnership_id: partnershipId,
         token,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+        expires_at: new Date(Date.now() + expirationHours * 60 * 60 * 1000).toISOString(),
       });
     
     if (error) throw error;
@@ -264,10 +264,15 @@ export const validateCollaborationToken = async (token: string): Promise<{
       .from('partnership_tokens')
       .select('partnership_id, expires_at, used')
       .eq('token', token)
-      .single();
+      .maybeSingle();
     
-    if (error || !data) {
-      return { valid: false, error: 'Invalid or expired token' };
+    if (error) {
+      console.error('Error querying token:', error);
+      return { valid: false, error: 'Erro ao validar token' };
+    }
+    
+    if (!data) {
+      return { valid: false, error: 'Token inválido' };
     }
     
     // Cast data to expected type
