@@ -59,7 +59,7 @@ const DashboardHome: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto pt-6 space-y-6">
+    <div className="container mx-auto pt-2 space-y-6">
       
       {/* Banner Carousel Moderno */}
       <FeatureCarousel />

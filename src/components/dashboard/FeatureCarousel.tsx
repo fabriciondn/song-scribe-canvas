@@ -42,7 +42,7 @@ const FeatureCarousel: React.FC = () => {
     link: "/folders",
     gradient: "from-orange-600/80 to-red-600/80"
   }];
-  return <div className="w-full mb-8">
+  return <div className="w-full mb-6">
       <Carousel opts={{
       align: "start",
       loop: true
