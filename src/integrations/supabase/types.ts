@@ -481,6 +481,33 @@ export type Database = {
           },
         ]
       }
+      partnership_audio_recordings: {
+        Row: {
+          created_at: string
+          duration: number | null
+          file_path: string
+          id: string
+          partnership_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: number | null
+          file_path: string
+          id?: string
+          partnership_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number | null
+          file_path?: string
+          id?: string
+          partnership_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       partnership_collaborators: {
         Row: {
           created_at: string | null
@@ -553,6 +580,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      partnership_messages: {
+        Row: {
+          audio_url: string | null
+          content: string
+          created_at: string
+          id: string
+          message_type: string
+          partnership_id: string
+          replied_to_message_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audio_url?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          partnership_id: string
+          replied_to_message_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audio_url?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          partnership_id?: string
+          replied_to_message_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       partnership_tokens: {
         Row: {
@@ -766,6 +829,66 @@ export type Database = {
           is_blocked?: boolean | null
           last_submission?: string | null
           submission_count?: number | null
+        }
+        Relationships: []
+      }
+      segment_approvals: {
+        Row: {
+          created_at: string
+          id: string
+          partnership_id: string
+          segment_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          partnership_id: string
+          segment_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          partnership_id?: string
+          segment_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      segment_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          partnership_id: string
+          segment_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          partnership_id: string
+          segment_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          partnership_id?: string
+          segment_id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

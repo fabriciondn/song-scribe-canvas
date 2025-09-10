@@ -5,7 +5,10 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Json } from '@/integrations/supabase/types';
+import { CollaborativeChatPanel } from '@/components/partnerships/CollaborativeChatPanel';
+import { SegmentApprovalSystem } from '@/components/partnerships/SegmentApprovalSystem';
+import { AudioRecordingPanel } from '@/components/partnerships/AudioRecordingPanel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Segment {
   text: string;
@@ -35,37 +38,24 @@ interface ProfileData {
   email?: string;
 }
 
-// Type definitions for Supabase responses
-interface CollaboratorResponse {
-  user_id: string;
-  profiles: ProfileData;
-}
-
-interface PartnershipResponse {
-  user_id: string;
-  profiles: ProfileData;
-}
-
 export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partnershipId }) => {
   const [content, setContent] = useState('');
   const [segments, setSegments] = useState<Segment[]>([]);
   const [authors, setAuthors] = useState<Record<string, AuthorInfo>>({});
   const [lastCursorPosition, setLastCursorPosition] = useState(0);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [selectedText, setSelectedText] = useState('');
+  const [selectedSegmentId, setSelectedSegmentId] = useState('');
+  const [showApprovalPanel, setShowApprovalPanel] = useState(false);
+  
   const { user } = useAuth();
   const { toast } = useToast();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Color palette for different authors
   const colorPalette = [
-    '#F2FCE2', // Soft Green
-    '#FEF7CD', // Soft Yellow
-    '#FEC6A1', // Soft Orange
-    '#E5DEFF', // Soft Purple
-    '#FFDEE2', // Soft Pink
-    '#FDE1D3', // Soft Peach
-    '#D3E4FD', // Soft Blue
-    '#F1F0FB', // Soft Gray
+    '#F2FCE2', '#FEF7CD', '#FEC6A1', '#E5DEFF', 
+    '#FFDEE2', '#FDE1D3', '#D3E4FD', '#F1F0FB'
   ];
   
   // Load initial content and set up real-time subscription
@@ -84,13 +74,11 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
         if (compositionError) throw compositionError;
         
         if (compositionData) {
-          // Cast the data and handle the Json type properly
           const content = compositionData.content as string || '';
           
           // Convert Json to Segment[] with proper type casting
           let parsedSegments: Segment[] = [];
           if (compositionData.author_segments) {
-            // Cast Json to appropriate type and ensure it has the required properties
             const jsonSegments = compositionData.author_segments as any[];
             parsedSegments = jsonSegments.filter(segment => 
               typeof segment === 'object' && 
@@ -144,7 +132,6 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
         
         // Add partnership creator
         if (partnershipData) {
-          // Type casting to access properties safely
           const partnershipInfo = partnershipData as any;
           if (partnershipInfo.user_id && partnershipInfo.public_profiles) {
             const profile = partnershipInfo.public_profiles as ProfileData;
@@ -159,9 +146,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
         // Add collaborators
         if (collaboratorsData) {
           (collaboratorsData as any[]).forEach((collab, index) => {
-            // Type casting to access properties safely
             if (collab.user_id && collab.public_profiles) {
-              // Skip if already added (creator)
               if (authorsMap[collab.user_id]) return;
               
               const profile = collab.public_profiles as ProfileData;
@@ -209,7 +194,6 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
             // Handle author_segments with proper type casting
             if (newData.author_segments) {
               try {
-                // Ensure we properly cast the incoming data
                 const jsonSegments = newData.author_segments as any[];
                 const parsedSegments = jsonSegments
                   .filter(segment => 
@@ -229,7 +213,6 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
                 setSegments(parsedSegments);
               } catch (error) {
                 console.error('Error parsing segments from real-time update:', error);
-                // Fallback to empty array if parsing fails
                 setSegments([]);
               }
             } else {
@@ -252,14 +235,13 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
     const newContent = e.target.value;
     const currentPosition = e.target.selectionStart;
     
-    // Update local state
     setContent(newContent);
     setLastCursorPosition(currentPosition);
     
     // Determine what changed
     const previousContent = content;
     
-    // Simple diff detection - in a real app, a more sophisticated diff algorithm should be used
+    // Simple diff detection
     let changeStart = 0;
     const minLength = Math.min(previousContent.length, newContent.length);
     
@@ -283,14 +265,12 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
       // Adjust existing segments
       const updatedSegments = segments.map(segment => {
         if (segment.startOffset >= changeStart) {
-          // Segment starts after the insertion point, move it
           return {
             ...segment,
             startOffset: segment.startOffset + addedText.length,
             endOffset: segment.endOffset + addedText.length
           };
         } else if (segment.endOffset >= changeStart) {
-          // Insertion happens within this segment, split it
           return {
             ...segment,
             endOffset: segment.endOffset + addedText.length
@@ -299,11 +279,10 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
         return segment;
       });
       
-      // Add the new segment
       const newSegments = [...updatedSegments, newSegment];
       setSegments(newSegments);
       
-      // Save to database - usando any para contornar limitação dos tipos
+      // Save to database
       await supabase
         .from('partnership_compositions' as any)
         .update({
@@ -322,39 +301,28 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
       // Update segments for deletion
       const updatedSegments = segments
         .map(segment => {
-          // Case 1: Segment is completely after deletion
           if (segment.startOffset >= deletionEnd) {
             return {
               ...segment,
               startOffset: segment.startOffset - deletionLength,
               endOffset: segment.endOffset - deletionLength
             };
-          }
-          // Case 2: Segment is completely before deletion
-          else if (segment.endOffset <= changeStart) {
+          } else if (segment.endOffset <= changeStart) {
             return segment;
-          }
-          // Case 3: Segment is completely within deletion
-          else if (segment.startOffset >= changeStart && segment.endOffset <= deletionEnd) {
-            return null; // Will be filtered out
-          }
-          // Case 4: Deletion starts within segment
-          else if (segment.startOffset < changeStart && segment.endOffset > changeStart) {
+          } else if (segment.startOffset >= changeStart && segment.endOffset <= deletionEnd) {
+            return null;
+          } else if (segment.startOffset < changeStart && segment.endOffset > changeStart) {
             return {
               ...segment,
               endOffset: segment.endOffset - Math.min(deletionLength, segment.endOffset - changeStart)
             };
-          }
-          // Case 5: Deletion ends within segment
-          else if (segment.startOffset < deletionEnd && segment.endOffset > deletionEnd) {
+          } else if (segment.startOffset < deletionEnd && segment.endOffset > deletionEnd) {
             return {
               ...segment,
               startOffset: changeStart,
               endOffset: segment.endOffset - deletionLength
             };
-          }
-          // Case 6: Segment spans the entire deletion
-          else if (segment.startOffset <= changeStart && segment.endOffset >= deletionEnd) {
+          } else if (segment.startOffset <= changeStart && segment.endOffset >= deletionEnd) {
             return {
               ...segment,
               endOffset: segment.endOffset - deletionLength
@@ -366,7 +334,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
       
       setSegments(updatedSegments);
       
-      // Save to database - usando any para contornar limitação dos tipos
+      // Save to database
       await supabase
         .from('partnership_compositions' as any)
         .update({
@@ -378,70 +346,107 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ partne
         .eq('partnership_id', partnershipId);
     }
   };
-  
-  // Render the content with author highlighting
-  const renderHighlightedContent = () => {
-    if (!content || segments.length === 0) {
-      return content;
+
+  const handleTextSelection = () => {
+    if (!textareaRef.current) return;
+
+    const start = textareaRef.current.selectionStart;
+    const end = textareaRef.current.selectionEnd;
+
+    if (start !== end) {
+      const selected = content.substring(start, end);
+      setSelectedText(selected);
+      setSelectedSegmentId(`segment_${start}_${end}`);
+      setShowApprovalPanel(true);
     }
+  };
+
+  const handleInsertAudio = (audioInfo: { url: string; duration?: number }) => {
+    const audioMarker = `[ÁUDIO: ${audioInfo.duration ? `${audioInfo.duration}s` : 'gravação'}](${audioInfo.url})`;
     
-    // Sort segments by startOffset
-    const sortedSegments = [...segments].sort((a, b) => a.startOffset - b.startOffset);
-    
-    // Create HTML with spans for highlighting
-    let html = '';
-    let lastIndex = 0;
-    
-    sortedSegments.forEach(segment => {
-      // Add text before this segment
-      if (segment.startOffset > lastIndex) {
-        html += content.substring(lastIndex, segment.startOffset);
-      }
+    if (textareaRef.current) {
+      const cursorPosition = textareaRef.current.selectionStart;
+      const newContent = content.slice(0, cursorPosition) + audioMarker + content.slice(cursorPosition);
       
-      // Get author color
-      const authorColor = authors[segment.authorId]?.color || '#ffffff';
+      // Simulate typing the audio marker
+      const event = {
+        target: {
+          value: newContent,
+          selectionStart: cursorPosition + audioMarker.length
+        }
+      } as React.ChangeEvent<HTMLTextAreaElement>;
       
-      // Add the highlighted segment
-      const segmentText = content.substring(segment.startOffset, segment.endOffset);
-      html += `<span style="background-color: ${authorColor};">${segmentText}</span>`;
-      
-      lastIndex = segment.endOffset;
-    });
-    
-    // Add any remaining text
-    if (lastIndex < content.length) {
-      html += content.substring(lastIndex);
+      handleContentChange(event);
     }
-    
-    return html;
   };
   
   return (
-    <div className="collaborative-editor">
-      <div className="mb-4">
-        <h3 className="text-lg font-medium mb-2">Compositor Colaborativo</h3>
-        
-        <div className="flex flex-wrap gap-2 mb-3">
-          {Object.values(authors).map(author => (
-            <div 
-              key={author.id}
-              className="flex items-center px-2 py-1 rounded text-xs"
-              style={{ backgroundColor: author.color }}
-            >
-              <span className="font-medium">{author.name}</span>
-              {author.id === user?.id && <span className="ml-1">(você)</span>}
+    <div className="h-full flex gap-4">
+      {/* Main editor area */}
+      <div className="flex-1 flex flex-col space-y-4">
+        <div className="flex-1">
+          <div className="mb-4">
+            <h3 className="text-lg font-medium mb-2">Compositor Colaborativo</h3>
+            
+            <div className="flex flex-wrap gap-2 mb-3">
+              {Object.values(authors).map(author => (
+                <div 
+                  key={author.id}
+                  className="flex items-center px-2 py-1 rounded text-xs"
+                  style={{ backgroundColor: author.color }}
+                >
+                  <span className="font-medium">{author.name}</span>
+                  {author.id === user?.id && <span className="ml-1">(você)</span>}
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+          
+          <Textarea
+            ref={textareaRef}
+            value={content}
+            onChange={handleContentChange}
+            onMouseUp={handleTextSelection}
+            className="min-h-[500px] font-mono resize-none"
+            placeholder="Comece a compor colaborativamente... Selecione o texto para aprovar ou comentar."
+          />
         </div>
+
+        {/* Approval panel */}
+        {showApprovalPanel && (
+          <SegmentApprovalSystem
+            partnershipId={partnershipId}
+            selectedText={selectedText}
+            segmentId={selectedSegmentId}
+            onClose={() => setShowApprovalPanel(false)}
+            authors={authors}
+          />
+        )}
       </div>
-      
-      <Textarea
-        ref={textareaRef}
-        value={content}
-        onChange={handleContentChange}
-        className="min-h-[400px] font-mono"
-        placeholder="Comece a compor colaborativamente..."
-      />
+
+      {/* Side panel with tabs */}
+      <div className="w-80 flex-shrink-0">
+        <Tabs defaultValue="chat" className="h-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="chat">Chat</TabsTrigger>
+            <TabsTrigger value="audio">Áudio</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="chat" className="h-[calc(100%-40px)]">
+            <CollaborativeChatPanel
+              partnershipId={partnershipId}
+              authors={authors}
+            />
+          </TabsContent>
+          
+          <TabsContent value="audio" className="h-[calc(100%-40px)] overflow-y-auto">
+            <AudioRecordingPanel
+              partnershipId={partnershipId}
+              onInsertAudio={handleInsertAudio}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
