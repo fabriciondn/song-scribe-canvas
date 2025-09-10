@@ -141,71 +141,72 @@ export const Header = ({
       
       {/* Right section */}
       <div className="flex items-center flex-1 justify-end">
-        <div className="flex items-center gap-3">
-          {/* Theme toggle */}
-          <Button variant="ghost" size="icon" onClick={toggleTheme} className="mr-2">
-            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
-
-          {/* Exibição dos créditos */}
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <CreditCard className="h-3 w-3" />
-              {credits || 0} créditos
-            </Badge>
-            <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => navigate('/credits-checkout')}>
-              <Plus className="h-3 w-3 mr-1" />
-              Adicionar
+        {user ? (
+          <div className="flex items-center gap-3">
+            {/* Theme toggle */}
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="mr-2">
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
-          </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={profile?.avatar_url || ""} alt={profile?.name || user.email || "User"} />
-                  <AvatarFallback>
-                    {getUserInitials(profile?.name, user.email)}
-                  </AvatarFallback>
-                </Avatar>
+            {/* Exibição dos créditos */}
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <CreditCard className="h-3 w-3" />
+                {credits || 0} créditos
+              </Badge>
+              <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => navigate('/credits-checkout')}>
+                <Plus className="h-3 w-3 mr-1" />
+                Adicionar
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {profile?.name || profile?.artistic_name || user.email}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {credits || 0} créditos disponíveis
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              
-              {/* Dashboard navigation based on role - sempre disponível */}
-              <DropdownMenuItem onClick={handleDashboardClick}>
-                <dashboardMenuItem.icon className="mr-2 h-4 w-4" />
-                <span>{dashboardMenuItem.text}</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem onClick={() => navigate('/credits-checkout')}>
-                <CreditCard className="mr-2 h-4 w-4" />
-                <span>Adicionar Créditos</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem disabled={isLoggingOut} onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>{isLoggingOut ? 'Saindo...' : 'Sair'}</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      ) : (
-        <Link to="/">
-          <Button size="sm">Entrar</Button>
-        </Link>
-      )}
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profile?.avatar_url || ""} alt={profile?.name || user.email || "User"} />
+                    <AvatarFallback>
+                      {getUserInitials(profile?.name, user.email)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {profile?.name || profile?.artistic_name || user.email}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {credits || 0} créditos disponíveis
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                {/* Dashboard navigation based on role - sempre disponível */}
+                <DropdownMenuItem onClick={handleDashboardClick}>
+                  <dashboardMenuItem.icon className="mr-2 h-4 w-4" />
+                  <span>{dashboardMenuItem.text}</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem onClick={() => navigate('/credits-checkout')}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  <span>Adicionar Créditos</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem disabled={isLoggingOut} onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>{isLoggingOut ? 'Saindo...' : 'Sair'}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ) : (
+          <Link to="/">
+            <Button size="sm">Entrar</Button>
+          </Link>
+        )}
       </div>
     </header>
   );
