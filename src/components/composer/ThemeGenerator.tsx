@@ -41,12 +41,12 @@ export const ThemeGenerator: React.FC = () => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg border border-border shadow-sm">
+    <div className="bg-card p-4 rounded-lg border border-border shadow-sm">
       <h3 className="text-lg font-semibold mb-2 flex items-center">
         <Zap className="mr-2 h-5 w-5 text-amber-500" />
         Gerador de Temas
       </h3>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-muted-foreground mb-4 break-words">
         Precisa de inspiração? Gere ideias de temas para sua composição com um clique.
       </p>
       

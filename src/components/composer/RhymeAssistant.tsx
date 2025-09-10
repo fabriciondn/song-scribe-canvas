@@ -85,12 +85,12 @@ export const RhymeAssistant: React.FC = () => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg border border-border shadow-sm">
+    <div className="bg-card p-4 rounded-lg border border-border shadow-sm">
       <h3 className="text-lg font-semibold mb-2 flex items-center">
         <Search className="mr-2 h-5 w-5 text-blue-500" />
         Assistente de Rimas
       </h3>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-muted-foreground mb-4 break-words">
         Encontre a palavra perfeita para completar seu verso com rimas precisas.
       </p>
       
