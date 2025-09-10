@@ -151,7 +151,7 @@ export const MusicBases: React.FC<MusicBasesProps> = ({
                   <AccordionContent>
                     <div className="flex flex-col space-y-2">
                       {bases.map(base => (
-                        <div key={base.id} className="flex items-center justify-between p-3 bg-card border border-border rounded-md">
+                        <div key={base.id} className="flex items-center justify-between p-3 bg-card border border-border rounded-md text-card-foreground">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">{base.title}</p>
                           </div>
