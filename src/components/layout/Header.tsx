@@ -117,28 +117,30 @@ export const Header = ({
   const shouldShowLogo = isSidebarCollapsed || !isSidebarOpen;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border py-3 px-6 flex items-center justify-between">
-      <div className="flex items-center flex-1 mx-[68px]">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border py-2 px-6 flex items-center">
+      {/* Left section */}
+      <div className="flex items-center flex-1">
         <Button variant="ghost" size="icon" className="mr-2 lg:hidden" onClick={toggleSidebar}>
           <Menu className="h-5 w-5" />
         </Button>
         {shouldShowLogo && (
-          <Link to="/" className="flex items-center gap-2 mr-12">
+          <Link to="/" className="flex items-center gap-2">
             <img 
               src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} 
               alt="Logo" 
-              className="h-9" 
+              className="h-8" 
             />
           </Link>
         )}
       </div>
       
-      {/* Trial Banner in center of header */}
-      <div className="flex-1 flex justify-center">
+      {/* Center section - Trial Banner */}
+      <div className="flex justify-center flex-1">
         <TrialBanner />
       </div>
       
-      {user ? (
+      {/* Right section */}
+      <div className="flex items-center flex-1 justify-end">
         <div className="flex items-center gap-3">
           {/* Theme toggle */}
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="mr-2">
@@ -160,7 +162,7 @@ export const Header = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-9 w-9">
+                <Avatar className="h-8 w-8">
                   <AvatarImage src={profile?.avatar_url || ""} alt={profile?.name || user.email || "User"} />
                   <AvatarFallback>
                     {getUserInitials(profile?.name, user.email)}
@@ -204,6 +206,7 @@ export const Header = ({
           <Button size="sm">Entrar</Button>
         </Link>
       )}
+      </div>
     </header>
   );
 };
