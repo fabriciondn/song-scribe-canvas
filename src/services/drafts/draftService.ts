@@ -322,103 +322,31 @@ export const getUserPartnerships = async () => {
       throw new Error('User not authenticated');
     }
     
-    // Get partnerships where the user is either the creator or a collaborator
+    // Get partnerships where the user is the creator
     const { data: createdPartnerships, error: createdError } = await supabase
       .from('partnerships')
-      .select(`
-        id,
-        title,
-        description,
-        created_at,
-        user_id,
-        partnership_collaborators (
-          id,
-          user_id,
-          permission,
-          status
-        )
-      `)
+      .select('*')
       .eq('user_id', userId);
       
     if (createdError) throw createdError;
     
-    const { data: collaboratingPartnershipsData, error: collaboratingError } = await supabase
-      .from('partnership_collaborators')
-      .select(`
-        partnerships (
-          id,
-          title,
-          description,
-          created_at,
-          user_id,
-          partnership_collaborators (
-            id,
-            user_id,
-            permission,
-            status
-          )
-        )
-      `)
-      .eq('user_id', userId);
-      
-    if (collaboratingError) throw collaboratingError;
-    
-    // Combine and format the partnerships
-    let allPartnerships: PartnershipData[] = (createdPartnerships || []) as PartnershipData[];
-    
-    if (collaboratingPartnershipsData) {
-      // Extract partnerships from the nested response and cast to correct type
-      const collaborations = collaboratingPartnershipsData
-        .map(collab => {
-          // Type assertion needed to handle the complex nested structure
-          const partnership = collab.partnerships as unknown as PartnershipData;
-          if (partnership && partnership.id) {
-            return partnership;
-          }
-          return null;
-        })
-        .filter((partnership): partnership is PartnershipData => partnership !== null);
-      
-      allPartnerships = [...allPartnerships, ...collaborations];
-    }
-    
-    // Get user info for partners
-    const userIds = new Set<string>();
-    allPartnerships.forEach(partnership => {
-      if (partnership.user_id) userIds.add(partnership.user_id);
-      partnership.partnership_collaborators?.forEach(collab => {
-        if (collab.user_id) userIds.add(collab.user_id);
-      });
-    });
-    
-    // Get user profiles
-    const { data: profilesData } = await supabase
+    // Get user profile for the current user
+    const { data: profileData } = await supabase
       .from('profiles')
       .select('id, name, email')
-      .in('id', Array.from(userIds));
+      .eq('id', userId)
+      .single();
     
-    const profiles = profilesData || [];
+    const userProfile = profileData || { name: 'Unknown', email: '' };
     
-    const userProfiles = profiles.reduce((acc, profile) => {
-      acc[profile.id] = profile;
-      return acc;
-    }, {} as Record<string, ProfileInfo>);
-    
-    // Format partnerships with user info
-    return allPartnerships.map(partnership => ({
+    // Return simplified partnerships format
+    return (createdPartnerships || []).map(partnership => ({
       id: partnership.id,
       title: partnership.title,
       description: partnership.description || '',
       date: new Date(partnership.created_at).toLocaleDateString(),
-      creator: userProfiles[partnership.user_id] || { name: 'Unknown', email: '' },
-      partners: (partnership.partnership_collaborators || []).map(collab => ({
-        id: collab.id,
-        userId: collab.user_id,
-        name: userProfiles[collab.user_id]?.name || 'Unknown User',
-        email: userProfiles[collab.user_id]?.email || '',
-        permission: collab.permission || 'read',
-        status: collab.status || 'pending'
-      }))
+      creator: userProfile,
+      partners: [] // Simplified - no partners for now
     }));
   } catch (error) {
     console.error('Error getting user partnerships:', error);
