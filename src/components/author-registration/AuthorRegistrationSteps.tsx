@@ -20,6 +20,8 @@ import {
 import { Upload, FileAudio, ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import { AuthorRegistrationData } from '@/pages/AuthorRegistration';
 import { useProfile } from '@/hooks/useProfile';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { FormDescription } from '@/components/ui/form';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3'];
@@ -49,6 +51,9 @@ const step2Schema = z.object({
   genre: z.string().min(1, 'Gênero é obrigatório'),
   styleVariation: z.string().optional(),
   songVersion: z.string().optional(),
+  registrationType: z.enum(['lyrics_only', 'complete'], {
+    required_error: 'Selecione o tipo de registro',
+  }),
   additionalInfo: z.string().optional(),
   termsAccepted: z.boolean().refine((val) => val === true, {
     message: 'Você deve aceitar os termos para continuar',
@@ -83,6 +88,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [lyrics, setLyrics] = useState<string>('');
+  const [registrationType, setRegistrationType] = useState<'lyrics_only' | 'complete'>('complete');
   const [isCurrentUser, setIsCurrentUser] = useState<boolean>(false);
   const { profile } = useProfile();
 
@@ -108,6 +114,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
       genre: '',
       styleVariation: '',
       songVersion: '',
+      registrationType: 'complete',
       additionalInfo: '',
       termsAccepted: false,
     },
@@ -115,6 +122,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
 
   const hasOtherAuthors = step1Form.watch('hasOtherAuthors');
   const otherAuthors = step1Form.watch('otherAuthors') || [];
+  const currentRegistrationType = step2Form.watch('registrationType');
 
   // Handle "Eu mesmo" checkbox change
   const handleCurrentUserChange = (checked: boolean) => {
@@ -165,8 +173,9 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   };
 
   const handleStep2Submit = (data: Step2Data) => {
-    if (!audioFile) {
-      setAudioError('Arquivo de áudio é obrigatório');
+    // Validação condicional do áudio baseada no tipo de registro
+    if (data.registrationType === 'complete' && !audioFile) {
+      setAudioError('Arquivo de áudio é obrigatório para registro completo');
       return;
     }
 
@@ -592,7 +601,63 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                 )}
               </div>
 
-              {/* Upload de áudio */}
+              {/* Tipo de Registro */}
+              <FormField
+                control={step2Form.control}
+                name="registrationType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Registro *</FormLabel>
+                    <FormDescription className="mb-4">
+                      Escolha o tipo de registro que deseja realizar
+                    </FormDescription>
+                    <FormControl>
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setRegistrationType(value as 'lyrics_only' | 'complete');
+                        }}
+                        className="grid grid-cols-1 gap-4"
+                      >
+                        <div className="flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors">
+                          <RadioGroupItem value="complete" id="complete" className="mt-1" />
+                          <div className="flex-1 cursor-pointer" onClick={() => {
+                            field.onChange('complete');
+                            setRegistrationType('complete');
+                          }}>
+                            <Label htmlFor="complete" className="cursor-pointer font-medium text-sm">
+                              Registro completo (letra + áudio)
+                            </Label>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Registra a letra e a música completa. É obrigatório anexar arquivo de áudio MP3.
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors">
+                          <RadioGroupItem value="lyrics_only" id="lyrics_only" className="mt-1" />
+                          <div className="flex-1 cursor-pointer" onClick={() => {
+                            field.onChange('lyrics_only');
+                            setRegistrationType('lyrics_only');
+                          }}>
+                            <Label htmlFor="lyrics_only" className="cursor-pointer font-medium text-sm">
+                              Registro de obra apenas letra
+                            </Label>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Registra apenas a letra da música. Não é necessário anexar arquivo de áudio.
+                            </p>
+                          </div>
+                        </div>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Upload de áudio - Condicional baseado no tipo */}
+              {currentRegistrationType === 'complete' && (
               <div className="space-y-2">
                 <Label className={isMobile ? "text-sm" : ""}>Upload do áudio (MP3) *</Label>
                 <div className={`border-2 border-dashed border-muted-foreground/25 rounded-lg relative ${isMobile ? 'p-4' : 'p-6'}`}>
@@ -655,6 +720,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                   Máximo 10MB, apenas arquivos MP3
                 </p>
               </div>
+              )}
 
               {/* Informações adicionais */}
               <FormField
@@ -700,7 +766,15 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                   <ChevronLeft className="h-4 w-4" />
                   Etapa Anterior
                 </Button>
-                <Button type="submit" disabled={userCredits <= 0} className="flex items-center gap-2">
+                <Button 
+                  type="submit" 
+                  disabled={
+                    userCredits <= 0 || 
+                    !lyrics.trim() || 
+                    (currentRegistrationType === 'complete' && !audioFile)
+                  } 
+                  className="flex items-center gap-2"
+                >
                   {userCredits <= 0 ? 'Créditos Insuficientes' : 'Registrar Obra'}
                 </Button>
               </div>
