@@ -35,7 +35,9 @@ import Tutorials from "./pages/Tutorials";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import ModeratorDashboard from "./pages/ModeratorDashboard";
+import AffiliateDashboard from "./pages/AffiliateDashboard";
 import ModeratorAuth from "./pages/ModeratorAuth";
+import AffiliateLink from "./pages/AffiliateLink";
 import PublicRegistrationForm from "./pages/PublicRegistrationForm";
 
 const queryClient = new QueryClient({
@@ -110,6 +112,7 @@ const AppContent = () => {
             <Route path="/moderator/profile" element={<ModeratorDashboard />} />
             <Route path="/moderator/debug" element={<ModeratorDashboard />} />
             <Route path="/moderator-auth" element={<ModeratorAuth />} />
+            <Route path="/ref/:code" element={<AffiliateLink />} />
             <Route path="/formulario" element={<PublicRegistrationForm />} />
             <Route path="/plans" element={<Dashboard />}>
               <Route index element={<Plans />} />

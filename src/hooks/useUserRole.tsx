@@ -3,20 +3,23 @@ import { useImpersonation } from '@/context/ImpersonationContext';
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useAffiliateRole } from '@/hooks/useAffiliateRole';
 import { supabase } from '@/integrations/supabase/client';
 
 interface UserRole {
   isPro: boolean;
   isAdmin: boolean;
   isModerator: boolean;
+  isAffiliate: boolean;
   isLoading: boolean;
-  role: 'admin' | 'moderator' | 'user';
+  role: 'admin' | 'moderator' | 'affiliate' | 'user';
 }
 
 export const useUserRole = (): UserRole => {
   const { user } = useAuth();
   const { isImpersonating, impersonatedUser } = useImpersonation();
   const { isPro: subscriptionIsPro, isLoading: subscriptionLoading } = useSubscription();
+  const { isAffiliate, isLoading: affiliateLoading } = useAffiliateRole();
   const [adminRole, setAdminRole] = useState<string | null>(null);
   const [adminLoading, setAdminLoading] = useState(true);
 
@@ -69,16 +72,18 @@ export const useUserRole = (): UserRole => {
         isPro: false,
         isAdmin: false,
         isModerator: false,
+        isAffiliate: false,
         isLoading: false,
         role: 'user'
       };
     }
 
-    if (adminLoading || subscriptionLoading) {
+    if (adminLoading || subscriptionLoading || affiliateLoading) {
       return {
         isPro: false,
         isAdmin: false,
         isModerator: false,
+        isAffiliate: false,
         isLoading: true,
         role: 'user'
       };
@@ -95,17 +100,25 @@ export const useUserRole = (): UserRole => {
       subscriptionIsPro,
       isPro,
       isAdmin,
-      isModerator
+      isModerator,
+      isAffiliate
     });
+
+    // Determinar role final baseado na hierarquia
+    let finalRole: 'admin' | 'moderator' | 'affiliate' | 'user' = 'user';
+    if (isAdmin) finalRole = 'admin';
+    else if (isModerator) finalRole = 'moderator'; 
+    else if (isAffiliate) finalRole = 'affiliate';
 
     return {
       isPro,
       isAdmin,
       isModerator,
+      isAffiliate,
       isLoading: false,
-      role: adminRole as 'admin' | 'moderator' | 'user' || 'user'
+      role: finalRole
     };
-  }, [currentUserId, adminRole, adminLoading, subscriptionIsPro, subscriptionLoading]);
+  }, [currentUserId, adminRole, adminLoading, subscriptionIsPro, subscriptionLoading, isAffiliate, affiliateLoading]);
 
   return finalRole;
 };

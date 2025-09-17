@@ -14,7 +14,8 @@ import {
   Trash2, 
   Settings,
   CreditCard,
-  ArrowUp
+  ArrowUp,
+  TrendingUp
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -148,6 +149,13 @@ export const useMenuItems = () => {
         icon: Shield,
         path: '/moderator',
         functionKey: 'moderator',
+        isPro: false
+      },
+      {
+        label: 'Afiliados',
+        icon: TrendingUp,
+        path: '/affiliate',
+        functionKey: 'affiliate',
         isPro: false
       }
     ];
