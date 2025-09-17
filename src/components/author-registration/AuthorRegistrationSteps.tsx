@@ -124,6 +124,11 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   const otherAuthors = step1Form.watch('otherAuthors') || [];
   const currentRegistrationType = step2Form.watch('registrationType');
 
+  // Sincronizar o estado local com o valor do formulário
+  useEffect(() => {
+    setRegistrationType(currentRegistrationType);
+  }, [currentRegistrationType]);
+
   // Handle "Eu mesmo" checkbox change
   const handleCurrentUserChange = (checked: boolean) => {
     setIsCurrentUser(checked);
@@ -614,10 +619,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                     <FormControl>
                       <RadioGroup
                         value={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setRegistrationType(value as 'lyrics_only' | 'complete');
-                        }}
+                        onValueChange={field.onChange}
                         className="grid grid-cols-1 gap-4"
                       >
                         <div className="flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors">
