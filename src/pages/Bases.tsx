@@ -10,6 +10,7 @@ import { Folder, Music, Plus, Trash2, Upload } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { BaseMusical, BaseMusicalInput, getBases, getBasesByFolder, createBaseMusical, removeBaseMusical, ensureMusicBasesBucketExists } from '@/services/basesMusicais/basesService';
+import { getFolders, createFolder } from '@/services/folderService';
 import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
 import { FolderLimitModal } from '@/components/ui/folder-limit-modal';
 
@@ -18,7 +19,7 @@ interface BaseFile extends BaseMusical {}
 interface BaseFolder {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   files: BaseFile[];
 }
 const Bases: React.FC = () => {
@@ -61,6 +62,9 @@ const Bases: React.FC = () => {
         // Garantir que o bucket de storage exista
         await ensureMusicBasesBucketExists();
 
+        // Carregar pastas do banco de dados
+        const foldersData = await getFolders();
+        
         // Carregar todas as bases
         const basesData = await getBases();
 
@@ -75,27 +79,30 @@ const Bases: React.FC = () => {
           files: []
         });
 
+        // Adicionar pastas do banco de dados
+        foldersData.forEach(folder => {
+          folderMap.set(folder.id, {
+            id: folder.id,
+            name: folder.name,
+            description: '', // A tabela folders não tem campo description
+            files: []
+          });
+        });
+
         // Organizar bases em suas respectivas pastas
         basesData.forEach(base => {
           const folderId = base.folder_id || 'uncategorized';
-          if (!folderMap.has(folderId)) {
-            folderMap.set(folderId, {
-              id: folderId,
-              name: `Pasta ${folderMap.size + 1}`,
-              // Nome temporário até carregarmos os nomes reais
-              description: '',
-              files: []
-            });
-          }
           const folder = folderMap.get(folderId);
           if (folder) {
             folder.files.push(base);
+          } else {
+            // Se a pasta não existe, adicionar à pasta "Sem pasta"
+            const uncategorizedFolder = folderMap.get('uncategorized');
+            if (uncategorizedFolder) {
+              uncategorizedFolder.files.push(base);
+            }
           }
         });
-
-        // Carregar informações das pastas do banco de dados
-        // Aqui poderíamos fazer uma consulta para obter nomes e descrições das pastas
-        // Por enquanto, vamos simplesmente usar o que já temos
 
         setFolders(Array.from(folderMap.values()));
       } catch (error) {
@@ -111,7 +118,7 @@ const Bases: React.FC = () => {
     };
     loadData();
   }, [user, toast]);
-  const handleAddFolder = () => {
+  const handleAddFolder = async () => {
     // Verificar limite de pastas
     if (folders.length >= MAX_FREE_FOLDERS) {
       setLimitType('folder');
@@ -127,22 +134,42 @@ const Bases: React.FC = () => {
       });
       return;
     }
-    const newFolderData: BaseFolder = {
-      id: Date.now().toString(),
-      name: newFolder.name,
-      description: newFolder.description,
-      files: []
-    };
-    setFolders(prev => [...prev, newFolderData]);
-    setNewFolder({
-      name: '',
-      description: ''
-    });
-    setIsAddingFolder(false);
-    toast({
-      title: "Pasta criada",
-      description: `A pasta "${newFolder.name}" foi criada com sucesso`
-    });
+
+    try {
+      setIsLoading(true);
+      
+      // Criar pasta no banco de dados
+      const createdFolder = await createFolder(newFolder.name);
+      
+      // Adicionar à lista local
+      const newFolderData: BaseFolder = {
+        id: createdFolder.id,
+        name: createdFolder.name,
+        description: newFolder.description,
+        files: []
+      };
+      
+      setFolders(prev => [...prev, newFolderData]);
+      setNewFolder({
+        name: '',
+        description: ''
+      });
+      setIsAddingFolder(false);
+      
+      toast({
+        title: "Pasta criada",
+        description: `A pasta "${newFolder.name}" foi criada com sucesso`
+      });
+    } catch (error) {
+      console.error('Erro ao criar pasta:', error);
+      toast({
+        title: "Erro ao criar pasta",
+        description: "Não foi possível criar a pasta. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   const handleAddBase = async () => {
     if (!selectedFolder) return;
