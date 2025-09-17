@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Edit, FileText, Folder, BookText, Users, Menu, X, FileMusic, ListMusic, DollarSign, BarChart3, Trash2, Shield, User, Settings, Crown } from 'lucide-react';
+import { Edit, FileText, Folder, BookText, Users, Menu, X, FileMusic, ListMusic, DollarSign, BarChart3, Trash2, Shield, User, Settings, Crown, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useTheme } from '@/hooks/useTheme';
 import { FunctionStatusTag } from '@/components/layout/FunctionStatusTag';
 import { useMenuItems } from '@/hooks/useMenuItems';
+import { useAffiliateRole } from '@/hooks/useAffiliateRole';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -25,7 +26,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   toggleCollapse
 }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isPro, isAdmin, isLoading } = useUserRole();
+  const { isAffiliate } = useAffiliateRole();
   const { theme } = useTheme();
   const { menuItems, isLoading: menuLoading } = useMenuItems();
 
@@ -45,6 +48,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return true;
   };
 
+  // Handle affiliate navigation
+  const handleAffiliateClick = () => {
+    if (isAffiliate) {
+      navigate('/affiliate');
+    } else {
+      navigate('/affiliate-application');
+    }
+    if (window.innerWidth < 768) {
+      toggleSidebar();
+    }
+  };
+
   // Filter menu items by admin access and user access
   const visibleMenuItems = useMemo(() => {
     let items = menuItems;
@@ -58,6 +73,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (isPro) {
       items = items.filter(item => item.functionKey !== 'upgrade');
     }
+    
+    // Remove affiliate from normal menu since we handle it separately
+    items = items.filter(item => item.functionKey !== 'affiliate');
     
     return items;
   }, [menuItems, isAdmin, isPro]);
@@ -158,6 +176,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
             );
             })
           )}
+          
+          {/* Affiliate Menu Item - Separate from normal menu */}
+          <div
+            onClick={handleAffiliateClick}
+            className={cn(
+              "nav-link flex items-center rounded-lg text-white transition-colors cursor-pointer",
+              isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3",
+              location.pathname.startsWith('/affiliate')
+                ? "bg-[#111111] text-[#00bd4b]"
+                : "hover:bg-[#111111]"
+            )}
+            title={isCollapsed ? "Afiliados" : undefined}
+          >
+            <TrendingUp size={20} />
+            {!isCollapsed && (
+              <div className="flex items-center justify-between w-full">
+                <span>Afiliados</span>
+                {isAffiliate && (
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded bg-green-600 text-white">Ativo</span>
+                )}
+              </div>
+            )}
+          </div>
         </nav>
 
         <div className="pt-4 mt-auto border-t border-sidebar-border space-y-2">

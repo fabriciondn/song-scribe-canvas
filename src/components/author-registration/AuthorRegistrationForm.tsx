@@ -21,6 +21,7 @@ import {
 import { Upload, FileAudio } from 'lucide-react';
 import { AuthorRegistrationData } from '@/pages/AuthorRegistration';
 import { useProfile } from '@/hooks/useProfile';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3'];
@@ -39,6 +40,9 @@ const formSchema = z.object({
   songVersion: z.string().optional(),
   lyrics: z.string().min(1, 'Letra é obrigatória'),
   additionalInfo: z.string().optional(),
+  registrationType: z.enum(['lyrics_only', 'complete'], {
+    required_error: 'Selecione o tipo de registro',
+  }),
   termsAccepted: z.boolean().refine((val) => val === true, {
     message: 'Você deve aceitar os termos para continuar',
   }),
@@ -84,12 +88,14 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
       songVersion: initialData.songVersion,
       lyrics: initialData.lyrics,
       additionalInfo: initialData.additionalInfo,
+      registrationType: 'complete' as const,
       termsAccepted: initialData.termsAccepted,
     },
   });
 
   const hasOtherAuthors = form.watch('hasOtherAuthors');
   const otherAuthors = form.watch('otherAuthors') || [];
+  const registrationType = form.watch('registrationType');
 
   // Handle "Eu mesmo" checkbox change
   const handleCurrentUserChange = (checked: boolean) => {
@@ -130,8 +136,9 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
   };
 
   const handleFormSubmit = (data: FormData) => {
-    if (!audioFile) {
-      setAudioError('Arquivo de áudio é obrigatório');
+    // Audio validation only for complete registration
+    if (data.registrationType === 'complete' && !audioFile) {
+      setAudioError('Arquivo de áudio é obrigatório para registro completo');
       return;
     }
 
@@ -198,7 +205,9 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
     return parseInt(onlyNumbers[9]) === digit1 && parseInt(onlyNumbers[10]) === digit2;
   };
 
-  const isFormValid = form.formState.isValid && audioFile && !audioError;
+  const isFormValid = form.formState.isValid && 
+    (registrationType === 'lyrics_only' || (registrationType === 'complete' && audioFile)) && 
+    !audioError;
 
   return (
     <Card className={isMobile ? "border-0 shadow-none" : ""}>
@@ -488,9 +497,44 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
               )}
             />
 
-            {/* Upload de áudio */}
-            <div className="space-y-2">
-              <Label className={isMobile ? "text-sm" : ""}>Upload do áudio (MP3) *</Label>
+            {/* Tipo de Registro */}
+            <FormField
+              control={form.control}
+              name="registrationType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Registro *</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="complete" id="complete" />
+                        <Label htmlFor="complete">Registro completo (letra + áudio)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="lyrics_only" id="lyrics_only" />
+                        <Label htmlFor="lyrics_only">Registro de obra apenas letra</Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormDescription>
+                    {registrationType === 'complete' 
+                      ? 'Inclui letra e arquivo de áudio MP3' 
+                      : 'Apenas a letra da música, sem áudio'
+                    }
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Upload de áudio - Condicional baseado no tipo */}
+            {registrationType === 'complete' && (
+              <div className="space-y-2">
+                <Label className={isMobile ? "text-sm" : ""}>Upload do áudio (MP3) *</Label>
               <div className={`border-2 border-dashed border-muted-foreground/25 rounded-lg relative cursor-pointer hover:border-muted-foreground/50 transition-colors ${isMobile ? 'p-4' : 'p-6'}`}>
                 <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
                   {audioFile ? (
@@ -526,10 +570,11 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
               {audioError && (
                 <p className="text-sm text-red-500">{audioError}</p>
               )}
-              <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
-                Máximo 10MB, apenas arquivos MP3
-              </p>
-            </div>
+                <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
+                  Máximo 10MB, apenas arquivos MP3
+                </p>
+              </div>
+            )}
 
             {/* Informações adicionais */}
             <FormField

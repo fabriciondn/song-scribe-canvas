@@ -36,6 +36,7 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import ModeratorDashboard from "./pages/ModeratorDashboard";
 import AffiliateDashboard from "./pages/AffiliateDashboard";
+import AffiliateApplication from "./pages/AffiliateApplication";
 import ModeratorAuth from "./pages/ModeratorAuth";
 import AffiliateLink from "./pages/AffiliateLink";
 import PublicRegistrationForm from "./pages/PublicRegistrationForm";
@@ -107,6 +108,7 @@ const AppContent = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/moderator" element={<ModeratorDashboard />} />
           <Route path="/affiliate" element={<AffiliateDashboard />} />
+          <Route path="/affiliate-application" element={<AffiliateApplication />} />
           <Route path="/affiliate/*" element={<AffiliateDashboard />} />
             <Route path="/moderator/users" element={<ModeratorDashboard />} />
             <Route path="/moderator/transactions" element={<ModeratorDashboard />} />

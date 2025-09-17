@@ -23,6 +23,7 @@ import { AffiliateCommissions } from '@/components/affiliate/AffiliateCommission
 import { AffiliateAchievements } from '@/components/affiliate/AffiliateAchievements';
 import { AffiliateWithdrawals } from '@/components/affiliate/AffiliateWithdrawals';
 import { AffiliateApplication } from '@/components/affiliate/AffiliateApplication';
+import { BackToDashboardButton } from '@/components/affiliate/BackToDashboardButton';
 
 export default function AffiliateDashboard() {
   const { affiliate, stats, isLoading, isAffiliate, isPending, isRejected } = useAffiliate();
@@ -129,6 +130,7 @@ export default function AffiliateDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <BackToDashboardButton />
           {getLevelBadge(affiliate.level)}
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
             Ativo
