@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { 
   TrendingUp, 
   Users, 
@@ -14,22 +17,64 @@ import {
 import { applyForAffiliate } from '@/services/affiliateService';
 import { useToast } from '@/hooks/use-toast';
 
+interface AffiliateFormData {
+  fullName: string;
+  whatsapp: string;
+  email: string;
+  socialMediaLink: string;
+  youtubeLink: string;
+  tiktokLink: string;
+  websiteLink: string;
+  promotionStrategy: string;
+}
+
 export const AffiliateApplication = () => {
+  const [showForm, setShowForm] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [formData, setFormData] = useState<AffiliateFormData>({
+    fullName: '',
+    whatsapp: '',
+    email: '',
+    socialMediaLink: '',
+    youtubeLink: '',
+    tiktokLink: '',
+    websiteLink: '',
+    promotionStrategy: ''
+  });
   const { toast } = useToast();
 
-  const handleApply = async () => {
+  const handleInputChange = (field: keyof AffiliateFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validações básicas
+    if (!formData.fullName || !formData.whatsapp || !formData.email || !formData.promotionStrategy) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsApplying(true);
+    
     try {
-      const result = await applyForAffiliate();
+      const result = await applyForAffiliate(formData);
       
       if (result.success) {
         toast({
           title: "Solicitação Enviada!",
-          description: "Sua solicitação para se tornar afiliado foi enviada com sucesso.",
+          description: "Sua solicitação foi enviada com sucesso. Nossa equipe analisará e você será informado sobre a aprovação no seu WhatsApp ou email informado no formulário.",
         });
-        // Recarregar a página para mostrar o status pendente
-        window.location.reload();
+        
+        // Recarregar a página para mostrar o status atualizado
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } else {
         toast({
           title: "Erro",
@@ -39,9 +84,9 @@ export const AffiliateApplication = () => {
       }
     } catch (error) {
       toast({
-        title: "Erro",
-        description: "Erro interno do servidor",
-        variant: "destructive",
+        title: "Erro ao enviar solicitação",
+        description: "Ocorreu um erro ao enviar sua solicitação. Tente novamente.",
+        variant: "destructive"
       });
     } finally {
       setIsApplying(false);
@@ -228,15 +273,135 @@ export const AffiliateApplication = () => {
           <p className="mb-6 opacity-90">
             Junte-se aos nossos afiliados e comece a ganhar comissões hoje mesmo
           </p>
-          <Button 
-            size="lg" 
-            variant="secondary"
-            onClick={handleApply}
-            disabled={isApplying}
-            className="text-primary hover:bg-white/90"
-          >
-            {isApplying ? 'Enviando...' : 'Quero ser Afiliado'}
-          </Button>
+          {!showForm ? (
+            <Button 
+              size="lg" 
+              variant="secondary"
+              onClick={() => setShowForm(true)}
+              className="text-primary hover:bg-white/90"
+            >
+              Quero ser Afiliado
+            </Button>
+          ) : (
+            <Card className="max-w-2xl mx-auto">
+              <CardHeader>
+                <CardTitle>Formulário de Inscrição - Programa de Afiliados</CardTitle>
+                <CardDescription>
+                  Preencha todos os dados para que possamos analisar sua candidatura
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="fullName">Nome Completo *</Label>
+                      <Input
+                        id="fullName"
+                        value={formData.fullName}
+                        onChange={(e) => handleInputChange('fullName', e.target.value)}
+                        placeholder="Seu nome completo"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="whatsapp">WhatsApp *</Label>
+                      <Input
+                        id="whatsapp"
+                        value={formData.whatsapp}
+                        onChange={(e) => handleInputChange('whatsapp', e.target.value)}
+                        placeholder="+55 11 99999-9999"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      placeholder="seu@email.com"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="socialMediaLink">Instagram/Facebook</Label>
+                      <Input
+                        id="socialMediaLink"
+                        value={formData.socialMediaLink}
+                        onChange={(e) => handleInputChange('socialMediaLink', e.target.value)}
+                        placeholder="Link do seu perfil"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="youtubeLink">YouTube</Label>
+                      <Input
+                        id="youtubeLink"
+                        value={formData.youtubeLink}
+                        onChange={(e) => handleInputChange('youtubeLink', e.target.value)}
+                        placeholder="Link do seu canal"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="tiktokLink">TikTok</Label>
+                      <Input
+                        id="tiktokLink"
+                        value={formData.tiktokLink}
+                        onChange={(e) => handleInputChange('tiktokLink', e.target.value)}
+                        placeholder="Link do seu perfil"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="websiteLink">Site</Label>
+                      <Input
+                        id="websiteLink"
+                        value={formData.websiteLink}
+                        onChange={(e) => handleInputChange('websiteLink', e.target.value)}
+                        placeholder="Seu site ou blog"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="promotionStrategy">Como pretende divulgar? *</Label>
+                    <Textarea
+                      id="promotionStrategy"
+                      value={formData.promotionStrategy}
+                      onChange={(e) => handleInputChange('promotionStrategy', e.target.value)}
+                      placeholder="Descreva como planeja promover o CompuSe e atrair novos usuários..."
+                      rows={4}
+                      required
+                    />
+                  </div>
+
+                  <div className="flex gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowForm(false)}
+                      className="flex-1"
+                    >
+                      Voltar
+                    </Button>
+                    <Button 
+                      type="submit"
+                      disabled={isApplying}
+                      className="flex-1"
+                    >
+                      {isApplying ? 'Enviando...' : 'Enviar Solicitação'}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
           <p className="text-xs mt-4 opacity-75">
             Análise em até 3 dias úteis
           </p>

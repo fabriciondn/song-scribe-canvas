@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { AdminOverview } from '@/components/admin/AdminOverview';
 import { AdminUsers } from '@/components/admin/AdminUsers';
 import { AdminRoles } from '@/components/admin/AdminRoles';
+import { AdminAffiliates } from '@/components/admin/AdminAffiliates';
 import { AdminContent } from '@/components/admin/AdminContent';
 import { AdminTutorials } from '@/components/admin/AdminTutorials';
 import { AdminBanners } from '@/components/admin/AdminBanners';
@@ -104,6 +105,8 @@ const AdminDashboard: React.FC = () => {
         return <AdminModerators />;
       case 'roles':
         return <AdminRoles />;
+      case 'affiliates':
+        return <AdminAffiliates />;
       case 'content':
         return <AdminContent />;
       case 'tutorials':

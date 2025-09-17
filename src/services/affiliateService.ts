@@ -59,8 +59,19 @@ export interface AffiliateStats {
   subscriptions_count: number;
 }
 
-// Aplicar para ser afiliado
-export async function applyForAffiliate(): Promise<{ success: boolean; error?: string }> {
+// Affiliate application and data retrieval
+interface AffiliateApplicationData {
+  fullName: string;
+  whatsapp: string;
+  email: string;
+  socialMediaLink: string;
+  youtubeLink: string;
+  tiktokLink: string;
+  websiteLink: string;
+  promotionStrategy: string;
+}
+
+export async function applyForAffiliate(applicationData: AffiliateApplicationData): Promise<{ success: boolean; error?: string }> {
   try {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) throw new Error('Usuário não autenticado');
@@ -76,21 +87,10 @@ export async function applyForAffiliate(): Promise<{ success: boolean; error?: s
       return { success: false, error: 'Você já possui uma solicitação de afiliação' };
     }
 
-    // Buscar dados do perfil
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('name')
-      .eq('id', user.user.id)
-      .single();
-
-    if (!profile?.name) {
-      return { success: false, error: 'Complete seu perfil antes de se tornar afiliado' };
-    }
-
     // Gerar código único
     const { data: code, error: codeError } = await supabase.rpc('generate_affiliate_code', {
       user_id: user.user.id,
-      user_name: profile.name
+      user_name: applicationData.fullName
     });
 
     if (codeError) throw codeError;
@@ -100,7 +100,17 @@ export async function applyForAffiliate(): Promise<{ success: boolean; error?: s
       .from('affiliates')
       .insert({
         user_id: user.user.id,
-        affiliate_code: code
+        affiliate_code: code,
+        status: 'pending',
+        level: 'bronze',
+        full_name: applicationData.fullName,
+        whatsapp: applicationData.whatsapp,
+        contact_email: applicationData.email,
+        social_media_link: applicationData.socialMediaLink || null,
+        youtube_link: applicationData.youtubeLink || null,
+        tiktok_link: applicationData.tiktokLink || null,
+        website_link: applicationData.websiteLink || null,
+        promotion_strategy: applicationData.promotionStrategy
       });
 
     if (error) throw error;

@@ -21,6 +21,7 @@ import { AffiliateLinks } from '@/components/affiliate/AffiliateLinks';
 import { AffiliateCampaigns } from '@/components/affiliate/AffiliateCampaigns';
 import { AffiliateCommissions } from '@/components/affiliate/AffiliateCommissions';
 import { AffiliateAchievements } from '@/components/affiliate/AffiliateAchievements';
+import { AffiliateWithdrawals } from '@/components/affiliate/AffiliateWithdrawals';
 import { AffiliateApplication } from '@/components/affiliate/AffiliateApplication';
 
 export default function AffiliateDashboard() {
@@ -224,11 +225,12 @@ export default function AffiliateDashboard() {
 
       {/* Tabs de Conteúdo */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="links">Links</TabsTrigger>
           <TabsTrigger value="campaigns">Campanhas</TabsTrigger>
           <TabsTrigger value="commissions">Comissões</TabsTrigger>
+          <TabsTrigger value="withdrawals">Saques</TabsTrigger>
           <TabsTrigger value="achievements">Conquistas</TabsTrigger>
         </TabsList>
 
@@ -246,6 +248,10 @@ export default function AffiliateDashboard() {
 
         <TabsContent value="commissions">
           <AffiliateCommissions />
+        </TabsContent>
+
+        <TabsContent value="withdrawals">
+          <AffiliateWithdrawals />
         </TabsContent>
 
         <TabsContent value="achievements">

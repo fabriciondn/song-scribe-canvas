@@ -39,6 +39,11 @@ const adminMenuItems = [
     id: "moderators",
   },
   {
+    title: "Afiliados",
+    icon: Users,
+    id: "affiliates",
+  },
+  {
     title: "Gerenciar Funções",
     icon: Shield,
     id: "roles",

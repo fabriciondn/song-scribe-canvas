@@ -350,51 +350,131 @@ export type Database = {
           },
         ]
       }
+      affiliate_withdrawal_requests: {
+        Row: {
+          affiliate_id: string
+          amount: number
+          created_at: string | null
+          id: string
+          payment_details: Json | null
+          payment_method: string | null
+          processed_at: string | null
+          processed_by: string | null
+          rejection_reason: string | null
+          requested_at: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          amount: number
+          created_at?: string | null
+          id?: string
+          payment_details?: Json | null
+          payment_method?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          rejection_reason?: string | null
+          requested_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          amount?: number
+          created_at?: string | null
+          id?: string
+          payment_details?: Json | null
+          payment_method?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          rejection_reason?: string | null
+          requested_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_withdrawal_requests_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliates: {
         Row: {
           affiliate_code: string
           approved_at: string | null
           approved_by: string | null
+          contact_email: string | null
           created_at: string
+          full_name: string | null
           id: string
           level: Database["public"]["Enums"]["affiliate_level"]
+          promotion_strategy: string | null
+          rejection_reason: string | null
+          social_media_link: string | null
           status: Database["public"]["Enums"]["affiliate_status"]
+          tiktok_link: string | null
           total_earnings: number
           total_paid: number
           total_registrations: number
           total_subscriptions: number
           updated_at: string
           user_id: string
+          website_link: string | null
+          whatsapp: string | null
+          youtube_link: string | null
         }
         Insert: {
           affiliate_code: string
           approved_at?: string | null
           approved_by?: string | null
+          contact_email?: string | null
           created_at?: string
+          full_name?: string | null
           id?: string
           level?: Database["public"]["Enums"]["affiliate_level"]
+          promotion_strategy?: string | null
+          rejection_reason?: string | null
+          social_media_link?: string | null
           status?: Database["public"]["Enums"]["affiliate_status"]
+          tiktok_link?: string | null
           total_earnings?: number
           total_paid?: number
           total_registrations?: number
           total_subscriptions?: number
           updated_at?: string
           user_id: string
+          website_link?: string | null
+          whatsapp?: string | null
+          youtube_link?: string | null
         }
         Update: {
           affiliate_code?: string
           approved_at?: string | null
           approved_by?: string | null
+          contact_email?: string | null
           created_at?: string
+          full_name?: string | null
           id?: string
           level?: Database["public"]["Enums"]["affiliate_level"]
+          promotion_strategy?: string | null
+          rejection_reason?: string | null
+          social_media_link?: string | null
           status?: Database["public"]["Enums"]["affiliate_status"]
+          tiktok_link?: string | null
           total_earnings?: number
           total_paid?: number
           total_registrations?: number
           total_subscriptions?: number
           updated_at?: string
           user_id?: string
+          website_link?: string | null
+          whatsapp?: string | null
+          youtube_link?: string | null
         }
         Relationships: []
       }

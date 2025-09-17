@@ -4,11 +4,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useImpersonation } from '@/context/ImpersonationContext';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useAffiliateRole } from '@/hooks/useAffiliateRole';
 
 export const useRoleBasedNavigation = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { isImpersonating, impersonatedUser } = useImpersonation();
   const userRoleData = useUserRole();
+  const { isAffiliate, isLoading: affiliateLoading } = useAffiliateRole();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -16,15 +18,22 @@ export const useRoleBasedNavigation = () => {
   const userRole = useMemo(() => {
     if (isImpersonating && impersonatedUser) {
       return {
-        role: impersonatedUser.role as 'admin' | 'moderator' | 'user',
+        role: impersonatedUser.role as 'admin' | 'moderator' | 'affiliate' | 'user',
         permissions: []
       };
     }
+    
+    // Determinar role baseado nos hooks
+    let role: 'admin' | 'moderator' | 'affiliate' | 'user' = 'user';
+    if (userRoleData.isAdmin) role = 'admin';
+    else if (userRoleData.isModerator) role = 'moderator';
+    else if (isAffiliate) role = 'affiliate';
+    
     return {
-      role: userRoleData.role,
+      role,
       permissions: []
     };
-  }, [isImpersonating, impersonatedUser, userRoleData.role]);
+  }, [isImpersonating, impersonatedUser, userRoleData.role, userRoleData.isAdmin, userRoleData.isModerator, isAffiliate]);
 
   // Função simplificada de redirecionamento - SEM redirecionamentos automáticos problemáticos
   const redirectBasedOnRole = (currentUserRole: typeof userRole, currentPath: string) => {
@@ -40,10 +49,28 @@ export const useRoleBasedNavigation = () => {
       return;
     }
 
-    // CRÍTICO: Se está no painel admin/moderator, NÃO redirecionar
-    if (currentPath.startsWith('/admin') || currentPath.startsWith('/moderator')) {
-      console.log('🛡️ NO PAINEL ADMIN/MODERATOR - Mantendo usuário na página');
+    // CRÍTICO: Se está no painel admin/moderator/affiliate, NÃO redirecionar
+    if (currentPath.startsWith('/admin') || currentPath.startsWith('/moderator') || currentPath.startsWith('/affiliate')) {
+      console.log('🛡️ NO PAINEL ADMIN/MODERATOR/AFFILIATE - Mantendo usuário na página');
       return;
+    }
+
+    // Redirecionamento automático baseado no role (apenas para usuários autenticados sem path específico)
+    if (currentPath === '/dashboard' || currentPath === '/') {
+      if (currentUserRole.role === 'admin' && !currentPath.startsWith('/admin')) {
+        navigate('/admin');
+        return;
+      }
+      
+      if (currentUserRole.role === 'moderator' && !currentPath.startsWith('/moderator')) {
+        navigate('/moderator');
+        return;
+      }
+      
+      if (currentUserRole.role === 'affiliate' && !currentPath.startsWith('/affiliate')) {
+        navigate('/affiliate');
+        return;
+      }
     }
 
     // Apenas verificações de segurança - usuário tentando acessar área sem permissão
@@ -59,44 +86,52 @@ export const useRoleBasedNavigation = () => {
       return;
     }
 
-    console.log('✅ Navegação permitida');
-  };
-
-  // useEffect para verificações de segurança - SEM redirecionamentos automáticos
-  useEffect(() => {
-    if (isLoading || userRoleData.isLoading || !isAuthenticated) {
+    if (currentPath.startsWith('/affiliate') && !['admin', 'moderator', 'affiliate'].includes(currentUserRole.role)) {
+      console.log('❌ Acesso negado ao afiliado');
+      navigate('/dashboard', { replace: true });
       return;
     }
 
-    // Apenas verificações de segurança, sem redirecionamentos automáticos
+    console.log('✅ Navegação permitida');
+  };
+
+  // useEffect para verificações de segurança e redirecionamentos
+  useEffect(() => {
+    if (isLoading || userRoleData.isLoading || affiliateLoading || !isAuthenticated) {
+      return;
+    }
+
     redirectBasedOnRole(userRole, location.pathname);
-  }, [userRole, userRoleData.isLoading, isAuthenticated, isLoading, location.pathname, isImpersonating, navigate]);
+  }, [userRole, userRoleData.isLoading, affiliateLoading, isAuthenticated, isLoading, location.pathname, isImpersonating, navigate]);
 
   const getDefaultDashboard = () => {
     const effectiveRole = isImpersonating && impersonatedUser
       ? impersonatedUser.role
-      : userRoleData.role;
+      : userRole.role;
       
     switch (effectiveRole) {
       case 'admin':
         return '/admin';
       case 'moderator':
         return '/moderator';
+      case 'affiliate':
+        return '/affiliate';
       default:
         return '/dashboard';
     }
   };
 
-  const canAccess = (requiredRole: 'admin' | 'moderator' | 'user') => {
+  const canAccess = (requiredRole: 'admin' | 'moderator' | 'affiliate' | 'user') => {
     const effectiveRole = isImpersonating && impersonatedUser
       ? impersonatedUser.role
-      : userRoleData.role;
+      : userRole.role;
       
     if (!effectiveRole) return false;
 
     const roleHierarchy = {
-      admin: 3,
-      moderator: 2,
+      admin: 4,
+      moderator: 3,
+      affiliate: 2,
       user: 1
     };
 
@@ -105,11 +140,12 @@ export const useRoleBasedNavigation = () => {
 
   return {
     userRole,
-    isRoleLoading: userRoleData.isLoading,
+    isRoleLoading: userRoleData.isLoading || affiliateLoading,
     getDefaultDashboard,
     canAccess,
     isAdmin: userRoleData.isAdmin,
     isModerator: userRoleData.isModerator,
-    isUser: userRoleData.role === 'user'
+    isAffiliate: userRole.role === 'affiliate',
+    isUser: userRole.role === 'user'
   };
 };
