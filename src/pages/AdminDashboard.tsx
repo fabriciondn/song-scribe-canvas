@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -41,7 +41,6 @@ const AdminDashboard: React.FC = () => {
   });
   
   const { profile } = useProfile();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isLoading && isAdmin) {
@@ -183,8 +182,8 @@ const AdminDashboard: React.FC = () => {
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => window.location.href = '/dashboard'}>
-                  Painel Usuário
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard">Painel Usuário</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

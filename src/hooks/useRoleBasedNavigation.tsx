@@ -55,23 +55,9 @@ export const useRoleBasedNavigation = () => {
       return;
     }
 
-    // Redirecionamento automático baseado no role (apenas para usuários autenticados sem path específico)
-    if (currentPath === '/dashboard' || currentPath === '/') {
-      if (currentUserRole.role === 'admin' && !currentPath.startsWith('/admin')) {
-        navigate('/admin');
-        return;
-      }
-      
-      if (currentUserRole.role === 'moderator' && !currentPath.startsWith('/moderator')) {
-        navigate('/moderator');
-        return;
-      }
-      
-      if (currentUserRole.role === 'affiliate' && !currentPath.startsWith('/affiliate')) {
-        navigate('/affiliate');
-        return;
-      }
-    }
+    // CRÍTICO: Remover redirecionamentos automáticos que causam loops
+    // Usuários devem poder navegar livremente entre dashboards
+    console.log('✅ Permitindo navegação livre entre dashboards');
 
     // Apenas verificações de segurança - usuário tentando acessar área sem permissão
     if (currentPath.startsWith('/admin') && currentUserRole.role !== 'admin') {
