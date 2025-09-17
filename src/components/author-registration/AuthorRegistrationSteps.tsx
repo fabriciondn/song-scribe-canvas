@@ -622,10 +622,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                       >
                         <div className="flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors">
                           <RadioGroupItem value="complete" id="complete" className="mt-1" />
-                          <div className="flex-1 cursor-pointer" onClick={() => {
-                            field.onChange('complete');
-                            setRegistrationType('complete');
-                          }}>
+                          <div className="flex-1">
                             <Label htmlFor="complete" className="cursor-pointer font-medium text-sm">
                               Registro completo (letra + áudio)
                             </Label>
@@ -637,10 +634,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                         
                         <div className="flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors">
                           <RadioGroupItem value="lyrics_only" id="lyrics_only" className="mt-1" />
-                          <div className="flex-1 cursor-pointer" onClick={() => {
-                            field.onChange('lyrics_only');
-                            setRegistrationType('lyrics_only');
-                          }}>
+                          <div className="flex-1">
                             <Label htmlFor="lyrics_only" className="cursor-pointer font-medium text-sm">
                               Registro de obra apenas letra
                             </Label>
