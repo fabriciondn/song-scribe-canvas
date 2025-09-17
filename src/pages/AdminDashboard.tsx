@@ -183,7 +183,7 @@ const AdminDashboard: React.FC = () => {
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                <DropdownMenuItem onClick={() => window.location.href = '/dashboard'}>
                   Painel Usuário
                 </DropdownMenuItem>
               </DropdownMenuContent>
