@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { BaseMusical, BaseMusicalInput, getBases, getBasesByFolder, createBaseMusical, removeBaseMusical, ensureMusicBasesBucketExists } from '@/services/basesMusicais/basesService';
 import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
+import { FolderLimitModal } from '@/components/ui/folder-limit-modal';
 
 // Interfaces para pastas e arquivos de base
 interface BaseFile extends BaseMusical {}
@@ -37,12 +38,18 @@ const Bases: React.FC = () => {
   const [isAddingBase, setIsAddingBase] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [baseToDelete, setBaseToDelete] = useState<BaseFile | null>(null);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitType, setLimitType] = useState<'folder' | 'base'>('folder');
   const {
     toast
   } = useToast();
   const {
     user
   } = useAuth();
+
+  // Limites do sistema
+  const MAX_FREE_FOLDERS = 3;
+  const MAX_BASES_PER_FOLDER = 3;
 
   // Carregar pastas e bases do banco de dados
   useEffect(() => {
@@ -105,6 +112,13 @@ const Bases: React.FC = () => {
     loadData();
   }, [user, toast]);
   const handleAddFolder = () => {
+    // Verificar limite de pastas
+    if (folders.length >= MAX_FREE_FOLDERS) {
+      setLimitType('folder');
+      setShowLimitModal(true);
+      return;
+    }
+
     if (!newFolder.name.trim()) {
       toast({
         title: "Erro",
@@ -132,6 +146,14 @@ const Bases: React.FC = () => {
   };
   const handleAddBase = async () => {
     if (!selectedFolder) return;
+
+    // Verificar limite de bases na pasta
+    if (selectedFolder.files.length >= MAX_BASES_PER_FOLDER) {
+      setLimitType('base');
+      setShowLimitModal(true);
+      return;
+    }
+
     if (!newBase.name.trim() || !newBase.genre.trim()) {
       toast({
         title: "Erro",
@@ -251,6 +273,16 @@ const Bases: React.FC = () => {
       }));
     }
   };
+
+  const handleUpgrade = () => {
+    // Aqui implementaríamos a integração com o sistema de pagamento
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: "O sistema de upgrade estará disponível em breve.",
+      variant: "default"
+    });
+    setShowLimitModal(false);
+  };
   return (
     <ProOnlyWrapper featureName="Bases Musicais">
       <div className="container mx-auto px-4 py-8">
@@ -259,7 +291,7 @@ const Bases: React.FC = () => {
         
         <Dialog open={isAddingFolder} onOpenChange={setIsAddingFolder}>
           <DialogTrigger asChild>
-            <Button className="bg-purple-600 hover:bg-purple-700">
+            <Button>
               <Plus className="mr-2 h-4 w-4" /> Nova Pasta
             </Button>
           </DialogTrigger>
@@ -295,17 +327,17 @@ const Bases: React.FC = () => {
       </div>
 
       {isLoading && <div className="flex justify-center my-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>}
 
       {!isLoading && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {folders.map(folder => <Card key={folder.id} className="overflow-hidden">
-              <CardHeader className="bg-slate-50">
+              <CardHeader className="bg-muted/20 dark:bg-muted/40">
                 <div className="flex items-center gap-2">
-                  <Folder className="text-purple-500" />
-                  <CardTitle className="text-zinc-950">{folder.name}</CardTitle>
+                  <Folder className="text-primary" />
+                  <CardTitle>{folder.name}</CardTitle>
                 </div>
-                <CardDescription className="text-gray-800">{folder.description}</CardDescription>
+                <CardDescription>{folder.description}</CardDescription>
               </CardHeader>
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-2">
@@ -313,9 +345,9 @@ const Bases: React.FC = () => {
                 </p>
                 
                 <div className="space-y-2">
-                  {folder.files.map(file => <div key={file.id} className="flex items-center justify-between p-2 bg-muted/40 rounded-md">
+                    {folder.files.map(file => <div key={file.id} className="flex items-center justify-between p-2 bg-muted/40 rounded-md">
                       <div className="flex items-center">
-                        <Music className="mr-2 h-4 w-4 text-purple-500" />
+                        <Music className="mr-2 h-4 w-4 text-primary" />
                         <div>
                           <p className="text-sm font-medium">{file.name}</p>
                           <p className="text-xs text-muted-foreground">{file.genre}</p>
@@ -349,7 +381,7 @@ const Bases: React.FC = () => {
                     </div>)}
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end bg-slate-50 py-3">
+              <CardFooter className="flex justify-end bg-muted/20 dark:bg-muted/40 py-3">
                 <Dialog open={isAddingBase && selectedFolder?.id === folder.id} onOpenChange={open => {
             setIsAddingBase(open);
             if (open) setSelectedFolder(folder);
@@ -416,6 +448,17 @@ const Bases: React.FC = () => {
             <Plus className="mr-2 h-4 w-4" /> Criar Primeira Pasta
           </Button>
         </div>}
+      
+      <FolderLimitModal
+        isOpen={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        onUpgrade={handleUpgrade}
+        currentFolders={folders.length}
+        maxFolders={MAX_FREE_FOLDERS}
+        currentBases={selectedFolder?.files.length || 0}
+        maxBasesPerFolder={MAX_BASES_PER_FOLDER}
+        limitType={limitType}
+      />
       </div>
     </ProOnlyWrapper>
   );
