@@ -195,6 +195,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
       additionalInfo: data.additionalInfo || '',
       termsAccepted: data.termsAccepted,
       audioFile,
+      registrationType: data.registrationType,
     });
   };
 

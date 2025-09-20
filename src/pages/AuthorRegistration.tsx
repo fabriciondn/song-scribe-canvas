@@ -25,6 +25,7 @@ export interface AuthorRegistrationData {
   audioFile: File | null;
   additionalInfo: string;
   termsAccepted: boolean;
+  registrationType: 'lyrics_only' | 'complete';
 }
 
 const AuthorRegistration: React.FC = () => {
@@ -47,6 +48,7 @@ const AuthorRegistration: React.FC = () => {
     audioFile: null,
     additionalInfo: '',
     termsAccepted: false,
+    registrationType: 'complete',
   });
 
   if (creditsLoading) {
@@ -161,6 +163,7 @@ const AuthorRegistration: React.FC = () => {
       audioFile: null,
       additionalInfo: '',
       termsAccepted: false,
+      registrationType: 'complete',
     });
     setStep('form');
   };

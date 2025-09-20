@@ -155,6 +155,7 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
       termsAccepted: data.termsAccepted,
       additionalInfo: data.additionalInfo || '',
       audioFile,
+      registrationType: data.registrationType,
     });
   };
 
