@@ -619,7 +619,13 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                            className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
                              (field.value || 'complete') === 'complete' ? 'border-primary bg-primary/5' : ''
                            }`}
-                           onClick={() => field.onChange('complete')}
+                           onClick={(e) => {
+                             e.preventDefault();
+                             e.stopPropagation();
+                             console.log('Clicked complete, current value:', field.value);
+                             field.onChange('complete');
+                             console.log('After change complete, new value:', field.value);
+                           }}
                          >
                            <div className={`w-4 h-4 rounded-full border-2 border-primary mt-1 flex items-center justify-center ${
                              (field.value || 'complete') === 'complete' ? 'bg-primary' : 'bg-background'
@@ -638,14 +644,20 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                          
                          <div 
                            className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
-                             (field.value || 'complete') === 'lyrics_only' ? 'border-primary bg-primary/5' : ''
+                             field.value === 'lyrics_only' ? 'border-primary bg-primary/5' : ''
                            }`}
-                           onClick={() => field.onChange('lyrics_only')}
+                           onClick={(e) => {
+                             e.preventDefault();
+                             e.stopPropagation();
+                             console.log('Clicked lyrics_only, current value:', field.value);
+                             field.onChange('lyrics_only');
+                             console.log('After change lyrics_only, new value should be lyrics_only');
+                           }}
                          >
                            <div className={`w-4 h-4 rounded-full border-2 border-primary mt-1 flex items-center justify-center ${
-                             (field.value || 'complete') === 'lyrics_only' ? 'bg-primary' : 'bg-background'
+                             field.value === 'lyrics_only' ? 'bg-primary' : 'bg-background'
                            }`}>
-                             {(field.value || 'complete') === 'lyrics_only' && (
+                             {field.value === 'lyrics_only' && (
                                <div className="w-2 h-2 rounded-full bg-primary-foreground"></div>
                              )}
                            </div>
