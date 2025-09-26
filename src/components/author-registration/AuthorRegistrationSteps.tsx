@@ -613,45 +613,51 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                     <FormDescription className="mb-4">
                       Escolha o tipo de registro que deseja realizar
                     </FormDescription>
-                    <FormControl>
-                      <RadioGroup
-                        value={field.value || 'complete'}
-                        onValueChange={(value) => {
-                          console.log('RadioGroup onValueChange:', value);
-                          field.onChange(value);
-                        }}
-                        defaultValue="complete"
-                        className="grid grid-cols-1 gap-4"
-                      >
-                        <div className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors ${
-                          (field.value || 'complete') === 'complete' ? 'border-primary bg-primary/5' : ''
-                        }`}>
-                          <RadioGroupItem value="complete" id="complete" className="mt-1" />
-                          <Label htmlFor="complete" className="cursor-pointer font-medium text-sm flex-1">
-                            <div>
-                              <div className="font-medium">Registro completo (letra + áudio)</div>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Registra a letra e a música completa. É obrigatório anexar arquivo de áudio MP3.
-                              </p>
-                            </div>
-                          </Label>
-                        </div>
-                        
-                        <div className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors ${
-                          (field.value || 'complete') === 'lyrics_only' ? 'border-primary bg-primary/5' : ''
-                        }`}>
-                          <RadioGroupItem value="lyrics_only" id="lyrics_only" className="mt-1" />
-                          <Label htmlFor="lyrics_only" className="cursor-pointer font-medium text-sm flex-1">
-                            <div>
-                              <div className="font-medium">Registro de obra apenas letra</div>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Registra apenas a letra da música. Não é necessário anexar arquivo de áudio.
-                              </p>
-                            </div>
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                    </FormControl>
+                     <FormControl>
+                       <div className="grid grid-cols-1 gap-4">
+                         <div 
+                           className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
+                             (field.value || 'complete') === 'complete' ? 'border-primary bg-primary/5' : ''
+                           }`}
+                           onClick={() => field.onChange('complete')}
+                         >
+                           <div className={`w-4 h-4 rounded-full border-2 border-primary mt-1 flex items-center justify-center ${
+                             (field.value || 'complete') === 'complete' ? 'bg-primary' : 'bg-background'
+                           }`}>
+                             {(field.value || 'complete') === 'complete' && (
+                               <div className="w-2 h-2 rounded-full bg-primary-foreground"></div>
+                             )}
+                           </div>
+                           <div className="flex-1">
+                             <div className="font-medium">Registro completo (letra + áudio)</div>
+                             <p className="text-xs text-muted-foreground mt-1">
+                               Registra a letra e a música completa. É obrigatório anexar arquivo de áudio MP3.
+                             </p>
+                           </div>
+                         </div>
+                         
+                         <div 
+                           className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
+                             (field.value || 'complete') === 'lyrics_only' ? 'border-primary bg-primary/5' : ''
+                           }`}
+                           onClick={() => field.onChange('lyrics_only')}
+                         >
+                           <div className={`w-4 h-4 rounded-full border-2 border-primary mt-1 flex items-center justify-center ${
+                             (field.value || 'complete') === 'lyrics_only' ? 'bg-primary' : 'bg-background'
+                           }`}>
+                             {(field.value || 'complete') === 'lyrics_only' && (
+                               <div className="w-2 h-2 rounded-full bg-primary-foreground"></div>
+                             )}
+                           </div>
+                           <div className="flex-1">
+                             <div className="font-medium">Registro de obra apenas letra</div>
+                             <p className="text-xs text-muted-foreground mt-1">
+                               Registra apenas a letra da música. Não é necessário anexar arquivo de áudio.
+                             </p>
+                           </div>
+                         </div>
+                       </div>
+                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
