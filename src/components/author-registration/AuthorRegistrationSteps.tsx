@@ -616,26 +616,13 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                     <FormControl>
                       <RadioGroup
                         value={field.value || 'complete'}
-                        onValueChange={(value: 'complete' | 'lyrics_only') => {
-                          console.log('RadioGroup onValueChange:', value);
-                          field.onChange(value);
-                          step2Form.setValue('registrationType', value);
-                          console.log('Field value after change:', field.value);
-                          console.log('Form state after setValue:', step2Form.getValues());
-                        }}
+                        onValueChange={field.onChange}
                         defaultValue="complete"
                         className="grid grid-cols-1 gap-4"
                       >
-                        <div 
-                          className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
-                            (field.value || 'complete') === 'complete' ? 'border-primary bg-primary/5' : ''
-                          }`}
-                          onClick={() => {
-                            console.log('Clicking complete option');
-                            field.onChange('complete');
-                            step2Form.setValue('registrationType', 'complete');
-                          }}
-                        >
+                        <div className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors ${
+                          (field.value || 'complete') === 'complete' ? 'border-primary bg-primary/5' : ''
+                        }`}>
                           <RadioGroupItem value="complete" id="complete" className="mt-1" />
                           <Label htmlFor="complete" className="cursor-pointer font-medium text-sm flex-1">
                             <div>
@@ -647,16 +634,9 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                           </Label>
                         </div>
                         
-                        <div 
-                          className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
-                            (field.value || 'complete') === 'lyrics_only' ? 'border-primary bg-primary/5' : ''
-                          }`}
-                          onClick={() => {
-                            console.log('Clicking lyrics_only option');
-                            field.onChange('lyrics_only');
-                            step2Form.setValue('registrationType', 'lyrics_only');
-                          }}
-                        >
+                        <div className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors ${
+                          (field.value || 'complete') === 'lyrics_only' ? 'border-primary bg-primary/5' : ''
+                        }`}>
                           <RadioGroupItem value="lyrics_only" id="lyrics_only" className="mt-1" />
                           <Label htmlFor="lyrics_only" className="cursor-pointer font-medium text-sm flex-1">
                             <div>
