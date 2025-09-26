@@ -604,76 +604,63 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
               </div>
 
               {/* Tipo de Registro */}
-              <FormField
-                control={step2Form.control}
-                name="registrationType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Registro *</FormLabel>
-                    <FormDescription className="mb-4">
-                      Escolha o tipo de registro que deseja realizar
-                    </FormDescription>
-                     <FormControl>
-                       <div className="grid grid-cols-1 gap-4">
-                         <div 
-                           className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
-                             (field.value || 'complete') === 'complete' ? 'border-primary bg-primary/5' : ''
-                           }`}
-                           onClick={(e) => {
-                             e.preventDefault();
-                             e.stopPropagation();
-                             console.log('Clicked complete, current value:', field.value);
-                             field.onChange('complete');
-                             console.log('After change complete, new value:', field.value);
-                           }}
-                         >
-                           <div className={`w-4 h-4 rounded-full border-2 border-primary mt-1 flex items-center justify-center ${
-                             (field.value || 'complete') === 'complete' ? 'bg-primary' : 'bg-background'
-                           }`}>
-                             {(field.value || 'complete') === 'complete' && (
-                               <div className="w-2 h-2 rounded-full bg-primary-foreground"></div>
-                             )}
-                           </div>
-                           <div className="flex-1">
-                             <div className="font-medium">Registro completo (letra + áudio)</div>
-                             <p className="text-xs text-muted-foreground mt-1">
-                               Registra a letra e a música completa. É obrigatório anexar arquivo de áudio MP3.
-                             </p>
-                           </div>
-                         </div>
-                         
-                         <div 
-                           className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
-                             field.value === 'lyrics_only' ? 'border-primary bg-primary/5' : ''
-                           }`}
-                           onClick={(e) => {
-                             e.preventDefault();
-                             e.stopPropagation();
-                             console.log('Clicked lyrics_only, current value:', field.value);
-                             field.onChange('lyrics_only');
-                             console.log('After change lyrics_only, new value should be lyrics_only');
-                           }}
-                         >
-                           <div className={`w-4 h-4 rounded-full border-2 border-primary mt-1 flex items-center justify-center ${
-                             field.value === 'lyrics_only' ? 'bg-primary' : 'bg-background'
-                           }`}>
-                             {field.value === 'lyrics_only' && (
-                               <div className="w-2 h-2 rounded-full bg-primary-foreground"></div>
-                             )}
-                           </div>
-                           <div className="flex-1">
-                             <div className="font-medium">Registro de obra apenas letra</div>
-                             <p className="text-xs text-muted-foreground mt-1">
-                               Registra apenas a letra da música. Não é necessário anexar arquivo de áudio.
-                             </p>
-                           </div>
-                         </div>
-                       </div>
-                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <Label>Tipo de Registro *</Label>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Escolha o tipo de registro que deseja realizar
+                </p>
+                <div className="grid grid-cols-1 gap-4">
+                  <div 
+                    className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
+                      currentRegistrationType === 'complete' ? 'border-primary bg-primary/5' : ''
+                    }`}
+                    onClick={() => {
+                      console.log('Setting registration type to complete');
+                      step2Form.setValue('registrationType', 'complete');
+                      step2Form.trigger('registrationType');
+                    }}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 border-primary mt-1 flex items-center justify-center ${
+                      currentRegistrationType === 'complete' ? 'bg-primary' : 'bg-background'
+                    }`}>
+                      {currentRegistrationType === 'complete' && (
+                        <div className="w-2 h-2 rounded-full bg-primary-foreground"></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">Registro completo (letra + áudio)</div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Registra a letra e a música completa. É obrigatório anexar arquivo de áudio MP3.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
+                      currentRegistrationType === 'lyrics_only' ? 'border-primary bg-primary/5' : ''
+                    }`}
+                    onClick={() => {
+                      console.log('Setting registration type to lyrics_only');
+                      step2Form.setValue('registrationType', 'lyrics_only');
+                      step2Form.trigger('registrationType');
+                    }}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 border-primary mt-1 flex items-center justify-center ${
+                      currentRegistrationType === 'lyrics_only' ? 'bg-primary' : 'bg-background'
+                    }`}>
+                      {currentRegistrationType === 'lyrics_only' && (
+                        <div className="w-2 h-2 rounded-full bg-primary-foreground"></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">Registro de obra apenas letra</div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Registra apenas a letra da música. Não é necessário anexar arquivo de áudio.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Upload de áudio - Condicional baseado no tipo */}
               {currentRegistrationType === 'complete' && (
