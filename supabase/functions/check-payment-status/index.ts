@@ -31,7 +31,7 @@ serve(async (req) => {
         userId = data.user?.id || null;
         console.log('[CHECK-PAYMENT-STATUS] ✅ User authenticated:', userId);
       } catch (authError) {
-        console.log('[CHECK-PAYMENT-STATUS] ⚠️ Auth failed, continuing without user:', authError?.message);
+        console.log('[CHECK-PAYMENT-STATUS] ⚠️ Auth failed, continuing without user:', authError instanceof Error ? authError.message : 'Unknown error');
       }
     }
 
@@ -239,7 +239,7 @@ serve(async (req) => {
         error: 'Erro interno do servidor',
         isPaid: false,
         paid: false,
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

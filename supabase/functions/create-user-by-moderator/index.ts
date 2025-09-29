@@ -249,13 +249,13 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('❌ Erro geral:', error.message || error);
+    console.error('❌ Erro geral:', error instanceof Error ? error.message : error);
     
     // Retornar erro mais específico se possível
     let errorMessage = 'Erro interno do servidor';
     let statusCode = 500;
     
-    if (error.message) {
+    if (error instanceof Error && error.message) {
       errorMessage = error.message;
       // Se é erro de validação, usar status 400
       if (error.message.includes('já existe') || error.message.includes('already')) {

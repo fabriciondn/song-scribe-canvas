@@ -362,15 +362,15 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Function error:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack
+      name: error instanceof Error ? error.name : 'UnknownError',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     });
     
     return new Response(
       JSON.stringify({ 
         error: 'Erro interno do servidor. Tente novamente em alguns minutos.',
-        type: error.name || 'UnknownError'
+        type: error instanceof Error ? error.name : 'UnknownError'
       }),
       {
         headers: { 
