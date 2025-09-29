@@ -104,13 +104,13 @@ export const AffiliateApplication = () => {
           Ganhe comissões indicando novos usuários para a plataforma
         </p>
         <div className="flex justify-center gap-2">
-          <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+          <Badge variant="secondary" className="bg-accent text-accent-foreground border-border">
             Até 50% de comissão
           </Badge>
-          <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
+          <Badge variant="secondary" className="bg-accent text-accent-foreground border-border">
             Comissões recorrentes
           </Badge>
-          <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-200">
+          <Badge variant="secondary" className="bg-accent text-accent-foreground border-border">
             Materiais de marketing
           </Badge>
         </div>
@@ -118,10 +118,10 @@ export const AffiliateApplication = () => {
 
       {/* Níveis de Afiliação */}
       <div className="grid md:grid-cols-3 gap-6 mb-10">
-        <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100">
+        <Card className="border-border bg-card">
           <CardHeader className="text-center">
-            <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Star className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
+              <Star className="w-6 h-6 text-primary-foreground" />
             </div>
             <CardTitle className="flex items-center justify-center gap-2">
               Nível Bronze
@@ -130,32 +130,32 @@ export const AffiliateApplication = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="w-4 h-4 text-green-600" />
+              <CheckCircle className="w-4 h-4 text-primary" />
               25% comissão por registro autoral
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="w-4 h-4 text-green-600" />
+              <CheckCircle className="w-4 h-4 text-primary" />
               Link de afiliado personalizado
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="w-4 h-4 text-green-600" />
+              <CheckCircle className="w-4 h-4 text-primary" />
               Dashboard básico
             </div>
             <div className="text-center mt-4">
-              <Badge variant="outline" className="border-orange-300 text-orange-700">
+              <Badge variant="outline" className="border-border text-foreground">
                 0-4 registros
               </Badge>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 relative">
+        <Card className="border-border bg-card relative">
           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-            <Badge className="bg-gray-600 text-white">Mais Popular</Badge>
+            <Badge className="bg-muted text-muted-foreground">Mais Popular</Badge>
           </div>
           <CardHeader className="text-center">
-            <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Trophy className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
+              <Trophy className="w-6 h-6 text-primary-foreground" />
             </div>
             <CardTitle className="flex items-center justify-center gap-2">
               Nível Silver
@@ -164,29 +164,29 @@ export const AffiliateApplication = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="w-4 h-4 text-green-600" />
+              <CheckCircle className="w-4 h-4 text-primary" />
               50% comissão por registro autoral
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="w-4 h-4 text-green-600" />
+              <CheckCircle className="w-4 h-4 text-primary" />
               Campanhas personalizadas
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="w-4 h-4 text-green-600" />
+              <CheckCircle className="w-4 h-4 text-primary" />
               Relatórios avançados
             </div>
             <div className="text-center mt-4">
-              <Badge variant="outline" className="border-gray-400 text-gray-700">
+              <Badge variant="outline" className="border-border text-foreground">
                 5+ registros
               </Badge>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-yellow-300 bg-gradient-to-br from-yellow-50 to-yellow-100">
+        <Card className="border-border bg-card">
           <CardHeader className="text-center">
-            <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Award className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
+              <Award className="w-6 h-6 text-primary-foreground" />
             </div>
             <CardTitle className="flex items-center justify-center gap-2">
               Nível Gold
@@ -195,19 +195,19 @@ export const AffiliateApplication = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="w-4 h-4 text-green-600" />
+              <CheckCircle className="w-4 h-4 text-primary" />
               50% comissão por registro autoral
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="w-4 h-4 text-green-600" />
+              <CheckCircle className="w-4 h-4 text-primary" />
               25-50% comissão recorrente
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="w-4 h-4 text-green-600" />
+              <CheckCircle className="w-4 h-4 text-primary" />
               Suporte prioritário
             </div>
             <div className="text-center mt-4">
-              <Badge variant="outline" className="border-yellow-400 text-yellow-700">
+              <Badge variant="outline" className="border-border text-foreground">
                 100+ registros
               </Badge>
             </div>
