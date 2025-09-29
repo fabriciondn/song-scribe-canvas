@@ -89,11 +89,11 @@ export default function Ranking() {
   const getPositionStyle = (position: number) => {
     switch (position) {
       case 1:
-        return "border-yellow-200 bg-gradient-to-r from-yellow-50 to-amber-50";
+        return "border-yellow-200 bg-gradient-to-r from-yellow-50 to-amber-50 dark:border-yellow-500/30 dark:from-yellow-900/20 dark:to-amber-900/20";
       case 2:
-        return "border-gray-200 bg-gradient-to-r from-gray-50 to-slate-50";
+        return "border-gray-200 bg-gradient-to-r from-gray-50 to-slate-50 dark:border-gray-500/30 dark:from-gray-800/20 dark:to-slate-800/20";
       case 3:
-        return "border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50";
+        return "border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 dark:border-amber-500/30 dark:from-amber-900/20 dark:to-orange-900/20";
       default:
         return "border-border bg-card";
     }

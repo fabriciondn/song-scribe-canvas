@@ -144,7 +144,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }}
                     title={isCollapsed ? item.label : undefined}
                   >
-                    <item.icon size={20} />
+                    <item.icon size={isCollapsed ? 24 : 20} />
                     {!isCollapsed && (
                       <div className="flex items-center justify-between w-full">
                         <span>{item.label}</span>
@@ -163,7 +163,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     )}
                     title={isCollapsed ? item.label : undefined}
                   >
-                    <item.icon size={20} />
+                    <item.icon size={isCollapsed ? 24 : 20} />
                     {!isCollapsed && (
                       <div className="flex items-center justify-between w-full">
                         <span>{item.label}</span>
@@ -189,7 +189,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
             title={isCollapsed ? "Afiliados" : undefined}
           >
-            <TrendingUp size={20} />
+            <TrendingUp size={isCollapsed ? 24 : 20} />
             {!isCollapsed && (
               <div className="flex items-center justify-between w-full">
                 <span>Afiliados</span>
