@@ -40,6 +40,7 @@ import AffiliateApplication from "./pages/AffiliateApplication";
 import ModeratorAuth from "./pages/ModeratorAuth";
 import AffiliateLink from "./pages/AffiliateLink";
 import PublicRegistrationForm from "./pages/PublicRegistrationForm";
+import Ranking from "./pages/Ranking";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +79,7 @@ const AppContent = () => {
               <Route path="author-registration" element={<AuthorRegistration />} />
               <Route path="registered-works" element={<RegisteredWorks />} />
               <Route path="tutorials" element={<Tutorials />} />
+              <Route path="ranking" element={<Ranking />} />
               <Route path="settings" element={<Settings />} />
               <Route path="trash" element={<Trash />} />
             </Route>

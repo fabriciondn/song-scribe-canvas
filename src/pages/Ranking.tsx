@@ -34,21 +34,98 @@ export default function Ranking() {
       setLoading(true);
       
       // Buscar dados dos usuários com contagem de obras registradas
-      const { data, error } = await supabase.rpc('get_composers_ranking');
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          name,
+          artistic_name,
+          avatar_url,
+          email,
+          created_at,
+          author_registrations!inner(id)
+        `)
+        .eq('author_registrations.status', 'registered')
+        .order('author_registrations(count)', { ascending: false });
       
       if (error) {
         console.error('Erro ao buscar ranking:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar o ranking dos compositores.",
-          variant: "destructive"
-        });
+        
+        // Tentar busca alternativa sem inner join
+        const { data: alternativeData, error: altError } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            name,
+            artistic_name,
+            avatar_url,
+            email,
+            created_at
+          `);
+          
+        if (altError) {
+          toast({
+            title: "Erro",
+            description: "Não foi possível carregar o ranking dos compositores.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Buscar contagem de obras para cada usuário
+        const usersWithWorks = [];
+        for (const user of alternativeData || []) {
+          const { count } = await supabase
+            .from('author_registrations')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .in('status', ['registered', 'completed']);
+            
+          if (count && count > 0) {
+            usersWithWorks.push({
+              ...user,
+              total_works: count
+            });
+          }
+        }
+        
+        // Ordenar por número de obras
+        usersWithWorks.sort((a, b) => b.total_works - a.total_works);
+        
+        // Adicionar posição no ranking
+        const rankingsWithPosition = usersWithWorks.map((user: any, index: number) => ({
+          ...user,
+          position: index + 1
+        }));
+        
+        setRankings(rankingsWithPosition);
         return;
       }
 
       if (data) {
+        // Processar dados do Supabase
+        const usersWithCounts = await Promise.all(
+          data.map(async (user: any) => {
+            const { count } = await supabase
+              .from('author_registrations')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', user.id)
+              .in('status', ['registered', 'completed']);
+              
+            return {
+              ...user,
+              total_works: count || 0
+            };
+          })
+        );
+        
+        // Filtrar apenas usuários com obras e ordenar
+        const filteredUsers = usersWithCounts
+          .filter(user => user.total_works > 0)
+          .sort((a, b) => b.total_works - a.total_works);
+        
         // Adicionar posição no ranking
-        const rankingsWithPosition = data.map((user: any, index: number) => ({
+        const rankingsWithPosition = filteredUsers.map((user: any, index: number) => ({
           ...user,
           position: index + 1
         }));

@@ -15,7 +15,8 @@ import {
   Settings,
   CreditCard,
   ArrowUp,
-  TrendingUp
+  TrendingUp,
+  Trophy
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -108,6 +109,13 @@ export const useMenuItems = () => {
         path: '/dashboard/tutorials',
         functionKey: 'tutorials',
         isPro: true
+      },
+      {
+        label: 'Ranking',
+        icon: Trophy,
+        path: '/dashboard/ranking',
+        functionKey: 'ranking',
+        isPro: false
       },
       {
         label: 'Configurações',

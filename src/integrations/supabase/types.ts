@@ -1738,6 +1738,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_composers_ranking: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          artistic_name: string
+          avatar_url: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          total_works: number
+        }[]
+      }
       get_draft_by_id: {
         Args: { draft_id: string }
         Returns: {
