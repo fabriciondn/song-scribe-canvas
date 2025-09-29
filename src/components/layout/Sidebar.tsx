@@ -89,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className={cn("fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-200", isOpen ? "opacity-100" : "opacity-0 pointer-events-none")} onClick={toggleSidebar} />
 
       <aside className={cn(
-        "fixed left-0 top-16 bottom-0 bg-black z-60 p-5 flex flex-col border-r border-sidebar-border transition-all duration-300 md:translate-x-0", 
+        "fixed left-0 top-0 bottom-0 bg-black z-50 pt-16 p-5 flex flex-col border-r border-sidebar-border transition-all duration-300 md:translate-x-0", 
         isOpen ? "translate-x-0" : "-translate-x-full",
         isCollapsed ? "w-16" : "w-64"
       )}>
