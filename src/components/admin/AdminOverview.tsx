@@ -83,11 +83,16 @@ export const AdminOverview: React.FC = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-700 dark:text-purple-400">Usuários Online</p>
-                <p className="text-2xl font-bold text-purple-900 dark:text-purple-200">{onlineUsers || 0}</p>
-                <p className="text-xs text-purple-600 dark:text-purple-500 mt-1">Últimos 5 minutos</p>
+                <p className="text-sm font-medium text-purple-700 dark:text-purple-400">Total Faturado</p>
+                <p className="text-2xl font-bold text-purple-900 dark:text-purple-200">
+                  {new Intl.NumberFormat('pt-BR', { 
+                    style: 'currency', 
+                    currency: 'BRL' 
+                  }).format(stats?.totalRevenue || 0)}
+                </p>
+                <p className="text-xs text-purple-600 dark:text-purple-500 mt-1">Com registros autorais</p>
               </div>
-              <Activity className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+              <BarChart3 className="h-8 w-8 text-purple-600 dark:text-purple-400" />
             </div>
           </CardContent>
         </Card>

@@ -11,6 +11,7 @@ export interface AdminDashboardStats {
   totalFolders: number;
   totalComposers: number;
   totalProtectedWorks: number;
+  totalRevenue: number;
 }
 
 export interface UserData {
@@ -38,6 +39,10 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
     }
 
     const stats = data as any;
+    
+    // Calcular faturamento: registros * 30 reais cada
+    const totalRevenue = (stats.total_registered_works || 0) * 30;
+    
     return {
       totalUsers: stats.total_users || 0,
       totalSongs: stats.total_songs || 0,
@@ -49,6 +54,7 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
       totalFolders: stats.total_folders || 0,
       totalComposers: stats.total_users || 0,
       totalProtectedWorks: stats.total_registered_works || 0,
+      totalRevenue: totalRevenue,
     };
   } catch (error) {
     console.error('Erro ao buscar estatísticas do admin:', error);
