@@ -9,6 +9,8 @@ export interface AdminDashboardStats {
   activeUsers: number;
   totalTemplates: number;
   totalFolders: number;
+  totalComposers: number;
+  totalProtectedWorks: number;
 }
 
 export interface UserData {
@@ -45,6 +47,8 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
       activeUsers: stats.active_users || 0,
       totalTemplates: stats.total_templates || 0,
       totalFolders: stats.total_folders || 0,
+      totalComposers: stats.total_users || 0,
+      totalProtectedWorks: stats.total_registered_works || 0,
     };
   } catch (error) {
     console.error('Erro ao buscar estatísticas do admin:', error);
