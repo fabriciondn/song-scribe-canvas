@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
-import { getAdminDashboardStats, getRevenueTransactions } from '@/services/adminService';
+import { getAdminDashboardStats, getRevenueTransactions, getUsersByPlan } from '@/services/adminService';
 import { RevenueDetailsModal } from './RevenueDetailsModal';
+import { UsersByPlanModal } from './UsersByPlanModal';
 import { 
   Users, 
   Shield,
@@ -15,6 +16,7 @@ import {
 
 export const AdminOverview: React.FC = () => {
   const [showRevenueModal, setShowRevenueModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'pro' | 'trial' | 'free' | 'inactive' | null>(null);
   
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['admin-dashboard-stats'],
@@ -26,6 +28,12 @@ export const AdminOverview: React.FC = () => {
     queryKey: ['revenue-transactions'],
     queryFn: getRevenueTransactions,
     enabled: showRevenueModal,
+  });
+
+  const { data: usersByPlan = [], isLoading: usersLoading } = useQuery({
+    queryKey: ['users-by-plan', selectedPlan],
+    queryFn: () => selectedPlan ? getUsersByPlan(selectedPlan) : Promise.resolve([]),
+    enabled: !!selectedPlan,
   });
 
   if (statsLoading) {
@@ -90,52 +98,64 @@ export const AdminOverview: React.FC = () => {
 
         {/* Resumo de Usuários por Plano */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card className="bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800/30">
+          <Card 
+            className="bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800/30 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => setSelectedPlan('pro')}
+          >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Plano Pro</p>
                   <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-200">{stats?.proUsers || 0}</p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">Usuários ativos</p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">Usuários ativos · Clique para ver</p>
                 </div>
                 <CreditCard className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800/30">
+          <Card 
+            className="bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800/30 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => setSelectedPlan('trial')}
+          >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-amber-700 dark:text-amber-400">Trial</p>
                   <p className="text-2xl font-bold text-amber-900 dark:text-amber-200">{stats?.trialUsers || 0}</p>
-                  <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">Em período de teste</p>
+                  <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">Em período de teste · Clique para ver</p>
                 </div>
                 <Clock className="h-8 w-8 text-amber-600 dark:text-amber-400" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-50 border-slate-200 dark:bg-slate-950/20 dark:border-slate-800/30">
+          <Card 
+            className="bg-slate-50 border-slate-200 dark:bg-slate-950/20 dark:border-slate-800/30 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => setSelectedPlan('free')}
+          >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-400">Plano Grátis</p>
                   <p className="text-2xl font-bold text-slate-900 dark:text-slate-200">{stats?.freeUsers || 0}</p>
-                  <p className="text-xs text-slate-600 dark:text-slate-500 mt-1">Usuários gratuitos</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-500 mt-1">Usuários gratuitos · Clique para ver</p>
                 </div>
                 <UserCheck className="h-8 w-8 text-slate-600 dark:text-slate-400" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800/30">
+          <Card 
+            className="bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800/30 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => setSelectedPlan('inactive')}
+          >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-red-700 dark:text-red-400">Inativos +30d</p>
                   <p className="text-2xl font-bold text-red-900 dark:text-red-200">{stats?.inactiveUsers || 0}</p>
-                  <p className="text-xs text-red-600 dark:text-red-500 mt-1">Sem acesso há 30+ dias</p>
+                  <p className="text-xs text-red-600 dark:text-red-500 mt-1">Sem acesso há 30+ dias · Clique para ver</p>
                 </div>
                 <UserX className="h-8 w-8 text-red-600 dark:text-red-400" />
               </div>
@@ -150,6 +170,16 @@ export const AdminOverview: React.FC = () => {
         transactions={revenueTransactions}
         isLoading={revenueLoading}
       />
+
+      {selectedPlan && (
+        <UsersByPlanModal
+          open={!!selectedPlan}
+          onOpenChange={(open) => !open && setSelectedPlan(null)}
+          users={usersByPlan}
+          isLoading={usersLoading}
+          planType={selectedPlan}
+        />
+      )}
     </>
   );
 };

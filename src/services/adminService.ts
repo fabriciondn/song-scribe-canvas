@@ -31,6 +31,17 @@ export interface RevenueTransaction {
   completed_at: string;
 }
 
+export interface UserByPlan {
+  id: string;
+  name: string;
+  email: string;
+  avatar_url: string | null;
+  created_at: string;
+  subscription_status: string;
+  expires_at?: string;
+  last_activity?: string;
+}
+
 export interface UserData {
   id: string;
   email: string;
@@ -188,6 +199,100 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
     });
   } catch (error) {
     console.error('Erro ao buscar transações de receita:', error);
+    throw error;
+  }
+};
+
+export const getUsersByPlan = async (planType: 'pro' | 'trial' | 'free' | 'inactive'): Promise<UserByPlan[]> => {
+  try {
+    if (planType === 'inactive') {
+      // Buscar usuários inativos (sem atividade nos últimos 30 dias)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const { data: inactiveSessions, error: sessionsError } = await supabase
+        .from('user_sessions')
+        .select('user_id, last_activity')
+        .lt('last_activity', thirtyDaysAgo.toISOString());
+      
+      if (sessionsError) throw sessionsError;
+
+      const userIds = inactiveSessions?.map(s => s.user_id) || [];
+      
+      if (userIds.length === 0) return [];
+
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, email, avatar_url, created_at')
+        .in('id', userIds);
+      
+      if (profilesError) throw profilesError;
+
+      // Mapear última atividade
+      const lastActivityMap = new Map(inactiveSessions?.map(s => [s.user_id, s.last_activity]) || []);
+
+      return (profiles || []).map(p => ({
+        id: p.id,
+        name: p.name || 'Sem nome',
+        email: p.email || '',
+        avatar_url: p.avatar_url,
+        created_at: p.created_at,
+        subscription_status: 'inactive',
+        last_activity: lastActivityMap.get(p.id),
+      }));
+    }
+
+    // Buscar assinaturas por tipo
+    const { data: subscriptions, error: subsError } = await supabase
+      .from('subscriptions')
+      .select('user_id, status, expires_at, created_at')
+      .order('created_at', { ascending: false });
+    
+    if (subsError) throw subsError;
+
+    // Filtrar por tipo de plano
+    const filteredSubs = subscriptions?.filter(sub => {
+      const isExpired = sub.expires_at && new Date(sub.expires_at) < new Date();
+      
+      if (planType === 'pro') {
+        return sub.status === 'active' && !isExpired;
+      } else if (planType === 'trial') {
+        return sub.status === 'trial' && !isExpired;
+      } else if (planType === 'free') {
+        return isExpired || sub.status === 'expired' || sub.status === 'free';
+      }
+      return false;
+    }) || [];
+
+    // Remover duplicatas (pegar apenas a assinatura mais recente de cada usuário)
+    const uniqueUserIds = [...new Set(filteredSubs.map(s => s.user_id))];
+
+    if (uniqueUserIds.length === 0) return [];
+
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, name, email, avatar_url, created_at')
+      .in('id', uniqueUserIds);
+    
+    if (profilesError) throw profilesError;
+
+    // Mapear dados de assinatura
+    const subsMap = new Map(filteredSubs.map(s => [s.user_id, s]));
+
+    return (profiles || []).map(p => {
+      const sub = subsMap.get(p.id);
+      return {
+        id: p.id,
+        name: p.name || 'Sem nome',
+        email: p.email || '',
+        avatar_url: p.avatar_url,
+        created_at: p.created_at,
+        subscription_status: sub?.status || planType,
+        expires_at: sub?.expires_at,
+      };
+    });
+  } catch (error) {
+    console.error('Erro ao buscar usuários por plano:', error);
     throw error;
   }
 };
