@@ -47,15 +47,15 @@ serve(async (req) => {
     
     console.log('📝 Dados recebidos:', { user_id, user_email, user_name });
 
-    // Verificar se usuário já tem assinatura ativa
+    // Verificar se usuário já tem alguma assinatura (ativa ou não)
     const { data: existingSubscription } = await supabaseService
       .from('subscriptions')
       .select('*')
       .eq('user_id', user_id)
-      .eq('status', 'active')
-      .single();
+      .maybeSingle();
 
-    if (existingSubscription) {
+    // Se já tem assinatura ativa, retornar erro
+    if (existingSubscription && existingSubscription.status === 'active') {
       console.log('⚠️ Usuário já tem assinatura ativa');
       return new Response(
         JSON.stringify({ error: 'Você já possui uma assinatura ativa' }),
@@ -110,30 +110,65 @@ serve(async (req) => {
       qr_code: paymentData.point_of_interaction?.transaction_data?.qr_code ? 'present' : 'missing'
     });
 
-    // Salvar subscription como pending no Supabase
-    const { data: subscriptionData, error: subscriptionError } = await supabaseService
-      .from('subscriptions')
-      .insert({
-        user_id: user_id,
-        status: 'pending',
-        plan_type: 'pro',
-        amount: 14.99,
-        currency: 'BRL',
-        payment_provider: 'mercadopago',
-        payment_provider_subscription_id: paymentData.id.toString(),
-        auto_renew: false,
-        started_at: null,
-        expires_at: null
-      })
-      .select()
-      .single();
+    let subscriptionData;
 
-    if (subscriptionError) {
-      console.error('❌ Erro ao salvar subscription:', subscriptionError);
-      throw new Error('Erro ao salvar assinatura');
+    // Se já existe subscription (expirada, trial, etc), fazer UPDATE
+    if (existingSubscription) {
+      console.log('📝 Atualizando subscription existente:', existingSubscription.id);
+      
+      const { data: updatedData, error: updateError } = await supabaseService
+        .from('subscriptions')
+        .update({
+          status: 'pending',
+          plan_type: 'pro',
+          amount: 14.99,
+          currency: 'BRL',
+          payment_provider: 'mercadopago',
+          payment_provider_subscription_id: paymentData.id.toString(),
+          auto_renew: false,
+          started_at: null,
+          expires_at: null
+        })
+        .eq('id', existingSubscription.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar subscription:', updateError);
+        throw new Error('Erro ao atualizar assinatura');
+      }
+
+      subscriptionData = updatedData;
+      console.log('✅ Subscription atualizada como pending:', subscriptionData.id);
+    } else {
+      // Se não existe subscription, fazer INSERT
+      console.log('📝 Criando nova subscription');
+      
+      const { data: insertedData, error: insertError } = await supabaseService
+        .from('subscriptions')
+        .insert({
+          user_id: user_id,
+          status: 'pending',
+          plan_type: 'pro',
+          amount: 14.99,
+          currency: 'BRL',
+          payment_provider: 'mercadopago',
+          payment_provider_subscription_id: paymentData.id.toString(),
+          auto_renew: false,
+          started_at: null,
+          expires_at: null
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('❌ Erro ao criar subscription:', insertError);
+        throw new Error('Erro ao criar assinatura');
+      }
+
+      subscriptionData = insertedData;
+      console.log('✅ Subscription criada como pending:', subscriptionData.id);
     }
-
-    console.log('✅ Subscription salva como pending:', subscriptionData.id);
 
     // Retornar dados do PIX
     return new Response(
