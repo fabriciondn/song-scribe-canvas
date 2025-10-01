@@ -43,25 +43,24 @@ serve(async (req) => {
 
     console.log('📝 Dados recebidos:', { user_id, user_email, user_name });
 
-    // Criar pagamento no Abacate
+    // Criar pagamento PIX único no Abacate (não é recorrente)
     const abacatePayload = {
-      frequency: 'monthly',
-      customer: {
-        name: user_name,
-        email: user_email,
-        cellphone: '',
-        taxId: ''
-      },
-      billingType: 'PIX',
-      value: 14.99,
-      description: 'Assinatura Plano Pro - Mensal',
-      externalReference: `pro_subscription_${user_id}_${Date.now()}`,
-      dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 24h para pagamento
+      frequency: 'oneTime', // Pagamento único, não recorrente
+      methods: ['PIX'],
+      products: [{
+        externalId: `pro_subscription_${user_id}_${Date.now()}`,
+        name: 'Assinatura Plano Pro - 30 dias',
+        description: 'Acesso completo aos recursos Pro por 30 dias',
+        quantity: 1,
+        price: 1499 // Valor em centavos (14,99 reais)
+      }],
+      returnUrl: `${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/subscription-checkout`,
+      completionUrl: `${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/dashboard`
     };
 
     console.log('💳 Criando pagamento no Abacate:', abacatePayload);
 
-    const abacateResponse = await fetch('https://www.abacatepay.com/api/v1/billing/subscription', {
+    const abacateResponse = await fetch('https://api.abacatepay.com/v1/billing/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -79,7 +78,7 @@ serve(async (req) => {
     const abacateData = await abacateResponse.json();
     console.log('✅ Pagamento criado no Abacate:', abacateData);
 
-    // Salvar dados da subscription no Supabase
+    // Salvar subscription como pendente no Supabase (será ativada no webhook)
     const subscriptionData = {
       user_id,
       status: 'pending',
@@ -88,12 +87,12 @@ serve(async (req) => {
       currency: 'BRL',
       payment_provider: 'abacate',
       payment_provider_subscription_id: abacateData.id,
-      auto_renew: true,
+      auto_renew: false, // Renovação manual (novo pagamento a cada mês)
       started_at: new Date().toISOString(),
-      // Não definir expires_at para subscription recorrente
+      // expires_at será definido no webhook quando o pagamento for confirmado
     };
 
-    console.log('💾 Salvando subscription no Supabase:', subscriptionData);
+    console.log('💾 Salvando subscription pendente no Supabase:', subscriptionData);
 
     const { error: subscriptionError } = await supabaseClient
       .from('subscriptions')
@@ -109,10 +108,10 @@ serve(async (req) => {
 
     console.log('✅ Subscription salva com sucesso');
 
-    // Retornar URL de pagamento
+    // Retornar URL de pagamento (PIX QR code)
     return new Response(JSON.stringify({
       success: true,
-      payment_url: abacateData.invoiceUrl,
+      payment_url: abacateData.url, // URL do checkout com QR code
       subscription_id: abacateData.id,
       amount: 14.99,
       currency: 'BRL'

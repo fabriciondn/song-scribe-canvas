@@ -33,23 +33,13 @@ serve(async (req) => {
     const webhookData = await req.json();
     logStep("Webhook data received", webhookData);
 
-    const { event_type, subscription, customer } = webhookData;
+    const { status, metadata } = webhookData;
 
-    // Processar diferentes tipos de eventos
-    switch (event_type) {
-      case 'subscription.payment_succeeded':
-      case 'subscription.activated':
-        await handleSubscriptionActivated(supabaseClient, subscription, customer);
-        break;
-        
-      case 'subscription.payment_failed':
-      case 'subscription.expired':
-      case 'subscription.cancelled':
-        await handleSubscriptionDeactivated(supabaseClient, subscription);
-        break;
-        
-      default:
-        logStep("Unhandled event type", { event_type });
+    // Processar pagamento concluído
+    if (status === 'SUCCEEDED' || status === 'paid') {
+      await handlePaymentSucceeded(supabaseClient, webhookData);
+    } else {
+      logStep("Payment not succeeded", { status });
     }
 
     return new Response(JSON.stringify({ received: true }), {
@@ -71,77 +61,55 @@ serve(async (req) => {
   }
 });
 
-async function handleSubscriptionActivated(supabaseClient: any, subscription: any, customer: any) {
-  logStep("Activating subscription", { subscription_id: subscription?.id, customer_email: customer?.email });
+async function handlePaymentSucceeded(supabaseClient: any, webhookData: any) {
+  logStep("Processing payment succeeded", { id: webhookData.id });
 
-  if (!subscription?.id || !customer?.email) {
-    throw new Error("Missing subscription or customer data");
-  }
+  const paymentId = webhookData.id;
 
-  // Buscar usuário pelo email
-  const { data: profiles, error: profileError } = await supabaseClient
-    .from('profiles')
-    .select('id')
-    .eq('email', customer.email)
+  // Buscar subscription pendente com este payment_id
+  const { data: subscriptions, error: subError } = await supabaseClient
+    .from('subscriptions')
+    .select('*')
+    .eq('payment_provider_subscription_id', paymentId)
+    .eq('status', 'pending')
     .limit(1);
 
-  if (profileError || !profiles?.length) {
-    logStep("User not found", { email: customer.email });
-    throw new Error(`User not found for email: ${customer.email}`);
+  if (subError) {
+    logStep("Error finding subscription", subError);
+    throw subError;
   }
 
-  const userId = profiles[0].id;
+  if (!subscriptions || subscriptions.length === 0) {
+    logStep("No pending subscription found", { paymentId });
+    return;
+  }
 
-  // Calcular data de expiração (1 mês)
+  const subscription = subscriptions[0];
+  const userId = subscription.user_id;
+
+  // Calcular data de expiração (30 dias a partir de agora)
   const expiresAt = new Date();
-  expiresAt.setMonth(expiresAt.getMonth() + 1);
+  expiresAt.setDate(expiresAt.getDate() + 30);
 
-  // Atualizar subscription no banco
-  const { error: updateError } = await supabaseClient
-    .from('subscriptions')
-    .upsert({
-      user_id: userId,
-      status: 'active',
-      plan_type: 'pro',
-      started_at: new Date().toISOString(),
-      expires_at: expiresAt.toISOString(),
-      auto_renew: true,
-      payment_provider: 'abacate',
-      payment_provider_subscription_id: subscription.id,
-      amount: subscription.amount ? subscription.amount / 100 : 14.99, // Converter de centavos
-      currency: 'BRL'
-    }, { 
-      onConflict: 'user_id'
-    });
-
-  if (updateError) {
-    logStep("Error updating subscription", updateError);
-    throw updateError;
-  }
-
-  logStep("Subscription activated successfully", { userId, subscription_id: subscription.id });
-}
-
-async function handleSubscriptionDeactivated(supabaseClient: any, subscription: any) {
-  logStep("Deactivating subscription", { subscription_id: subscription?.id });
-
-  if (!subscription?.id) {
-    throw new Error("Missing subscription ID");
-  }
-
-  // Atualizar status no banco
+  // Ativar subscription por 30 dias
   const { error: updateError } = await supabaseClient
     .from('subscriptions')
     .update({
-      status: 'expired',
+      status: 'active',
+      started_at: new Date().toISOString(),
+      expires_at: expiresAt.toISOString(),
       updated_at: new Date().toISOString()
     })
-    .eq('payment_provider_subscription_id', subscription.id);
+    .eq('id', subscription.id);
 
   if (updateError) {
-    logStep("Error deactivating subscription", updateError);
+    logStep("Error activating subscription", updateError);
     throw updateError;
   }
 
-  logStep("Subscription deactivated successfully", { subscription_id: subscription.id });
+  logStep("Subscription activated for 30 days", { 
+    userId, 
+    subscription_id: subscription.id,
+    expires_at: expiresAt.toISOString()
+  });
 }
