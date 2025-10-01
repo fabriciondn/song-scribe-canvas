@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Music, FileText, FolderOpen, Calendar, CreditCard, Download, Coins, User, Activity, Award } from 'lucide-react';
+import { Music, FileText, FolderOpen, Calendar, CreditCard, Download, Coins, User, Activity, Award, Crown, Clock, CheckCircle } from 'lucide-react';
 
 interface AdvancedUserModalProps {
   user: any;
@@ -45,7 +45,7 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
     queryFn: async () => {
       if (!user?.id) return null;
 
-      const [songs, drafts, registrations, folders, transactions] = await Promise.all([
+      const [songs, drafts, registrations, folders, transactions, subscriptions, activityLogs] = await Promise.all([
         // Músicas
         supabase
           .from('songs')
@@ -78,7 +78,22 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
           .from('credit_transactions')
           .select('id, credits_purchased, total_amount, status, created_at')
           .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        
+        // Subscriptions
+        supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        
+        // Logs de atividade
+        supabase
+          .from('user_activity_logs')
+          .select('action, metadata, created_at')
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
+          .limit(20)
       ]);
 
       return {
@@ -86,7 +101,9 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
         drafts: drafts.data || [],
         registrations: registrations.data || [],
         folders: folders.data || [],
-        transactions: transactions.data || []
+        transactions: transactions.data || [],
+        subscriptions: subscriptions.data || [],
+        activityLogs: activityLogs.data || []
       };
     },
     enabled: isOpen && !!user?.id,
@@ -182,6 +199,85 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
     }
   };
 
+  const handleActivatePro = async () => {
+    if (!user?.id) return;
+
+    setIsLoading(true);
+    try {
+      // Verificar se já existe uma subscription ativa
+      const { data: existingSub } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 dias
+
+      if (existingSub) {
+        // Atualizar subscription existente
+        const { error } = await supabase
+          .from('subscriptions')
+          .update({
+            status: 'active',
+            plan_type: 'pro',
+            started_at: now.toISOString(),
+            expires_at: expiresAt.toISOString(),
+            updated_at: now.toISOString()
+          })
+          .eq('id', existingSub.id);
+
+        if (error) throw error;
+      } else {
+        // Criar nova subscription
+        const { error } = await supabase
+          .from('subscriptions')
+          .insert({
+            user_id: user.id,
+            status: 'active',
+            plan_type: 'pro',
+            started_at: now.toISOString(),
+            expires_at: expiresAt.toISOString(),
+            currency: 'BRL',
+            auto_renew: false
+          });
+
+        if (error) throw error;
+      }
+
+      // Log da atividade
+      await supabase
+        .from('user_activity_logs')
+        .insert({
+          user_id: user.id,
+          action: 'pro_activated_by_admin',
+          metadata: {
+            admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+            activated_at: now.toISOString(),
+            expires_at: expiresAt.toISOString()
+          }
+        });
+
+      toast({
+        title: 'Sucesso',
+        description: 'Assinatura Pro ativada por 30 dias',
+      });
+
+      onUserUpdate();
+    } catch (error) {
+      console.error('Erro ao ativar Pro:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao ativar assinatura Pro',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!user) return null;
 
   const stats = userStats;
@@ -203,10 +299,11 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="subscription">Assinatura</TabsTrigger>
             <TabsTrigger value="content">Conteúdo</TabsTrigger>
-            <TabsTrigger value="transactions">Transações</TabsTrigger>
+            <TabsTrigger value="activity">Atividade</TabsTrigger>
             <TabsTrigger value="management">Gerenciar</TabsTrigger>
           </TabsList>
 
@@ -290,6 +387,184 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                         .join(', ')}
                     </p>
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="subscription" className="space-y-4">
+            {/* Informações da Assinatura */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Crown className="h-5 w-5" />
+                  Status da Assinatura
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {stats?.subscriptions && stats.subscriptions.length > 0 ? (
+                  <>
+                    {(() => {
+                      const currentSub = stats.subscriptions[0];
+                      const now = new Date();
+                      const expiresAt = currentSub.expires_at ? new Date(currentSub.expires_at) : null;
+                      const startedAt = currentSub.started_at ? new Date(currentSub.started_at) : null;
+                      
+                      let statusBadge = null;
+                      let statusDetails = '';
+                      
+                      if (currentSub.status === 'active' && currentSub.plan_type === 'pro') {
+                        statusBadge = <Badge variant="default" className="gap-1"><Crown className="h-3 w-3" />Pro Ativo</Badge>;
+                        statusDetails = `Acesso completo a todas as funcionalidades Pro`;
+                      } else if (currentSub.status === 'trial') {
+                        if (expiresAt && now <= expiresAt) {
+                          const daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                          statusBadge = <Badge variant="secondary" className="gap-1"><Clock className="h-3 w-3" />Trial Ativo</Badge>;
+                          statusDetails = `Restam ${daysLeft} dia${daysLeft !== 1 ? 's' : ''} de teste`;
+                        } else {
+                          const daysSince = expiresAt ? Math.floor((now.getTime() - expiresAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+                          statusBadge = <Badge variant="destructive" className="gap-1"><Clock className="h-3 w-3" />Trial Expirado</Badge>;
+                          statusDetails = `Expirou há ${daysSince} dia${daysSince !== 1 ? 's' : ''}`;
+                        }
+                      } else if (currentSub.status === 'expired') {
+                        const daysSince = expiresAt ? Math.floor((now.getTime() - expiresAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+                        statusBadge = <Badge variant="destructive">Expirado</Badge>;
+                        statusDetails = `Expirou há ${daysSince} dia${daysSince !== 1 ? 's' : ''}`;
+                      } else {
+                        statusBadge = <Badge variant="outline">Gratuito</Badge>;
+                        statusDetails = 'Acesso limitado às funcionalidades gratuitas';
+                      }
+                      
+                      return (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">Status Atual</p>
+                              <p className="text-xs text-muted-foreground">{statusDetails}</p>
+                            </div>
+                            {statusBadge}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Tipo de Plano</Label>
+                              <p className="text-sm font-medium">{currentSub.plan_type || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Renovação Automática</Label>
+                              <p className="text-sm font-medium">{currentSub.auto_renew ? 'Sim' : 'Não'}</p>
+                            </div>
+                            {startedAt && (
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Início</Label>
+                                <p className="text-sm font-medium">{startedAt.toLocaleDateString('pt-BR')}</p>
+                              </div>
+                            )}
+                            {expiresAt && (
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Expira em</Label>
+                                <p className="text-sm font-medium">{expiresAt.toLocaleDateString('pt-BR')}</p>
+                              </div>
+                            )}
+                            {currentSub.payment_provider && (
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Provedor de Pagamento</Label>
+                                <p className="text-sm font-medium">{currentSub.payment_provider}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {currentSub.status !== 'active' && (
+                            <div className="pt-4 border-t">
+                              <Button 
+                                onClick={handleActivatePro}
+                                disabled={isLoading}
+                                className="w-full gap-2"
+                              >
+                                <Crown className="h-4 w-4" />
+                                Ativar Pro Manualmente (30 dias)
+                              </Button>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+
+                    {stats.subscriptions.length > 1 && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm font-medium mb-2">Histórico de Assinaturas</p>
+                        <div className="space-y-2">
+                          {stats.subscriptions.slice(1).map((sub: any, idx: number) => (
+                            <div key={sub.id} className="flex items-center justify-between text-xs p-2 bg-muted rounded">
+                              <div>
+                                <span className="font-medium">{sub.plan_type}</span>
+                                <span className="text-muted-foreground ml-2">
+                                  ({sub.started_at ? new Date(sub.started_at).toLocaleDateString('pt-BR') : 'N/A'})
+                                </span>
+                              </div>
+                              <Badge variant="outline" className="text-xs">{sub.status}</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-4">Nenhuma assinatura encontrada</p>
+                    <Button 
+                      onClick={handleActivatePro}
+                      disabled={isLoading}
+                      className="gap-2"
+                    >
+                      <Crown className="h-4 w-4" />
+                      Ativar Pro Manualmente (30 dias)
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Transações */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Histórico de Transações
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {stats?.transactions && stats.transactions.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Créditos</TableHead>
+                        <TableHead>Valor</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Data</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {stats.transactions.map((transaction: any) => (
+                        <TableRow key={transaction.id}>
+                          <TableCell>{transaction.credits_purchased}</TableCell>
+                          <TableCell>R$ {transaction.total_amount}</TableCell>
+                          <TableCell>
+                            <Badge variant={transaction.status === 'completed' ? 'default' : 'secondary'}>
+                              {transaction.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(transaction.created_at).toLocaleDateString('pt-BR')}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">
+                    Nenhuma transação encontrada
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -405,45 +680,60 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
             </div>
           </TabsContent>
 
-          <TabsContent value="transactions" className="space-y-4">
+          <TabsContent value="activity" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Histórico de Transações
+                  <Activity className="h-5 w-5" />
+                  Histórico de Atividades
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {stats?.transactions && stats.transactions.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Créditos</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Data</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {stats.transactions.map((transaction: any) => (
-                        <TableRow key={transaction.id}>
-                          <TableCell>{transaction.credits_purchased}</TableCell>
-                          <TableCell>R$ {transaction.total_amount}</TableCell>
-                          <TableCell>
-                            <Badge variant={transaction.status === 'completed' ? 'default' : 'secondary'}>
-                              {transaction.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(transaction.created_at).toLocaleDateString('pt-BR')}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                {stats?.activityLogs && stats.activityLogs.length > 0 ? (
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {stats.activityLogs.map((log: any, idx: number) => {
+                      const getActivityIcon = (action: string) => {
+                        if (action.includes('login')) return <CheckCircle className="h-4 w-4 text-green-500" />;
+                        if (action.includes('credit')) return <Coins className="h-4 w-4 text-yellow-500" />;
+                        if (action.includes('pro')) return <Crown className="h-4 w-4 text-purple-500" />;
+                        return <Activity className="h-4 w-4 text-blue-500" />;
+                      };
+
+                      const getActivityLabel = (action: string) => {
+                        const labels: Record<string, string> = {
+                          'user_login': 'Login realizado',
+                          'credits_updated_by_admin': 'Créditos atualizados pelo admin',
+                          'credits_updated_by_moderator': 'Créditos atualizados por moderador',
+                          'pro_activated_by_admin': 'Pro ativado pelo admin',
+                          'user_deleted_by_admin': 'Usuário excluído',
+                          'song_created': 'Música criada',
+                          'draft_created': 'Rascunho criado',
+                          'registration_created': 'Registro criado'
+                        };
+                        return labels[action] || action;
+                      };
+
+                      return (
+                        <div key={idx} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                          {getActivityIcon(log.action)}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{getActivityLabel(log.action)}</p>
+                            {log.metadata && Object.keys(log.metadata).length > 0 && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                {JSON.stringify(log.metadata)}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(log.created_at).toLocaleString('pt-BR')}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 ) : (
-                  <p className="text-muted-foreground text-center py-4">
-                    Nenhuma transação encontrada
+                  <p className="text-muted-foreground text-center py-8">
+                    Nenhuma atividade registrada
                   </p>
                 )}
               </CardContent>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Users, UserPlus, Edit, Trash2, AlertTriangle } from 'lucide-react';
+import { Search, Users, UserPlus, Edit, Trash2, AlertTriangle, Crown, Clock, CircleDot } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -21,19 +21,58 @@ export const AdminUsers = () => {
   const [isAdvancedModalOpen, setIsAdvancedModalOpen] = useState(false);
   const { toast } = useToast();
 
-  // Buscar todos os usuários
+  // Buscar todos os usuários com subscription e última atividade
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
-        // Filtrar usuários que não foram deletados (nome não contém "[USUÁRIO EXCLUÍDO]")
         .not('name', 'like', '%[USUÁRIO EXCLUÍDO]%')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data || [];
+      if (profilesError) throw profilesError;
+
+      // Buscar subscriptions e última atividade para cada usuário
+      const userIds = profiles?.map(p => p.id) || [];
+      
+      const [subscriptionsData, sessionsData] = await Promise.all([
+        supabase
+          .from('subscriptions')
+          .select('*')
+          .in('user_id', userIds)
+          .order('created_at', { ascending: false }),
+        
+        supabase
+          .from('user_sessions')
+          .select('user_id, last_activity')
+          .in('user_id', userIds)
+          .order('last_activity', { ascending: false })
+      ]);
+
+      // Mapear subscriptions e sessões
+      const subscriptionsMap = new Map();
+      subscriptionsData.data?.forEach((sub: any) => {
+        if (!subscriptionsMap.has(sub.user_id)) {
+          subscriptionsMap.set(sub.user_id, sub);
+        }
+      });
+
+      const sessionsMap = new Map();
+      sessionsData.data?.forEach((session: any) => {
+        if (!sessionsMap.has(session.user_id)) {
+          sessionsMap.set(session.user_id, session.last_activity);
+        }
+      });
+
+      // Combinar dados
+      const enrichedUsers = profiles?.map(profile => ({
+        ...profile,
+        subscription: subscriptionsMap.get(profile.id),
+        last_activity: sessionsMap.get(profile.id)
+      })) || [];
+
+      return enrichedUsers;
     },
   });
 
@@ -149,14 +188,65 @@ export const AdminUsers = () => {
                   <TableHead>Foto</TableHead>
                   <TableHead>Nome</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Nome Artístico</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Última Atividade</TableHead>
                   <TableHead>Créditos</TableHead>
-                  <TableHead>Criado em</TableHead>
                   <TableHead className="text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user: any) => (
+                {filteredUsers.map((user: any) => {
+                  const getSubscriptionStatus = () => {
+                    const sub = user.subscription;
+                    if (!sub) return { label: 'Gratuito', variant: 'outline' as const, icon: null };
+                    
+                    const now = new Date();
+                    const expiresAt = sub.expires_at ? new Date(sub.expires_at) : null;
+                    
+                    if (sub.status === 'active' && sub.plan_type === 'pro') {
+                      return { label: 'Pro Ativo', variant: 'default' as const, icon: <Crown className="h-3 w-3" /> };
+                    }
+                    if (sub.status === 'trial') {
+                      if (expiresAt && now <= expiresAt) {
+                        const daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                        return { label: `Trial (${daysLeft}d)`, variant: 'secondary' as const, icon: <Clock className="h-3 w-3" /> };
+                      }
+                      return { label: 'Trial Expirado', variant: 'destructive' as const, icon: <Clock className="h-3 w-3" /> };
+                    }
+                    if (sub.status === 'expired') {
+                      if (sub.plan_type === 'trial') {
+                        const daysSince = expiresAt ? Math.floor((now.getTime() - expiresAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+                        return { label: `Expirou há ${daysSince}d`, variant: 'destructive' as const, icon: null };
+                      }
+                      return { label: 'Expirado', variant: 'destructive' as const, icon: null };
+                    }
+                    return { label: 'Gratuito', variant: 'outline' as const, icon: null };
+                  };
+
+                  const getActivityStatus = () => {
+                    if (!user.last_activity) return { label: 'Nunca', variant: 'outline' as const, color: 'text-muted-foreground' };
+                    
+                    const now = new Date();
+                    const lastActivity = new Date(user.last_activity);
+                    const diffMinutes = Math.floor((now.getTime() - lastActivity.getTime()) / (1000 * 60));
+                    const diffHours = Math.floor(diffMinutes / 60);
+                    const diffDays = Math.floor(diffHours / 24);
+                    
+                    if (diffMinutes < 5) {
+                      return { label: 'Online', variant: 'default' as const, color: 'text-green-500' };
+                    } else if (diffHours < 24) {
+                      return { label: `${diffHours}h atrás`, variant: 'secondary' as const, color: 'text-yellow-500' };
+                    } else if (diffDays < 7) {
+                      return { label: `${diffDays}d atrás`, variant: 'outline' as const, color: 'text-orange-500' };
+                    } else {
+                      return { label: `${diffDays}d atrás`, variant: 'outline' as const, color: 'text-red-500' };
+                    }
+                  };
+
+                  const subscriptionStatus = getSubscriptionStatus();
+                  const activityStatus = getActivityStatus();
+
+                  return (
                   <TableRow key={user.id}>
                     <TableCell>
                       <Avatar className="w-8 h-8">
@@ -165,12 +255,20 @@ export const AdminUsers = () => {
                       </Avatar>
                     </TableCell>
                     <TableCell>{user.name || '-'}</TableCell>
-                    <TableCell>{user.email || '-'}</TableCell>
-                    <TableCell>{user.artistic_name || '-'}</TableCell>
-                    <TableCell>{user.credits || 0}</TableCell>
+                    <TableCell className="max-w-[200px] truncate">{user.email || '-'}</TableCell>
                     <TableCell>
-                      {user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '-'}
+                      <Badge variant={subscriptionStatus.variant} className="gap-1">
+                        {subscriptionStatus.icon}
+                        {subscriptionStatus.label}
+                      </Badge>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <CircleDot className={`h-3 w-3 ${activityStatus.color}`} />
+                        <span className="text-xs">{activityStatus.label}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{user.credits || 0}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 justify-center">
                         <ImpersonateButton
@@ -224,7 +322,8 @@ export const AdminUsers = () => {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
