@@ -40,8 +40,18 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
 
     const stats = data as any;
     
-    // Calcular faturamento: registros * 30 reais cada
-    const totalRevenue = (stats.total_registered_works || 0) * 30;
+    // Calcular faturamento apenas com transações completadas via Mercado Pago
+    const { data: transactions, error: transError } = await supabase
+      .from('credit_transactions')
+      .select('total_amount')
+      .eq('status', 'completed')
+      .eq('payment_provider', 'mercadopago');
+    
+    if (transError) {
+      console.error('Erro ao buscar transações:', transError);
+    }
+    
+    const totalRevenue = transactions?.reduce((sum, t) => sum + Number(t.total_amount), 0) || 0;
     
     return {
       totalUsers: stats.total_users || 0,

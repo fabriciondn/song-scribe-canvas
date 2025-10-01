@@ -3,150 +3,157 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import { 
-  AlertCircle, 
-  CheckCircle, 
-  Info, 
-  AlertTriangle, 
-  Search, 
-  Filter, 
+  Music,
+  Edit,
+  Users,
+  FileText,
+  Folder,
+  Hash,
+  Volume2,
+  Search,
   Download,
   RefreshCw,
   Clock,
-  User,
+  User as UserIcon,
   Activity
 } from 'lucide-react';
+import { format } from 'date-fns';
 
-interface LogEntry {
+interface ActivityLog {
   id: string;
-  timestamp: string;
-  level: 'info' | 'warning' | 'error' | 'success';
-  message: string;
-  user_id?: string;
+  user_id: string;
   action: string;
+  metadata: any;
+  timestamp: string;
   ip_address?: string;
-  user_agent?: string;
+  profiles?: {
+    name: string;
+    artistic_name: string;
+    avatar_url: string;
+    email: string;
+  };
 }
 
 export const AdminLogs: React.FC = () => {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [filteredLogs, setFilteredLogs] = useState<LogEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState<string>('all');
-  const [isLoading, setIsLoading] = useState(true);
-  const [autoRefresh, setAutoRefresh] = useState(true);
 
-  useEffect(() => {
-    const loadLogs = () => {
-      // Em um sistema real, aqui buscaríamos os logs do Supabase
-      // Por enquanto, retornamos array vazio para mostrar apenas dados reais
-      setLogs([]);
-      setFilteredLogs([]);
-      setIsLoading(false);
-    };
+  const { data: activities = [], isLoading, refetch } = useQuery({
+    queryKey: ['admin-activity-logs'],
+    queryFn: async () => {
+      const { data: logs, error: logsError } = await supabase
+        .from('user_activity_logs')
+        .select('id, user_id, action, metadata, timestamp, ip_address')
+        .order('timestamp', { ascending: false })
+        .limit(200);
 
-    loadLogs();
+      if (logsError) throw logsError;
+      if (!logs) return [];
 
-    // Auto-refresh dos logs
-    let interval: NodeJS.Timeout;
-    if (autoRefresh) {
-      interval = setInterval(loadLogs, 30000); // Atualiza a cada 30 segundos
-    }
+      // Buscar perfis dos usuários
+      const userIds = [...new Set(logs.map(log => log.user_id))];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, artistic_name, avatar_url, email')
+        .in('id', userIds);
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [autoRefresh]);
+      if (profilesError) throw profilesError;
 
-  useEffect(() => {
-    let filtered = logs;
+      // Mapear perfis para logs
+      const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      
+      return logs.map(log => ({
+        ...log,
+        profiles: profilesMap.get(log.user_id)
+      })) as ActivityLog[];
+    },
+    refetchInterval: 30000,
+  });
 
-    // Filtrar por nível
-    if (selectedLevel !== 'all') {
-      filtered = filtered.filter(log => log.level === selectedLevel);
-    }
+  const filteredActivities = activities.filter(activity => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const userName = activity.profiles?.name?.toLowerCase() || '';
+    const artisticName = activity.profiles?.artistic_name?.toLowerCase() || '';
+    const email = activity.profiles?.email?.toLowerCase() || '';
+    const action = activity.action?.toLowerCase() || '';
+    
+    return userName.includes(searchLower) || 
+           artisticName.includes(searchLower) || 
+           email.includes(searchLower) ||
+           action.includes(searchLower);
+  });
 
-    // Filtrar por termo de busca
-    if (searchTerm) {
-      filtered = filtered.filter(log => 
-        log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.user_id?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    setFilteredLogs(filtered);
-  }, [logs, searchTerm, selectedLevel]);
-
-  const getLevelIcon = (level: string) => {
-    switch (level) {
-      case 'error':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      default:
-        return <Info className="h-4 w-4 text-blue-500" />;
-    }
+  const getActivityIcon = (action: string) => {
+    if (action.includes('song') || action.includes('música')) return <Music className="h-4 w-4 text-blue-500" />;
+    if (action.includes('draft') || action.includes('rascunho')) return <Edit className="h-4 w-4 text-orange-500" />;
+    if (action.includes('partnership') || action.includes('parceria')) return <Users className="h-4 w-4 text-purple-500" />;
+    if (action.includes('registration') || action.includes('registro')) return <FileText className="h-4 w-4 text-green-500" />;
+    if (action.includes('folder') || action.includes('pasta')) return <Folder className="h-4 w-4 text-yellow-500" />;
+    if (action.includes('cifrador')) return <Hash className="h-4 w-4 text-cyan-500" />;
+    if (action.includes('base')) return <Volume2 className="h-4 w-4 text-pink-500" />;
+    if (action.includes('login')) return <UserIcon className="h-4 w-4 text-teal-500" />;
+    return <Activity className="h-4 w-4 text-gray-500" />;
   };
 
-  const getLevelBadge = (level: string) => {
-    const variants = {
-      error: 'destructive',
-      warning: 'secondary',
-      success: 'default',
-      info: 'outline'
-    };
+  const getActivityDescription = (activity: ActivityLog) => {
+    const metadata = activity.metadata || {};
     
-    return (
-      <Badge variant={variants[level as keyof typeof variants] as any}>
-        {level.toUpperCase()}
-      </Badge>
-    );
+    switch (activity.action) {
+      case 'song_created':
+        return `Nova música criada: ${metadata.title || 'Sem título'}`;
+      case 'draft_created':
+        return `Novo rascunho criado: ${metadata.title || 'Sem título'}`;
+      case 'partnership_created':
+        return `Nova parceria criada: ${metadata.title || 'Sem título'}`;
+      case 'author_registration_submitted':
+        return `Obra registrada: ${metadata.title || 'Registro autoral'}`;
+      case 'folder_created':
+        return `Nova pasta criada: ${metadata.name || 'Sem nome'}`;
+      case 'user_login':
+        return 'Usuário fez login no sistema';
+      case 'user_logout':
+        return 'Usuário saiu do sistema';
+      case 'profile_updated':
+        return 'Perfil atualizado';
+      case 'credits_updated':
+        return `Créditos atualizados: ${metadata.oldCredits || 0} → ${metadata.newCredits || 0}`;
+      case 'public_registration_submitted':
+        return 'Novo cadastro público realizado';
+      default:
+        return activity.action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
   };
 
   const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
+    return format(new Date(timestamp), "dd/MM/yyyy, HH:mm:ss");
   };
 
   const exportLogs = () => {
     const csvContent = [
-      ['Timestamp', 'Level', 'Action', 'Message', 'User ID', 'IP Address'].join(','),
-      ...filteredLogs.map(log => [
-        log.timestamp,
-        log.level,
-        log.action,
-        `"${log.message}"`,
-        log.user_id || '',
-        log.ip_address || ''
+      ['Data/Hora', 'Ação', 'Usuário', 'Email', 'IP'].join(','),
+      ...filteredActivities.map(activity => [
+        formatTimestamp(activity.timestamp),
+        activity.action,
+        activity.profiles?.name || 'N/A',
+        activity.profiles?.email || 'N/A',
+        activity.ip_address || 'N/A'
       ].join(','))
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `logs-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `atividades-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
-
-  const levelCounts = logs.reduce((acc, log) => {
-    acc[log.level] = (acc[log.level] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
 
   if (isLoading) {
     return (
@@ -157,170 +164,118 @@ export const AdminLogs: React.FC = () => {
   }
 
   return (
-  <div className="space-y-4 md:space-y-6 px-1 md:px-0">
-      {/* Estatísticas dos Logs */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-red-700">Erros</p>
-                <p className="text-2xl font-bold text-red-900">{levelCounts.error || 0}</p>
-              </div>
-              <AlertCircle className="h-8 w-8 text-red-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-yellow-700">Avisos</p>
-                <p className="text-2xl font-bold text-yellow-900">{levelCounts.warning || 0}</p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-yellow-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-700">Sucessos</p>
-                <p className="text-2xl font-bold text-green-900">{levelCounts.success || 0}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-700">Informações</p>
-                <p className="text-2xl font-bold text-blue-900">{levelCounts.info || 0}</p>
-              </div>
-              <Info className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
+    <div className="space-y-4 md:space-y-6 px-1 md:px-0">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Atividades Recentes</h2>
+          <p className="text-sm text-muted-foreground">
+            Últimas ações realizadas na plataforma
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Atualizar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportLogs}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar
+          </Button>
+        </div>
       </div>
 
-      {/* Painel Principal de Logs */}
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <Input
+          placeholder="Pesquisar por usuário, ação ou email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Activities List */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            Logs do Sistema
+            Últimas Ações Realizadas na Plataforma
           </CardTitle>
           <CardDescription>
-            Monitoramento em tempo real das atividades da plataforma
+            Todas as atividades dos usuários em tempo real
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Controles de Filtro */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Pesquisar logs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
             </div>
-            
-            <div className="flex gap-2">
-              <select
-                value={selectedLevel}
-                onChange={(e) => setSelectedLevel(e.target.value)}
-                className="px-3 py-2 border rounded-md bg-background"
-              >
-                <option value="all">Todos os níveis</option>
-                <option value="error">Erros</option>
-                <option value="warning">Avisos</option>
-                <option value="success">Sucessos</option>
-                <option value="info">Informações</option>
-              </select>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setAutoRefresh(!autoRefresh)}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
-                Auto-refresh
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={exportLogs}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
-              </Button>
-            </div>
-          </div>
+          ) : (
+            <ScrollArea className="h-[700px]">
+              <div className="space-y-2">
+                {filteredActivities.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  >
+                    {/* Icon */}
+                    <div className="flex-shrink-0 mt-1">
+                      {getActivityIcon(activity.action)}
+                    </div>
 
-          {/* Lista de Logs */}
-          <ScrollArea className="h-[600px] rounded-md border">
-            <div className="p-4 space-y-2">
-              {filteredLogs.map((log) => (
-                <div
-                  key={log.id}
-                  className="flex items-start space-x-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex-shrink-0 mt-1">
-                    {getLevelIcon(log.level)}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          {getLevelBadge(log.level)}
-                          <span className="text-sm font-medium">{log.action}</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground break-words">
-                          {log.message}
-                        </p>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {formatTimestamp(log.timestamp)}
-                          </div>
-                          {log.user_id && (
-                            <div className="flex items-center gap-1">
-                              <User className="h-3 w-3" />
-                              {log.user_id}
-                            </div>
-                          )}
-                          {log.ip_address && (
-                            <span>{log.ip_address}</span>
-                          )}
+                    {/* User Avatar */}
+                    <Avatar className="h-10 w-10 flex-shrink-0">
+                      <AvatarImage src={activity.profiles?.avatar_url} />
+                      <AvatarFallback>
+                        {activity.profiles?.name?.slice(0, 2).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium break-words">
+                        {getActivityDescription(activity)}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        <span className="font-medium">
+                          por {activity.profiles?.name || activity.profiles?.artistic_name || 'Usuário'}
+                        </span>
+                        {activity.profiles?.email && (
+                          <span>• {activity.profiles.email}</span>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {formatTimestamp(activity.timestamp)}
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              
-              {filteredLogs.length === 0 && (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    {searchTerm || selectedLevel !== 'all' 
-                      ? 'Nenhum log encontrado com os filtros aplicados' 
-                      : 'Nenhum log disponível'
-                    }
-                  </p>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+                ))}
+
+                {filteredActivities.length === 0 && (
+                  <div className="text-center py-8">
+                    <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-muted-foreground">
+                      {searchTerm 
+                        ? 'Nenhuma atividade encontrada com o filtro aplicado' 
+                        : 'Nenhuma atividade recente'
+                      }
+                    </p>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          )}
         </CardContent>
       </Card>
     </div>
