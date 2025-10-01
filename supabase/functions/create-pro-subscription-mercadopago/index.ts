@@ -120,7 +120,7 @@ serve(async (req) => {
         amount: 14.99,
         currency: 'BRL',
         payment_provider: 'mercadopago',
-        payment_id: paymentData.id.toString(),
+        payment_provider_subscription_id: paymentData.id.toString(),
         auto_renew: false,
         started_at: null,
         expires_at: null

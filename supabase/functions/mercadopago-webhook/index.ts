@@ -94,7 +94,7 @@ serve(async (req) => {
       const { data: subscription, error: subscriptionError } = await supabaseService
         .from('subscriptions')
         .select('*')
-        .eq('payment_id', paymentId.toString())
+        .eq('payment_provider_subscription_id', paymentId.toString())
         .eq('status', 'pending')
         .single();
 
