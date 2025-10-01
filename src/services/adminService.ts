@@ -25,10 +25,12 @@ export interface RevenueTransaction {
   user_email: string;
   user_avatar: string | null;
   total_amount: number;
-  credits_purchased: number;
-  bonus_credits: number;
+  credits_purchased?: number;
+  bonus_credits?: number;
   payment_id: string;
   completed_at: string;
+  transaction_type: 'credits' | 'subscription';
+  subscription_plan?: string;
 }
 
 export interface UserByPlan {
@@ -68,8 +70,8 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
 
     const stats = data as any;
     
-    // Calcular faturamento apenas com transações completadas via Mercado Pago
-    const { data: transactions, error: transError } = await supabase
+    // Calcular faturamento de créditos via Mercado Pago
+    const { data: creditTransactions, error: transError } = await supabase
       .from('credit_transactions')
       .select('total_amount')
       .eq('status', 'completed')
@@ -79,21 +81,37 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
       console.error('Erro ao buscar transações:', transError);
     }
     
-    const totalRevenue = transactions?.reduce((sum, t) => sum + Number(t.total_amount), 0) || 0;
+    const creditRevenue = creditTransactions?.reduce((sum, t) => sum + Number(t.total_amount), 0) || 0;
+    
+    // Calcular faturamento de assinaturas via Mercado Pago
+    const { data: paidSubscriptions, error: paidSubsError } = await supabase
+      .from('subscriptions')
+      .select('amount, started_at')
+      .eq('payment_provider', 'mercadopago')
+      .in('status', ['active', 'expired'])
+      .not('started_at', 'is', null);
+    
+    if (paidSubsError) {
+      console.error('Erro ao buscar assinaturas:', paidSubsError);
+    }
+    
+    const subscriptionRevenue = paidSubscriptions?.reduce((sum, s) => sum + Number(s.amount || 0), 0) || 0;
+    
+    const totalRevenue = creditRevenue + subscriptionRevenue;
     
     // Buscar contagem de usuários por tipo de assinatura
-    const { data: subscriptions, error: subsError } = await supabase
+    const { data: allSubscriptions, error: allSubsError } = await supabase
       .from('subscriptions')
       .select('user_id, status, expires_at')
       .order('created_at', { ascending: false });
     
-    if (subsError) {
-      console.error('Erro ao buscar assinaturas:', subsError);
+    if (allSubsError) {
+      console.error('Erro ao buscar assinaturas:', allSubsError);
     }
 
     // Contar usuários únicos por status
     const usersByStatus = new Map<string, Set<string>>();
-    subscriptions?.forEach(sub => {
+    allSubscriptions?.forEach(sub => {
       const isExpired = sub.expires_at && new Date(sub.expires_at) < new Date();
       const status = isExpired ? 'free' : sub.status;
       
@@ -147,7 +165,8 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
 
 export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> => {
   try {
-    const { data: transactions, error } = await supabase
+    // Buscar transações de créditos
+    const { data: creditTransactions, error: creditsError } = await supabase
       .from('credit_transactions')
       .select(`
         id,
@@ -162,18 +181,40 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
       .eq('payment_provider', 'mercadopago')
       .order('completed_at', { ascending: false });
 
-    if (error) throw error;
+    if (creditsError) throw creditsError;
 
-    if (!transactions || transactions.length === 0) {
+    // Buscar assinaturas pagas via Mercado Pago
+    const { data: subscriptions, error: subsError } = await supabase
+      .from('subscriptions')
+      .select(`
+        id,
+        user_id,
+        amount,
+        plan_type,
+        payment_provider_subscription_id,
+        started_at
+      `)
+      .eq('payment_provider', 'mercadopago')
+      .in('status', ['active', 'expired'])
+      .not('started_at', 'is', null)
+      .order('started_at', { ascending: false });
+
+    if (subsError) throw subsError;
+
+    // Coletar todos os user_ids
+    const creditUserIds = creditTransactions?.map(t => t.user_id) || [];
+    const subsUserIds = subscriptions?.map(s => s.user_id) || [];
+    const allUserIds = [...new Set([...creditUserIds, ...subsUserIds])];
+
+    if (allUserIds.length === 0) {
       return [];
     }
 
     // Buscar perfis dos usuários
-    const userIds = transactions.map(t => t.user_id);
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, name, email, avatar_url')
-      .in('id', userIds);
+      .in('id', allUserIds);
 
     if (profilesError) {
       console.error('Erro ao buscar perfis:', profilesError);
@@ -182,7 +223,8 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
     // Mapear perfis por ID
     const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-    return transactions.map(t => {
+    // Mapear transações de créditos
+    const creditTransactionsData: RevenueTransaction[] = (creditTransactions || []).map(t => {
       const profile = profilesMap.get(t.user_id);
       return {
         id: t.id,
@@ -195,8 +237,36 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
         bonus_credits: t.bonus_credits || 0,
         payment_id: t.payment_id || '',
         completed_at: t.completed_at || '',
+        transaction_type: 'credits' as const,
       };
     });
+
+    // Mapear transações de assinaturas
+    const subscriptionTransactionsData: RevenueTransaction[] = (subscriptions || []).map(s => {
+      const profile = profilesMap.get(s.user_id);
+      return {
+        id: s.id,
+        user_id: s.user_id,
+        user_name: profile?.name || 'Usuário Desconhecido',
+        user_email: profile?.email || '',
+        user_avatar: profile?.avatar_url || null,
+        total_amount: s.amount || 0,
+        payment_id: s.payment_provider_subscription_id || '',
+        completed_at: s.started_at || '',
+        transaction_type: 'subscription' as const,
+        subscription_plan: s.plan_type || 'pro',
+      };
+    });
+
+    // Combinar e ordenar por data
+    const allTransactions = [...creditTransactionsData, ...subscriptionTransactionsData];
+    allTransactions.sort((a, b) => {
+      const dateA = new Date(a.completed_at).getTime();
+      const dateB = new Date(b.completed_at).getTime();
+      return dateB - dateA;
+    });
+
+    return allTransactions;
   } catch (error) {
     console.error('Erro ao buscar transações de receita:', error);
     throw error;

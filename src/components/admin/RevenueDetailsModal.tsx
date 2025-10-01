@@ -89,25 +89,37 @@ export const RevenueDetailsModal: React.FC<RevenueDetailsModalProps> = ({
                           {transaction.user_email}
                         </p>
                         
-                        <div className="flex items-center gap-4 mt-2 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Serviço: </span>
-                            <span className="font-medium">
-                              Compra de Créditos
-                            </span>
-                          </div>
+                      <div className="flex items-center gap-4 mt-2 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Serviço: </span>
+                          <span className="font-medium">
+                            {transaction.transaction_type === 'credits' 
+                              ? 'Compra de Créditos' 
+                              : `Assinatura ${transaction.subscription_plan?.toUpperCase()}`}
+                          </span>
+                        </div>
+                        
+                        {transaction.transaction_type === 'credits' && (
                           <div>
                             <span className="text-muted-foreground">Créditos: </span>
                             <span className="font-medium">
                               {transaction.credits_purchased}
-                              {transaction.bonus_credits > 0 && (
+                              {transaction.bonus_credits && transaction.bonus_credits > 0 && (
                                 <span className="text-green-600 dark:text-green-400">
                                   {' '}+{transaction.bonus_credits} bônus
                                 </span>
                               )}
                             </span>
                           </div>
-                        </div>
+                        )}
+                        
+                        {transaction.transaction_type === 'subscription' && (
+                          <div>
+                            <span className="text-muted-foreground">Período: </span>
+                            <span className="font-medium">30 dias</span>
+                          </div>
+                        )}
+                      </div>
                         
                         {transaction.payment_id && (
                           <p className="text-xs text-muted-foreground mt-1">
