@@ -12,6 +12,23 @@ export interface AdminDashboardStats {
   totalComposers: number;
   totalProtectedWorks: number;
   totalRevenue: number;
+  proUsers: number;
+  trialUsers: number;
+  freeUsers: number;
+  inactiveUsers: number;
+}
+
+export interface RevenueTransaction {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  user_avatar: string | null;
+  total_amount: number;
+  credits_purchased: number;
+  bonus_credits: number;
+  payment_id: string;
+  completed_at: string;
 }
 
 export interface UserData {
@@ -53,6 +70,47 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
     
     const totalRevenue = transactions?.reduce((sum, t) => sum + Number(t.total_amount), 0) || 0;
     
+    // Buscar contagem de usuários por tipo de assinatura
+    const { data: subscriptions, error: subsError } = await supabase
+      .from('subscriptions')
+      .select('user_id, status, expires_at')
+      .order('created_at', { ascending: false });
+    
+    if (subsError) {
+      console.error('Erro ao buscar assinaturas:', subsError);
+    }
+
+    // Contar usuários únicos por status
+    const usersByStatus = new Map<string, Set<string>>();
+    subscriptions?.forEach(sub => {
+      const isExpired = sub.expires_at && new Date(sub.expires_at) < new Date();
+      const status = isExpired ? 'free' : sub.status;
+      
+      if (!usersByStatus.has(status)) {
+        usersByStatus.set(status, new Set());
+      }
+      usersByStatus.get(status)?.add(sub.user_id);
+    });
+
+    const proUsers = usersByStatus.get('active')?.size || 0;
+    const trialUsers = usersByStatus.get('trial')?.size || 0;
+    const freeUsers = (usersByStatus.get('free')?.size || 0) + (usersByStatus.get('expired')?.size || 0);
+
+    // Buscar usuários inativos (sem atividade nos últimos 30 dias)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const { data: inactiveUsersData, error: inactiveError } = await supabase
+      .from('user_sessions')
+      .select('user_id')
+      .lt('last_activity', thirtyDaysAgo.toISOString());
+    
+    if (inactiveError) {
+      console.error('Erro ao buscar usuários inativos:', inactiveError);
+    }
+
+    const inactiveUsers = new Set(inactiveUsersData?.map(u => u.user_id) || []).size;
+    
     return {
       totalUsers: stats.total_users || 0,
       totalSongs: stats.total_songs || 0,
@@ -65,9 +123,71 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
       totalComposers: stats.total_users || 0,
       totalProtectedWorks: stats.total_registered_works || 0,
       totalRevenue: totalRevenue,
+      proUsers,
+      trialUsers,
+      freeUsers,
+      inactiveUsers,
     };
   } catch (error) {
     console.error('Erro ao buscar estatísticas do admin:', error);
+    throw error;
+  }
+};
+
+export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> => {
+  try {
+    const { data: transactions, error } = await supabase
+      .from('credit_transactions')
+      .select(`
+        id,
+        user_id,
+        total_amount,
+        credits_purchased,
+        bonus_credits,
+        payment_id,
+        completed_at
+      `)
+      .eq('status', 'completed')
+      .eq('payment_provider', 'mercadopago')
+      .order('completed_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (!transactions || transactions.length === 0) {
+      return [];
+    }
+
+    // Buscar perfis dos usuários
+    const userIds = transactions.map(t => t.user_id);
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, name, email, avatar_url')
+      .in('id', userIds);
+
+    if (profilesError) {
+      console.error('Erro ao buscar perfis:', profilesError);
+    }
+
+    // Mapear perfis por ID
+    const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+    return transactions.map(t => {
+      const profile = profilesMap.get(t.user_id);
+      return {
+        id: t.id,
+        user_id: t.user_id,
+        user_name: profile?.name || 'Usuário Desconhecido',
+        user_email: profile?.email || '',
+        user_avatar: profile?.avatar_url || null,
+        total_amount: t.total_amount,
+        credits_purchased: t.credits_purchased,
+        bonus_credits: t.bonus_credits || 0,
+        payment_id: t.payment_id || '',
+        completed_at: t.completed_at || '',
+      };
+    });
+  } catch (error) {
+    console.error('Erro ao buscar transações de receita:', error);
     throw error;
   }
 };
