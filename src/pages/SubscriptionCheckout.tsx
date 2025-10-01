@@ -3,22 +3,43 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Crown, CreditCard, ArrowLeft, Clock } from 'lucide-react';
+import { CheckCircle, Crown, CreditCard, ArrowLeft, Clock, Copy } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
+import { QRCodeSVG } from 'qrcode.react';
+import { usePaymentConfirmation } from '@/hooks/usePaymentConfirmation';
+
+interface PixData {
+  qr_code: string;
+  qr_code_url: string;
+  payment_id: string;
+}
 
 export default function SubscriptionCheckout() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { subscription, isTrialActive, trialDaysRemaining } = useSubscription();
+  const { subscription, isTrialActive, trialDaysRemaining, refreshSubscription } = useSubscription();
   const { profile } = useProfile();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [pixData, setPixData] = useState<PixData | null>(null);
   const [showQR, setShowQR] = useState(false);
+
+  const handlePaymentConfirmed = () => {
+    toast.success("Assinatura Pro ativada com sucesso! 🎉");
+    setShowQR(false);
+    refreshSubscription();
+    setTimeout(() => navigate("/dashboard"), 2000);
+  };
+
+  const { isChecking } = usePaymentConfirmation({
+    paymentId: pixData?.payment_id || "",
+    isActive: showQR && !!pixData,
+    onPaymentConfirmed: handlePaymentConfirmed
+  });
 
   const handleSubscribe = async () => {
     if (!user) {
@@ -26,10 +47,15 @@ export default function SubscriptionCheckout() {
       return;
     }
 
+    if (subscription?.status === 'active') {
+      toast.info('Você já é um usuário Pro!');
+      return;
+    }
+
     try {
       setIsProcessing(true);
       
-      const { data, error } = await supabase.functions.invoke('create-pro-subscription', {
+      const { data, error } = await supabase.functions.invoke('create-pro-subscription-mercadopago', {
         body: {
           user_id: user.id,
           user_email: user.email,
@@ -39,10 +65,16 @@ export default function SubscriptionCheckout() {
 
       if (error) throw error;
 
-      if (data?.payment_url) {
-        setPaymentUrl(data.payment_url);
+      if (data?.qr_code) {
+        setPixData({
+          qr_code: data.qr_code,
+          qr_code_url: `data:image/png;base64,${data.qr_code_base64}`,
+          payment_id: data.payment_id
+        });
         setShowQR(true);
         toast.success('QR Code gerado! Escaneie para pagar via PIX.');
+      } else {
+        toast.error('Erro ao gerar QR Code');
       }
     } catch (error: any) {
       console.error('Erro ao processar assinatura:', error);
@@ -200,7 +232,7 @@ export default function SubscriptionCheckout() {
           </Card>
 
           {/* QR Code Section */}
-          {showQR && paymentUrl && (
+          {showQR && pixData && (
             <Card className="mb-8 border-green-200 bg-green-50/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -211,26 +243,42 @@ export default function SubscriptionCheckout() {
                   Use o aplicativo do seu banco para escanear o código PIX
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-center space-y-4">
-                <div className="bg-white p-4 rounded-lg shadow-sm border inline-block">
-                  <iframe
-                    src={paymentUrl}
-                    className="w-80 h-80 border-0"
-                    title="QR Code PIX"
-                  />
+              <CardContent className="space-y-4">
+                <div className="flex justify-center p-4 bg-white rounded-lg">
+                  {pixData.qr_code_url ? (
+                    <img src={pixData.qr_code_url} alt="QR Code PIX" className="w-64 h-64" />
+                  ) : (
+                    <QRCodeSVG value={pixData.qr_code} size={256} />
+                  )}
                 </div>
                 <div className="space-y-2">
+                  <p className="text-center text-sm font-medium">Código PIX Copia e Cola:</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={pixData.qr_code}
+                      readOnly
+                      className="flex-1 p-2 text-xs bg-muted rounded border text-center"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(pixData.qr_code);
+                        toast.success("Código copiado!");
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="text-center space-y-2">
                   <p className="text-sm font-medium">Valor: R$ 14,99</p>
                   <p className="text-xs text-muted-foreground">
-                    Após o pagamento, sua conta será ativada automaticamente
+                    {isChecking 
+                      ? "Aguardando confirmação do pagamento..." 
+                      : "Após o pagamento, sua conta será ativada automaticamente"}
                   </p>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => window.open(paymentUrl, '_blank')}
-                    className="mt-2"
-                  >
-                    Abrir link de pagamento
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -254,13 +302,13 @@ export default function SubscriptionCheckout() {
             ) : showQR ? (
               <div className="space-y-4">
                 <p className="text-muted-foreground">
-                  Aguardando confirmação do pagamento...
+                  {isChecking ? "Verificando pagamento..." : "Aguardando pagamento..."}
                 </p>
                 <Button
                   variant="outline"
                   onClick={() => {
                     setShowQR(false);
-                    setPaymentUrl(null);
+                    setPixData(null);
                   }}
                 >
                   Voltar

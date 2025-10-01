@@ -81,9 +81,61 @@ serve(async (req) => {
       return new Response('Payment not approved yet', { status: 200, headers: corsHeaders });
     }
 
-    console.log('✅ Payment approved! Processing credits...');
+    console.log('✅ Payment approved! Processing...');
 
-    // Buscar transação no banco
+    // Verificar se é pagamento de assinatura ou créditos
+    const externalReference = paymentData.external_reference || '';
+    const isSubscription = externalReference.startsWith('subscription_');
+
+    if (isSubscription) {
+      console.log('🎯 Processing subscription payment');
+      
+      // Buscar subscription pendente
+      const { data: subscription, error: subscriptionError } = await supabaseService
+        .from('subscriptions')
+        .select('*')
+        .eq('payment_id', paymentId.toString())
+        .eq('status', 'pending')
+        .single();
+
+      if (subscriptionError || !subscription) {
+        console.error('❌ Error finding subscription:', subscriptionError);
+        return new Response('Subscription not found', { status: 200, headers: corsHeaders });
+      }
+
+      console.log('📋 Found subscription:', subscription.id);
+
+      // Ativar subscription por 30 dias
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+
+      const { error: updateError } = await supabaseService
+        .from('subscriptions')
+        .update({
+          status: 'active',
+          started_at: new Date().toISOString(),
+          expires_at: expiresAt.toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', subscription.id);
+
+      if (updateError) {
+        console.error('❌ Error activating subscription:', updateError);
+        return new Response('Error activating subscription', { status: 500, headers: corsHeaders });
+      }
+
+      console.log('🎉 Subscription activated successfully!', {
+        userId: subscription.user_id,
+        subscriptionId: subscription.id,
+        expiresAt: expiresAt.toISOString()
+      });
+
+      return new Response('OK - Subscription activated', { status: 200, headers: corsHeaders });
+    }
+
+    // Processar créditos (fluxo existente)
+    console.log('💰 Processing credits payment');
+    
     const { data: transaction, error: transactionError } = await supabaseService
       .from('credit_transactions')
       .select('*')
@@ -93,7 +145,6 @@ serve(async (req) => {
 
     if (transactionError) {
       console.error('❌ Error finding transaction:', transactionError);
-      // Ainda retornar 200 para não ficar reprocessando
       return new Response('Transaction not found', { status: 200, headers: corsHeaders });
     }
 
