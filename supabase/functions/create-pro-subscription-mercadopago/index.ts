@@ -121,7 +121,6 @@ serve(async (req) => {
         currency: 'BRL',
         payment_provider: 'mercadopago',
         payment_id: paymentData.id.toString(),
-        external_reference: externalReference,
         auto_renew: false,
         started_at: null,
         expires_at: null
