@@ -69,6 +69,9 @@ serve(async (req) => {
     // Criar external_reference único
     const externalReference = `subscription_${user_id}_${Date.now()}`;
     
+    // Gerar idempotency key único
+    const idempotencyKey = crypto.randomUUID();
+    
     // Criar pagamento no Mercado Pago
     const paymentPayload = {
       transaction_amount: 14.99,
@@ -89,6 +92,7 @@ serve(async (req) => {
       headers: {
         'Authorization': `Bearer ${mercadoPagoAccessToken}`,
         'Content-Type': 'application/json',
+        'X-Idempotency-Key': idempotencyKey,
       },
       body: JSON.stringify(paymentPayload),
     });
