@@ -270,19 +270,6 @@ const DashboardHome: React.FC = () => {
         )}
 
       </div>
-
-      {/* Mensagem sobre dados em tempo real */}
-      <Card className="bg-muted border-border">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-3">
-            <Bell className="h-5 w-5 text-blue-600" />
-            <div>
-              <p className="text-foreground font-medium">Dashboard em tempo real</p>
-              <p className="text-muted-foreground text-sm">Os dados são atualizados automaticamente conforme você usa a plataforma.</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
