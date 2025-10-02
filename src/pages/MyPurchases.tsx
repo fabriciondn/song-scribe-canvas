@@ -112,7 +112,7 @@ export default function MyPurchases() {
                       <tr className="text-left">
                         <th className="p-4 font-medium">Data</th>
                         <th className="p-4 font-medium">ID Pagamento</th>
-                        <th className="p-4 font-medium">Créditos</th>
+                        <th className="p-4 font-medium">Tipo</th>
                         <th className="p-4 font-medium">Valor</th>
                         <th className="p-4 font-medium">Status</th>
                         <th className="p-4 font-medium">Método</th>
@@ -126,14 +126,21 @@ export default function MyPurchases() {
                             <td className="p-4">{formatDate(transaction.created_at)}</td>
                             <td className="p-4 font-mono text-sm">{transaction.payment_id}</td>
                             <td className="p-4">
-                              <div className="flex flex-col">
-                                <span className="font-medium">{transaction.total_credits} créditos</span>
-                                {transaction.bonus_credits > 0 && (
-                                  <span className="text-xs text-green-600">
-                                    +{transaction.bonus_credits} bônus
-                                  </span>
-                                )}
-                              </div>
+                              {transaction.transaction_type === 'subscription' ? (
+                                <div className="flex flex-col">
+                                  <span className="font-medium">Assinatura {transaction.plan_type === 'pro' ? 'Pro' : 'Trial'}</span>
+                                  <span className="text-xs text-muted-foreground">Recorrente</span>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{transaction.total_credits} créditos</span>
+                                  {transaction.bonus_credits > 0 && (
+                                    <span className="text-xs text-green-600">
+                                      +{transaction.bonus_credits} bônus
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </td>
                             <td className="p-4 font-medium">{formatCurrency(transaction.amount)}</td>
                             <td className="p-4">
@@ -173,15 +180,22 @@ export default function MyPurchases() {
                     
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Créditos:</span>
-                        <div className="text-right">
-                          <span className="text-sm font-medium">{transaction.total_credits}</span>
-                          {transaction.bonus_credits > 0 && (
-                            <span className="text-xs text-green-600 ml-1">
-                              (+{transaction.bonus_credits} bônus)
-                            </span>
-                          )}
-                        </div>
+                        <span className="text-sm text-muted-foreground">Tipo:</span>
+                        {transaction.transaction_type === 'subscription' ? (
+                          <div className="text-right">
+                            <span className="text-sm font-medium">Assinatura {transaction.plan_type === 'pro' ? 'Pro' : 'Trial'}</span>
+                            <span className="text-xs text-muted-foreground block">Recorrente</span>
+                          </div>
+                        ) : (
+                          <div className="text-right">
+                            <span className="text-sm font-medium">{transaction.total_credits} créditos</span>
+                            {transaction.bonus_credits > 0 && (
+                              <span className="text-xs text-green-600 ml-1">
+                                (+{transaction.bonus_credits} bônus)
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                       
                       <div className="flex justify-between">

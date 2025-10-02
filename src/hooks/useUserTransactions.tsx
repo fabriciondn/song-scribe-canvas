@@ -12,10 +12,12 @@ export interface UserTransaction {
   total_credits: number;
   payment_id: string;
   payment_method: string;
-  status: 'pending' | 'completed' | 'failed';
+  status: 'pending' | 'completed' | 'failed' | 'active' | 'expired';
   created_at: string;
   completed_at?: string;
   metadata?: any;
+  transaction_type: 'credits' | 'subscription';
+  plan_type?: string;
 }
 
 export const useUserTransactions = () => {
@@ -26,19 +28,29 @@ export const useUserTransactions = () => {
     queryFn: async () => {
       if (!user?.id) return [];
 
-      const { data, error } = await supabase
+      // Buscar transações de créditos
+      const { data: creditData, error: creditError } = await supabase
         .from('credit_transactions')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (creditError) throw creditError;
+
+      // Buscar assinaturas
+      const { data: subscriptionData, error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (subscriptionError) throw subscriptionError;
       
-      // Mapear os dados da tabela para a interface UserTransaction
-      return (data || []).map(transaction => {
-        // Determinar o método de pagamento baseado no payment_id
+      // Mapear transações de créditos
+      const creditTransactions = (creditData || []).map(transaction => {
+        // Determinar o método de pagamento baseado no payment_id ou payment_provider
         let paymentMethod = 'Mercado Pago';
-        if (transaction.payment_id && transaction.payment_id.startsWith('pix_')) {
+        if (transaction.payment_id && transaction.payment_id.toLowerCase().includes('pix')) {
           paymentMethod = 'PIX';
         } else if (transaction.payment_provider === 'mercadopago') {
           paymentMethod = 'Mercado Pago';
@@ -55,9 +67,53 @@ export const useUserTransactions = () => {
           status: transaction.status as 'pending' | 'completed' | 'failed',
           created_at: transaction.created_at,
           completed_at: transaction.completed_at,
+          transaction_type: 'credits' as const,
           metadata: {}
         };
-      }) as UserTransaction[];
+      });
+
+      // Mapear assinaturas
+      const subscriptionTransactions = (subscriptionData || []).map(subscription => {
+        // Determinar o método de pagamento baseado no payment_provider
+        let paymentMethod = 'PIX';
+        if (subscription.payment_provider === 'mercadopago') {
+          paymentMethod = 'PIX'; // Mercado Pago via PIX
+        } else if (subscription.payment_provider === 'stripe') {
+          paymentMethod = 'Cartão de Crédito';
+        }
+
+        // Normalizar status para interface
+        let normalizedStatus: 'pending' | 'completed' | 'failed' | 'active' | 'expired' = 'pending';
+        if (subscription.status === 'active') {
+          normalizedStatus = 'active';
+        } else if (subscription.status === 'expired') {
+          normalizedStatus = 'expired';
+        } else if (subscription.status === 'trial') {
+          normalizedStatus = 'active';
+        }
+
+        return {
+          id: subscription.id,
+          user_id: subscription.user_id,
+          amount: subscription.amount || 0,
+          bonus_credits: 0,
+          total_credits: 0,
+          payment_id: subscription.payment_provider_subscription_id || 'Assinatura',
+          payment_method: paymentMethod,
+          status: normalizedStatus,
+          created_at: subscription.created_at,
+          completed_at: subscription.started_at,
+          transaction_type: 'subscription' as const,
+          plan_type: subscription.plan_type,
+          metadata: {}
+        };
+      });
+
+      // Combinar e ordenar por data
+      const allTransactions = [...creditTransactions, ...subscriptionTransactions]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      return allTransactions as UserTransaction[];
     },
     enabled: !!user?.id,
   });
@@ -65,11 +121,14 @@ export const useUserTransactions = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return { color: 'bg-green-500', text: 'Completado' };
+      case 'active':
+        return { color: 'bg-green-500', text: 'Ativo' };
       case 'pending':
         return { color: 'bg-yellow-500', text: 'Pendente' };
       case 'failed':
         return { color: 'bg-red-500', text: 'Falhou' };
+      case 'expired':
+        return { color: 'bg-gray-500', text: 'Expirado' };
       default:
         return { color: 'bg-gray-500', text: 'Desconhecido' };
     }
