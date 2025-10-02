@@ -145,7 +145,7 @@ export const useMenuItems = () => {
         icon: Trash2,
         path: '/dashboard/trash',
         functionKey: 'trash',
-        isPro: false
+        isPro: true
       },
       {
         label: 'Administração',
