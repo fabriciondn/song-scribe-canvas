@@ -1,9 +1,19 @@
 
-import { useEffect } from 'react';
-import { useImpersonation } from '@/context/ImpersonationContext';
+import { useEffect, useContext } from 'react';
+import { ImpersonationContext } from '@/context/ImpersonationContext';
 
 export const useImpersonationSync = () => {
-  const { startImpersonation, stopImpersonation, isImpersonating } = useImpersonation();
+  // Usar contexto de forma segura (pode não existir em algumas rotas)
+  const impersonationContext = useContext(ImpersonationContext);
+  
+  // Se o contexto não existir, retornar função vazia
+  if (!impersonationContext) {
+    return {
+      stopImpersonationGlobally: () => {}
+    };
+  }
+  
+  const { startImpersonation, stopImpersonation, isImpersonating } = impersonationContext;
 
   // Sincronizar estado de impersonação via localStorage
   useEffect(() => {
