@@ -1,11 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useImpersonation } from '@/context/ImpersonationContext';
+import { ImpersonationContext } from '@/context/ImpersonationContext';
 
 export const useAffiliateRole = () => {
   const { user } = useAuth();
-  const { isImpersonating, impersonatedUser } = useImpersonation();
+  
+  // Usar contexto de forma segura (pode não existir em algumas rotas)
+  const impersonationContext = useContext(ImpersonationContext);
+  const isImpersonating = impersonationContext?.isImpersonating || false;
+  const impersonatedUser = impersonationContext?.impersonatedUser;
+  
   const [isAffiliate, setIsAffiliate] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 

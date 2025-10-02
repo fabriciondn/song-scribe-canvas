@@ -1,6 +1,6 @@
 
-import { useImpersonation } from '@/context/ImpersonationContext';
-import { useState, useEffect, useMemo } from 'react';
+import { ImpersonationContext } from '@/context/ImpersonationContext';
+import { useState, useEffect, useMemo, useContext } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAffiliateRole } from '@/hooks/useAffiliateRole';
@@ -17,7 +17,12 @@ interface UserRole {
 
 export const useUserRole = (): UserRole => {
   const { user } = useAuth();
-  const { isImpersonating, impersonatedUser } = useImpersonation();
+  
+  // Usar contexto de forma segura (pode não existir em algumas rotas)
+  const impersonationContext = useContext(ImpersonationContext);
+  const isImpersonating = impersonationContext?.isImpersonating || false;
+  const impersonatedUser = impersonationContext?.impersonatedUser;
+  
   const { isPro: subscriptionIsPro, isLoading: subscriptionLoading } = useSubscription();
   const { isAffiliate, isLoading: affiliateLoading } = useAffiliateRole();
   const [adminRole, setAdminRole] = useState<string | null>(null);
