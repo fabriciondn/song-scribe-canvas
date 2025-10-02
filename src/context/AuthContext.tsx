@@ -17,6 +17,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   session: Session | null;
 }
 
@@ -29,6 +30,7 @@ export const AuthContext = createContext<AuthContextType>({
   register: async () => {},
   loginWithGoogle: async () => {},
   logout: async () => {},
+  resetPassword: async () => {},
   session: null
 });
 
@@ -179,6 +181,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Reset password function
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/dashboard`
+      });
+
+      if (error) throw error;
+      
+      console.log('📧 Email de redefinição de senha enviado');
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -189,6 +207,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         register,
         loginWithGoogle,
         logout,
+        resetPassword,
         session
       }}
     >

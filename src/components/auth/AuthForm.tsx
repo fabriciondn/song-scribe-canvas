@@ -18,8 +18,10 @@ export const AuthForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   
-  const { login, register, loginWithGoogle } = useAuth();
+  const { login, register, loginWithGoogle, resetPassword } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,7 +89,88 @@ export const AuthForm: React.FC = () => {
   const toggleMode = () => {
     setMode(mode === 'login' ? 'register' : 'login');
     setError('');
+    setShowForgotPassword(false);
   };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+    
+    try {
+      await resetPassword(resetEmail);
+      toast({
+        title: 'E-mail enviado!',
+        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+      });
+      setShowForgotPassword(false);
+      setResetEmail('');
+    } catch (error: any) {
+      console.error('Erro ao enviar e-mail:', error);
+      setError('Erro ao enviar e-mail de redefinição. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (showForgotPassword) {
+    return (
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">
+            Esqueci minha senha
+          </CardTitle>
+          <CardDescription className="text-center">
+            Digite seu e-mail para receber um link de redefinição de senha.
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleForgotPassword}>
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">E-mail</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                placeholder="seu@email.com"
+                required
+              />
+            </div>
+          </CardContent>
+          
+          <CardFooter className="flex flex-col space-y-4">
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Enviando...' : 'Enviar link de redefinição'}
+            </Button>
+            
+            <Button 
+              variant="link" 
+              className="w-full" 
+              onClick={() => {
+                setShowForgotPassword(false);
+                setError('');
+              }} 
+              type="button"
+              disabled={isSubmitting}
+            >
+              Voltar para o login
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -136,7 +219,19 @@ export const AuthForm: React.FC = () => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Senha</Label>
+              {mode === 'login' && (
+                <Button
+                  variant="link"
+                  type="button"
+                  className="px-0 h-auto text-xs"
+                  onClick={() => setShowForgotPassword(true)}
+                >
+                  Esqueci minha senha
+                </Button>
+              )}
+            </div>
             <Input
               id="password"
               type="password"
