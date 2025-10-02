@@ -170,7 +170,7 @@ export const useMenuItems = () => {
       }
     ];
 
-    // Filtrar itens baseado no status das funções e plano do usuário
+    // Filtrar itens baseado no status das funções
     return baseItems
       .map(item => {
         const func = functions.find(f => f.function_key === item.functionKey);
@@ -180,11 +180,8 @@ export const useMenuItems = () => {
         };
       })
       .filter(item => {
-        // Remove itens ocultos ou inativos
+        // Remove apenas itens ocultos ou inativos
         if (item.isHidden) return false;
-        
-        // Se é usuário free, apenas mostra funções não-Pro
-        if (!isPro && item.isPro) return false;
         
         return true;
       });
