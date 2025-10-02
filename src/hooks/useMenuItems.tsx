@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useMenuFunctions } from '@/hooks/useMenuFunctions';
+import { useUserRole } from '@/hooks/useUserRole';
 import { 
   BarChart3, 
   Shield, 
@@ -30,6 +31,7 @@ export interface MenuItem {
 
 export const useMenuItems = () => {
   const { functions, loading } = useMenuFunctions();
+  const { isPro } = useUserRole();
 
   const menuItems = useMemo(() => {
     const baseItems: MenuItem[] = [
@@ -168,7 +170,7 @@ export const useMenuItems = () => {
       }
     ];
 
-    // Filtrar itens baseado no status das funções
+    // Filtrar itens baseado no status das funções e plano do usuário
     return baseItems
       .map(item => {
         const func = functions.find(f => f.function_key === item.functionKey);
@@ -177,8 +179,16 @@ export const useMenuItems = () => {
           isHidden: func?.is_hidden || func?.status !== 'available' || false
         };
       })
-      .filter(item => !item.isHidden); // Remove itens ocultos ou inativos do menu
-  }, [functions]);
+      .filter(item => {
+        // Remove itens ocultos ou inativos
+        if (item.isHidden) return false;
+        
+        // Se é usuário free, apenas mostra funções não-Pro
+        if (!isPro && item.isPro) return false;
+        
+        return true;
+      });
+  }, [functions, isPro]);
 
   return {
     menuItems,

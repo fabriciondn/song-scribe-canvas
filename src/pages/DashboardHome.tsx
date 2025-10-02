@@ -29,11 +29,13 @@ import {
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { useDashboardCardSelection } from '@/hooks/useDashboardCardSelection';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const DashboardHome: React.FC = () => {
   const { stats, isLoading, error } = useDashboardStats();
   const isMobile = useMobileDetection();
   const { expandedSections, toggleSection, isExpanded } = useDashboardCardSelection();
+  const { isPro } = useUserRole();
 
   if (isLoading) {
     return (
@@ -75,8 +77,8 @@ const DashboardHome: React.FC = () => {
         </CardSelector>
       </div>
 
-      {/* Resumo de Composições */}
-      {isExpanded('compositions') && (
+      {/* Resumo de Composições - Apenas Pro */}
+      {isPro && isExpanded('compositions') && (
         <Card className="hover:shadow-lg transition-all duration-200">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
@@ -131,8 +133,8 @@ const DashboardHome: React.FC = () => {
       )}
 
 
-      {/* Parcerias */}
-      {isExpanded('partnerships') && (
+      {/* Parcerias - Apenas Pro */}
+      {isPro && isExpanded('partnerships') && (
         <Card className="hover:shadow-lg transition-all duration-200">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
@@ -230,8 +232,8 @@ const DashboardHome: React.FC = () => {
       {/* Organização de Pastas e Modelos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Organização de Pastas */}
-        {isExpanded('folders') && (
+        {/* Organização de Pastas - Apenas Pro */}
+        {isPro && isExpanded('folders') && (
           <Card className="hover:shadow-lg transition-all duration-200">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2">

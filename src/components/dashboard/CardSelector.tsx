@@ -10,6 +10,7 @@ import {
   Folder, 
   FileText
 } from 'lucide-react';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface CardSelectorProps {
   expandedSections: string[];
@@ -18,10 +19,10 @@ interface CardSelectorProps {
 }
 
 const cardOptions = [
-  { id: 'compositions', name: 'Composições', icon: Edit, color: 'text-blue-600' },
-  { id: 'partnerships', name: 'Parcerias', icon: Users, color: 'text-purple-600' },
-  { id: 'registeredWorks', name: 'Obras Registradas', icon: Shield, color: 'text-green-600' },
-  { id: 'folders', name: 'Pastas', icon: Folder, color: 'text-yellow-600' },
+  { id: 'compositions', name: 'Composições', icon: Edit, color: 'text-blue-600', isPro: true },
+  { id: 'partnerships', name: 'Parcerias', icon: Users, color: 'text-purple-600', isPro: true },
+  { id: 'registeredWorks', name: 'Obras Registradas', icon: Shield, color: 'text-green-600', isPro: false },
+  { id: 'folders', name: 'Pastas', icon: Folder, color: 'text-yellow-600', isPro: true },
 ];
 
 export const CardSelector: React.FC<CardSelectorProps> = ({ 
@@ -29,6 +30,11 @@ export const CardSelector: React.FC<CardSelectorProps> = ({
   onToggleSection, 
   children 
 }) => {
+  const { isPro } = useUserRole();
+  
+  // Filtrar cards disponíveis baseado no plano
+  const availableCards = cardOptions.filter(card => isPro || !card.isPro);
+  
   const handleSelectAll = () => {
     if (expandedSections.includes('all')) {
       onToggleSection('all');
@@ -65,7 +71,7 @@ export const CardSelector: React.FC<CardSelectorProps> = ({
               Ou selecione cards individuais:
             </p>
             <div className="grid grid-cols-1 gap-2">
-              {cardOptions.map((option) => {
+              {availableCards.map((option) => {
                 const Icon = option.icon;
                 const isSelected = expandedSections.includes(option.id);
                 
