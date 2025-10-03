@@ -17,7 +17,7 @@ export const ComposersCarousel: React.FC = () => {
     { 
       loop: true, 
       dragFree: true,
-      align: 'start',
+      align: 'center',
     },
     [AutoScroll({ playOnInit: true, speed: 1, stopOnInteraction: false })]
   );
@@ -86,9 +86,9 @@ export const ComposersCarousel: React.FC = () => {
         <span className="text-primary">Plataforma</span>
       </h3>
       
-      <div className="flex justify-center items-center">
-        <div className="overflow-hidden max-w-5xl" ref={emblaRef}>
-          <div className="flex gap-12 justify-center">
+      <div className="w-full px-4 md:px-8 mx-auto">
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex gap-8 md:gap-12">
             {composers.map((composer) => (
               <div 
                 key={composer.id} 
