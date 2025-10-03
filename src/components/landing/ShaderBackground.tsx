@@ -132,8 +132,8 @@ const fragmentShader = `
     vec3 bright= vec3(0.11, 0.86, 0.46);   // ~#1ED760 (spotify-like)
     vec3 c = mix(deep,  mid,  smoothstep(0.10, 0.60, t));
     c = mix(c,  bright, smoothstep(0.60, 1.00, t));
-    // leve pulso pra dar vida
-    float pulse = 0.05 * sin(0.7 * iTime);
+    // pulso mais intenso pra dar vida
+    float pulse = 0.12 * sin(0.7 * iTime);
     c += pulse * t;
     return clamp(c, 0.0, 1.0);
   }
@@ -141,8 +141,8 @@ const fragmentShader = `
   void main() {
     vec2 uv = vUv * 2.0 - 1.0; uv.y *= -1.0;
 
-    // base procedural
-    vec4 base = cppn_fn(uv, 0.1 * sin(0.3 * iTime), 0.1 * sin(0.69 * iTime), 0.1 * sin(0.44 * iTime));
+    // base procedural com animação mais intensa
+    vec4 base = cppn_fn(uv, 0.25 * sin(0.3 * iTime), 0.25 * sin(0.69 * iTime), 0.25 * sin(0.44 * iTime));
 
     // luminância como chave de paleta
     float l = clamp((base.x + base.y + base.z) / 3.0, 0.0, 1.0);
