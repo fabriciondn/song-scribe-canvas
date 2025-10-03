@@ -24,14 +24,39 @@ export const ComposersCarousel: React.FC = () => {
 
   useEffect(() => {
     const fetchComposers = async () => {
-      const { data, error } = await supabase
+      // Buscar perfis públicos com avatar
+      const { data: profilesWithAvatar, error: error1 } = await supabase
         .from('profiles')
         .select('id, name, artistic_name, avatar_url')
         .not('name', 'is', null)
-        .limit(20);
+        .not('avatar_url', 'is', null)
+        .limit(10);
 
-      if (!error && data) {
-        setComposers(data);
+      // Buscar perfis públicos sem avatar para completar
+      const { data: profilesWithoutAvatar, error: error2 } = await supabase
+        .from('profiles')
+        .select('id, name, artistic_name, avatar_url')
+        .not('name', 'is', null)
+        .is('avatar_url', null)
+        .limit(10);
+
+      const allProfiles = [
+        ...(profilesWithAvatar || []),
+        ...(profilesWithoutAvatar || [])
+      ];
+
+      if (allProfiles.length > 0) {
+        setComposers(allProfiles);
+      } else {
+        // Compositores de exemplo se não houver dados
+        setComposers([
+          { id: '1', name: 'Beatriz Alves', artistic_name: null, avatar_url: null },
+          { id: '2', name: 'Lucas Ferreira', artistic_name: null, avatar_url: null },
+          { id: '3', name: 'Camila Rocha', artistic_name: null, avatar_url: null },
+          { id: '4', name: 'Bruno Martins', artistic_name: null, avatar_url: null },
+          { id: '5', name: 'Fernanda Cruz', artistic_name: null, avatar_url: null },
+          { id: '6', name: 'Diego Pereira', artistic_name: null, avatar_url: null },
+        ]);
       }
     };
 
