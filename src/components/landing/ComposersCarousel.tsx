@@ -17,9 +17,9 @@ export const ComposersCarousel: React.FC = () => {
     { 
       loop: true, 
       dragFree: true,
-      align: 'center',
+      align: 'start',
     },
-    [AutoScroll({ playOnInit: true, speed: 1, stopOnInteraction: false })]
+    [AutoScroll({ playOnInit: true, speed: 0.5, stopOnInteraction: false })]
   );
 
   useEffect(() => {
@@ -79,6 +79,9 @@ export const ComposersCarousel: React.FC = () => {
 
   if (composers.length === 0) return null;
 
+  // Duplicar compositores 3x para efeito infinito contínuo
+  const infiniteComposers = [...composers, ...composers, ...composers];
+
   return (
     <div className="w-full">
       <h3 className="text-2xl md:text-3xl font-bold text-center mb-8">
@@ -86,29 +89,27 @@ export const ComposersCarousel: React.FC = () => {
         <span className="text-primary">Plataforma</span>
       </h3>
       
-      <div className="flex justify-center">
-        <div className="overflow-hidden w-full" ref={emblaRef}>
-          <div className="flex gap-8 md:gap-12 justify-center">
-            {composers.map((composer) => (
-              <div 
-                key={composer.id} 
-                className="flex-[0_0_auto] flex flex-col items-center gap-3"
-              >
-                <Avatar className="h-32 w-32 border-4 border-primary/20">
-                  <AvatarImage 
-                    src={composer.avatar_url || undefined} 
-                    alt={getDisplayName(composer)}
-                  />
-                  <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
-                    {getInitials(composer)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium text-gray-300 text-center max-w-[120px] truncate">
-                  {getDisplayName(composer)}
-                </span>
-              </div>
-            ))}
-          </div>
+      <div className="w-full overflow-hidden" ref={emblaRef}>
+        <div className="flex gap-6">
+          {infiniteComposers.map((composer, index) => (
+            <div 
+              key={`${composer.id}-${index}`} 
+              className="flex-shrink-0 flex flex-col items-center gap-3"
+            >
+              <Avatar className="h-28 w-28 md:h-32 md:w-32 border-4 border-primary/20">
+                <AvatarImage 
+                  src={composer.avatar_url || undefined} 
+                  alt={getDisplayName(composer)}
+                />
+                <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
+                  {getInitials(composer)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium text-gray-300 text-center max-w-[120px] truncate">
+                {getDisplayName(composer)}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -11,14 +11,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onGetStarted,
   onLearnMore
 }) => {
-  return <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
+  return <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden py-20">
       {/* Shader Background */}
       <ShaderBackground />
       
       {/* Overlay escuro para melhor contraste */}
       <div className="absolute inset-0 bg-black/40" />
       
-    <div className="relative z-10 max-w-7xl mx-auto">
+      {/* Conteúdo principal com max-width */}
+      <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
           <div className="text-center lg:text-left space-y-8">
@@ -68,11 +69,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
           </div>
         </div>
-        
-        {/* Composers Carousel - Full width section */}
-        <div className="mt-16">
-          <ComposersCarousel />
-        </div>
+      </div>
+      
+      {/* Composers Carousel - Full width, fora do container */}
+      <div className="relative z-10 w-full mt-16">
+        <ComposersCarousel />
       </div>
     </section>;
 };
