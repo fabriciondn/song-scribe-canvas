@@ -1,14 +1,13 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Clock, Shield, Sparkles } from 'lucide-react';
-
 interface FinalCTASectionProps {
   onGetStarted: () => void;
 }
-
-export const FinalCTASection: React.FC<FinalCTASectionProps> = ({ onGetStarted }) => {
-  return (
-    <section className="py-24 px-6 relative overflow-hidden">
+export const FinalCTASection: React.FC<FinalCTASectionProps> = ({
+  onGetStarted
+}) => {
+  return <section className="py-24 px-6 relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-black to-green-500/20" />
       
@@ -46,30 +45,29 @@ export const FinalCTASection: React.FC<FinalCTASectionProps> = ({ onGetStarted }
           
           {/* Features highlight */}
           <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto my-12">
-            {[
-              { icon: Clock, text: "Certificado em 5 minutos" },
-              { icon: Shield, text: "100% válido juridicamente" },
-              { icon: Sparkles, text: "IA criativa incluída" }
-            ].map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div key={index} className="flex items-center gap-3 justify-center md:justify-start">
+            {[{
+            icon: Clock,
+            text: "Certificado em 5 minutos"
+          }, {
+            icon: Shield,
+            text: "100% válido juridicamente"
+          }, {
+            icon: Sparkles,
+            text: "IA criativa incluída"
+          }].map((feature, index) => {
+            const Icon = feature.icon;
+            return <div key={index} className="flex items-center gap-3 justify-center md:justify-start">
                   <div className="w-10 h-10 bg-gradient-to-br from-primary/30 to-green-400/30 rounded-full flex items-center justify-center">
                     <Icon className="w-5 h-5 text-primary" />
                   </div>
                   <span className="text-gray-300 font-medium">{feature.text}</span>
-                </div>
-              );
-            })}
+                </div>;
+          })}
           </div>
           
           {/* Main CTA button */}
           <div className="space-y-6">
-            <Button 
-              onClick={onGetStarted}
-              size="lg"
-              className="group relative px-12 py-6 text-xl font-bold bg-gradient-to-r from-primary to-green-400 hover:from-green-400 hover:to-primary text-black shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all duration-500 hover:scale-110"
-            >
+            <Button onClick={onGetStarted} size="lg" className="group relative px-12 py-6 text-xl font-bold bg-gradient-to-r from-primary to-green-400 hover:from-green-400 hover:to-primary text-black shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all duration-500 hover:scale-110">
               Comece agora gratuitamente
               <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-2 transition-transform duration-300" />
             </Button>
@@ -77,7 +75,7 @@ export const FinalCTASection: React.FC<FinalCTASectionProps> = ({ onGetStarted }
             {/* Trust indicators */}
             <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-gray-500">
               <span>✓ Sem cartão de crédito</span>
-              <span>✓ Teste grátis por 7 dias</span>
+              <span>✓ Teste grátis por 15 dias</span>
               <span>✓ Suporte 24/7</span>
             </div>
           </div>
@@ -112,6 +110,5 @@ export const FinalCTASection: React.FC<FinalCTASectionProps> = ({ onGetStarted }
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
