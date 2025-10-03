@@ -2,15 +2,15 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Play } from 'lucide-react';
 import { ShaderBackground } from './ShaderBackground';
-
 interface HeroSectionProps {
   onGetStarted: () => void;
   onLearnMore: () => void;
 }
-
-export const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, onLearnMore }) => {
-  return (
-    <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
+export const HeroSection: React.FC<HeroSectionProps> = ({
+  onGetStarted,
+  onLearnMore
+}) => {
+  return <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
       {/* Shader Background */}
       <ShaderBackground />
       
@@ -26,7 +26,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, onLearnM
               <span className="bg-gradient-to-r from-primary to-green-300 bg-clip-text text-transparent">
                 músicas
               </span>{' '}
-              <span className="text-white">com segurança</span>
+              <span className="text-white">em apenas 5 minutos</span>
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-300 max-w-2xl">
@@ -42,21 +42,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, onLearnM
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-            <Button 
-              onClick={onGetStarted}
-              size="lg"
-              className="group relative px-8 py-4 text-lg font-semibold bg-gradient-to-r from-primary to-green-400 hover:from-green-400 hover:to-primary text-black shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300 hover:scale-105"
-            >
+            <Button onClick={onGetStarted} size="lg" className="group relative px-8 py-4 text-lg font-semibold bg-gradient-to-r from-primary to-green-400 hover:from-green-400 hover:to-primary text-black shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300 hover:scale-105">
               Começar agora
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
             
-            <Button
-              onClick={onLearnMore}
-              variant="outline"
-              size="lg"
-              className="px-8 py-4 text-lg font-semibold border-gray-600 text-gray-300 hover:border-primary hover:text-white hover:bg-primary/10 transition-all duration-300"
-            >
+            <Button onClick={onLearnMore} variant="outline" size="lg" className="px-8 py-4 text-lg font-semibold border-gray-600 text-gray-300 hover:border-primary hover:text-white hover:bg-primary/10 transition-all duration-300">
               <Play className="mr-2 h-5 w-5" />
               Saiba mais
             </Button>
@@ -76,6 +67,5 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, onLearnM
         </div>
         
       </div>
-    </section>
-  );
+    </section>;
 };
