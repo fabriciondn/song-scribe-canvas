@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Play } from 'lucide-react';
 import { ShaderBackground } from './ShaderBackground';
+import { ComposersCarousel } from './ComposersCarousel';
 interface HeroSectionProps {
   onGetStarted: () => void;
   onLearnMore: () => void;
@@ -64,6 +65,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <span>Validade jurídica garantida</span>
             </div>
           </div>
+
+          {/* Composers Carousel */}
+          <ComposersCarousel />
         </div>
         
       </div>
