@@ -80,33 +80,30 @@ export const ComposersCarousel: React.FC = () => {
   if (composers.length === 0) return null;
 
   return (
-    <div className="w-full mt-12">
-      <h3 className="text-center text-lg md:text-xl font-semibold mb-8">
-        <span className="text-white">Compositores na </span>
+    <div className="w-full">
+      <h3 className="text-2xl md:text-3xl font-bold text-center mb-8">
+        Compositores na{' '}
         <span className="text-primary">Plataforma</span>
       </h3>
       
-      <div className="w-full px-4 md:px-8 mx-auto">
-        <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex gap-8 md:gap-12">
+      <div className="flex justify-center">
+        <div className="overflow-hidden w-full" ref={emblaRef}>
+          <div className="flex gap-8 md:gap-12 justify-center">
             {composers.map((composer) => (
               <div 
                 key={composer.id} 
                 className="flex-[0_0_auto] flex flex-col items-center gap-3"
               >
-                <Avatar className="h-28 w-28 md:h-32 md:w-32 border-2 border-primary/20 hover:border-primary transition-all duration-300 hover:scale-105">
-                  {composer.avatar_url ? (
-                    <AvatarImage 
-                      src={composer.avatar_url} 
-                      alt={getDisplayName(composer)}
-                      className="object-cover"
-                    />
-                  ) : null}
-                  <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
+                <Avatar className="h-32 w-32 border-4 border-primary/20">
+                  <AvatarImage 
+                    src={composer.avatar_url || undefined} 
+                    alt={getDisplayName(composer)}
+                  />
+                  <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
                     {getInitials(composer)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm text-gray-300 max-w-[120px] text-center truncate">
+                <span className="text-sm font-medium text-gray-300 text-center max-w-[120px] truncate">
                   {getDisplayName(composer)}
                 </span>
               </div>
