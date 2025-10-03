@@ -181,7 +181,7 @@ function ShaderPlane() {
 
   return (
     <mesh ref={meshRef}>
-      <planeGeometry args={[2, 2]} />
+      <planeGeometry args={[10, 10]} />
       <shaderMaterial
         uniforms={uniforms}
         vertexShader={vertexShader}
