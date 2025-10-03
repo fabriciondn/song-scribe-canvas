@@ -11,7 +11,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onGetStarted,
   onLearnMore
 }) => {
-  return <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-0 pb-20">
+  return <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-20 pb-20">
       {/* Shader Background */}
       <ShaderBackground />
       

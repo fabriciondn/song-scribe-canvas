@@ -88,7 +88,7 @@ const Index: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="pt-16">
+      <main>
         {/* Hero Section */}
         <HeroSection 
           onGetStarted={handleGetStarted}
