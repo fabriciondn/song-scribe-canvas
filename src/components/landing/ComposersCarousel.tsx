@@ -81,35 +81,37 @@ export const ComposersCarousel: React.FC = () => {
 
   return (
     <div className="w-full mt-12">
-      <h3 className="text-center text-lg md:text-xl font-semibold mb-6">
+      <h3 className="text-center text-lg md:text-xl font-semibold mb-8">
         <span className="text-white">Compositores na </span>
         <span className="text-primary">Plataforma</span>
       </h3>
       
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex gap-8">
-          {composers.map((composer) => (
-            <div 
-              key={composer.id} 
-              className="flex-[0_0_auto] flex flex-col items-center gap-3"
-            >
-              <Avatar className="h-24 w-24 border-2 border-primary/20 hover:border-primary transition-all duration-300 hover:scale-105">
-                {composer.avatar_url ? (
-                  <AvatarImage 
-                    src={composer.avatar_url} 
-                    alt={getDisplayName(composer)}
-                    className="object-cover"
-                  />
-                ) : null}
-                <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
-                  {getInitials(composer)}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm text-gray-300 max-w-[100px] text-center truncate">
-                {getDisplayName(composer)}
-              </span>
-            </div>
-          ))}
+      <div className="flex justify-center items-center">
+        <div className="overflow-hidden max-w-5xl" ref={emblaRef}>
+          <div className="flex gap-12 justify-center">
+            {composers.map((composer) => (
+              <div 
+                key={composer.id} 
+                className="flex-[0_0_auto] flex flex-col items-center gap-3"
+              >
+                <Avatar className="h-28 w-28 md:h-32 md:w-32 border-2 border-primary/20 hover:border-primary transition-all duration-300 hover:scale-105">
+                  {composer.avatar_url ? (
+                    <AvatarImage 
+                      src={composer.avatar_url} 
+                      alt={getDisplayName(composer)}
+                      className="object-cover"
+                    />
+                  ) : null}
+                  <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
+                    {getInitials(composer)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm text-gray-300 max-w-[120px] text-center truncate">
+                  {getDisplayName(composer)}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
