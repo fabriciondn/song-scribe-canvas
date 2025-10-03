@@ -42,46 +42,6 @@ export const BenefitsSection: React.FC = () => {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-8">
-          {benefits.map((benefit, index) => {
-            const Icon = benefit.icon;
-            return (
-              <div
-                key={index}
-                className="group glass-card p-8 rounded-2xl border border-gray-800/50 hover:border-primary/30 transition-all duration-500 hover:scale-105 relative overflow-hidden"
-              >
-                {/* Card glow effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-green-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
-                <div className="relative z-10">
-                  {/* Icon */}
-                  <div className="mb-6 relative">
-                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-green-400/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <Icon className="w-8 h-8 text-primary" />
-                    </div>
-                    
-                    {/* Highlight badge */}
-                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-primary to-green-400 text-black text-xs font-bold px-3 py-1 rounded-full">
-                      {benefit.highlight}
-                    </div>
-                  </div>
-                  
-                  {/* Content */}
-                  <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-primary transition-colors duration-300">
-                    {benefit.title}
-                  </h3>
-                  
-                  <p className="text-gray-400 text-lg leading-relaxed group-hover:text-gray-300 transition-colors duration-300">
-                    {benefit.description}
-                  </p>
-                </div>
-                
-                {/* Hover effect overlay */}
-                <div className="absolute inset-0 border border-primary/0 group-hover:border-primary/20 rounded-2xl transition-all duration-500" />
-              </div>
-            );
-          })}
-        </div>
       </div>
     </section>
   );

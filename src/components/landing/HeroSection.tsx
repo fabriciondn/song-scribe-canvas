@@ -75,33 +75,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, onLearnM
           </div>
         </div>
         
-        {/* Visual mockup */}
-        <div className="relative">
-          <div className="glass-card p-8 rounded-2xl shadow-2xl shadow-primary/20 border border-gray-800/50">
-            <div className="aspect-[4/3] bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-red-500 rounded-full" />
-                <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-                <div className="w-3 h-3 bg-green-500 rounded-full" />
-              </div>
-              
-              <div className="space-y-3">
-                <div className="h-4 bg-gradient-to-r from-primary/50 to-green-400/50 rounded animate-pulse" />
-                <div className="h-3 bg-gray-700 rounded w-3/4" />
-                <div className="h-3 bg-gray-700 rounded w-1/2" />
-                <div className="mt-6 h-8 bg-gradient-to-r from-primary to-green-400 rounded animate-pulse" />
-              </div>
-            </div>
-          </div>
-          
-          {/* Floating elements */}
-          <div className="absolute -top-6 -right-6 glass-card p-4 rounded-xl shadow-lg border border-primary/20">
-            <div className="flex items-center gap-2 text-sm text-primary font-semibold">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              Registrando...
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );
