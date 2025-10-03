@@ -150,9 +150,9 @@ const fragmentShader = `
     // cor final em tons de verde
     vec3 col = emeraldPalette(l);
 
-    // vignette sutil
+    // vignette sutil e suave nas bordas
     float r = length(uv);
-    col *= smoothstep(1.2, 0.0, r - 0.05);
+    col *= smoothstep(1.8, 0.3, r);
 
     gl_FragColor = vec4(col, 1.0);
   }

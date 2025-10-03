@@ -11,7 +11,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onGetStarted,
   onLearnMore
 }) => {
-  return <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden py-20">
+  return <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-0 pb-20">
       {/* Shader Background */}
       <ShaderBackground />
       
@@ -72,7 +72,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
       
       {/* Composers Carousel - Full width, fora do container */}
-      <div className="relative z-10 w-full mt-16">
+      <div className="relative z-10 w-full mt-12">
         <ComposersCarousel />
       </div>
     </section>;
