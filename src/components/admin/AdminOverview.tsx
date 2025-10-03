@@ -28,6 +28,8 @@ export const AdminOverview: React.FC = () => {
     queryKey: ['revenue-transactions'],
     queryFn: getRevenueTransactions,
     enabled: showRevenueModal,
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   const { data: usersByPlan = [], isLoading: usersLoading } = useQuery({
