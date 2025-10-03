@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Play } from 'lucide-react';
+import { ShaderBackground } from './ShaderBackground';
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -10,14 +11,11 @@ interface HeroSectionProps {
 export const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, onLearnMore }) => {
   return (
     <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-green-950/20 to-black" />
+      {/* Shader Background */}
+      <ShaderBackground />
       
-      {/* Animated background elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-500/5 rounded-full blur-3xl animate-pulse delay-1000" />
-      </div>
+      {/* Overlay escuro para melhor contraste */}
+      <div className="absolute inset-0 bg-black/40" />
       
       <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
         {/* Content */}
