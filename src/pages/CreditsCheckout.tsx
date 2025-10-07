@@ -64,20 +64,19 @@ export default function CreditsCheckout() {
   }, [theme]);
 
   const calculatePricing = (creditAmount: number) => {
-    let unitPrice = 29.99;
+    let unitPrice = 19.99;
     let bonusCredits = 0;
     let savings = 0;
-    let originalPrice = 29.99 * creditAmount;
+    let originalPrice = 19.99 * creditAmount;
 
-    // Promoção de 10 créditos
+    // Super Oferta de 10 créditos + 2 grátis
     if (creditAmount === 10) {
-      unitPrice = 25.00;
+      unitPrice = 17.99;
       bonusCredits = 2;
-      savings = (29.99 - 25.00) * 10 + 2 * 29.99;
-    // Promoção de 5 créditos
-    } else if (creditAmount === 5) {
-      unitPrice = 25.00;
-      savings = (29.99 - 25.00) * 5;
+      // Preço original seria 12 créditos x 19,99 = 239,88
+      // Preço com oferta: 10 créditos x 17,99 = 179,90
+      originalPrice = 19.99 * 12; // 239,88
+      savings = originalPrice - (10 * unitPrice); // 239,88 - 179,90 = 59,98
     }
 
     let totalAmount = creditAmount * unitPrice;
@@ -400,48 +399,27 @@ export default function CreditsCheckout() {
                 </CardContent>
               </Card>
 
-              {/* Mobile Order Bumps */}
-              <div className="space-y-3">
-                <Card className={`border-2 cursor-pointer transition-all ${credits === 5 ? 'border-orange-500 bg-orange-50 dark:bg-orange-950' : 'border-orange-200 hover:border-orange-300'}`} onClick={() => setCredits(5)}>
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="bg-orange-100 p-1.5 rounded-full">
-                          <Gift className="h-3 w-3 text-orange-600" />
-                        </div>
-                         <div>
-                           <h3 className="font-semibold text-orange-800 dark:text-orange-200 text-sm">Oferta Especial - 5 Créditos</h3>
-                           <p className="text-xs text-orange-700 dark:text-orange-300">De R$ 29,99 por apenas R$ 25,00 cada</p>
-                         </div>
-                       </div>
-                       <div className="text-right">
-                         <div className="text-xs text-orange-600 dark:text-orange-400 line-through">R$ {(29.99*5).toFixed(2)}</div>
-                         <div className="text-sm font-bold text-orange-800 dark:text-orange-200">R$ {(25.00*5).toFixed(2)}</div>
+              {/* Mobile Order Bump */}
+              <Card className={`border-2 cursor-pointer transition-all ${credits === 10 ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-green-200 hover:border-green-300'}`} onClick={() => setCredits(10)}>
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-green-100 p-1.5 rounded-full">
+                        <Gift className="h-3 w-3 text-green-600" />
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className={`border-2 cursor-pointer transition-all ${credits === 10 ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-green-200 hover:border-green-300'}`} onClick={() => setCredits(10)}>
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="bg-green-100 p-1.5 rounded-full">
-                          <Gift className="h-3 w-3 text-green-600" />
-                        </div>
-                         <div>
-                           <h3 className="font-semibold text-green-800 dark:text-green-200 text-sm">Super Oferta - 10 + 2 GRÁTIS</h3>
-                           <p className="text-xs text-green-700 dark:text-green-300">12 créditos por R$ 25,00 cada (apenas os 10)</p>
-                         </div>
+                       <div>
+                         <h3 className="font-semibold text-green-800 dark:text-green-200 text-sm">Super Oferta</h3>
+                         <p className="text-xs text-green-700 dark:text-green-300 font-semibold">10 Créditos + 2 GRÁTIS</p>
+                         <p className="text-xs text-green-600 dark:text-green-400">12 créditos por R$ 17,99 cada (apenas os 10)</p>
                        </div>
-                       <div className="text-right">
-                         <div className="text-xs text-green-600 dark:text-green-400 line-through">R$ {(29.99*12).toFixed(2)}</div>
-                         <div className="text-sm font-bold text-green-800 dark:text-green-200">R$ {(25.00*10).toFixed(2)}</div>
-                      </div>
+                     </div>
+                     <div className="text-right">
+                       <div className="text-xs text-green-600 dark:text-green-400 line-through">R$ 239,88</div>
+                       <div className="text-sm font-bold text-green-800 dark:text-green-200">R$ 179,90</div>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Mobile Summary */}
               <Card>
@@ -586,41 +564,22 @@ export default function CreditsCheckout() {
                   </CardContent>
                 </Card>
 
-                {/* Desktop Order Bumps - Two separate cards */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  <Card className={`border-2 cursor-pointer transition-all ${credits === 5 ? 'border-orange-500 bg-orange-50 dark:bg-orange-950' : 'border-orange-200 hover:border-orange-300'}`} onClick={() => setCredits(5)}>
-                    <CardContent className="p-4">
-                      <div className="text-center space-y-3">
-                        <div className="bg-orange-100 p-3 rounded-full w-fit mx-auto">
-                          <Gift className="h-6 w-6 text-orange-600" />
-                        </div>
-                         <div>
-                           <h3 className="font-semibold text-orange-800 dark:text-orange-200 text-lg">Oferta Especial</h3>
-                           <p className="text-orange-700 dark:text-orange-300 font-medium">5 Créditos</p>
-                           <p className="text-sm text-orange-600 dark:text-orange-400">De R$ 29,99 por apenas R$ 25,00 cada</p>
-                         </div>
-                         <div className="text-center">
-                           <div className="text-sm text-orange-600 dark:text-orange-400 line-through">R$ {(29.99*5).toFixed(2)}</div>
-                           <div className="text-xl font-bold text-orange-800 dark:text-orange-200">R$ {(25.00*5).toFixed(2)}</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
+                {/* Desktop Order Bump */}
+                <div className="max-w-2xl mx-auto">
                   <Card className={`border-2 cursor-pointer transition-all ${credits === 10 ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-green-200 hover:border-green-300'}`} onClick={() => setCredits(10)}>
-                    <CardContent className="p-4">
+                    <CardContent className="p-6">
                       <div className="text-center space-y-3">
                         <div className="bg-green-100 p-3 rounded-full w-fit mx-auto">
                           <Gift className="h-6 w-6 text-green-600" />
                         </div>
                          <div>
-                           <h3 className="font-semibold text-green-800 dark:text-green-200 text-lg">Super Oferta</h3>
-                           <p className="text-green-700 dark:text-green-300 font-medium">10 Créditos + 2 GRÁTIS</p>
-                           <p className="text-sm text-green-600 dark:text-green-400">12 créditos por R$ 25,00 cada (apenas os 10)</p>
+                           <h3 className="font-semibold text-green-800 dark:text-green-200 text-xl">Super Oferta</h3>
+                           <p className="text-green-700 dark:text-green-300 font-medium text-lg">10 Créditos + 2 GRÁTIS</p>
+                           <p className="text-sm text-green-600 dark:text-green-400">12 créditos por R$ 17,99 cada (apenas os 10)</p>
                          </div>
                          <div className="text-center">
-                           <div className="text-sm text-green-600 dark:text-green-400 line-through">R$ {(29.99*12).toFixed(2)}</div>
-                           <div className="text-xl font-bold text-green-800 dark:text-green-200">R$ {(25.00*10).toFixed(2)}</div>
+                           <div className="text-sm text-green-600 dark:text-green-400 line-through">R$ 239,88</div>
+                           <div className="text-2xl font-bold text-green-800 dark:text-green-200">R$ 179,90</div>
                         </div>
                       </div>
                     </CardContent>
