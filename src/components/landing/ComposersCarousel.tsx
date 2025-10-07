@@ -22,19 +22,20 @@ export const ComposersCarousel: React.FC = () => {
   })]);
   useEffect(() => {
     const fetchComposers = async () => {
-      // Buscar perfis públicos com avatar
+      // Buscar TODOS os perfis públicos (sem limite)
       const {
-        data: profilesWithAvatar,
-        error: error1
-      } = await supabase.from('profiles').select('id, name, artistic_name, avatar_url').not('name', 'is', null).not('avatar_url', 'is', null).limit(10);
-
-      // Buscar perfis públicos sem avatar para completar
-      const {
-        data: profilesWithoutAvatar,
-        error: error2
-      } = await supabase.from('profiles').select('id, name, artistic_name, avatar_url').not('name', 'is', null).is('avatar_url', null).limit(10);
-      const allProfiles = [...(profilesWithAvatar || []), ...(profilesWithoutAvatar || [])];
-      if (allProfiles.length > 0) {
+        data: allProfiles,
+        error
+      } = await supabase
+        .from('profiles')
+        .select('id, name, artistic_name, avatar_url')
+        .not('name', 'is', null)
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Erro ao buscar compositores:', error);
+      }
+      
+      if (allProfiles && allProfiles.length > 0) {
         setComposers(allProfiles);
       } else {
         // Compositores de exemplo se não houver dados

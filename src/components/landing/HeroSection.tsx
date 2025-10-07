@@ -21,7 +21,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       {/* Conteúdo principal com max-width */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Content */}
+          {/* Content - Lado Esquerdo */}
           <div className="text-center lg:text-left space-y-8">
             <div className="space-y-4">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
@@ -66,6 +66,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse delay-500" />
                 <span>Validade jurídica garantida</span>
               </div>
+            </div>
+          </div>
+
+          {/* Video Player - Lado Direito */}
+          <div className="hidden lg:flex items-center justify-center">
+            <div className="relative w-full max-w-xl aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-primary/20 hover:border-primary/40 transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none z-10" />
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ?controls=1&modestbranding=1&rel=0"
+                title="Apresentação Compuse"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
           </div>
         </div>
