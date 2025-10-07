@@ -71,7 +71,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           {/* Video Player - Lado Direito */}
           <div className="hidden lg:flex items-center justify-center">
-            <div className="relative w-full max-w-xl aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-primary/20 hover:border-primary/40 transition-all duration-300">
+            <div className="relative w-full max-w-3xl aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-primary/20 hover:border-primary/40 transition-all duration-300">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none z-10" />
               <iframe
                 className="w-full h-full"
