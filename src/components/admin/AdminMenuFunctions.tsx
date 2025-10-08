@@ -107,24 +107,24 @@ export const AdminMenuFunctions = () => {
     },
   });
 
-  const handleToggleFunction = async (functionKey: string, currentStatus: string) => {
+  const handleToggleFunction = async (functionKey: string, currentIsHidden: boolean) => {
     setUpdatingFunction(functionKey);
     
     try {
-      const newStatus = currentStatus === 'available' ? 'maintenance' : 'available';
+      const newIsHidden = !currentIsHidden;
       
       const { error } = await supabase
         .from('menu_functions')
-        .update({ status: newStatus })
+        .update({ is_hidden: newIsHidden })
         .eq('function_key', functionKey);
 
       if (error) throw error;
 
-      toast.success(`Status da função atualizado para: ${newStatus === 'available' ? 'Disponível' : 'Manutenção'}`);
+      toast.success(`Função ${newIsHidden ? 'ocultada' : 'mostrada'} com sucesso`);
       refetchFunctions();
     } catch (error) {
       console.error('Erro ao atualizar função:', error);
-      toast.error('Erro ao atualizar status da função');
+      toast.error('Erro ao atualizar visibilidade da função');
     } finally {
       setUpdatingFunction(null);
     }
@@ -187,12 +187,12 @@ export const AdminMenuFunctions = () => {
                     {getStatusBadge(func.status)}
                     <div className="flex items-center gap-2">
                       <Switch
-                        checked={func.status === 'available'}
-                        onCheckedChange={() => handleToggleFunction(func.function_key, func.status)}
+                        checked={!func.is_hidden}
+                        onCheckedChange={() => handleToggleFunction(func.function_key, func.is_hidden || false)}
                         disabled={updatingFunction === func.function_key}
                       />
                       <span className="text-sm text-muted-foreground">
-                        {func.status === 'available' ? 'Ativo' : 'Inativo'}
+                        {!func.is_hidden ? 'Mostrar' : 'Ocultar'}
                       </span>
                     </div>
                   </div>
