@@ -47,7 +47,7 @@ export const AffiliateMetrics = () => {
   const progressPercentage = (levelProgress.current / levelProgress.target) * 100;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-2">
       {/* Progresso do Nível */}
       <Card>
         <CardHeader>
@@ -76,7 +76,7 @@ export const AffiliateMetrics = () => {
       </Card>
 
       {/* Grid de Métricas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Cliques Totais</CardTitle>
@@ -157,7 +157,7 @@ export const AffiliateMetrics = () => {
       </div>
 
       {/* Resumo Financeiro */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
           <CardHeader>
             <CardTitle className="text-green-800">Total Ganho</CardTitle>

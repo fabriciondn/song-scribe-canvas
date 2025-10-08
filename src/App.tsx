@@ -118,6 +118,7 @@ const AppContent = () => {
             <Route path="/moderator/debug" element={<ModeratorDashboard />} />
             <Route path="/moderator-auth" element={<ModeratorAuth />} />
             <Route path="/ref/:code" element={<AffiliateLink />} />
+            <Route path="/:code" element={<AffiliateLink />} />
             <Route path="/formulario" element={<PublicRegistrationForm />} />
             <Route path="/plans" element={<Dashboard />}>
               <Route index element={<Plans />} />

@@ -128,7 +128,7 @@ export default function AffiliateDashboard() {
         affiliate={affiliate}
       />
       
-      <main className="flex-1 ml-64 p-4 space-y-4 overflow-auto">
+      <main className="flex-1 ml-64 p-6 md:p-8 space-y-6 overflow-auto">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold">Painel do Afiliado</h1>
@@ -165,7 +165,7 @@ export default function AffiliateDashboard() {
 
         {/* Métricas Principais */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
                 <CardTitle className="text-xs font-medium">Total de Ganhos</CardTitle>
