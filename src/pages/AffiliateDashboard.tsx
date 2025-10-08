@@ -27,7 +27,17 @@ export default function AffiliateDashboard() {
   const { affiliate, stats, isLoading, isAffiliate, isPending, isRejected } = useAffiliate();
   const [activeSection, setActiveSection] = useState('overview');
 
-  const affiliateLink = affiliate ? `https://compuse/ref/${affiliate.affiliate_code}` : '';
+  // Extract last part of affiliate code for shorter link
+  const getShortCode = (code: string) => {
+    const parts = code.split('-');
+    if (parts.length >= 3) {
+      // Get last UUID part and name part
+      return `-${parts[parts.length - 2]}-${parts[parts.length - 1]}`;
+    }
+    return code;
+  };
+  
+  const affiliateLink = affiliate ? `https://compuse.com.br${getShortCode(affiliate.affiliate_code)}` : '';
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(affiliateLink);
@@ -127,13 +137,16 @@ export default function AffiliateDashboard() {
           </p>
         </div>
 
-        {/* Código do Afiliado */}
+        {/* Link Principal do Afiliado */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Link className="w-5 h-5" />
-              Seu Código de Afiliado
+              Seu Link Principal
             </CardTitle>
+            <CardDescription>
+              Use este link para compartilhar e ganhar comissões
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-muted rounded-lg">

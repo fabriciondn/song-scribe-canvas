@@ -5,13 +5,16 @@ import {
   DollarSign, 
   Wallet, 
   Trophy,
-  ChevronLeft
+  ChevronLeft,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '@/hooks/useProfile';
+import { useTheme } from '@/hooks/useTheme';
 
 interface AffiliateSidebarProps {
   activeSection: string;
@@ -25,6 +28,7 @@ interface AffiliateSidebarProps {
 export function AffiliateSidebar({ activeSection, onSectionChange, affiliate }: AffiliateSidebarProps) {
   const navigate = useNavigate();
   const { profile } = useProfile();
+  const { theme, toggleTheme } = useTheme();
 
   const menuItems = [
     { id: 'overview', label: 'Visão Geral', icon: Home },
@@ -95,15 +99,36 @@ export function AffiliateSidebar({ activeSection, onSectionChange, affiliate }: 
         })}
       </nav>
 
-      {/* Back to Dashboard Button */}
-      <Button
-        variant="outline"
-        className="w-full mt-4"
-        onClick={() => navigate('/dashboard')}
-      >
-        <ChevronLeft className="w-4 h-4 mr-2" />
-        Voltar ao Dashboard
-      </Button>
+      {/* Theme Toggle */}
+      <div className="border-t pt-4 space-y-2">
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={toggleTheme}
+        >
+          {theme === 'dark' ? (
+            <>
+              <Sun className="w-5 h-5 mr-3" />
+              <span className="font-medium">Modo Claro</span>
+            </>
+          ) : (
+            <>
+              <Moon className="w-5 h-5 mr-3" />
+              <span className="font-medium">Modo Escuro</span>
+            </>
+          )}
+        </Button>
+
+        {/* Back to Dashboard Button */}
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => navigate('/dashboard')}
+        >
+          <ChevronLeft className="w-4 h-4 mr-2" />
+          Voltar ao Dashboard
+        </Button>
+      </div>
     </aside>
   );
 }
