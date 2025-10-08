@@ -128,7 +128,7 @@ export default function AffiliateDashboard() {
         affiliate={affiliate}
       />
       
-      <main className="flex-1 p-4 space-y-4 overflow-auto">
+      <main className="flex-1 ml-64 p-4 space-y-4 overflow-auto">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold">Painel do Afiliado</h1>
