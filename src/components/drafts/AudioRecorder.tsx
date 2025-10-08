@@ -70,7 +70,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       };
       
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(audioBlob);
         
         // Determine the name for the new recording
