@@ -22,7 +22,12 @@ import {
   Shield, 
   UserCheck,
   User,
-  Crown
+  Crown,
+  TrendingUp,
+  ArrowUp,
+  CreditCard,
+  BookText,
+  Trophy
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
@@ -42,7 +47,12 @@ const iconMap: { [key: string]: any } = {
   Shield,
   UserCheck,
   User,
-  Crown
+  Crown,
+  TrendingUp,
+  ArrowUp,
+  CreditCard,
+  BookText,
+  Trophy
 };
 
 export const AdminMenuFunctions = () => {
