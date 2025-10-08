@@ -128,36 +128,36 @@ export default function AffiliateDashboard() {
         affiliate={affiliate}
       />
       
-      <main className="flex-1 p-6 space-y-6">
+      <main className="flex-1 p-4 space-y-4 overflow-auto">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold">Painel do Afiliado</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold">Painel do Afiliado</h1>
+          <p className="text-sm text-muted-foreground">
             Gerencie suas campanhas e acompanhe seus ganhos
           </p>
         </div>
 
         {/* Link Principal do Afiliado */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Link className="w-5 h-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Link className="w-4 h-4" />
               Seu Link Principal
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs">
               Use este link para compartilhar e ganhar comissões
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <code className="text-sm font-mono">{affiliateLink}</code>
+          <CardContent>
+            <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+              <code className="text-xs font-mono truncate mr-2">{affiliateLink}</code>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleCopyLink}
               >
-                <Copy className="w-4 h-4 mr-2" />
-                Copiar
+                <Copy className="w-3 h-3 mr-1" />
+                <span className="text-xs">Copiar</span>
               </Button>
             </div>
           </CardContent>
@@ -165,62 +165,62 @@ export default function AffiliateDashboard() {
 
         {/* Métricas Principais */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total de Ganhos</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-medium">Total de Ganhos</CardTitle>
+                <DollarSign className="h-3 w-3 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-xl font-bold">
                   R$ {stats.total_earnings.toFixed(2)}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] text-muted-foreground">
                   +R$ {stats.this_month_earnings.toFixed(2)} este mês
                 </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-medium">Taxa de Conversão</CardTitle>
+                <TrendingUp className="h-3 w-3 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-xl font-bold">
                   {stats.conversion_rate.toFixed(1)}%
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] text-muted-foreground">
                   {stats.total_conversions} de {stats.total_clicks} cliques
                 </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Registros Indicados</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-medium">Registros Indicados</CardTitle>
+                <Users className="h-3 w-3 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-xl font-bold">
                   {stats.registrations_count}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {affiliate.level === 'bronze' ? `${5 - stats.registrations_count} para Silver` : 'Meta atingida'}
+                <p className="text-[10px] text-muted-foreground">
+                  {affiliate.level === 'bronze' ? `${Math.max(0, 5 - stats.registrations_count)} para 50% comissão` : '50% de comissão'}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">A Receber</CardTitle>
-                <Target className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-medium">A Receber</CardTitle>
+                <Target className="h-3 w-3 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-xl font-bold">
                   R$ {stats.pending_earnings.toFixed(2)}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] text-muted-foreground">
                   Comissões pendentes
                 </p>
               </CardContent>

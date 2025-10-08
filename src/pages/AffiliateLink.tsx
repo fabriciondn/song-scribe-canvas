@@ -15,6 +15,13 @@ export default function AffiliateLink() {
       }
 
       try {
+        // Reconstituir código completo se for formato curto
+        let fullCode = code;
+        if (code.startsWith('-')) {
+          // É um código curto, precisamos buscar o completo
+          fullCode = `compuse${code}`;
+        }
+
         // Extrair UTM parameters da URL se existirem
         const searchParams = new URLSearchParams(window.location.search);
         const utmParams: Record<string, string> = {};
@@ -24,8 +31,9 @@ export default function AffiliateLink() {
         if (searchParams.has('utm_campaign')) utmParams.utm_campaign = searchParams.get('utm_campaign')!;
         if (searchParams.has('utm_content')) utmParams.utm_content = searchParams.get('utm_content')!;
 
+        console.log('Tracking affiliate click:', fullCode);
         // Registrar o clique do afiliado
-        await trackAffiliateClick(code, Object.keys(utmParams).length > 0 ? utmParams : undefined);
+        await trackAffiliateClick(fullCode, Object.keys(utmParams).length > 0 ? utmParams : undefined);
         
         // Redirecionar para a landing page
         setTimeout(() => {

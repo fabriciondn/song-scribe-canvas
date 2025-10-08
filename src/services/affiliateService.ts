@@ -275,16 +275,25 @@ export function generateAffiliateLink(affiliateCode: string, campaign?: string):
 // Registrar clique no link
 export async function trackAffiliateClick(affiliateCode: string, utmParams?: Record<string, string>): Promise<void> {
   try {
-    const { data: affiliate } = await supabase
+    console.log('Buscando afiliado com código:', affiliateCode);
+    
+    // Buscar o afiliado pelo código completo ou por LIKE se for código curto
+    const { data: affiliate, error: affiliateError } = await supabase
       .from('affiliates')
-      .select('id')
-      .eq('affiliate_code', affiliateCode)
+      .select('id, affiliate_code')
+      .or(`affiliate_code.eq.${affiliateCode},affiliate_code.like.%${affiliateCode}`)
       .eq('status', 'approved')
-      .single();
+      .limit(1)
+      .maybeSingle();
 
-    if (!affiliate) return;
+    console.log('Afiliado encontrado:', affiliate, 'Erro:', affiliateError);
 
-    await supabase
+    if (!affiliate) {
+      console.error('Afiliado não encontrado ou não aprovado');
+      return;
+    }
+
+    const { data: click, error: clickError } = await supabase
       .from('affiliate_clicks')
       .insert({
         affiliate_id: affiliate.id,
@@ -295,10 +304,15 @@ export async function trackAffiliateClick(affiliateCode: string, utmParams?: Rec
         utm_medium: utmParams?.utm_medium,
         utm_campaign: utmParams?.utm_campaign,
         utm_content: utmParams?.utm_content
-      });
+      })
+      .select()
+      .single();
 
-    // Salvar código no localStorage para conversão posterior
-    localStorage.setItem('affiliate_code', affiliateCode);
+    console.log('Clique registrado:', click, 'Erro:', clickError);
+
+    // Salvar código completo no localStorage para conversão posterior
+    localStorage.setItem('affiliate_code', affiliate.affiliate_code);
+    console.log('Código salvo no localStorage:', affiliate.affiliate_code);
   } catch (error) {
     console.error('Erro ao registrar clique:', error);
   }

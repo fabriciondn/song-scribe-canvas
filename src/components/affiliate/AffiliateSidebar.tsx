@@ -57,19 +57,28 @@ export function AffiliateSidebar({ activeSection, onSectionChange, affiliate }: 
 
   return (
     <aside className="w-64 bg-card border-r min-h-screen p-4 flex flex-col">
+      {/* Logo Section */}
+      <div className="mb-4 flex justify-center">
+        <img 
+          src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
+          alt="Compuse Logo" 
+          className="h-8"
+        />
+      </div>
+
       {/* Profile Section */}
-      <div className="mb-6">
-        <div className="flex flex-col items-center mb-4">
-          <Avatar className="w-20 h-20 mb-3">
+      <div className="mb-4">
+        <div className="flex flex-col items-center">
+          <Avatar className="w-16 h-16 mb-2">
             <AvatarImage src={profile?.avatar_url || undefined} />
-            <AvatarFallback className="text-lg">
+            <AvatarFallback className="text-base">
               {profile?.name?.charAt(0)?.toUpperCase() || 'A'}
             </AvatarFallback>
           </Avatar>
-          <h3 className="font-semibold text-center">{profile?.name || 'Afiliado'}</h3>
-          <div className="flex items-center gap-2 mt-2">
+          <h3 className="font-semibold text-center text-sm">{profile?.name || 'Afiliado'}</h3>
+          <div className="flex items-center gap-1 mt-1">
             {getLevelBadge()}
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
               Ativo
             </Badge>
           </div>
