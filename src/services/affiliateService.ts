@@ -305,6 +305,22 @@ export async function trackAffiliateClick(affiliateCode: string, utmParams?: Rec
 }
 
 // Processar conversão
+// Valores atualizados da plataforma
+const PLATFORM_PRICES = {
+  AUTHOR_REGISTRATION: 50.00, // Preço do registro autoral
+  SUBSCRIPTION_MONTHLY: 15.00, // Preço da assinatura mensal
+  CREDIT_UNIT: 19.99 // Preço do crédito
+};
+
+// Taxas de comissão por nível
+const COMMISSION_RATES = {
+  BRONZE_REGISTRATION: 0.25, // 25% sobre registro (R$ 12,50)
+  SILVER_REGISTRATION: 0.50, // 50% sobre registro (R$ 25,00)
+  GOLD_REGISTRATION: 0.50, // 50% sobre registro (R$ 25,00)
+  GOLD_SUBSCRIPTION_FIRST_10: 0.25, // 25% para primeiros 10 assinantes (R$ 3,75/mês)
+  GOLD_SUBSCRIPTION_AFTER_10: 0.50 // 50% após 10 assinantes (R$ 7,50/mês)
+};
+
 export async function processAffiliateConversion(
   type: 'author_registration' | 'subscription_recurring',
   referenceId: string,
