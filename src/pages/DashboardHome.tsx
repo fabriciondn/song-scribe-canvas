@@ -74,7 +74,14 @@ const DashboardHome: React.FC = () => {
           "left-0 right-0"
         )
       )}>
-        <div className="container mx-auto px-6">
+        <div className={cn(
+          "mx-auto px-6",
+          isMobile ? "max-w-7xl" : (
+            isSidebarOpen && !isSidebarCollapsed ? "max-w-full lg:pl-6" :
+            isSidebarOpen && isSidebarCollapsed ? "max-w-full lg:pl-6" :
+            "max-w-7xl"
+          )
+        )}>
           <FeatureCarousel />
         </div>
       </div>
