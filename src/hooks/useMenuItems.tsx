@@ -182,6 +182,9 @@ export const useMenuItems = () => {
         };
       })
       .filter(item => {
+        // Remover a função "Planos" do menu
+        if (item.functionKey === 'plans') return false;
+        
         // Para a função "affiliate": se estiver oculta, mostrar apenas para afiliados
         if (item.functionKey === 'affiliate' && item.isHidden) {
           return isAffiliate;

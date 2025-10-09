@@ -32,20 +32,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { theme } = useTheme();
   const { menuItems, isLoading: menuLoading } = useMenuItems();
 
-  // Funções disponíveis para usuários básicos (não-PRO)
-  const basicFunctions = ['author-registration', 'settings', 'dashboard', 'trash', 'plans', 'my-purchases', 'upgrade'];
-  
-  // Verificar se a função deve ser acessível baseado no papel do usuário
-  const canAccessFunction = (functionKey: string) => {
-    // Apenas admins têm acesso total automático
-    if (isAdmin) return true;
+  // Retorna o status de acesso para uma função
+  const getAccessStatus = (functionKey: string) => {
+    // Admins têm acesso total
+    if (isAdmin) return { canAccess: true, showDisabled: false };
     
-    // Usuários básicos (incluindo moderadores sem Pro) só têm acesso às funções básicas
-    if (!isPro && !basicFunctions.includes(functionKey)) {
-      return false;
+    // Funções básicas: acessíveis para todos
+    const basicFunctions = ['author-registration', 'settings', 'dashboard', 'my-purchases', 'upgrade', 'ranking'];
+    if (basicFunctions.includes(functionKey)) {
+      return { canAccess: true, showDisabled: false };
     }
     
-    return true;
+    // Funções Pro: usuários grátis veem cinza mas item continua visível
+    const proFunctions = ['composer', 'cifrador', 'cifrador-neo', 'bases', 'folders', 'drafts', 'partnerships', 'tutorials', 'trash'];
+    if (proFunctions.includes(functionKey)) {
+      if (isPro) {
+        return { canAccess: true, showDisabled: false };
+      } else {
+        return { canAccess: false, showDisabled: true }; // Mostra cinza com badge Pro
+      }
+    }
+    
+    return { canAccess: true, showDisabled: false };
   };
 
   // Handle affiliate navigation
@@ -120,10 +128,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ) : (
             visibleMenuItems.map(item => {
               const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
-              const hasAccess = canAccessFunction(item.functionKey);
+              const accessStatus = getAccessStatus(item.functionKey);
+              const hasAccess = accessStatus.canAccess;
+              const showDisabled = accessStatus.showDisabled;
               
               // Tratamento especial para navegação de afiliados
               const handleClick = () => {
+                if (!hasAccess) return; // Não permite clique se não tiver acesso
+                
                 if (item.functionKey === 'affiliate') {
                   if (isAffiliate) {
                     navigate('/affiliate');
@@ -140,49 +152,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
             
             return (
               <div key={item.path}>
-                {hasAccess ? (
-                  <div 
-                    onClick={handleClick}
-                    className={cn(
-                      "nav-link flex items-center rounded-lg text-white transition-colors cursor-pointer", 
-                      isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3",
-                      isActive 
-                        ? "bg-[#111111] text-[#00bd4b]" 
-                        : "hover:bg-[#111111]"
-                    )}
-                    title={isCollapsed ? item.label : undefined}
-                  >
-                    <item.icon size={isCollapsed ? 24 : 20} />
-                    {!isCollapsed && (
-                      <div className="flex items-center justify-between w-full">
-                        <span>{item.label}</span>
+                <div 
+                  onClick={handleClick}
+                  className={cn(
+                    "nav-link flex items-center rounded-lg transition-colors", 
+                    isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3",
+                    hasAccess 
+                      ? isActive 
+                        ? "bg-[#111111] text-[#00bd4b] cursor-pointer" 
+                        : "text-white hover:bg-[#111111] cursor-pointer"
+                      : "text-gray-500 cursor-not-allowed opacity-60"
+                  )}
+                  title={isCollapsed ? item.label : undefined}
+                >
+                  <item.icon size={isCollapsed ? 24 : 20} />
+                  {!isCollapsed && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>{item.label}</span>
+                      <div className="flex items-center gap-2">
+                        {showDisabled && !hasAccess && (
+                          <span className="px-2 py-0.5 text-xs rounded bg-orange-600 text-white">Pro</span>
+                        )}
                         {item.functionKey === 'cifrador-neo' && (
-                          <span className="ml-2 px-2 py-0.5 text-xs rounded bg-green-600 text-white">Beta</span>
+                          <span className="px-2 py-0.5 text-xs rounded bg-green-600 text-white">Beta</span>
                         )}
                         {item.functionKey === 'affiliate' && isAffiliate && (
-                          <span className="ml-2 px-2 py-0.5 text-xs rounded bg-green-600 text-white">Ativo</span>
+                          <span className="px-2 py-0.5 text-xs rounded bg-green-600 text-white">Ativo</span>
                         )}
                         <FunctionStatusTag functionKey={item.functionKey} />
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div 
-                    className={cn(
-                      "nav-link flex items-center rounded-lg text-gray-500 cursor-not-allowed", 
-                      isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3"
-                    )}
-                    title={isCollapsed ? item.label : undefined}
-                  >
-                    <item.icon size={isCollapsed ? 24 : 20} />
-                    {!isCollapsed && (
-                      <div className="flex items-center justify-between w-full">
-                        <span>{item.label}</span>
-                        <FunctionStatusTag functionKey={item.functionKey} />
-                      </div>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
               </div>
             );
             })
