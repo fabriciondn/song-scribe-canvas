@@ -176,12 +176,16 @@ export const useMenuItems = () => {
         const func = functions.find(f => f.function_key === item.functionKey);
         return {
           ...item,
-          isHidden: func?.is_hidden || func?.status !== 'available' || false
+          isHidden: func?.is_hidden || false
         };
       })
       .filter(item => {
-        // Remove apenas itens ocultos ou inativos
+        // Remove itens ocultos
         if (item.isHidden) return false;
+        
+        // Remove itens com status diferente de available
+        const func = functions.find(f => f.function_key === item.functionKey);
+        if (func && func.status !== 'available') return false;
         
         return true;
       });
