@@ -67,11 +67,11 @@ const DashboardHome: React.FC = () => {
     <>
       {/* Banner Carousel Fixo - Não rola com a página */}
       <div className={cn(
-        "fixed right-0 top-16 z-20 bg-background pt-4 pb-4 transition-all duration-200",
-        isMobile ? "left-0" : (
-          isSidebarOpen && !isSidebarCollapsed ? "left-0 lg:left-64" : 
-          isSidebarOpen && isSidebarCollapsed ? "left-0 lg:left-16" : 
-          "left-0"
+        "fixed top-16 z-20 bg-background pt-4 pb-4 transition-all duration-200",
+        isMobile ? "left-0 right-0" : (
+          isSidebarOpen && !isSidebarCollapsed ? "left-0 lg:left-64 right-0" : 
+          isSidebarOpen && isSidebarCollapsed ? "left-0 lg:left-16 right-0" : 
+          "left-0 right-0"
         )
       )}>
         <div className="container mx-auto px-6">
