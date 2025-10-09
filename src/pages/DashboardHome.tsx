@@ -61,14 +61,18 @@ const DashboardHome: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto pt-2 space-y-6">
-      
-      {/* Banner Carousel Moderno - Fixo */}
-      <div className="sticky top-0 z-10 bg-background pb-4 -mx-6 px-6">
-        <FeatureCarousel />
+    <>
+      {/* Banner Carousel Fixo - Não rola com a página */}
+      <div className="fixed left-0 right-0 top-16 z-20 bg-background px-6 pt-4 pb-4">
+        <div className="container mx-auto">
+          <FeatureCarousel />
+        </div>
       </div>
-      
-      <div className="flex items-center justify-end">
+
+      {/* Conteúdo com espaçamento para o banner fixo */}
+      <div className="container mx-auto pt-[280px] space-y-6">
+        
+        <div className="flex items-center justify-end">
         <CardSelector 
           expandedSections={expandedSections}
           onToggleSection={toggleSection}
@@ -272,7 +276,8 @@ const DashboardHome: React.FC = () => {
         )}
 
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
