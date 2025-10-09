@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useMenuFunctions } from '@/hooks/useMenuFunctions';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useAffiliateRole } from '@/hooks/useAffiliateRole';
 import { 
   BarChart3, 
   Shield, 
@@ -32,6 +33,7 @@ export interface MenuItem {
 export const useMenuItems = () => {
   const { functions, loading } = useMenuFunctions();
   const { isPro } = useUserRole();
+  const { isAffiliate } = useAffiliateRole();
 
   const menuItems = useMemo(() => {
     const baseItems: MenuItem[] = [
@@ -180,7 +182,12 @@ export const useMenuItems = () => {
         };
       })
       .filter(item => {
-        // Remove itens ocultos
+        // Para a função "affiliate": se estiver oculta, mostrar apenas para afiliados
+        if (item.functionKey === 'affiliate' && item.isHidden) {
+          return isAffiliate;
+        }
+        
+        // Para outras funções: remove itens ocultos
         if (item.isHidden) return false;
         
         // Remove itens com status diferente de available
@@ -189,7 +196,7 @@ export const useMenuItems = () => {
         
         return true;
       });
-  }, [functions, isPro]);
+  }, [functions, isPro, isAffiliate]);
 
   return {
     menuItems,

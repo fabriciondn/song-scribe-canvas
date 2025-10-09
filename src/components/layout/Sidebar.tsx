@@ -74,9 +74,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       items = items.filter(item => item.functionKey !== 'upgrade');
     }
     
-    // Remove affiliate from normal menu since we handle it separately
-    items = items.filter(item => item.functionKey !== 'affiliate');
-    
     return items;
   }, [menuItems, isAdmin, isPro]);
 
@@ -124,24 +121,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
             visibleMenuItems.map(item => {
               const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
               const hasAccess = canAccessFunction(item.functionKey);
+              
+              // Tratamento especial para navegação de afiliados
+              const handleClick = () => {
+                if (item.functionKey === 'affiliate') {
+                  if (isAffiliate) {
+                    navigate('/affiliate');
+                  } else {
+                    navigate('/affiliate-application');
+                  }
+                } else {
+                  navigate(item.path);
+                }
+                if (window.innerWidth < 768) {
+                  toggleSidebar();
+                }
+              };
             
             return (
               <div key={item.path}>
                 {hasAccess ? (
-                  <Link 
-                    to={item.path} 
+                  <div 
+                    onClick={handleClick}
                     className={cn(
-                      "nav-link flex items-center rounded-lg text-white transition-colors", 
+                      "nav-link flex items-center rounded-lg text-white transition-colors cursor-pointer", 
                       isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3",
                       isActive 
                         ? "bg-[#111111] text-[#00bd4b]" 
                         : "hover:bg-[#111111]"
                     )}
-                    onClick={() => {
-                      if (window.innerWidth < 768) {
-                        toggleSidebar();
-                      }
-                    }}
                     title={isCollapsed ? item.label : undefined}
                   >
                     <item.icon size={isCollapsed ? 24 : 20} />
@@ -151,10 +159,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         {item.functionKey === 'cifrador-neo' && (
                           <span className="ml-2 px-2 py-0.5 text-xs rounded bg-green-600 text-white">Beta</span>
                         )}
+                        {item.functionKey === 'affiliate' && isAffiliate && (
+                          <span className="ml-2 px-2 py-0.5 text-xs rounded bg-green-600 text-white">Ativo</span>
+                        )}
                         <FunctionStatusTag functionKey={item.functionKey} />
                       </div>
                     )}
-                  </Link>
+                  </div>
                 ) : (
                   <div 
                     className={cn(
@@ -176,29 +187,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             );
             })
           )}
-          
-          {/* Affiliate Menu Item - Separate from normal menu */}
-          <div
-            onClick={handleAffiliateClick}
-            className={cn(
-              "nav-link flex items-center rounded-lg text-white transition-colors cursor-pointer",
-              isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3",
-              location.pathname.startsWith('/affiliate')
-                ? "bg-[#111111] text-[#00bd4b]"
-                : "hover:bg-[#111111]"
-            )}
-            title={isCollapsed ? "Afiliados" : undefined}
-          >
-            <TrendingUp size={isCollapsed ? 24 : 20} />
-            {!isCollapsed && (
-              <div className="flex items-center justify-between w-full">
-                <span>Afiliados</span>
-                {isAffiliate && (
-                  <span className="ml-2 px-2 py-0.5 text-xs rounded bg-green-600 text-white">Ativo</span>
-                )}
-              </div>
-            )}
-          </div>
         </nav>
 
         <div className="pt-4 mt-auto border-t border-sidebar-border space-y-2">
