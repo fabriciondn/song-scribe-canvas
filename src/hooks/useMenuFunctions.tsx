@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { menuFunctionService, MenuFunction } from '@/services/menuFunctionService';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useMenuFunctions() {
   const [functions, setFunctions] = useState<MenuFunction[]>([]);
@@ -101,6 +102,26 @@ export function useMenuFunctions() {
 
   useEffect(() => {
     fetchFunctions();
+    
+    // Subscription em tempo real para mudanças na tabela menu_functions
+    const channel = supabase
+      .channel('menu_functions_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'menu_functions'
+        },
+        () => {
+          fetchFunctions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {
