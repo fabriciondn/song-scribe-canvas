@@ -30,15 +30,12 @@ import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { useDashboardCardSelection } from '@/hooks/useDashboardCardSelection';
 import { useUserRole } from '@/hooks/useUserRole';
-import { useSidebarContext } from '@/context/SidebarContext';
-import { cn } from '@/lib/utils';
 
 const DashboardHome: React.FC = () => {
   const { stats, isLoading, error } = useDashboardStats();
   const isMobile = useMobileDetection();
   const { expandedSections, toggleSection, isExpanded } = useDashboardCardSelection();
   const { isPro } = useUserRole();
-  const { isSidebarOpen, isSidebarCollapsed } = useSidebarContext();
 
   if (isLoading) {
     return (
@@ -64,32 +61,14 @@ const DashboardHome: React.FC = () => {
   }
 
   return (
-    <>
-      {/* Banner Carousel Fixo - Não rola com a página */}
-      <div className={cn(
-        "fixed top-16 z-20 bg-background pt-4 pb-4 transition-all duration-200",
-        isMobile ? "left-0 right-0" : (
-          isSidebarOpen && !isSidebarCollapsed ? "left-0 lg:left-64 right-0" : 
-          isSidebarOpen && isSidebarCollapsed ? "left-0 lg:left-16 right-0" : 
-          "left-0 right-0"
-        )
-      )}>
-        <div className={cn(
-          "mx-auto px-6",
-          isMobile ? "max-w-7xl" : (
-            isSidebarOpen && !isSidebarCollapsed ? "max-w-full lg:pl-6" :
-            isSidebarOpen && isSidebarCollapsed ? "max-w-full lg:pl-6" :
-            "max-w-7xl"
-          )
-        )}>
-          <FeatureCarousel />
-        </div>
+    <div className="container mx-auto pt-2 space-y-6">
+      
+      {/* Banner Carousel Moderno - Fixo */}
+      <div className="sticky top-0 z-10 bg-background pb-4 -mx-6 px-6">
+        <FeatureCarousel />
       </div>
-
-      {/* Conteúdo com espaçamento para o banner fixo */}
-      <div className="container mx-auto px-6 pt-[280px] space-y-6">
-        
-        <div className="flex items-center justify-end">
+      
+      <div className="flex items-center justify-end">
         <CardSelector 
           expandedSections={expandedSections}
           onToggleSection={toggleSection}
@@ -293,8 +272,7 @@ const DashboardHome: React.FC = () => {
         )}
 
       </div>
-      </div>
-    </>
+    </div>
   );
 };
 
