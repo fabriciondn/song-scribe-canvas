@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileLayout } from '@/components/layout/MobileLayout';
@@ -12,11 +12,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { useImpersonationSync } from '@/hooks/useImpersonationSync';
 import { useRegionalAuth } from '@/hooks/useRegionalAuth';
+import { SidebarProvider, useSidebarContext } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
 
 const Dashboard: React.FC = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const { isSidebarOpen, setIsSidebarOpen, isSidebarCollapsed, setIsSidebarCollapsed } = useSidebarContext();
   const { isAuthenticated, isLoading } = useAuth();
   const { userRole, isRoleLoading } = useRoleBasedNavigation();
   const { isImpersonating } = useImpersonation();
@@ -48,11 +48,11 @@ const Dashboard: React.FC = () => {
   }, [isAuthenticated, isLoading, userRole, isRoleLoading, isImpersonating, navigate, toast]);
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(prev => !prev);
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   const toggleSidebarCollapse = () => {
-    setIsSidebarCollapsed(prev => !prev);
+    setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
   if (isLoading) {
@@ -109,4 +109,12 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+const DashboardWithProvider: React.FC = () => {
+  return (
+    <SidebarProvider>
+      <Dashboard />
+    </SidebarProvider>
+  );
+};
+
+export default DashboardWithProvider;

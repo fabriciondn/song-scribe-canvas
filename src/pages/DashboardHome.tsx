@@ -30,12 +30,15 @@ import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { useDashboardCardSelection } from '@/hooks/useDashboardCardSelection';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useSidebarContext } from '@/context/SidebarContext';
+import { cn } from '@/lib/utils';
 
 const DashboardHome: React.FC = () => {
   const { stats, isLoading, error } = useDashboardStats();
   const isMobile = useMobileDetection();
   const { expandedSections, toggleSection, isExpanded } = useDashboardCardSelection();
   const { isPro } = useUserRole();
+  const { isSidebarOpen, isSidebarCollapsed } = useSidebarContext();
 
   if (isLoading) {
     return (
@@ -63,7 +66,14 @@ const DashboardHome: React.FC = () => {
   return (
     <>
       {/* Banner Carousel Fixo - Não rola com a página */}
-      <div className="fixed left-0 right-0 top-16 z-20 bg-background px-6 pt-4 pb-4">
+      <div className={cn(
+        "fixed right-0 top-16 z-20 bg-background px-6 pt-4 pb-4 transition-all duration-200",
+        isMobile ? "left-0" : (
+          isSidebarOpen && !isSidebarCollapsed ? "left-0 lg:left-64" : 
+          isSidebarOpen && isSidebarCollapsed ? "left-0 lg:left-16" : 
+          "left-0"
+        )
+      )}>
         <div className="container mx-auto">
           <FeatureCarousel />
         </div>
