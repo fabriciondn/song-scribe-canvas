@@ -15,7 +15,7 @@ import { useRegionalAuth } from '@/hooks/useRegionalAuth';
 import { SidebarProvider, useSidebarContext } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
 
-const Dashboard: React.FC = () => {
+const DashboardContent: React.FC = () => {
   const { isSidebarOpen, setIsSidebarOpen, isSidebarCollapsed, setIsSidebarCollapsed } = useSidebarContext();
   const { isAuthenticated, isLoading } = useAuth();
   const { userRole, isRoleLoading } = useRoleBasedNavigation();
@@ -109,12 +109,12 @@ const Dashboard: React.FC = () => {
   );
 };
 
-const DashboardWithProvider: React.FC = () => {
+const Dashboard: React.FC = () => {
   return (
     <SidebarProvider>
-      <Dashboard />
+      <DashboardContent />
     </SidebarProvider>
   );
 };
 
-export default DashboardWithProvider;
+export default Dashboard;
