@@ -81,7 +81,7 @@ export async function applyForAffiliate(applicationData: AffiliateApplicationDat
       .from('affiliates')
       .select('id')
       .eq('user_id', user.user.id)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       return { success: false, error: 'Você já possui uma solicitação de afiliação' };
@@ -93,7 +93,14 @@ export async function applyForAffiliate(applicationData: AffiliateApplicationDat
       user_name: applicationData.fullName
     });
 
-    if (codeError) throw codeError;
+    if (codeError) {
+      console.error('Erro ao gerar código:', codeError);
+      throw codeError;
+    }
+
+    if (!code) {
+      throw new Error('Código de afiliado não foi gerado');
+    }
 
     // Criar solicitação de afiliação
     const { error } = await supabase
