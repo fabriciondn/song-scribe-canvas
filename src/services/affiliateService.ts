@@ -73,37 +73,66 @@ interface AffiliateApplicationData {
 
 export async function applyForAffiliate(applicationData: AffiliateApplicationData): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) throw new Error('Usuário não autenticado');
+    console.log('🔍 Iniciando aplicação para afiliado...');
+    
+    // Passo 1: Verificar autenticação
+    const { data: user, error: authError } = await supabase.auth.getUser();
+    if (authError) {
+      console.error('❌ Erro de autenticação:', authError);
+      return { success: false, error: 'Erro de autenticação. Por favor, faça login novamente.' };
+    }
+    
+    if (!user.user) {
+      console.error('❌ Usuário não autenticado');
+      return { success: false, error: 'Você precisa estar autenticado para se inscrever.' };
+    }
+    
+    console.log('✅ Usuário autenticado:', user.user.id);
 
-    // Verificar se já é afiliado
-    const { data: existing } = await supabase
+    // Passo 2: Verificar duplicação
+    console.log('🔍 Verificando se usuário já é afiliado...');
+    const { data: existing, error: checkError } = await supabase
       .from('affiliates')
-      .select('id')
+      .select('id, status')
       .eq('user_id', user.user.id)
       .maybeSingle();
 
-    if (existing) {
-      return { success: false, error: 'Você já possui uma solicitação de afiliação' };
+    if (checkError) {
+      console.error('❌ Erro ao verificar afiliado existente:', checkError);
+      return { success: false, error: 'Erro ao verificar dados. Tente novamente.' };
     }
 
-    // Gerar código único
+    if (existing) {
+      console.log('⚠️ Usuário já possui solicitação');
+      return { success: false, error: 'Você já possui uma solicitação de afiliação' };
+    }
+    
+    console.log('✅ Usuário não possui solicitação anterior');
+
+    // Passo 3: Gerar código de afiliado
+    console.log('🔍 Gerando código de afiliado...');
     const { data: code, error: codeError } = await supabase.rpc('generate_affiliate_code', {
       user_id: user.user.id,
       user_name: applicationData.fullName
     });
 
+    console.log('📝 Retorno da função generate_affiliate_code:', { code, error: codeError });
+
     if (codeError) {
-      console.error('Erro ao gerar código:', codeError);
-      throw codeError;
+      console.error('❌ Erro ao gerar código:', codeError);
+      return { success: false, error: `Erro ao gerar código de afiliado: ${codeError.message}` };
     }
 
-    if (!code) {
-      throw new Error('Código de afiliado não foi gerado');
+    if (!code || typeof code !== 'string') {
+      console.error('❌ Código inválido retornado:', code);
+      return { success: false, error: 'Erro ao gerar código de afiliado. Por favor, tente novamente.' };
     }
 
-    // Criar solicitação de afiliação
-    const { error } = await supabase
+    console.log('✅ Código gerado com sucesso:', code);
+
+    // Passo 4: Inserir no banco
+    console.log('🔍 Inserindo solicitação no banco...');
+    const { error: insertError } = await supabase
       .from('affiliates')
       .insert({
         user_id: user.user.id,
@@ -120,12 +149,20 @@ export async function applyForAffiliate(applicationData: AffiliateApplicationDat
         promotion_strategy: applicationData.promotionStrategy
       });
 
-    if (error) throw error;
+    if (insertError) {
+      console.error('❌ Erro ao inserir no banco:', insertError);
+      return { success: false, error: `Erro ao salvar solicitação: ${insertError.message}` };
+    }
 
+    console.log('✅ Solicitação criada com sucesso!');
     return { success: true };
-  } catch (error) {
-    console.error('Erro ao aplicar para afiliado:', error);
-    return { success: false, error: 'Erro interno do servidor' };
+    
+  } catch (error: any) {
+    console.error('❌ Erro inesperado ao aplicar para afiliado:', error);
+    return { 
+      success: false, 
+      error: error?.message || 'Erro inesperado. Por favor, tente novamente ou entre em contato com o suporte.' 
+    };
   }
 }
 
