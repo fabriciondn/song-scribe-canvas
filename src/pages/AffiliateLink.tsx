@@ -36,11 +36,11 @@ export default function AffiliateLink() {
         // Registrar o clique do afiliado com o código completo
         await trackAffiliateClick(fullCode, Object.keys(utmParams).length > 0 ? utmParams : undefined);
         
-        console.log('Clique rastreado com sucesso');
+        console.log('Clique rastreado com sucesso, redirecionando para registro autoral...');
         
-        // Redirecionar para a landing page
+        // Redirecionar direto para a página de registro autoral
         setTimeout(() => {
-          navigate('/');
+          navigate('/author-registration');
         }, 500);
       } catch (error) {
         console.error('Erro ao processar link de afiliado:', error);
