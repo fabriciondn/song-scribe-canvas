@@ -142,6 +142,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           
           try {
             console.log('🚀 Iniciando processamento de conversão...');
+            console.log('📋 Código do afiliado:', affiliateCode);
+            console.log('👤 ID do usuário:', authData.user.id);
             
             // Chamar função SQL para processar conversão de forma atômica
             const { data: result, error: functionError } = await supabase.rpc(
