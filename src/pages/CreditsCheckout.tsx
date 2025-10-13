@@ -37,11 +37,24 @@ export default function CreditsCheckout() {
   const { isChecking } = usePaymentConfirmation({
     paymentId: pixData?.payment_id || null,
     isActive: showQRCode && !paymentConfirmed,
-    onPaymentConfirmed: (credits) => {
+    onPaymentConfirmed: async (credits) => {
       setCreditsAdded(credits);
       setPaymentConfirmed(true);
       setShowQRCode(false);
       setShowSuccessModal(true);
+      
+      // Processar conversão de afiliado
+      try {
+        const { processAffiliateConversion } = await import('@/services/affiliateService');
+        await processAffiliateConversion(
+          'author_registration',
+          pixData?.payment_id || '',
+          pricing.totalAmount
+        );
+        console.log('✅ Conversão de afiliado processada no checkout');
+      } catch (affiliateError) {
+        console.error('⚠️ Erro ao processar conversão de afiliado:', affiliateError);
+      }
       
       // Recarregar perfil após confirmação
       if (typeof loadProfile === 'function') {

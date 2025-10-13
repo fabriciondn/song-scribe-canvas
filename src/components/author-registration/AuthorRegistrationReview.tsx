@@ -271,6 +271,20 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
 
       console.log('✅ Registro criado com sucesso:', registrationData);
 
+      // Processar conversão de afiliado (se existir código no localStorage)
+      try {
+        const { processAffiliateConversion } = await import('@/services/affiliateService');
+        await processAffiliateConversion(
+          'author_registration',
+          registrationData.id,
+          19.99
+        );
+        console.log('✅ Conversão de afiliado processada');
+      } catch (affiliateError) {
+        console.error('⚠️ Erro ao processar conversão de afiliado:', affiliateError);
+        // Não bloquear o fluxo se falhar
+      }
+
       // Mostrar mensagem de sucesso
       toast({
         title: 'Registro enviado para análise!',
