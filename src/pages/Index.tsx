@@ -64,7 +64,7 @@ const Index: React.FC = () => {
               ← Voltar para o site
             </Button>
           </div>
-          <AuthForm />
+          <AuthForm defaultMode={hasAffiliateRef ? 'register' : 'login'} />
         </div>
       </div>
     );

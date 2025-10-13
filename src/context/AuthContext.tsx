@@ -136,13 +136,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const affiliateCode = localStorage.getItem('affiliate_code');
           if (affiliateCode) {
             console.log('✅ Novo usuário registrado via afiliado:', affiliateCode);
-            // Salvar o código associado ao usuário para processar depois
-            await supabase
-              .from('profiles')
-              .update({ 
-                moderator_notes: `Registrado via afiliado: ${affiliateCode}`
-              })
-              .eq('id', authData.user.id);
+            
+            // Buscar o ID do afiliado
+            const { data: affiliate } = await supabase
+              .from('affiliates')
+              .select('id, total_registrations')
+              .or(`affiliate_code.eq.${affiliateCode},affiliate_code.like.%${affiliateCode}`)
+              .eq('status', 'approved')
+              .single();
+            
+            if (affiliate) {
+              console.log('✅ Afiliado encontrado:', affiliate);
+              
+              // Marcar conversão do clique
+              await supabase
+                .from('affiliate_clicks')
+                .update({ converted: true })
+                .eq('affiliate_id', affiliate.id)
+                .order('created_at', { ascending: false })
+                .limit(1);
+              
+              // Criar conversão (tipo 'author_registration' porque é um registro de usuário)
+              const { data: conversion } = await supabase
+                .from('affiliate_conversions')
+                .insert({
+                  affiliate_id: affiliate.id,
+                  user_id: authData.user.id,
+                  type: 'author_registration',
+                  reference_id: authData.user.id
+                })
+                .select()
+                .single();
+              
+              console.log('✅ Conversão criada:', conversion);
+              
+              // Incrementar total_registrations do afiliado
+              await supabase
+                .from('affiliates')
+                .update({ 
+                  total_registrations: affiliate.total_registrations + 1
+                })
+                .eq('id', affiliate.id);
+              
+              console.log('✅ Total de registros atualizado');
+              
+              // Salvar no perfil
+              await supabase
+                .from('profiles')
+                .update({ 
+                  moderator_notes: `Registrado via afiliado: ${affiliateCode}`
+                })
+                .eq('id', authData.user.id);
+              
+              // Remover do localStorage após processar
+              localStorage.removeItem('affiliate_code');
+              console.log('✅ Código removido do localStorage');
+            } else {
+              console.warn('⚠️ Afiliado não encontrado para código:', affiliateCode);
+            }
           }
         } catch (affiliateError) {
           console.error('⚠️ Erro ao processar conversão:', affiliateError);

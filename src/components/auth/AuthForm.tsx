@@ -11,8 +11,12 @@ import { Separator } from '@/components/ui/separator';
 
 type AuthMode = 'login' | 'register';
 
-export const AuthForm: React.FC = () => {
-  const [mode, setMode] = useState<AuthMode>('login');
+interface AuthFormProps {
+  defaultMode?: AuthMode;
+}
+
+export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => {
+  const [mode, setMode] = useState<AuthMode>(defaultMode);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
