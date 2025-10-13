@@ -387,12 +387,26 @@ export async function processAffiliateConversion(
 ): Promise<void> {
   try {
     const affiliateCode = localStorage.getItem('affiliate_code');
-    if (!affiliateCode) return;
+    
+    console.log('🔍 Processando conversão de afiliado:', {
+      affiliateCode: affiliateCode ? '✅ Encontrado' : '❌ Não encontrado',
+      type,
+      referenceId,
+      amount
+    });
+    
+    if (!affiliateCode) {
+      console.log('⚠️ Nenhum código de afiliado encontrado no localStorage');
+      return;
+    }
 
     const { data: user } = await supabase.auth.getUser();
-    if (!user.user) return;
+    if (!user.user) {
+      console.error('❌ Usuário não autenticado');
+      return;
+    }
 
-    await supabase.rpc('process_affiliate_conversion', {
+    console.log('📡 Chamando RPC process_affiliate_conversion...', {
       p_affiliate_code: affiliateCode,
       p_user_id: user.user.id,
       p_type: type,
@@ -400,9 +414,26 @@ export async function processAffiliateConversion(
       p_amount: amount
     });
 
-    // Remover código após conversão
+    const { data, error } = await supabase.rpc('process_affiliate_conversion', {
+      p_affiliate_code: affiliateCode,
+      p_user_id: user.user.id,
+      p_type: type,
+      p_reference_id: referenceId,
+      p_amount: amount
+    });
+
+    if (error) {
+      console.error('❌ Erro ao processar conversão:', error);
+      throw error;
+    }
+
+    console.log('✅ Conversão processada com sucesso:', data);
+
+    // Remover código após conversão bem-sucedida
     localStorage.removeItem('affiliate_code');
+    console.log('🧹 Código de afiliado removido do localStorage');
   } catch (error) {
-    console.error('Erro ao processar conversão:', error);
+    console.error('❌ Erro ao processar conversão:', error);
+    // Não lançar erro para não bloquear o fluxo principal
   }
 }
