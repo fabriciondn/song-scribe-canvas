@@ -8,38 +8,29 @@ export default function AffiliateLink() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleAffiliateRedirect = async () => {
-      if (!code) {
-        navigate('/');
-        return;
-      }
+    if (!code) {
+      window.location.replace('/');
+      return;
+    }
 
-      try {
-        const fullCode = `compuse${code}`;
-        
-        // Extrair UTM parameters da URL se existirem
-        const searchParams = new URLSearchParams(window.location.search);
-        const utmParams: Record<string, string> = {};
-        
-        if (searchParams.has('utm_source')) utmParams.utm_source = searchParams.get('utm_source')!;
-        if (searchParams.has('utm_medium')) utmParams.utm_medium = searchParams.get('utm_medium')!;
-        if (searchParams.has('utm_campaign')) utmParams.utm_campaign = searchParams.get('utm_campaign')!;
-        if (searchParams.has('utm_content')) utmParams.utm_content = searchParams.get('utm_content')!;
+    const fullCode = `compuse${code}`;
+    
+    // Extrair UTM parameters da URL se existirem
+    const searchParams = new URLSearchParams(window.location.search);
+    const utmParams: Record<string, string> = {};
+    
+    if (searchParams.has('utm_source')) utmParams.utm_source = searchParams.get('utm_source')!;
+    if (searchParams.has('utm_medium')) utmParams.utm_medium = searchParams.get('utm_medium')!;
+    if (searchParams.has('utm_campaign')) utmParams.utm_campaign = searchParams.get('utm_campaign')!;
+    if (searchParams.has('utm_content')) utmParams.utm_content = searchParams.get('utm_content')!;
 
-        // Redirecionar IMEDIATAMENTE para a página de registro autoral com o código ref
-        navigate(`/author-registration?ref=${fullCode}`);
-        
-        // Registrar o clique em background (não bloqueia o redirect)
-        trackAffiliateClick(fullCode, Object.keys(utmParams).length > 0 ? utmParams : undefined)
-          .catch(error => console.error('Erro ao rastrear clique:', error));
-      } catch (error) {
-        console.error('Erro ao processar link de afiliado:', error);
-        navigate('/');
-      }
-    };
-
-    handleAffiliateRedirect();
-  }, [code, navigate]);
+    // Redirecionar INSTANTANEAMENTE usando window.location
+    window.location.replace(`/author-registration?ref=${fullCode}`);
+    
+    // Registrar o clique em background (não bloqueia o redirect)
+    trackAffiliateClick(fullCode, Object.keys(utmParams).length > 0 ? utmParams : undefined)
+      .catch(error => console.error('Erro ao rastrear clique:', error));
+  }, [code]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
