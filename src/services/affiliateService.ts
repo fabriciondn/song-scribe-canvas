@@ -322,21 +322,37 @@ export function generateAffiliateLink(affiliateCode: string, campaign?: string):
 // Registrar clique no link
 export async function trackAffiliateClick(affiliateCode: string, utmParams?: Record<string, string>): Promise<void> {
   try {
-    console.log('Buscando afiliado com código:', affiliateCode);
+    console.log('🔍 Buscando afiliado com código:', affiliateCode);
     
-    // Buscar o afiliado pelo código completo ou por LIKE se for código curto
-    const { data: affiliate, error: affiliateError } = await supabase
+    // Buscar o afiliado pelo código exato primeiro
+    let { data: affiliate, error: affiliateError } = await supabase
       .from('affiliates')
       .select('id, affiliate_code')
-      .or(`affiliate_code.eq.${affiliateCode},affiliate_code.like.%${affiliateCode}`)
+      .eq('affiliate_code', affiliateCode)
       .eq('status', 'approved')
-      .limit(1)
       .maybeSingle();
 
-    console.log('Afiliado encontrado:', affiliate, 'Erro:', affiliateError);
+    // Se não encontrar pelo código exato, tentar buscar por padrão LIKE
+    if (!affiliate && !affiliateError) {
+      console.log('⚠️ Código exato não encontrado, buscando por padrão...');
+      const searchPattern = affiliateCode.replace('compuse', '');
+      const { data: altAffiliate, error: altError } = await supabase
+        .from('affiliates')
+        .select('id, affiliate_code')
+        .like('affiliate_code', `%${searchPattern}%`)
+        .eq('status', 'approved')
+        .limit(1)
+        .maybeSingle();
+      
+      affiliate = altAffiliate;
+      affiliateError = altError;
+      console.log('📝 Busca alternativa:', { affiliate: altAffiliate, error: altError });
+    }
+
+    console.log('✅ Afiliado encontrado:', affiliate, 'Erro:', affiliateError);
 
     if (!affiliate) {
-      console.error('Afiliado não encontrado ou não aprovado');
+      console.error('❌ Afiliado não encontrado ou não aprovado para código:', affiliateCode);
       return;
     }
 
@@ -344,7 +360,7 @@ export async function trackAffiliateClick(affiliateCode: string, utmParams?: Rec
       .from('affiliate_clicks')
       .insert({
         affiliate_id: affiliate.id,
-        ip_address: '127.0.0.1', // Em produção, capturar IP real
+        ip_address: '127.0.0.1',
         user_agent: navigator.userAgent,
         referrer: document.referrer,
         utm_source: utmParams?.utm_source,
@@ -355,13 +371,13 @@ export async function trackAffiliateClick(affiliateCode: string, utmParams?: Rec
       .select()
       .single();
 
-    console.log('Clique registrado:', click, 'Erro:', clickError);
+    console.log('📊 Clique registrado:', click, 'Erro:', clickError);
 
     // Salvar código completo no localStorage para conversão posterior
     localStorage.setItem('affiliate_code', affiliate.affiliate_code);
-    console.log('Código salvo no localStorage:', affiliate.affiliate_code);
+    console.log('💾 Código salvo no localStorage:', affiliate.affiliate_code);
   } catch (error) {
-    console.error('Erro ao registrar clique:', error);
+    console.error('❌ Erro ao registrar clique:', error);
   }
 }
 
