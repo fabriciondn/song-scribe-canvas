@@ -13,9 +13,8 @@ export default function AffiliateLink() {
       return;
     }
 
-    // Código já vem com o formato correto do banco (compuse-uuid-nome)
-    // Não precisa adicionar "compuse" novamente
-    const fullCode = code.startsWith('compuse') ? code : `compuse${code}`;
+    // Reconstruir código completo: compuse-{uuid-nome}
+    const fullCode = `compuse-${code}`;
     
     console.log('🔗 Processando link de afiliado:', {
       codeFromUrl: code,

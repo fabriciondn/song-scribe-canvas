@@ -133,100 +133,92 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Processar conversão de afiliado se existir código
       if (authData.user) {
         const affiliateCode = localStorage.getItem('affiliate_code');
+        console.log('🎯 Usuário criado com ID:', authData.user.id);
+        console.log('🔍 Código de afiliado no localStorage:', affiliateCode);
+        
         if (affiliateCode) {
-          // Aguardar um pouco para garantir que o perfil foi criado
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Aguardar criação do perfil (trigger automático)
+          await new Promise(resolve => setTimeout(resolve, 2000));
           
           try {
-            console.log('🔍 Processando conversão para código:', affiliateCode);
+            console.log('🚀 Iniciando processamento de conversão...');
             
-            // Buscar o ID do afiliado
-            const { data: affiliate, error: affiliateError } = await supabase
-              .from('affiliates')
-              .select('id, total_registrations')
-              .eq('affiliate_code', affiliateCode)
-              .eq('status', 'approved')
-              .single();
+            // Chamar função SQL para processar conversão de forma atômica
+            const { data: result, error: functionError } = await supabase.rpc(
+              'process_affiliate_registration',
+              {
+                p_affiliate_code: affiliateCode,
+                p_user_id: authData.user.id
+              }
+            );
             
-            if (affiliateError) {
-              console.error('❌ Erro ao buscar afiliado:', affiliateError);
-              return;
-            }
-            
-            if (!affiliate) {
-              console.warn('⚠️ Afiliado não encontrado para código:', affiliateCode);
-              return;
-            }
-            
-            console.log('✅ Afiliado encontrado:', affiliate);
-            
-            // Marcar conversão do clique mais recente
-            const { error: clickError } = await supabase
-              .from('affiliate_clicks')
-              .update({ converted: true })
-              .eq('affiliate_id', affiliate.id)
-              .is('converted', false)
-              .order('created_at', { ascending: false })
-              .limit(1);
-            
-            if (clickError) {
-              console.error('❌ Erro ao atualizar clique:', clickError);
+            if (functionError) {
+              console.error('❌ Erro ao processar conversão via função:', functionError);
+              
+              // Fallback: tentar processamento manual
+              console.log('🔄 Tentando processamento manual...');
+              
+              // Buscar afiliado com diferentes formatos
+              const possibleCodes = [
+                affiliateCode,
+                affiliateCode.startsWith('compuse-') ? affiliateCode : `compuse-${affiliateCode}`,
+                affiliateCode.replace(/^compuse-/, '')
+              ];
+              
+              let affiliate = null;
+              for (const code of possibleCodes) {
+                const { data, error } = await supabase
+                  .from('affiliates')
+                  .select('id, total_registrations, affiliate_code')
+                  .eq('affiliate_code', code)
+                  .eq('status', 'approved')
+                  .maybeSingle();
+                
+                if (data) {
+                  affiliate = data;
+                  console.log('✅ Afiliado encontrado com código:', code);
+                  break;
+                }
+              }
+              
+              if (!affiliate) {
+                console.error('❌ Afiliado não encontrado');
+                return;
+              }
+              
+              // Processar manualmente
+              try {
+                await supabase.from('affiliate_conversions').insert({
+                  affiliate_id: affiliate.id,
+                  user_id: authData.user.id,
+                  type: 'author_registration',
+                  reference_id: authData.user.id
+                });
+                
+                await supabase.from('affiliates').update({ 
+                  total_registrations: (affiliate.total_registrations || 0) + 1
+                }).eq('id', affiliate.id);
+                
+                await supabase.from('profiles').upsert({ 
+                  id: authData.user.id,
+                  moderator_notes: `Indicado por: ${affiliate.affiliate_code}`
+                }, { onConflict: 'id' });
+                
+                console.log('✅ Conversão processada manualmente');
+              } catch (manualError) {
+                console.error('❌ Erro no processamento manual:', manualError);
+              }
+            } else if (result) {
+              console.log('🎉 Conversão processada com sucesso via função SQL!');
             } else {
-              console.log('✅ Clique marcado como convertido');
+              console.warn('⚠️ Função retornou false - afiliado pode não existir');
             }
             
-            // Criar conversão
-            const { data: conversion, error: conversionError } = await supabase
-              .from('affiliate_conversions')
-              .insert({
-                affiliate_id: affiliate.id,
-                user_id: authData.user.id,
-                type: 'author_registration',
-                reference_id: authData.user.id
-              })
-              .select()
-              .single();
-            
-            if (conversionError) {
-              console.error('❌ Erro ao criar conversão:', conversionError);
-            } else {
-              console.log('✅ Conversão criada:', conversion);
-            }
-            
-            // Incrementar total_registrations do afiliado
-            const { error: updateError } = await supabase
-              .from('affiliates')
-              .update({ 
-                total_registrations: affiliate.total_registrations + 1
-              })
-              .eq('id', affiliate.id);
-            
-            if (updateError) {
-              console.error('❌ Erro ao atualizar registros:', updateError);
-            } else {
-              console.log('✅ Total de registros atualizado para:', affiliate.total_registrations + 1);
-            }
-            
-            // Salvar no perfil
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .update({ 
-                moderator_notes: `Registrado via afiliado: ${affiliateCode}`
-              })
-              .eq('id', authData.user.id);
-            
-            if (profileError) {
-              console.error('❌ Erro ao atualizar perfil:', profileError);
-            } else {
-              console.log('✅ Perfil atualizado com código de afiliado');
-            }
-            
-            // Remover do localStorage após processar
             localStorage.removeItem('affiliate_code');
-            console.log('✅ Código removido do localStorage');
+            console.log('💾 Código removido do localStorage');
             
           } catch (error) {
-            console.error('❌ Erro ao processar conversão de afiliado:', error);
+            console.error('💥 ERRO CRÍTICO ao processar conversão:', error);
           }
         }
       }

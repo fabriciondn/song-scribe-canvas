@@ -10,9 +10,19 @@ import {
   Award
 } from 'lucide-react';
 import { useAffiliate } from '@/hooks/useAffiliate';
+import { useEffect } from 'react';
 
 export const AffiliateMetrics = () => {
-  const { affiliate, stats } = useAffiliate();
+  const { affiliate, stats, refreshData } = useAffiliate();
+  
+  // Atualizar dados a cada 10 segundos para mostrar em tempo real
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshData();
+    }, 10000);
+    
+    return () => clearInterval(interval);
+  }, [refreshData]);
 
   if (!stats || !affiliate) {
     return <div>Carregando métricas...</div>;

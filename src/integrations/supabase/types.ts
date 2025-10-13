@@ -1840,6 +1840,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      process_affiliate_registration: {
+        Args: { p_affiliate_code: string; p_user_id: string }
+        Returns: boolean
+      }
       process_pending_registrations: {
         Args: Record<PropertyKey, never>
         Returns: undefined

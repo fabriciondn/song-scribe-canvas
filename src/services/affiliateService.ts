@@ -307,9 +307,8 @@ export async function createAffiliateCampaign(campaignData: Omit<AffiliateCampai
 // Gerar link de afiliado
 export function generateAffiliateLink(affiliateCode: string, campaign?: string): string {
   const baseUrl = window.location.origin;
-  // Remove o prefixo "compuse" do código se existir
-  const code = affiliateCode.replace(/^compuse/, '');
-  // Link usa a rota /ref/:code que redireciona automaticamente
+  // Remove o prefixo "compuse-" para gerar link limpo
+  const code = affiliateCode.replace(/^compuse-/, '');
   let url = `${baseUrl}/ref/${code}`;
   
   if (campaign) {
@@ -324,35 +323,35 @@ export async function trackAffiliateClick(affiliateCode: string, utmParams?: Rec
   try {
     console.log('🔍 Buscando afiliado com código:', affiliateCode);
     
-    // Buscar o afiliado pelo código exato primeiro
-    let { data: affiliate, error: affiliateError } = await supabase
-      .from('affiliates')
-      .select('id, affiliate_code')
-      .eq('affiliate_code', affiliateCode)
-      .eq('status', 'approved')
-      .maybeSingle();
-
-    // Se não encontrar pelo código exato, tentar buscar por padrão LIKE
-    if (!affiliate && !affiliateError) {
-      console.log('⚠️ Código exato não encontrado, buscando por padrão...');
-      const searchPattern = affiliateCode.replace('compuse', '');
-      const { data: altAffiliate, error: altError } = await supabase
+    // Tentar diferentes formatos do código
+    const possibleCodes = [
+      affiliateCode,
+      affiliateCode.startsWith('compuse-') ? affiliateCode : `compuse-${affiliateCode}`,
+      affiliateCode.replace(/^compuse-/, '')
+    ];
+    
+    let affiliate = null;
+    let affiliateError = null;
+    
+    for (const code of possibleCodes) {
+      const { data, error } = await supabase
         .from('affiliates')
         .select('id, affiliate_code')
-        .like('affiliate_code', `%${searchPattern}%`)
+        .eq('affiliate_code', code)
         .eq('status', 'approved')
-        .limit(1)
         .maybeSingle();
       
-      affiliate = altAffiliate;
-      affiliateError = altError;
-      console.log('📝 Busca alternativa:', { affiliate: altAffiliate, error: altError });
+      if (data) {
+        affiliate = data;
+        console.log('✅ Afiliado encontrado com código:', code);
+        break;
+      }
+      
+      affiliateError = error;
     }
 
-    console.log('✅ Afiliado encontrado:', affiliate, 'Erro:', affiliateError);
-
     if (!affiliate) {
-      console.error('❌ Afiliado não encontrado ou não aprovado para código:', affiliateCode);
+      console.error('❌ Afiliado não encontrado para código:', affiliateCode);
       return;
     }
 
