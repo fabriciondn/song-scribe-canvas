@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CreditCard, ArrowLeft, Gift } from 'lucide-react';
@@ -11,6 +11,7 @@ import { useUserCredits } from '@/hooks/useUserCredits';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { useProfileValidation } from '@/hooks/useProfileValidation';
+import { trackAffiliateClick } from '@/services/affiliateService';
 
 export interface AuthorRegistrationData {
   title: string;
@@ -31,6 +32,7 @@ export interface AuthorRegistrationData {
 const AuthorRegistration: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { credits, isLoading: creditsLoading } = useUserCredits();
   const { isMobile } = useMobileDetection();
   const { isComplete: isProfileComplete } = useProfileValidation();
@@ -50,6 +52,27 @@ const AuthorRegistration: React.FC = () => {
     termsAccepted: false,
     registrationType: 'complete',
   });
+
+  // Capturar código de afiliado da URL
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      console.log('🔗 Link de afiliado detectado:', refCode);
+      
+      // Capturar UTM params da URL
+      const utmParams = {
+        utm_source: searchParams.get('utm_source') || undefined,
+        utm_medium: searchParams.get('utm_medium') || undefined,
+        utm_campaign: searchParams.get('utm_campaign') || undefined,
+        utm_content: searchParams.get('utm_content') || undefined,
+      };
+      
+      // Registrar clique do afiliado
+      trackAffiliateClick(refCode, utmParams)
+        .then(() => console.log('✅ Clique de afiliado registrado'))
+        .catch((err) => console.error('❌ Erro ao registrar clique:', err));
+    }
+  }, [searchParams]);
 
   if (creditsLoading) {
     return (
