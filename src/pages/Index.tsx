@@ -13,7 +13,12 @@ import { FinalCTASection } from '@/components/landing/FinalCTASection';
 const Index: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [showAuth, setShowAuth] = useState(false);
+  
+  // Verificar se veio de link de afiliado
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasAffiliateRef = urlParams.has('ref');
+  
+  const [showAuth, setShowAuth] = useState(hasAffiliateRef);
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {

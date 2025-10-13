@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Clean up existing state
       cleanupAuthState();
       
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -129,6 +129,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) throw error;
+      
+      // Processar conversão de afiliado se existir código
+      if (authData.user) {
+        try {
+          const affiliateCode = localStorage.getItem('affiliate_code');
+          if (affiliateCode) {
+            console.log('✅ Novo usuário registrado via afiliado:', affiliateCode);
+            // Salvar o código associado ao usuário para processar depois
+            await supabase
+              .from('profiles')
+              .update({ 
+                moderator_notes: `Registrado via afiliado: ${affiliateCode}`
+              })
+              .eq('id', authData.user.id);
+          }
+        } catch (affiliateError) {
+          console.error('⚠️ Erro ao processar conversão:', affiliateError);
+        }
+      }
     } catch (error: any) {
       throw error;
     }
