@@ -15,14 +15,7 @@ export default function AffiliateLink() {
       }
 
       try {
-        // Reconstituir código completo do afiliado
-        // O código curto vem como "-74dfb4150e1a-fabricionedinodasilva"
-        // Precisamos reconstruir como "compuse-[uuid-completo]-fabricionedinodasilva"
-        // Como não temos a primeira parte do UUID, vamos buscar no banco
         const fullCode = `compuse${code}`;
-        
-        console.log('Código recebido:', code);
-        console.log('Código completo:', fullCode);
         
         // Extrair UTM parameters da URL se existirem
         const searchParams = new URLSearchParams(window.location.search);
@@ -33,15 +26,12 @@ export default function AffiliateLink() {
         if (searchParams.has('utm_campaign')) utmParams.utm_campaign = searchParams.get('utm_campaign')!;
         if (searchParams.has('utm_content')) utmParams.utm_content = searchParams.get('utm_content')!;
 
-        // Registrar o clique do afiliado com o código completo
-        await trackAffiliateClick(fullCode, Object.keys(utmParams).length > 0 ? utmParams : undefined);
+        // Redirecionar IMEDIATAMENTE para a página de registro autoral com o código ref
+        navigate(`/author-registration?ref=${fullCode}`);
         
-        console.log('Clique rastreado com sucesso, redirecionando para registro autoral...');
-        
-        // Redirecionar direto para a página de registro autoral
-        setTimeout(() => {
-          navigate('/author-registration');
-        }, 500);
+        // Registrar o clique em background (não bloqueia o redirect)
+        trackAffiliateClick(fullCode, Object.keys(utmParams).length > 0 ? utmParams : undefined)
+          .catch(error => console.error('Erro ao rastrear clique:', error));
       } catch (error) {
         console.error('Erro ao processar link de afiliado:', error);
         navigate('/');
