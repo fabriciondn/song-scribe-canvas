@@ -131,19 +131,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       
       // Processar conversão de afiliado se existir código
+      console.log('✅ AuthData recebido:', authData);
+      
       if (authData.user) {
+        console.log('✅ Usuário criado com ID:', authData.user.id);
+        
         const affiliateCode = localStorage.getItem('affiliate_code');
-        console.log('🎯 Usuário criado com ID:', authData.user.id);
-        console.log('🔍 Código de afiliado no localStorage:', affiliateCode);
+        console.log('🔍 Verificando localStorage para affiliate_code:', affiliateCode);
         
         if (affiliateCode) {
+          console.log('🎯 CÓDIGO DE AFILIADO ENCONTRADO:', affiliateCode);
+          console.log('⏳ Aguardando 2 segundos para criação do perfil...');
+          
           // Aguardar criação do perfil (trigger automático)
           await new Promise(resolve => setTimeout(resolve, 2000));
           
           try {
-            console.log('🚀 Iniciando processamento de conversão...');
-            console.log('📋 Código do afiliado:', affiliateCode);
-            console.log('👤 ID do usuário:', authData.user.id);
+            console.log('🚀 INICIANDO PROCESSAMENTO DE CONVERSÃO AFILIADO');
+            console.log('📋 Dados da conversão:', {
+              codigo: affiliateCode,
+              userId: authData.user.id,
+              timestamp: new Date().toISOString()
+            });
             
             // Chamar função SQL para processar conversão de forma atômica
             const { data: result, error: functionError } = await supabase.rpc(
@@ -154,8 +163,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               }
             );
             
+            console.log('📊 Resultado da função RPC:', { result, error: functionError });
+            
             if (functionError) {
-              console.error('❌ Erro ao processar conversão via função:', functionError);
+              console.error('❌ ERRO ao processar conversão via função:', functionError);
               
               // Fallback: tentar processamento manual
               console.log('🔄 Tentando processamento manual...');
@@ -211,18 +222,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 console.error('❌ Erro no processamento manual:', manualError);
               }
             } else if (result) {
-              console.log('🎉 Conversão processada com sucesso via função SQL!');
+              console.log('🎉 CONVERSÃO PROCESSADA COM SUCESSO VIA FUNÇÃO SQL!');
+              console.log('📊 Detalhes do resultado:', result);
             } else {
-              console.warn('⚠️ Função retornou false - afiliado pode não existir');
+              console.warn('⚠️ Função retornou FALSE - afiliado pode não existir ou não estar aprovado');
             }
             
             localStorage.removeItem('affiliate_code');
-            console.log('💾 Código removido do localStorage');
+            console.log('💾 Código de afiliado removido do localStorage');
             
           } catch (error) {
             console.error('💥 ERRO CRÍTICO ao processar conversão:', error);
           }
+        } else {
+          console.log('⚠️ NENHUM código de afiliado no localStorage após registro');
         }
+      } else {
+        console.log('⚠️ AuthData.user não presente após registro');
       }
     } catch (error: any) {
       throw error;
