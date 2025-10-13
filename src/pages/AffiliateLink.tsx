@@ -24,8 +24,8 @@ export default function AffiliateLink() {
     if (searchParams.has('utm_campaign')) utmParams.utm_campaign = searchParams.get('utm_campaign')!;
     if (searchParams.has('utm_content')) utmParams.utm_content = searchParams.get('utm_content')!;
 
-    // Redirecionar INSTANTANEAMENTE para o formulário público
-    window.location.replace(`/formulario?ref=${fullCode}`);
+    // Redirecionar INSTANTANEAMENTE para a tela de criação de conta
+    window.location.replace(`/?ref=${fullCode}`);
     
     // Registrar o clique em background (não bloqueia o redirect)
     trackAffiliateClick(fullCode, Object.keys(utmParams).length > 0 ? utmParams : undefined)
