@@ -307,11 +307,13 @@ export async function createAffiliateCampaign(campaignData: Omit<AffiliateCampai
 // Gerar link de afiliado
 export function generateAffiliateLink(affiliateCode: string, campaign?: string): string {
   const baseUrl = window.location.origin;
-  // Link leva direto para a página de registro autoral
-  let url = `${baseUrl}/author-registration?ref=${affiliateCode}`;
+  // Remove o prefixo "compuse" do código se existir
+  const code = affiliateCode.replace(/^compuse/, '');
+  // Link usa a rota /ref/:code que redireciona automaticamente
+  let url = `${baseUrl}/ref/${code}`;
   
   if (campaign) {
-    url += `&utm_campaign=${encodeURIComponent(campaign)}`;
+    url += `?utm_campaign=${encodeURIComponent(campaign)}`;
   }
   
   return url;
