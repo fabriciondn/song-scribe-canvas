@@ -72,7 +72,10 @@ serve(async (req) => {
       );
     }
 
-    // Create the user in Supabase Auth
+    // Try to create the user in Supabase Auth
+    let userId: string;
+    let userExists = false;
+    
     const { data: newUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
       email: body.email,
       password: body.password,
@@ -83,7 +86,33 @@ serve(async (req) => {
       }
     });
 
-    if (createUserError || !newUser.user) {
+    // If user already exists, get their ID
+    if (createUserError?.message?.includes('already been registered')) {
+      console.log('User already exists, fetching existing user...');
+      userExists = true;
+      
+      // Get the existing user by email
+      const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+      
+      if (listError) {
+        console.error('Error listing users:', listError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to fetch existing user' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      const existingUser = existingUsers.users.find(u => u.email === body.email);
+      
+      if (!existingUser) {
+        return new Response(
+          JSON.stringify({ error: 'User exists but could not be found' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      userId = existingUser.id;
+    } else if (createUserError || !newUser.user) {
       console.error('Error creating user:', createUserError);
       return new Response(
         JSON.stringify({ 
@@ -91,26 +120,40 @@ serve(async (req) => {
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    } else {
+      userId = newUser.user.id;
     }
 
-    const userId = newUser.user.id;
-
     try {
-      // Create or update user profile
-      const { error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .upsert({
-          id: userId,
-          name: body.name,
-          email: body.email,
-          credits: body.credits || (body.role === 'moderator' ? 500 : 10)
-        });
+      // Create or update user profile (only if user was just created)
+      if (!userExists) {
+        const { error: profileError } = await supabaseAdmin
+          .from('profiles')
+          .upsert({
+            id: userId,
+            name: body.name,
+            email: body.email,
+            credits: body.credits || (body.role === 'moderator' ? 500 : 10)
+          });
 
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        // Try to delete the user if profile creation fails
-        await supabaseAdmin.auth.admin.deleteUser(userId);
-        throw profileError;
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+          // Try to delete the user if profile creation fails
+          await supabaseAdmin.auth.admin.deleteUser(userId);
+          throw profileError;
+        }
+      } else {
+        // If user exists, update credits if needed
+        const { error: updateError } = await supabaseAdmin
+          .from('profiles')
+          .update({
+            credits: body.credits || (body.role === 'moderator' ? 500 : 10)
+          })
+          .eq('id', userId);
+          
+        if (updateError) {
+          console.error('Error updating profile credits:', updateError);
+        }
       }
 
       // If creating a moderator, add to admin_users table
@@ -149,7 +192,9 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           user_id: userId,
-          message: `${body.role} created successfully`
+          message: userExists 
+            ? `Usuário existente promovido a ${body.role} com sucesso`
+            : `${body.role} criado com sucesso`
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -157,11 +202,13 @@ serve(async (req) => {
     } catch (error) {
       console.error('Error in user creation process:', error);
       
-      // Clean up: delete the user if something went wrong
-      try {
-        await supabaseAdmin.auth.admin.deleteUser(userId);
-      } catch (cleanupError) {
-        console.error('Error cleaning up user:', cleanupError);
+      // Clean up: delete the user if something went wrong (only if it was just created)
+      if (!userExists) {
+        try {
+          await supabaseAdmin.auth.admin.deleteUser(userId);
+        } catch (cleanupError) {
+          console.error('Error cleaning up user:', cleanupError);
+        }
       }
       
       throw error;
