@@ -12,7 +12,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Music, FileText, FolderOpen, Calendar, CreditCard, Download, Coins, User, Activity, Award, Crown, Clock, CheckCircle } from 'lucide-react';
+import { Music, FileText, FolderOpen, Calendar, CreditCard, Download, Coins, User, Activity, Award, Crown, Clock, CheckCircle, UserCog, Shield } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface AdvancedUserModalProps {
   user: any;
@@ -30,6 +31,7 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [credits, setCredits] = useState(user?.credits || 0);
   const [moderatorNotes, setModeratorNotes] = useState(user?.moderator_notes || '');
+  const [selectedRole, setSelectedRole] = useState<string>('user');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -38,6 +40,30 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
       setModeratorNotes(user.moderator_notes || '');
     }
   }, [user]);
+
+  // Buscar role do usuário
+  const { data: userRole, refetch: refetchRole } = useQuery({
+    queryKey: ['user-role', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data?.role || 'user';
+    },
+    enabled: isOpen && !!user?.id,
+  });
+
+  useEffect(() => {
+    if (userRole) {
+      setSelectedRole(userRole);
+    }
+  }, [userRole]);
 
   // Buscar estatísticas do usuário
   const { data: userStats } = useQuery({
@@ -175,6 +201,78 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
       toast({
         title: 'Erro',
         description: 'Erro ao atualizar notas',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateRole = async () => {
+    if (!user?.id) return;
+
+    setIsLoading(true);
+    try {
+      if (selectedRole === 'user') {
+        // Remover da tabela admin_users se for usuário comum
+        const { error } = await supabase
+          .from('admin_users')
+          .delete()
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+      } else {
+        // Inserir ou atualizar na tabela admin_users
+        const { error } = await supabase
+          .from('admin_users')
+          .upsert({
+            user_id: user.id,
+            role: selectedRole,
+            permissions: selectedRole === 'moderator' 
+              ? ['manage_user_credits', 'create_users']
+              : ['full_access']
+          }, {
+            onConflict: 'user_id'
+          });
+
+        if (error) throw error;
+
+        // Se for moderador, dar 100 créditos iniciais
+        if (selectedRole === 'moderator') {
+          const { error: creditsError } = await supabase
+            .from('profiles')
+            .update({ credits: Math.max(user.credits || 0, 100) })
+            .eq('id', user.id);
+
+          if (creditsError) throw creditsError;
+        }
+      }
+
+      // Log da atividade
+      await supabase
+        .from('user_activity_logs')
+        .insert({
+          user_id: user.id,
+          action: 'role_updated_by_admin',
+          metadata: {
+            admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+            old_role: userRole,
+            new_role: selectedRole
+          }
+        });
+
+      toast({
+        title: 'Sucesso',
+        description: `Função atualizada para ${selectedRole === 'user' ? 'usuário comum' : selectedRole}`,
+      });
+
+      refetchRole();
+      onUserUpdate();
+    } catch (error) {
+      console.error('Erro ao atualizar função:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar função do usuário',
         variant: 'destructive',
       });
     } finally {
@@ -741,10 +839,81 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
           </TabsContent>
 
           <TabsContent value="management" className="space-y-4">
+            {/* Gerenciar Função/Role */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Gerenciar Função do Usuário
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-4 items-end">
+                  <div className="flex-1">
+                    <Label htmlFor="role">Função</Label>
+                    <Select value={selectedRole} onValueChange={setSelectedRole}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a função" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            Usuário Comum
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="moderator">
+                          <div className="flex items-center gap-2">
+                            <UserCog className="h-4 w-4" />
+                            Moderador
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="admin">
+                          <div className="flex items-center gap-2">
+                            <Shield className="h-4 w-4" />
+                            Administrador
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {selectedRole === 'user' && 'Usuário comum sem privilégios administrativos'}
+                      {selectedRole === 'moderator' && 'Pode gerenciar créditos e criar usuários (recebe 100 créditos ao se tornar moderador)'}
+                      {selectedRole === 'admin' && 'Acesso completo ao sistema administrativo'}
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={handleUpdateRole} 
+                    disabled={isLoading || selectedRole === userRole}
+                    className="gap-2"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Atualizar Função
+                  </Button>
+                </div>
+                
+                {userRole && userRole !== 'user' && (
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm font-medium">Função Atual</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant={userRole === 'admin' ? 'default' : 'secondary'}>
+                        {userRole === 'admin' && <Shield className="h-3 w-3 mr-1" />}
+                        {userRole === 'moderator' && <UserCog className="h-3 w-3 mr-1" />}
+                        {userRole}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Gestão de créditos */}
             <Card>
               <CardHeader>
-                <CardTitle>Gerenciar Créditos</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Coins className="h-5 w-5" />
+                  Gerenciar Créditos
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex gap-4 items-end">
