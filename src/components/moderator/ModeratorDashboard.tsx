@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { Wallet, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ModeratorSidebar } from './ModeratorSidebar';
 import { useModeratorAccess } from '@/hooks/useModeratorAccess';
 import { useUserCredits } from '@/hooks/useUserCredits';
@@ -51,11 +52,6 @@ export const ModeratorDashboard = ({ activeTab = 'overview' }: ModeratorDashboar
   const { isModerator, isLoading } = useModeratorAccess();
   const { credits, isLoading: creditsLoading } = useUserCredits();
   const [currentTab, setCurrentTab] = useState(activeTab);
-  const [systemHealth] = useState({
-    database: 'healthy',
-    api: 'healthy',
-    storage: 'healthy'
-  });
 
   // Determinar qual tab mostrar baseado na URL
   useEffect(() => {
@@ -110,16 +106,6 @@ export const ModeratorDashboard = ({ activeTab = 'overview' }: ModeratorDashboar
     );
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      default:
-        return <Activity className="h-4 w-4 text-red-500" />;
-    }
-  };
 
   const renderActiveTab = () => {
     console.log('🎯 Renderizando tab:', currentTab);
@@ -193,21 +179,7 @@ export const ModeratorDashboard = ({ activeTab = 'overview' }: ModeratorDashboar
               </Badge>
             </div>
             <div className="ml-auto flex items-center space-x-2">
-              {/* Status do Sistema */}
-              <div className="flex items-center space-x-1">
-                {getStatusIcon(systemHealth.database)}
-                <span className="text-xs text-muted-foreground">DB</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                {getStatusIcon(systemHealth.api)}
-                <span className="text-xs text-muted-foreground">API</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                {getStatusIcon(systemHealth.storage)}
-                <span className="text-xs text-muted-foreground">Storage</span>
-              </div>
-              
-              {/* Métricas Rápidas */}
+              {/* Créditos e Recarga */}
               <Card className="px-3 py-1">
                 <div className="flex items-center space-x-2">
                   <div className="text-center">
@@ -222,6 +194,14 @@ export const ModeratorDashboard = ({ activeTab = 'overview' }: ModeratorDashboar
                   </div>
                 </div>
               </Card>
+              <Button 
+                onClick={() => navigate('/moderator/recharge')}
+                className="bg-green-600 hover:bg-green-700 text-white"
+                size="sm"
+              >
+                <Wallet className="h-4 w-4 mr-2" />
+                Recarga
+              </Button>
             </div>
           </header>
 

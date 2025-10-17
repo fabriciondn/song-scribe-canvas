@@ -38,6 +38,7 @@ import ModeratorDashboard from "./pages/ModeratorDashboard";
 import AffiliateDashboard from "./pages/AffiliateDashboard";
 import AffiliateApplication from "./pages/AffiliateApplication";
 import ModeratorAuth from "./pages/ModeratorAuth";
+import ModeratorRecharge from "./pages/ModeratorRecharge";
 import AffiliateLink from "./pages/AffiliateLink";
 import PublicRegistrationForm from "./pages/PublicRegistrationForm";
 import Ranking from "./pages/Ranking";
@@ -116,6 +117,7 @@ const AppContent = () => {
             <Route path="/moderator/transactions" element={<ModeratorDashboard />} />
             <Route path="/moderator/profile" element={<ModeratorDashboard />} />
             <Route path="/moderator/debug" element={<ModeratorDashboard />} />
+            <Route path="/moderator/recharge" element={<ModeratorRecharge />} />
             <Route path="/moderator-auth" element={<ModeratorAuth />} />
             <Route path="/ref/:code" element={<AffiliateLink />} />
             <Route path="/formulario" element={<PublicRegistrationForm />} />
