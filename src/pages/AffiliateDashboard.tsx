@@ -137,46 +137,70 @@ export default function AffiliateDashboard() {
           </p>
         </div>
 
-        {/* Link Principal do Afiliado */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Link className="w-4 h-4" />
-              Seu Link Principal
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Use este link para compartilhar e ganhar comissões
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-              <code className="text-xs font-mono truncate mr-2">{affiliateLink}</code>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopyLink}
-              >
-                <Copy className="w-3 h-3 mr-1" />
-                <span className="text-xs">Copiar</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Métricas Principais */}
+        {/* Métricas Financeiras Principais - DESTAQUE */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Ganho</CardTitle>
+                <DollarSign className="h-5 w-5 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-primary">
+                  R$ {stats.total_earnings.toFixed(2)}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  +R$ {stats.this_month_earnings.toFixed(2)} este mês
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-warning/20 bg-gradient-to-br from-warning/5 to-transparent">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">A Receber</CardTitle>
+                <Target className="h-5 w-5 text-warning" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-warning">
+                  R$ {stats.pending_earnings.toFixed(2)}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Comissões pendentes
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-success/20 bg-gradient-to-br from-success/5 to-transparent">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Já Recebido</CardTitle>
+                <Award className="h-5 w-5 text-success" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-success">
+                  R$ {stats.paid_earnings.toFixed(2)}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Total de comissões pagas
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Métricas Secundárias */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                <CardTitle className="text-xs font-medium">Total de Ganhos</CardTitle>
-                <DollarSign className="h-3 w-3 text-muted-foreground" />
+                <CardTitle className="text-xs font-medium">Cliques Totais</CardTitle>
+                <Link className="h-3 w-3 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-xl font-bold">
-                  R$ {stats.total_earnings.toFixed(2)}
+                  {stats.total_clicks}
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  +R$ {stats.this_month_earnings.toFixed(2)} este mês
+                  Acessos ao seu link
                 </p>
               </CardContent>
             </Card>
@@ -191,7 +215,7 @@ export default function AffiliateDashboard() {
                   {stats.conversion_rate.toFixed(1)}%
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  {stats.total_conversions} de {stats.total_clicks} cliques
+                  {stats.total_conversions} conversões
                 </p>
               </CardContent>
             </Card>
@@ -206,22 +230,7 @@ export default function AffiliateDashboard() {
                   {stats.registrations_count}
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  {affiliate.level === 'bronze' ? `${Math.max(0, 5 - stats.registrations_count)} para 50% comissão` : '50% de comissão'}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                <CardTitle className="text-xs font-medium">A Receber</CardTitle>
-                <Target className="h-3 w-3 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl font-bold">
-                  R$ {stats.pending_earnings.toFixed(2)}
-                </div>
-                <p className="text-[10px] text-muted-foreground">
-                  Comissões pendentes
+                  Usuários cadastrados
                 </p>
               </CardContent>
             </Card>

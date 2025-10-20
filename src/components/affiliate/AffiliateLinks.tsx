@@ -65,25 +65,26 @@ export const AffiliateLinks = ({ affiliateCode }: AffiliateLinksProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Link className="w-5 h-5" />
-            Seu Link Principal
+            Seu Link de Afiliado
           </CardTitle>
           <CardDescription>
-            Use este link para compartilhar e ganhar comissões
+            Compartilhe este link e ganhe 50% de comissão na primeira compra de cada indicado
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+          <div className="flex items-center gap-2 p-4 bg-primary/5 border-2 border-primary/20 rounded-lg">
             <Input 
               value={baseLink} 
               readOnly 
-              className="bg-transparent border-none flex-1" 
+              className="bg-transparent border-none flex-1 font-mono font-semibold" 
             />
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
               onClick={() => copyToClipboard(baseLink, 'Link principal')}
             >
-              <Copy className="w-4 h-4" />
+              <Copy className="w-4 h-4 mr-1" />
+              Copiar
             </Button>
             <Button
               variant="outline"
@@ -99,50 +100,6 @@ export const AffiliateLinks = ({ affiliateCode }: AffiliateLinksProps) => {
             >
               <QrCode className="w-4 h-4" />
             </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Gerador de Links de Campanha */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
-            Criar Link de Campanha
-          </CardTitle>
-          <CardDescription>
-            Crie links personalizados para rastrear o desempenho de diferentes campanhas
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="campaign">Nome da Campanha</Label>
-              <Input
-                id="campaign"
-                placeholder="ex: instagram-stories"
-                value={campaignName}
-                onChange={(e) => setCampaignName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Link Gerado</Label>
-              <div className="flex items-center gap-2">
-                <Input 
-                  value={campaignLink} 
-                  readOnly 
-                  className="bg-muted" 
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!campaignName}
-                  onClick={() => copyToClipboard(campaignLink, 'Link da campanha')}
-                >
-                  <Copy className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>

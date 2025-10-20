@@ -8,34 +8,42 @@ export default function AffiliateLink() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!code) {
-      window.location.replace('/');
-      return;
-    }
+    const processAffiliateLink = async () => {
+      if (!code) {
+        window.location.replace('/');
+        return;
+      }
 
-    // Reconstruir código completo: compuse-{uuid-nome}
-    const fullCode = `compuse-${code}`;
-    
-    console.log('🔗 Processando link de afiliado:', {
-      codeFromUrl: code,
-      fullCode: fullCode
-    });
-    
-    // Extrair UTM parameters da URL se existirem
-    const searchParams = new URLSearchParams(window.location.search);
-    const utmParams: Record<string, string> = {};
-    
-    if (searchParams.has('utm_source')) utmParams.utm_source = searchParams.get('utm_source')!;
-    if (searchParams.has('utm_medium')) utmParams.utm_medium = searchParams.get('utm_medium')!;
-    if (searchParams.has('utm_campaign')) utmParams.utm_campaign = searchParams.get('utm_campaign')!;
-    if (searchParams.has('utm_content')) utmParams.utm_content = searchParams.get('utm_content')!;
+      // Reconstruir código completo: compuse-{uuid-nome}
+      const fullCode = `compuse-${code}`;
+      
+      console.log('🔗 Processando link de afiliado:', {
+        codeFromUrl: code,
+        fullCode: fullCode
+      });
+      
+      // Extrair UTM parameters da URL se existirem
+      const searchParams = new URLSearchParams(window.location.search);
+      const utmParams: Record<string, string> = {};
+      
+      if (searchParams.has('utm_source')) utmParams.utm_source = searchParams.get('utm_source')!;
+      if (searchParams.has('utm_medium')) utmParams.utm_medium = searchParams.get('utm_medium')!;
+      if (searchParams.has('utm_campaign')) utmParams.utm_campaign = searchParams.get('utm_campaign')!;
+      if (searchParams.has('utm_content')) utmParams.utm_content = searchParams.get('utm_content')!;
 
-    // Redirecionar INSTANTANEAMENTE para a tela de criação de conta
-    window.location.replace(`/?ref=${fullCode}`);
-    
-    // Registrar o clique em background (não bloqueia o redirect)
-    trackAffiliateClick(fullCode, Object.keys(utmParams).length > 0 ? utmParams : undefined)
-      .catch(error => console.error('Erro ao rastrear clique:', error));
+      // IMPORTANTE: Registrar o clique ANTES de redirecionar
+      try {
+        await trackAffiliateClick(fullCode, Object.keys(utmParams).length > 0 ? utmParams : undefined);
+        console.log('✅ Clique registrado com sucesso');
+      } catch (error) {
+        console.error('❌ Erro ao rastrear clique:', error);
+      }
+      
+      // Redirecionar APENAS APÓS registrar o clique
+      window.location.replace(`/?ref=${fullCode}`);
+    };
+
+    processAffiliateLink();
   }, [code]);
 
   return (
