@@ -1840,6 +1840,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      process_affiliate_first_purchase: {
+        Args: {
+          p_payment_amount: number
+          p_payment_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       process_affiliate_registration: {
         Args: { p_affiliate_code: string; p_user_id: string }
         Returns: boolean

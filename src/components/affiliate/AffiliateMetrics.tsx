@@ -1,26 +1,71 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
   TrendingUp, 
   Users, 
   MousePointer, 
   Target,
   Calendar,
-  Award
+  Award,
+  UserPlus,
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 import { useAffiliate } from '@/hooks/useAffiliate';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface ReferredUser {
+  name: string;
+  email: string;
+  conversion_date: string;
+  commission_amount: number | null;
+  commission_status: string | null;
+}
 
 export const AffiliateMetrics = () => {
   const { affiliate, stats, refreshData } = useAffiliate();
+  const [referredUsers, setReferredUsers] = useState<ReferredUser[]>([]);
   
   // Atualizar dados a cada 10 segundos para mostrar em tempo real
+  // Buscar usuários indicados
+  useEffect(() => {
+    const loadReferredUsers = async () => {
+      if (!affiliate?.id) return;
+
+      const { data, error } = await supabase
+        .from('affiliate_conversions')
+        .select(`
+          user_id,
+          created_at,
+          profiles!inner(name, email),
+          affiliate_commissions(amount, status)
+        `)
+        .eq('affiliate_id', affiliate.id)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const users = data.map((conv: any) => ({
+          name: conv.profiles?.name || 'Sem nome',
+          email: conv.profiles?.email || 'Sem email',
+          conversion_date: conv.created_at,
+          commission_amount: conv.affiliate_commissions?.[0]?.amount || null,
+          commission_status: conv.affiliate_commissions?.[0]?.status || null
+        }));
+        setReferredUsers(users);
+      }
+    };
+
+    loadReferredUsers();
+  }, [affiliate?.id]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       refreshData();
     }, 10000);
-    
+
     return () => clearInterval(interval);
   }, [refreshData]);
 
@@ -210,6 +255,75 @@ export const AffiliateMetrics = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* NOVA SEÇÃO: Meus Indicados */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Meus Indicados
+          </CardTitle>
+          <CardDescription>
+            Usuários que se cadastraram através do seu link de afiliado
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {referredUsers.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>Nenhum indicado ainda</p>
+              <p className="text-sm mt-1">Compartilhe seu link para começar a ganhar comissões</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Data de Cadastro</TableHead>
+                    <TableHead>Comissão</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {referredUsers.map((user, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        {new Date(user.conversion_date).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell>
+                        {user.commission_amount ? (
+                          <div className="flex items-center gap-2">
+                            {user.commission_status === 'paid' ? (
+                              <>
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                                <span className="text-green-600 font-semibold">
+                                  R$ {user.commission_amount.toFixed(2)} paga
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <Clock className="h-4 w-4 text-orange-600" />
+                                <span className="text-orange-600 font-semibold">
+                                  R$ {user.commission_amount.toFixed(2)} pendente
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <Badge variant="outline">Aguardando pagamento</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

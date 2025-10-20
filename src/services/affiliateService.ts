@@ -304,12 +304,15 @@ export async function createAffiliateCampaign(campaignData: Omit<AffiliateCampai
   }
 }
 
+// DOMÍNIO DE PRODUÇÃO FIXO
+const PRODUCTION_DOMAIN = 'https://compuse.com.br';
+
 // Gerar link de afiliado
 export function generateAffiliateLink(affiliateCode: string, campaign?: string): string {
-  const baseUrl = window.location.origin;
   // Remove o prefixo "compuse-" para gerar link limpo
   const code = affiliateCode.replace(/^compuse-/, '');
-  let url = `${baseUrl}/ref/${code}`;
+  // Sempre usar domínio de produção
+  let url = `${PRODUCTION_DOMAIN}/ref/${code}`;
   
   if (campaign) {
     url += `?utm_campaign=${encodeURIComponent(campaign)}`;

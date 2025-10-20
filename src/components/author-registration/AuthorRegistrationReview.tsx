@@ -271,17 +271,22 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
 
       console.log('✅ Registro criado com sucesso:', registrationData);
 
-      // Processar conversão de afiliado (se existir código no localStorage)
+      // Processar comissão de afiliado no registro autoral
       try {
-        const { processAffiliateConversion } = await import('@/services/affiliateService');
-        await processAffiliateConversion(
-          'author_registration',
-          registrationData.id,
-          19.99
-        );
-        console.log('✅ Conversão de afiliado processada');
+        console.log('💰 Processando comissão de afiliado no registro autoral...');
+        const { data: commissionData, error: commissionError } = await supabase.rpc('process_affiliate_first_purchase', {
+          p_user_id: targetUserId,
+          p_payment_amount: 19.99,
+          p_payment_id: registrationData.id
+        });
+        
+        if (commissionError) {
+          console.error('⚠️ Erro ao processar comissão:', commissionError);
+        } else if (commissionData) {
+          console.log('✅ Comissão de afiliado processada com sucesso');
+        }
       } catch (affiliateError) {
-        console.error('⚠️ Erro ao processar conversão de afiliado:', affiliateError);
+        console.error('⚠️ Erro ao processar comissão de afiliado:', affiliateError);
         // Não bloquear o fluxo se falhar
       }
 

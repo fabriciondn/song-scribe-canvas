@@ -43,17 +43,24 @@ export default function CreditsCheckout() {
       setShowQRCode(false);
       setShowSuccessModal(true);
       
-      // Processar conversão de afiliado
-      try {
-        const { processAffiliateConversion } = await import('@/services/affiliateService');
-        await processAffiliateConversion(
-          'author_registration',
-          pixData?.payment_id || '',
-          pricing.totalAmount
-        );
-        console.log('✅ Conversão de afiliado processada no checkout');
-      } catch (affiliateError) {
-        console.error('⚠️ Erro ao processar conversão de afiliado:', affiliateError);
+      // Processar comissão de afiliado na primeira compra
+      if (user?.id) {
+        try {
+          console.log('💰 Processando comissão de afiliado na primeira compra...');
+          const { data, error } = await supabase.rpc('process_affiliate_first_purchase', {
+            p_user_id: user.id,
+            p_payment_amount: pricing.totalAmount,
+            p_payment_id: pixData?.payment_id || ''
+          });
+          
+          if (error) {
+            console.error('⚠️ Erro ao processar comissão:', error);
+          } else if (data) {
+            console.log('✅ Comissão de afiliado processada com sucesso');
+          }
+        } catch (affiliateError) {
+          console.error('⚠️ Erro ao processar comissão de afiliado:', affiliateError);
+        }
       }
       
       // Recarregar perfil após confirmação
