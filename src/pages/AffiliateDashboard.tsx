@@ -21,11 +21,14 @@ import { AffiliateAchievements } from '@/components/affiliate/AffiliateAchieveme
 import { AffiliateWithdrawals } from '@/components/affiliate/AffiliateWithdrawals';
 import { AffiliateApplication } from '@/components/affiliate/AffiliateApplication';
 import { AffiliateSidebar } from '@/components/affiliate/AffiliateSidebar';
+import { AffiliateMobileLayout } from '@/components/affiliate/AffiliateMobileLayout';
+import { useMobileDetection } from '@/hooks/use-mobile';
 import { toast } from '@/hooks/use-toast';
 
 export default function AffiliateDashboard() {
   const { affiliate, stats, isLoading, isAffiliate, isPending, isRejected } = useAffiliate();
   const [activeSection, setActiveSection] = useState('overview');
+  const { isMobile } = useMobileDetection();
 
   // Extract last part of affiliate code for shorter link
   const getShortCode = (code: string) => {
@@ -120,6 +123,78 @@ export default function AffiliateDashboard() {
     );
   }
 
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <AffiliateMobileLayout
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        affiliate={affiliate}
+      >
+        {/* Métricas Financeiras Principais - Mobile */}
+        {stats && (
+          <div className="space-y-3 mb-6">
+            <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Ganho</CardTitle>
+                <DollarSign className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">
+                  R$ {stats.total_earnings.toFixed(2)}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  +R$ {stats.this_month_earnings.toFixed(2)} este mês
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-warning/20 bg-gradient-to-br from-warning/5 to-transparent">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">A Receber</CardTitle>
+                <Target className="h-4 w-4 text-warning" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-warning">
+                  R$ {stats.pending_earnings.toFixed(2)}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Comissões pendentes
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-success/20 bg-gradient-to-br from-success/5 to-transparent">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Já Recebido</CardTitle>
+                <Award className="h-4 w-4 text-success" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-success">
+                  R$ {stats.paid_earnings.toFixed(2)}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Total de comissões pagas
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Content Sections */}
+        <div className="space-y-4">
+          {activeSection === 'overview' && <AffiliateMetrics />}
+          {activeSection === 'links' && <AffiliateLinks affiliateCode={affiliate.affiliate_code} />}
+          {activeSection === 'campaigns' && <AffiliateCampaigns />}
+          {activeSection === 'commissions' && <AffiliateCommissions />}
+          {activeSection === 'withdrawals' && <AffiliateWithdrawals />}
+          {activeSection === 'achievements' && <AffiliateAchievements affiliate={affiliate} />}
+        </div>
+      </AffiliateMobileLayout>
+    );
+  }
+
+  // Desktop Layout
   return (
     <div className="flex min-h-screen w-full">
       <AffiliateSidebar 
