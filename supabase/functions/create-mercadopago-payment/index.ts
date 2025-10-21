@@ -207,7 +207,7 @@ serve(async (req) => {
     });
 
     const mercadoPagoPayload = {
-      transaction_amount: Number(totalAmount),
+      transaction_amount: Number(totalAmount.toFixed(2)),
       description: `${credits} Crédito${credits > 1 ? 's' : ''} - Sistema Compuse`,
       payment_method_id: "pix",
       payer: {
