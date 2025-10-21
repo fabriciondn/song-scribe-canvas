@@ -141,10 +141,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (affiliateCode) {
           console.log('🎯 CÓDIGO DE AFILIADO ENCONTRADO:', affiliateCode);
-          console.log('⏳ Aguardando 2 segundos para criação do perfil...');
+          console.log('⏳ Verificando criação do perfil...');
           
-          // Aguardar criação do perfil (trigger automático)
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          // Verificar se o perfil foi criado antes de processar (com retry)
+          let retries = 0;
+          const maxRetries = 5;
+          let profileExists = false;
+          
+          while (retries < maxRetries && !profileExists) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('id', authData.user.id)
+              .maybeSingle();
+            
+            if (profile) {
+              profileExists = true;
+              console.log(`✅ Perfil confirmado na tentativa ${retries + 1}`);
+            } else {
+              console.log(`⏳ Aguardando perfil... tentativa ${retries + 1}/${maxRetries}`);
+              retries++;
+            }
+          }
+          
+          if (!profileExists) {
+            console.error('❌ Perfil não foi criado após múltiplas tentativas');
+            console.warn('💾 Salvando código para retry no próximo login');
+            localStorage.setItem('affiliate_code_pending', affiliateCode);
+            return;
+          }
           
           try {
             console.log('🚀 INICIANDO PROCESSAMENTO DE CONVERSÃO AFILIADO');
@@ -224,15 +251,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             } else if (result) {
               console.log('🎉 CONVERSÃO PROCESSADA COM SUCESSO VIA FUNÇÃO SQL!');
               console.log('📊 Detalhes do resultado:', result);
+              localStorage.removeItem('affiliate_code');
+              localStorage.removeItem('affiliate_code_pending');
+              console.log('💾 Códigos de afiliado removidos do localStorage');
             } else {
               console.warn('⚠️ Função retornou FALSE - afiliado pode não existir ou não estar aprovado');
+              localStorage.setItem('affiliate_code_pending', affiliateCode);
             }
-            
-            localStorage.removeItem('affiliate_code');
-            console.log('💾 Código de afiliado removido do localStorage');
             
           } catch (error) {
             console.error('💥 ERRO CRÍTICO ao processar conversão:', error);
+            localStorage.setItem('affiliate_code_pending', affiliateCode);
           }
         } else {
           console.log('⚠️ NENHUM código de afiliado no localStorage após registro');
