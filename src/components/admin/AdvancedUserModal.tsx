@@ -59,6 +59,24 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
     enabled: isOpen && !!user?.id,
   });
 
+  // Buscar dados de afiliado do usuário
+  const { data: affiliateData, refetch: refetchAffiliate } = useQuery({
+    queryKey: ['user-affiliate', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('affiliates')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+    enabled: isOpen && !!user?.id,
+  });
+
   useEffect(() => {
     if (userRole) {
       setSelectedRole(userRole);
@@ -376,6 +394,149 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
     }
   };
 
+  const handleMakeAffiliate = async () => {
+    if (!user?.id) return;
+
+    setIsLoading(true);
+    try {
+      // Verificar se já é afiliado
+      if (affiliateData) {
+        toast({
+          title: 'Aviso',
+          description: 'Este usuário já é um afiliado',
+          variant: 'default',
+        });
+        return;
+      }
+
+      // Gerar código de afiliado usando a função SQL
+      const { data: codeData, error: codeError } = await supabase.rpc(
+        'generate_affiliate_code',
+        { 
+          user_id: user.id,
+          user_name: user.name || user.email.split('@')[0]
+        }
+      );
+
+      if (codeError) throw codeError;
+
+      const affiliateCode = codeData;
+
+      // Obter dados do perfil para usar como dados do afiliado
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      // Criar registro de afiliado com status aprovado
+      const { data: adminUser } = await supabase.auth.getUser();
+      
+      const { error: insertError } = await supabase
+        .from('affiliates')
+        .insert({
+          user_id: user.id,
+          affiliate_code: affiliateCode,
+          status: 'approved',
+          level: 'bronze',
+          full_name: profile?.name || user.name || '',
+          contact_email: profile?.email || user.email || '',
+          whatsapp: profile?.cellphone || '',
+          approved_by: adminUser.user?.id,
+          approved_at: new Date().toISOString(),
+          social_media_link: '',
+          youtube_link: '',
+          tiktok_link: '',
+          website_link: '',
+          promotion_strategy: 'Afiliado criado pelo administrador'
+        });
+
+      if (insertError) throw insertError;
+
+      // Log da atividade
+      await supabase
+        .from('user_activity_logs')
+        .insert({
+          user_id: user.id,
+          action: 'affiliate_created_by_admin',
+          metadata: {
+            admin_user_id: adminUser.user?.id,
+            affiliate_code: affiliateCode,
+            created_at: new Date().toISOString()
+          }
+        });
+
+      toast({
+        title: 'Sucesso',
+        description: `Usuário transformado em afiliado com código: ${affiliateCode}`,
+      });
+
+      refetchAffiliate();
+      onUserUpdate();
+    } catch (error: any) {
+      console.error('Erro ao tornar usuário em afiliado:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao tornar usuário em afiliado',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateAffiliateStatus = async (status: string) => {
+    if (!affiliateData?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('affiliates')
+        .update({ status: status as 'approved' | 'pending' | 'rejected' | 'suspended' })
+        .eq('id', affiliateData.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Status do afiliado atualizado',
+      });
+      
+      refetchAffiliate();
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleUpdateAffiliateLevel = async (level: string) => {
+    if (!affiliateData?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('affiliates')
+        .update({ level: level as 'bronze' | 'silver' | 'gold' })
+        .eq('id', affiliateData.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Nível do afiliado atualizado',
+      });
+      
+      refetchAffiliate();
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (!user) return null;
 
   const stats = userStats;
@@ -484,6 +645,80 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                         .filter(Boolean)
                         .join(', ')}
                     </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Card de Status de Afiliado */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCog className="h-5 w-5" />
+                  Status de Afiliado
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {affiliateData ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Status:</span>
+                      <Badge variant={
+                        affiliateData.status === 'approved' ? 'default' :
+                        affiliateData.status === 'pending' ? 'secondary' :
+                        'destructive'
+                      }>
+                        {affiliateData.status === 'approved' && <CheckCircle className="h-3 w-3 mr-1" />}
+                        {affiliateData.status === 'approved' ? 'Aprovado' :
+                         affiliateData.status === 'pending' ? 'Pendente' :
+                         affiliateData.status === 'rejected' ? 'Rejeitado' : 'Suspenso'}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Nível:</span>
+                      <Badge variant="outline">
+                        {affiliateData.level === 'bronze' && '🥉 Bronze'}
+                        {affiliateData.level === 'silver' && '🥈 Silver'}
+                        {affiliateData.level === 'gold' && '🥇 Gold'}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm text-muted-foreground">Código:</span>
+                      <code className="text-xs bg-muted p-2 rounded break-all">
+                        {affiliateData.affiliate_code}
+                      </code>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                      <div>
+                        <div className="text-xs text-muted-foreground">Registros</div>
+                        <div className="text-lg font-bold">{affiliateData.total_registrations || 0}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground">Ganhos</div>
+                        <div className="text-lg font-bold">
+                          R$ {(affiliateData.total_earnings || 0).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Este usuário não é um afiliado.
+                    </p>
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={handleMakeAffiliate}
+                      disabled={isLoading}
+                    >
+                      <UserCog className="h-4 w-4 mr-2" />
+                      Tornar Afiliado
+                    </Button>
                   </div>
                 )}
               </CardContent>
@@ -839,6 +1074,53 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
           </TabsContent>
 
           <TabsContent value="management" className="space-y-4">
+            {/* Seção de Afiliado */}
+            {affiliateData && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <UserCog className="h-5 w-5" />
+                    Gerenciar Afiliado
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Status do Afiliado</Label>
+                    <Select 
+                      value={affiliateData.status} 
+                      onValueChange={handleUpdateAffiliateStatus}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="approved">Aprovado</SelectItem>
+                        <SelectItem value="suspended">Suspenso</SelectItem>
+                        <SelectItem value="rejected">Rejeitado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Nível do Afiliado</Label>
+                    <Select 
+                      value={affiliateData.level} 
+                      onValueChange={handleUpdateAffiliateLevel}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="bronze">🥉 Bronze (25%)</SelectItem>
+                        <SelectItem value="silver">🥈 Silver (50%)</SelectItem>
+                        <SelectItem value="gold">🥇 Gold (50% + Recorrente)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Gerenciar Função/Role */}
             <Card>
               <CardHeader>
