@@ -13,19 +13,26 @@ import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
 import { PaymentSuccessModal } from '@/components/checkout/PaymentSuccessModal';
 import { usePaymentConfirmation } from '@/hooks/usePaymentConfirmation';
-
 interface PixData {
   qr_code: string;
   qr_code_url: string;
   payment_id: string;
 }
-
 export default function CreditsCheckout() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { profile, loadProfile } = useProfile();
-  const { toast } = useToast();
-  const { theme } = useTheme();
+  const {
+    user
+  } = useAuth();
+  const {
+    profile,
+    loadProfile
+  } = useProfile();
+  const {
+    toast
+  } = useToast();
+  const {
+    theme
+  } = useTheme();
   const [credits, setCredits] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [pixData, setPixData] = useState<PixData | null>(null);
@@ -33,26 +40,29 @@ export default function CreditsCheckout() {
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [creditsAdded, setCreditsAdded] = useState(0);
-
-  const { isChecking } = usePaymentConfirmation({
+  const {
+    isChecking
+  } = usePaymentConfirmation({
     paymentId: pixData?.payment_id || null,
     isActive: showQRCode && !paymentConfirmed,
-    onPaymentConfirmed: async (credits) => {
+    onPaymentConfirmed: async credits => {
       setCreditsAdded(credits);
       setPaymentConfirmed(true);
       setShowQRCode(false);
       setShowSuccessModal(true);
-      
+
       // Processar comissão de afiliado na primeira compra
       if (user?.id) {
         try {
           console.log('💰 Processando comissão de afiliado na primeira compra...');
-          const { data, error } = await supabase.rpc('process_affiliate_first_purchase', {
+          const {
+            data,
+            error
+          } = await supabase.rpc('process_affiliate_first_purchase', {
             p_user_id: user.id,
             p_payment_amount: pricing.totalAmount,
             p_payment_id: pixData?.payment_id || ''
           });
-          
           if (error) {
             console.error('⚠️ Erro ao processar comissão:', error);
           } else if (data) {
@@ -62,7 +72,7 @@ export default function CreditsCheckout() {
           console.error('⚠️ Erro ao processar comissão de afiliado:', affiliateError);
         }
       }
-      
+
       // Recarregar perfil após confirmação
       if (typeof loadProfile === 'function') {
         setTimeout(() => {
@@ -82,7 +92,6 @@ export default function CreditsCheckout() {
       }
     }
   }, [theme]);
-
   const calculatePricing = (creditAmount: number) => {
     let unitPrice = 19.99;
     let bonusCredits = 0;
@@ -96,11 +105,9 @@ export default function CreditsCheckout() {
       // Preço original seria 12 créditos x 19,99 = 239,88
       // Preço com oferta: 10 créditos x 17,99 = 179,90
       originalPrice = 19.99 * 12; // 239,88
-      savings = originalPrice - (10 * unitPrice); // 239,88 - 179,90 = 59,98
+      savings = originalPrice - 10 * unitPrice; // 239,88 - 179,90 = 59,98
     }
-
     let totalAmount = creditAmount * unitPrice;
-
     return {
       unitPrice,
       totalAmount,
@@ -110,9 +117,7 @@ export default function CreditsCheckout() {
       finalCredits: creditAmount + bonusCredits
     };
   };
-
   const pricing = calculatePricing(credits);
-
   const handleProcessPayment = async () => {
     if (!user) {
       toast({
@@ -133,7 +138,6 @@ export default function CreditsCheckout() {
       navigate('/settings');
       return;
     }
-
     console.log('🔄 Iniciando processamento de pagamento com Mercado Pago...', {
       credits: credits,
       bonusCredits: pricing.bonusCredits,
@@ -141,10 +145,12 @@ export default function CreditsCheckout() {
       totalAmount: pricing.totalAmount,
       userId: user.id
     });
-
     setIsProcessing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-mercadopago-payment', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('create-mercadopago-payment', {
         body: {
           credits: credits,
           bonusCredits: pricing.bonusCredits,
@@ -158,24 +164,19 @@ export default function CreditsCheckout() {
           }
         }
       });
-
-      console.log('📡 Resposta da Edge Function (Mercado Pago):', { data, error });
-
+      console.log('📡 Resposta da Edge Function (Mercado Pago):', {
+        data,
+        error
+      });
       if (error) {
         console.error('❌ Erro na Edge Function:', error);
-        
         let errorMsg = 'Não foi possível processar o pagamento.';
-        
         if (error.message) {
           errorMsg = error.message;
         }
-        
         if (error.context?.response?.body) {
           try {
-            const responseBody = typeof error.context.response.body === 'string' 
-              ? JSON.parse(error.context.response.body) 
-              : error.context.response.body;
-            
+            const responseBody = typeof error.context.response.body === 'string' ? JSON.parse(error.context.response.body) : error.context.response.body;
             if (responseBody?.error) {
               errorMsg = responseBody.error;
             }
@@ -183,7 +184,6 @@ export default function CreditsCheckout() {
             console.error('Erro ao parsear resposta:', parseError);
           }
         }
-
         toast({
           title: "Erro no Pagamento",
           description: errorMsg,
@@ -191,7 +191,6 @@ export default function CreditsCheckout() {
         });
         return;
       }
-
       if (data?.success && data?.qr_code && data?.payment_id) {
         setPixData({
           qr_code: data.qr_code,
@@ -222,12 +221,10 @@ export default function CreditsCheckout() {
       setIsProcessing(false);
     }
   };
-
   const handleSuccessModalContinue = () => {
     setShowSuccessModal(false);
     navigate('/dashboard');
   };
-
   if (!user) {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex items-center justify-center">
         <div className="w-full max-w-md mx-auto">
@@ -250,7 +247,6 @@ export default function CreditsCheckout() {
         </div>
       </div>;
   }
-
   if (showQRCode && pixData) {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
         <div className="max-w-2xl mx-auto">
@@ -273,27 +269,20 @@ export default function CreditsCheckout() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex flex-col items-center space-y-4">
-                {pixData.qr_code_url && (
-                  <div className="bg-white p-4 rounded-lg">
+                {pixData.qr_code_url && <div className="bg-white p-4 rounded-lg">
                     <img src={pixData.qr_code_url} alt="QR Code PIX" className="w-64 h-64" />
-                  </div>
-                )}
+                  </div>}
                 <div className="w-full">
                   <Label htmlFor="pix-code">Código PIX</Label>
                   <div className="flex gap-2 mt-1">
-                    <Input 
-                      id="pix-code" 
-                      value={pixData.qr_code} 
-                      readOnly 
-                      className="font-mono text-xs" 
-                    />
+                    <Input id="pix-code" value={pixData.qr_code} readOnly className="font-mono text-xs" />
                     <Button variant="outline" onClick={() => {
-                      navigator.clipboard.writeText(pixData.qr_code);
-                      toast({
-                        title: "Copiado!",
-                        description: "Código PIX copiado para a área de transferência."
-                      });
-                    }}>
+                    navigator.clipboard.writeText(pixData.qr_code);
+                    toast({
+                      title: "Copiado!",
+                      description: "Código PIX copiado para a área de transferência."
+                    });
+                  }}>
                       Copiar
                     </Button>
                   </div>
@@ -318,8 +307,7 @@ export default function CreditsCheckout() {
                     </p>
                   </div>}
 
-                {!isChecking && (
-                  <div className="text-center space-y-2">
+                {!isChecking && <div className="text-center space-y-2">
                     <div className="flex items-center justify-center gap-2 text-orange-600">
                       <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
                       <span className="text-sm">Aguardando pagamento...</span>
@@ -327,24 +315,17 @@ export default function CreditsCheckout() {
                     <p className="text-xs text-muted-foreground">
                       Após realizar o pagamento, os créditos serão liberados automaticamente
                     </p>
-                  </div>
-                )}
+                  </div>}
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Success Modal */}
-        <PaymentSuccessModal 
-          isOpen={showSuccessModal}
-          creditsAdded={creditsAdded}
-          onContinue={handleSuccessModalContinue}
-        />
+        <PaymentSuccessModal isOpen={showSuccessModal} creditsAdded={creditsAdded} onContinue={handleSuccessModalContinue} />
       </div>;
   }
-
-  return (
-    <>
+  return <>
       {/* Hook para detectar mobile */}
       <div className="block md:hidden">
         {/* Layout Mobile */}
@@ -372,16 +353,16 @@ export default function CreditsCheckout() {
                 <CardContent className="space-y-4">
                   <div>
                     <Label className="text-sm">Quantidade de Créditos</Label>
-                    <Select value={credits.toString()} onValueChange={(value) => setCredits(parseInt(value))}>
+                    <Select value={credits.toString()} onValueChange={value => setCredits(parseInt(value))}>
                       <SelectTrigger className="text-base font-semibold mt-1">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => (
-                          <SelectItem key={num} value={num.toString()}>
+                        {Array.from({
+                        length: 20
+                      }, (_, i) => i + 1).map(num => <SelectItem key={num} value={num.toString()}>
                             {num} {num === 1 ? 'crédito' : 'créditos'}
-                          </SelectItem>
-                        ))}
+                          </SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -391,12 +372,10 @@ export default function CreditsCheckout() {
                       <span className="text-muted-foreground">Créditos base:</span>
                       <span className="font-medium">{credits}</span>
                     </div>
-                    {pricing.bonusCredits > 0 && (
-                      <div className="flex justify-between items-center mb-1">
+                    {pricing.bonusCredits > 0 && <div className="flex justify-between items-center mb-1">
                         <span className="text-muted-foreground">Créditos bônus:</span>
                         <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
-                      </div>
-                    )}
+                      </div>}
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-muted-foreground">Total de créditos:</span>
                       <span className="font-bold text-primary">{pricing.finalCredits}</span>
@@ -405,11 +384,9 @@ export default function CreditsCheckout() {
                     <div className="flex justify-between items-center">
                       <span className="font-semibold">Valor total:</span>
                       <div className="text-right">
-                        {pricing.savings > 0 && (
-                          <div className="text-xs text-muted-foreground line-through">
+                        {pricing.savings > 0 && <div className="text-xs text-muted-foreground line-through">
                             R$ {pricing.originalPrice.toFixed(2)}
-                          </div>
-                        )}
+                          </div>}
                         <div className="text-base font-bold text-foreground">
                           R$ {pricing.totalAmount.toFixed(2)}
                         </div>
@@ -492,19 +469,11 @@ export default function CreditsCheckout() {
                     </div>
                   </div>
 
-                  <Button 
-                    onClick={handleProcessPayment} 
-                    disabled={isProcessing} 
-                    className="w-full" 
-                    size="lg"
-                  >
-                    {isProcessing ? 
-                      <div className="flex items-center gap-2">
+                  <Button onClick={handleProcessPayment} disabled={isProcessing} className="w-full" size="lg">
+                    {isProcessing ? <div className="flex items-center gap-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                         Processando...
-                      </div> : 
-                      `Finalizar Compra - R$ ${pricing.totalAmount.toFixed(2)}`
-                    }
+                      </div> : `Finalizar Compra - R$ ${pricing.totalAmount.toFixed(2)}`}
                   </Button>
                 </CardContent>
               </Card>
@@ -540,15 +509,7 @@ export default function CreditsCheckout() {
                   <CardContent className="space-y-6">
                     <div>
                       <Label htmlFor="credits">Quantidade de Créditos</Label>
-                      <Input 
-                        id="credits" 
-                        type="number" 
-                        min="1" 
-                        max="100" 
-                        value={credits} 
-                        onChange={e => setCredits(Math.max(1, parseInt(e.target.value) || 1))} 
-                        className="text-lg font-semibold" 
-                      />
+                      <Input id="credits" type="number" min="1" max="100" value={credits} onChange={e => setCredits(Math.max(1, parseInt(e.target.value) || 1))} className="text-lg font-semibold" />
                     </div>
 
                     <div className="bg-muted p-4 rounded-lg">
@@ -556,12 +517,10 @@ export default function CreditsCheckout() {
                         <span className="text-muted-foreground">Créditos base:</span>
                         <span className="font-medium">{credits}</span>
                       </div>
-                      {pricing.bonusCredits > 0 && (
-                        <div className="flex justify-between items-center mb-2">
+                      {pricing.bonusCredits > 0 && <div className="flex justify-between items-center mb-2">
                           <span className="text-muted-foreground">Créditos bônus:</span>
                           <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
-                        </div>
-                      )}
+                        </div>}
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-muted-foreground">Total de créditos:</span>
                         <span className="font-bold text-primary">{pricing.finalCredits}</span>
@@ -570,11 +529,9 @@ export default function CreditsCheckout() {
                       <div className="flex justify-between items-center">
                         <span className="font-semibold">Valor total:</span>
                         <div className="text-right">
-                          {pricing.savings > 0 && (
-                            <div className="text-xs text-muted-foreground line-through">
+                          {pricing.savings > 0 && <div className="text-xs text-muted-foreground line-through">
                               R$ {pricing.originalPrice.toFixed(2)}
-                            </div>
-                          )}
+                            </div>}
                           <div className="text-lg font-bold text-foreground">
                             R$ {pricing.totalAmount.toFixed(2)}
                           </div>
@@ -593,7 +550,7 @@ export default function CreditsCheckout() {
                           <Gift className="h-6 w-6 text-green-600" />
                         </div>
                          <div>
-                           <h3 className="font-semibold text-green-800 dark:text-green-200 text-xl">Super Oferta</h3>
+                           <h3 className="font-semibold text-green-800 dark:text-green-200 text-xl">Super Oferta de lançamento</h3>
                            <p className="text-green-700 dark:text-green-300 font-medium text-lg">10 Créditos + 2 GRÁTIS</p>
                            <p className="text-sm text-green-600 dark:text-green-400">12 créditos por R$ 17,99 cada (apenas os 10)</p>
                          </div>
@@ -659,19 +616,11 @@ export default function CreditsCheckout() {
                       </div>
                     </div>
 
-                    <Button 
-                      onClick={handleProcessPayment} 
-                      disabled={isProcessing} 
-                      className="w-full" 
-                      size="lg"
-                    >
-                      {isProcessing ? 
-                        <div className="flex items-center gap-2">
+                    <Button onClick={handleProcessPayment} disabled={isProcessing} className="w-full" size="lg">
+                      {isProcessing ? <div className="flex items-center gap-2">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                           Processando...
-                        </div> : 
-                        `Finalizar Compra - R$ ${pricing.totalAmount.toFixed(2)}`
-                      }
+                        </div> : `Finalizar Compra - R$ ${pricing.totalAmount.toFixed(2)}`}
                     </Button>
                   </CardContent>
                 </Card>
@@ -681,11 +630,6 @@ export default function CreditsCheckout() {
         </div>
       </div>
       {/* Success Modal */}
-      <PaymentSuccessModal 
-        isOpen={showSuccessModal}
-        creditsAdded={creditsAdded}
-        onContinue={handleSuccessModalContinue}
-      />
-    </>
-  );
+      <PaymentSuccessModal isOpen={showSuccessModal} creditsAdded={creditsAdded} onContinue={handleSuccessModalContinue} />
+    </>;
 }
