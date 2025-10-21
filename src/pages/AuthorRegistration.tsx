@@ -114,27 +114,6 @@ const AuthorRegistration: React.FC = () => {
               </div>
             </div>
 
-            {/* Ofertas Especiais */}
-            <div className="space-y-3">
-              <Card className="border-green-200 bg-green-50">
-                <CardContent className="pt-4">
-                  <div className="flex items-center gap-2 text-green-600 mb-2">
-                    <Gift className="h-4 w-4" />
-                    <span className="font-semibold">Super Oferta!</span>
-                  </div>
-                  <p className="text-sm text-green-700 font-semibold">
-                    10 Créditos + 2 GRÁTIS
-                  </p>
-                  <p className="text-xs text-green-600">
-                    12 créditos por R$ 17,99 cada (apenas os 10)
-                  </p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs text-green-600 line-through">R$ 239,80</span>
-                    <span className="text-lg font-bold text-green-700">R$ 179,90</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
             
             <div className="space-y-4">
               <Button 
