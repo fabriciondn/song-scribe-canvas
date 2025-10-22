@@ -111,7 +111,7 @@ export const AffiliateMetrics = () => {
             Progresso do Nível
           </CardTitle>
           <CardDescription>
-            Sua evolução no programa de afiliados
+            Sua evolução no programa de parceiros
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -140,7 +140,7 @@ export const AffiliateMetrics = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.total_clicks}</div>
             <p className="text-xs text-muted-foreground">
-              Links de afiliado acessados
+              Links de parceiro acessados
             </p>
           </CardContent>
         </Card>
@@ -264,7 +264,7 @@ export const AffiliateMetrics = () => {
             Meus Indicados
           </CardTitle>
           <CardDescription>
-            Usuários que se cadastraram através do seu link de afiliado
+            Usuários que se cadastraram através do seu link de parceiro
           </CardDescription>
         </CardHeader>
         <CardContent>

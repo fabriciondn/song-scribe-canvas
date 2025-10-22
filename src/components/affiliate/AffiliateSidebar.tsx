@@ -75,7 +75,7 @@ export function AffiliateSidebar({ activeSection, onSectionChange, affiliate }: 
               {profile?.name?.charAt(0)?.toUpperCase() || 'A'}
             </AvatarFallback>
           </Avatar>
-          <h3 className="font-semibold text-center text-sm text-white">{profile?.name || 'Afiliado'}</h3>
+          <h3 className="font-semibold text-center text-sm text-white">{profile?.name || 'Parceiro'}</h3>
           <div className="flex items-center gap-1 mt-1">
             {getLevelBadge()}
             <Badge variant="outline" className="bg-green-900/30 text-green-400 border-green-700 text-xs">

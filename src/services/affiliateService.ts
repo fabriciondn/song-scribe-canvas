@@ -10,6 +10,7 @@ export interface Affiliate {
   total_subscriptions: number;
   total_earnings: number;
   total_paid: number;
+  custom_commission_rate?: number | null;
   approved_by?: string;
   approved_at?: string;
   created_at: string;
@@ -174,7 +175,7 @@ export async function getMyAffiliateData(): Promise<Affiliate | null> {
 
     const { data, error } = await supabase
       .from('affiliates')
-      .select('*')
+      .select('*, custom_commission_rate')
       .eq('user_id', user.user.id)
       .single();
 
@@ -307,7 +308,30 @@ export async function createAffiliateCampaign(campaignData: Omit<AffiliateCampai
 // DOMÍNIO DE PRODUÇÃO FIXO
 const PRODUCTION_DOMAIN = 'https://compuse.com.br';
 
-// Gerar link de afiliado
+/**
+ * Retorna a taxa de comissão efetiva do parceiro
+ * Prioriza custom_commission_rate, senão usa taxa padrão do nível
+ */
+export function getEffectiveCommissionRate(affiliate: Affiliate): number {
+  // Se tem taxa personalizada, usa ela
+  if (affiliate.custom_commission_rate !== null && 
+      affiliate.custom_commission_rate !== undefined) {
+    return affiliate.custom_commission_rate;
+  }
+  
+  // Senão usa taxa padrão baseada no nível
+  const defaultRates = {
+    bronze: 25,
+    silver: 50,
+    gold: 50
+  };
+  
+  return defaultRates[affiliate.level] || 25;
+}
+
+/**
+ * Gera um link de parceiro
+ */
 export function generateAffiliateLink(affiliateCode: string, campaign?: string): string {
   // Remove o prefixo "compuse-" para gerar link limpo
   const code = affiliateCode.replace(/^compuse-/, '');

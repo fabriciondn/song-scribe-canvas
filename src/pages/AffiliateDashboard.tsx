@@ -46,7 +46,7 @@ export default function AffiliateDashboard() {
     navigator.clipboard.writeText(affiliateLink);
     toast({
       title: "Link copiado!",
-      description: "O link de afiliado foi copiado para a área de transferência.",
+      description: "O link de parceiro foi copiado para a área de transferência.",
     });
   };
 
@@ -79,7 +79,7 @@ export default function AffiliateDashboard() {
             </div>
             <CardTitle>Solicitação em Análise</CardTitle>
             <CardDescription>
-              Sua solicitação para se tornar afiliado está sendo analisada pela nossa equipe.
+              Sua solicitação para se tornar parceiro está sendo analisada pela nossa equipe.
               Você receberá uma notificação quando for aprovada.
             </CardDescription>
           </CardHeader>
@@ -106,7 +106,7 @@ export default function AffiliateDashboard() {
             </div>
             <CardTitle>Solicitação Rejeitada</CardTitle>
             <CardDescription>
-              Infelizmente sua solicitação para se tornar afiliado foi rejeitada.
+              Infelizmente sua solicitação para se tornar parceiro foi rejeitada.
               Entre em contato conosco para mais informações.
             </CardDescription>
           </CardHeader>
@@ -184,7 +184,7 @@ export default function AffiliateDashboard() {
         {/* Content Sections */}
         <div className="space-y-4">
           {activeSection === 'overview' && <AffiliateMetrics />}
-          {activeSection === 'links' && <AffiliateLinks affiliateCode={affiliate.affiliate_code} />}
+          {activeSection === 'links' && <AffiliateLinks affiliateCode={affiliate.affiliate_code} affiliate={affiliate} />}
           {activeSection === 'campaigns' && <AffiliateCampaigns />}
           {activeSection === 'commissions' && <AffiliateCommissions />}
           {activeSection === 'withdrawals' && <AffiliateWithdrawals />}
@@ -206,7 +206,7 @@ export default function AffiliateDashboard() {
       <main className="flex-1 ml-64 p-6 md:p-8 space-y-6 overflow-auto">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold">Painel do Afiliado</h1>
+          <h1 className="text-2xl font-bold">Painel do Parceiro</h1>
           <p className="text-sm text-muted-foreground">
             Gerencie suas campanhas e acompanhe seus ganhos
           </p>
@@ -315,7 +315,7 @@ export default function AffiliateDashboard() {
         {/* Content Sections */}
         <div>
           {activeSection === 'overview' && <AffiliateMetrics />}
-          {activeSection === 'links' && <AffiliateLinks affiliateCode={affiliate.affiliate_code} />}
+          {activeSection === 'links' && <AffiliateLinks affiliateCode={affiliate.affiliate_code} affiliate={affiliate} />}
           {activeSection === 'campaigns' && <AffiliateCampaigns />}
           {activeSection === 'commissions' && <AffiliateCommissions />}
           {activeSection === 'withdrawals' && <AffiliateWithdrawals />}

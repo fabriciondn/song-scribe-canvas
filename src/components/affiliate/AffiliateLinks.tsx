@@ -14,20 +14,22 @@ import {
   ExternalLink,
   Sparkles
 } from 'lucide-react';
-import { generateAffiliateLink } from '@/services/affiliateService';
+import { generateAffiliateLink, getEffectiveCommissionRate, type Affiliate } from '@/services/affiliateService';
 import { useToast } from '@/hooks/use-toast';
 
 interface AffiliateLinksProps {
   affiliateCode: string;
+  affiliate: Affiliate;
 }
 
-export const AffiliateLinks = ({ affiliateCode }: AffiliateLinksProps) => {
+export const AffiliateLinks = ({ affiliateCode, affiliate }: AffiliateLinksProps) => {
   const [campaignName, setCampaignName] = useState('');
   const [customLink, setCustomLink] = useState('');
   const { toast } = useToast();
 
   const baseLink = generateAffiliateLink(affiliateCode);
   const campaignLink = campaignName ? generateAffiliateLink(affiliateCode, campaignName) : baseLink;
+  const commissionRate = getEffectiveCommissionRate(affiliate);
 
   const copyToClipboard = (text: string, type: string) => {
     navigator.clipboard.writeText(text);
@@ -65,10 +67,10 @@ export const AffiliateLinks = ({ affiliateCode }: AffiliateLinksProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Link className="w-5 h-5" />
-            Seu Link de Afiliado
+            Seu Link de Parceiro
           </CardTitle>
           <CardDescription>
-            Compartilhe este link e ganhe 50% de comissão na primeira compra de cada indicado
+            Compartilhe este link e ganhe {commissionRate}% de comissão na primeira compra de cada indicado
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -125,7 +127,7 @@ export const AffiliateLinks = ({ affiliateCode }: AffiliateLinksProps) => {
                     variant="ghost"
                     size="sm"
                     onClick={() => copyToClipboard(
-                      `🎵 Descobri a plataforma PERFEITA para compositores! \n\n✅ Registro de obras autorais\n✅ Ferramentas de composição\n✅ Proteção legal\n✅ Interface super intuitiva\n\nConheça: ${baseLink}\n\n#musica #compositor #direitosautorais #compuse`,
+                      `🎵 Descobri a plataforma PERFEITA para compositores! \n\n✅ Registro de obras autorais\n✅ Ferramentas de composição\n✅ Proteção legal\n✅ Interface super intuitiva\n\nConheça: ${baseLink}\n\nGanhe ${commissionRate}% de comissão na primeira compra! 🎵\n\n#musica #compositor #direitosautorais #compuse`,
                       'Texto do Instagram'
                     )}
                   >
@@ -142,9 +144,11 @@ export const AffiliateLinks = ({ affiliateCode }: AffiliateLinksProps) => {
 
 Conheça: ${baseLink}
 
+Ganhe ${commissionRate}% de comissão na primeira compra! 🎵
+
 #musica #compositor #direitosautorais #compuse`}
                   readOnly
-                  className="bg-transparent border-none resize-none h-32"
+                  className="bg-transparent border-none resize-none h-40"
                 />
               </div>
 
@@ -155,7 +159,7 @@ Conheça: ${baseLink}
                     variant="ghost"
                     size="sm"
                     onClick={() => copyToClipboard(
-                      `Oi! Você que faz música precisa conhecer essa plataforma: ${baseLink}\n\nÉ ideal para registrar suas obras e proteger seus direitos autorais. Super recomendo! 🎵`,
+                      `Oi! Você que faz música precisa conhecer essa plataforma: ${baseLink}\n\nÉ ideal para registrar suas obras e proteger seus direitos autorais.\n\nVocê ganha ${commissionRate}% de comissão se cadastrar através do meu link! 🎵`,
                       'Texto do WhatsApp'
                     )}
                   >
@@ -165,9 +169,11 @@ Conheça: ${baseLink}
                 <Textarea 
                   value={`Oi! Você que faz música precisa conhecer essa plataforma: ${baseLink}
 
-É ideal para registrar suas obras e proteger seus direitos autorais. Super recomendo! 🎵`}
+É ideal para registrar suas obras e proteger seus direitos autorais.
+
+Você ganha ${commissionRate}% de comissão se cadastrar através do meu link! 🎵`}
                   readOnly
-                  className="bg-transparent border-none resize-none h-20"
+                  className="bg-transparent border-none resize-none h-24"
                 />
               </div>
 

@@ -98,14 +98,14 @@ export const AffiliateApplication = () => {
       {/* Hero Section */}
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold mb-4">
-          Torne-se um Afiliado <span className="text-primary">Compuse</span>
+          Torne-se um Parceiro <span className="text-primary">Compuse</span>
         </h1>
         <p className="text-xl text-muted-foreground mb-6">
           Ganhe comissões indicando novos usuários para a plataforma
         </p>
         <div className="flex justify-center gap-2">
           <Badge variant="secondary" className="bg-accent text-accent-foreground border-border">
-            Até 50% de comissão
+            Comissão personalizável
           </Badge>
           <Badge variant="secondary" className="bg-accent text-accent-foreground border-border">
             Comissões recorrentes
@@ -131,11 +131,11 @@ export const AffiliateApplication = () => {
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
               <CheckCircle className="w-4 h-4 text-primary" />
-              25% comissão por registro autoral
+              Comissão personalizável (mínimo 25%)
             </div>
             <div className="flex items-center gap-2 text-sm">
               <CheckCircle className="w-4 h-4 text-primary" />
-              Link de afiliado personalizado
+              Link de parceiro personalizado
             </div>
             <div className="flex items-center gap-2 text-sm">
               <CheckCircle className="w-4 h-4 text-primary" />
@@ -160,12 +160,12 @@ export const AffiliateApplication = () => {
             <CardTitle className="flex items-center justify-center gap-2">
               Nível Silver
             </CardTitle>
-            <CardDescription>Para afiliados ativos</CardDescription>
+            <CardDescription>Para parceiros ativos</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
               <CheckCircle className="w-4 h-4 text-primary" />
-              50% comissão por registro autoral
+              Comissão personalizável (até 50%)
             </div>
             <div className="flex items-center gap-2 text-sm">
               <CheckCircle className="w-4 h-4 text-primary" />
@@ -191,16 +191,16 @@ export const AffiliateApplication = () => {
             <CardTitle className="flex items-center justify-center gap-2">
               Nível Gold
             </CardTitle>
-            <CardDescription>Para super afiliados</CardDescription>
+            <CardDescription>Para super parceiros</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
               <CheckCircle className="w-4 h-4 text-primary" />
-              50% comissão por registro autoral
+              Comissão personalizável (até 100%)
             </div>
             <div className="flex items-center gap-2 text-sm">
               <CheckCircle className="w-4 h-4 text-primary" />
-              25-50% comissão recorrente
+              Comissão recorrente personalizável
             </div>
             <div className="flex items-center gap-2 text-sm">
               <CheckCircle className="w-4 h-4 text-primary" />
@@ -227,9 +227,9 @@ export const AffiliateApplication = () => {
               Comissão por Registro Autoral
             </h3>
             <ul className="space-y-2 text-sm">
-              <li>• <strong>Bronze:</strong> 25% sobre cada registro (R$ 12,50)</li>
-              <li>• <strong>Silver/Gold:</strong> 50% sobre cada registro (R$ 25,00)</li>
-              <li>• Comissão única por registro autoral</li>
+              <li>• <strong>Bronze:</strong> Comissão personalizável (mínimo 25%)</li>
+              <li>• <strong>Silver/Gold:</strong> Comissão personalizável (até 50%+)</li>
+              <li>• Comissão configurada individualmente por parceiro</li>
               <li>• Upgrade automático após 5 registros</li>
             </ul>
           </div>
@@ -240,8 +240,8 @@ export const AffiliateApplication = () => {
             </h3>
             <ul className="space-y-2 text-sm">
               <li>• Disponível após 100 registros indicados</li>
-              <li>• 25% dos primeiros 10 assinantes (R$ 3,75/mês)</li>
-              <li>• 50% dos próximos assinantes (R$ 7,50/mês)</li>
+              <li>• Comissão personalizável por parceiro</li>
+              <li>• Taxa configurada individualmente pelo admin</li>
               <li>• Comissão mensal enquanto o cliente for ativo</li>
             </ul>
           </div>
@@ -252,7 +252,7 @@ export const AffiliateApplication = () => {
       <div className="grid md:grid-cols-3 gap-6 mb-10">
         <div className="text-center">
           <div className="text-3xl font-bold text-primary mb-2">R$ 1.250</div>
-          <p className="text-sm text-muted-foreground">Média mensal dos afiliados Gold</p>
+          <p className="text-sm text-muted-foreground">Média mensal dos parceiros Gold</p>
         </div>
         <div className="text-center">
           <div className="text-3xl font-bold text-primary mb-2">4.7%</div>
@@ -260,7 +260,7 @@ export const AffiliateApplication = () => {
         </div>
         <div className="text-center">
           <div className="text-3xl font-bold text-primary mb-2">98%</div>
-          <p className="text-sm text-muted-foreground">Satisfação dos afiliados</p>
+          <p className="text-sm text-muted-foreground">Satisfação dos parceiros</p>
         </div>
       </div>
 
@@ -271,7 +271,7 @@ export const AffiliateApplication = () => {
             Pronto para Começar?
           </h2>
           <p className="mb-6 opacity-90">
-            Junte-se aos nossos afiliados e comece a ganhar comissões hoje mesmo
+            Junte-se aos nossos parceiros e comece a ganhar comissões hoje mesmo
           </p>
           {!showForm ? (
             <Button 
@@ -280,12 +280,12 @@ export const AffiliateApplication = () => {
               onClick={() => setShowForm(true)}
               className="text-primary hover:bg-white/90"
             >
-              Quero ser Afiliado
+              Quero ser Parceiro
             </Button>
           ) : (
             <Card className="max-w-2xl mx-auto">
               <CardHeader>
-                <CardTitle>Formulário de Inscrição - Programa de Afiliados</CardTitle>
+                <CardTitle>Formulário de Inscrição - Programa de Parceiros</CardTitle>
                 <CardDescription>
                   Preencha todos os dados para que possamos analisar sua candidatura
                 </CardDescription>

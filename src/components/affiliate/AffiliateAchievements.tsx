@@ -13,13 +13,15 @@ import {
   CheckCircle,
   Lock
 } from 'lucide-react';
-import { type Affiliate } from '@/services/affiliateService';
+import { type Affiliate, getEffectiveCommissionRate } from '@/services/affiliateService';
 
 interface AffiliateAchievementsProps {
   affiliate: Affiliate;
 }
 
 export const AffiliateAchievements = ({ affiliate }: AffiliateAchievementsProps) => {
+  const commissionRate = getEffectiveCommissionRate(affiliate);
+  
   const achievements = [
     {
       id: 'first_registration',
@@ -34,12 +36,12 @@ export const AffiliateAchievements = ({ affiliate }: AffiliateAchievementsProps)
     {
       id: 'bronze_level',
       title: 'Nível Bronze',
-      description: 'Complete seu cadastro como afiliado',
+      description: 'Complete seu cadastro como parceiro',
       icon: Star,
       unlocked: true,
       progress: 1,
       target: 1,
-      reward: '25% de comissão por registro'
+      reward: `${commissionRate}% de comissão por registro`
     },
     {
       id: 'silver_level',
@@ -49,7 +51,7 @@ export const AffiliateAchievements = ({ affiliate }: AffiliateAchievementsProps)
       unlocked: affiliate.total_registrations >= 5,
       progress: Math.min(affiliate.total_registrations, 5),
       target: 5,
-      reward: '50% de comissão por registro'
+      reward: `${commissionRate}% de comissão por registro`
     },
     {
       id: 'gold_level',
@@ -69,7 +71,7 @@ export const AffiliateAchievements = ({ affiliate }: AffiliateAchievementsProps)
       unlocked: affiliate.total_paid > 0,
       progress: affiliate.total_paid > 0 ? 1 : 0,
       target: 1,
-      reward: 'Badge de Afiliado Ativo'
+      reward: 'Badge de Parceiro Ativo'
     },
     {
       id: 'recurring_master',
