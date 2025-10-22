@@ -19,7 +19,8 @@ import {
   MessageCircle,
   ExternalLink,
   Star,
-  TrendingUp
+  TrendingUp,
+  Percent
 } from 'lucide-react';
 
 interface Affiliate {
@@ -38,6 +39,7 @@ interface Affiliate {
   promotion_strategy: string;
   total_registrations: number;
   total_earnings: number;
+  custom_commission_rate?: number;
   rejection_reason?: string;
   created_at: string;
   approved_at?: string;
@@ -158,7 +160,8 @@ export const AdminAffiliates = () => {
     const variants = {
       pending: { label: 'Pendente', variant: 'secondary' as const },
       approved: { label: 'Aprovado', variant: 'default' as const },
-      rejected: { label: 'Rejeitado', variant: 'destructive' as const }
+      rejected: { label: 'Rejeitado', variant: 'destructive' as const },
+      suspended: { label: 'Suspenso', variant: 'destructive' as const }
     };
     const config = variants[status as keyof typeof variants];
     return <Badge variant={config.variant}>{config.label}</Badge>;
@@ -174,6 +177,13 @@ export const AdminAffiliates = () => {
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
+  const getCommissionRate = (affiliate: Affiliate) => {
+    if (affiliate.custom_commission_rate) {
+      return `${affiliate.custom_commission_rate}%*`;
+    }
+    return affiliate.level === 'bronze' ? '25%' : '50%';
+  };
+
   const filteredAffiliates = affiliates.filter(affiliate => {
     const matchesSearch = affiliate.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          affiliate.contact_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -184,7 +194,7 @@ export const AdminAffiliates = () => {
 
   const pendingCount = affiliates.filter(a => a.status === 'pending').length;
   const approvedCount = affiliates.filter(a => a.status === 'approved').length;
-  const rejectedCount = affiliates.filter(a => a.status === 'rejected').length;
+  const rejectedCount = affiliates.filter(a => a.status === 'rejected' || a.status === 'suspended').length;
 
   if (loading) {
     return <div className="p-6">Carregando afiliados...</div>;
@@ -232,7 +242,7 @@ export const AdminAffiliates = () => {
             <div className="flex items-center space-x-2">
               <X className="h-5 w-5 text-red-500" />
               <div>
-                <p className="text-sm text-muted-foreground">Rejeitados</p>
+                <p className="text-sm text-muted-foreground">Rejeitados/Suspensos</p>
                 <p className="text-2xl font-bold">{rejectedCount}</p>
               </div>
             </div>
@@ -272,6 +282,7 @@ export const AdminAffiliates = () => {
                 <option value="pending">Pendentes</option>
                 <option value="approved">Aprovados</option>
                 <option value="rejected">Rejeitados</option>
+                <option value="suspended">Suspensos</option>
               </select>
             </div>
           </div>
@@ -283,7 +294,7 @@ export const AdminAffiliates = () => {
         <CardHeader>
           <CardTitle>Afiliados ({filteredAffiliates.length})</CardTitle>
           <CardDescription>
-            Gerencie todas as solicitações e afiliados ativos
+            Gerencie todas as solicitações e afiliados ativos. * = comissão personalizada
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -295,6 +306,12 @@ export const AdminAffiliates = () => {
                 <TableHead>WhatsApp</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Nível</TableHead>
+                <TableHead>
+                  <div className="flex items-center gap-1">
+                    <Percent className="h-3 w-3" />
+                    Comissão
+                  </div>
+                </TableHead>
                 <TableHead>Registros</TableHead>
                 <TableHead>Ganhos</TableHead>
                 <TableHead>Ações</TableHead>
@@ -308,8 +325,13 @@ export const AdminAffiliates = () => {
                   <TableCell>{affiliate.whatsapp}</TableCell>
                   <TableCell>{getStatusBadge(affiliate.status)}</TableCell>
                   <TableCell>{getLevelBadge(affiliate.level)}</TableCell>
+                  <TableCell>
+                    <Badge variant={affiliate.custom_commission_rate ? "secondary" : "outline"}>
+                      {getCommissionRate(affiliate)}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{affiliate.total_registrations}</TableCell>
-                  <TableCell>R$ {affiliate.total_earnings.toFixed(2)}</TableCell>
+                  <TableCell>R$ {Number(affiliate.total_earnings || 0).toFixed(2)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
@@ -376,7 +398,7 @@ export const AdminAffiliates = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label>Status</Label>
                   <div>{getStatusBadge(selectedAffiliate.status)}</div>
@@ -384,6 +406,28 @@ export const AdminAffiliates = () => {
                 <div>
                   <Label>Nível</Label>
                   <div>{getLevelBadge(selectedAffiliate.level)}</div>
+                </div>
+                <div>
+                  <Label>Comissão</Label>
+                  <Badge variant={selectedAffiliate.custom_commission_rate ? "secondary" : "outline"}>
+                    {getCommissionRate(selectedAffiliate)}
+                  </Badge>
+                  {selectedAffiliate.custom_commission_rate && (
+                    <p className="text-xs text-muted-foreground mt-1">Personalizada</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 p-3 bg-muted rounded-lg">
+                <div>
+                  <Label>Total de Registros</Label>
+                  <p className="text-2xl font-bold">{selectedAffiliate.total_registrations}</p>
+                </div>
+                <div>
+                  <Label>Total de Ganhos</Label>
+                  <p className="text-2xl font-bold text-green-600">
+                    R$ {Number(selectedAffiliate.total_earnings || 0).toFixed(2)}
+                  </p>
                 </div>
               </div>
 

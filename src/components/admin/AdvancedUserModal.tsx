@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Music, FileText, FolderOpen, Calendar, CreditCard, Download, Coins, User, Activity, Award, Crown, Clock, CheckCircle, UserCog, Shield } from 'lucide-react';
+import { Music, FileText, FolderOpen, Calendar, CreditCard, Download, Coins, User, Activity, Award, Crown, Clock, CheckCircle, UserCog, Shield, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface AdvancedUserModalProps {
@@ -517,15 +517,32 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
     try {
       const { error } = await supabase
         .from('affiliates')
-        .update({ level: level as 'bronze' | 'silver' | 'gold' })
+        .update({ 
+          level: level as 'bronze' | 'silver' | 'gold',
+          updated_at: new Date().toISOString()
+        })
         .eq('id', affiliateData.id);
       
       if (error) throw error;
       
       toast({
         title: 'Sucesso',
-        description: 'Nível do afiliado atualizado',
+        description: `Nível do afiliado atualizado para ${level}`,
       });
+      
+      // Log da atividade
+      await supabase
+        .from('user_activity_logs')
+        .insert({
+          user_id: user.id,
+          action: 'affiliate_level_updated',
+          metadata: {
+            admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+            affiliate_id: affiliateData.id,
+            old_level: affiliateData.level,
+            new_level: level
+          }
+        });
       
       refetchAffiliate();
     } catch (error: any) {
@@ -534,6 +551,55 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
         description: error.message,
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleUpdateCommissionRate = async (newRate: number | null) => {
+    if (!affiliateData?.id) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('affiliates')
+        .update({ 
+          custom_commission_rate: newRate,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', affiliateData.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Comissão atualizada",
+        description: newRate 
+          ? `Taxa de comissão personalizada definida para ${newRate}%`
+          : "Taxa de comissão resetada para padrão do nível",
+      });
+
+      // Log da atividade
+      await supabase
+        .from('user_activity_logs')
+        .insert({
+          user_id: user.id,
+          action: 'affiliate_commission_updated',
+          metadata: {
+            admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+            affiliate_id: affiliateData.id,
+            old_rate: affiliateData.custom_commission_rate,
+            new_rate: newRate
+          }
+        });
+      
+      refetchAffiliate();
+    } catch (error: any) {
+      console.error('Erro ao atualizar comissão:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao atualizar taxa de comissão",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -689,6 +755,18 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                       <code className="text-xs bg-muted p-2 rounded break-all">
                         {affiliateData.affiliate_code}
                       </code>
+                    </div>
+                    
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm text-muted-foreground">Comissão:</span>
+                      <Badge variant="secondary" className="w-fit">
+                        {affiliateData.custom_commission_rate 
+                          ? `${affiliateData.custom_commission_rate}% personalizada`
+                          : `${affiliateData.level === 'bronze' ? '25' : '50'}% padrão`}
+                      </Badge>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Por registro: R$ {(19.99 * (affiliateData.custom_commission_rate || (affiliateData.level === 'bronze' ? 25 : 50)) / 100).toFixed(2)}
+                      </p>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4 pt-2 border-t">
@@ -1116,6 +1194,46 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                         <SelectItem value="gold">🥇 Gold (50% + Recorrente)</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Taxa de Comissão Personalizada</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        placeholder={`Padrão: ${affiliateData.level === 'bronze' ? '25' : '50'}%`}
+                        value={affiliateData.custom_commission_rate || ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '') {
+                            handleUpdateCommissionRate(null);
+                          } else {
+                            const rate = parseFloat(value);
+                            if (rate >= 0 && rate <= 100) {
+                              handleUpdateCommissionRate(rate);
+                            }
+                          }
+                        }}
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleUpdateCommissionRate(null)}
+                        title="Resetar para padrão"
+                        disabled={!affiliateData.custom_commission_rate}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {affiliateData.custom_commission_rate 
+                        ? `Comissão atual: ${affiliateData.custom_commission_rate}% sobre cada registro (R$ ${(19.99 * affiliateData.custom_commission_rate / 100).toFixed(2)})`
+                        : `Comissão padrão do nível ${affiliateData.level}: ${affiliateData.level === 'bronze' ? '25' : '50'}% (R$ ${(19.99 * (affiliateData.level === 'bronze' ? 25 : 50) / 100).toFixed(2)})`}
+                    </p>
                   </div>
                 </CardContent>
               </Card>

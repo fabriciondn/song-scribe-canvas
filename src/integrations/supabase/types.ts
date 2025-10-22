@@ -410,6 +410,7 @@ export type Database = {
           approved_by: string | null
           contact_email: string | null
           created_at: string
+          custom_commission_rate: number | null
           full_name: string | null
           id: string
           level: Database["public"]["Enums"]["affiliate_level"]
@@ -434,6 +435,7 @@ export type Database = {
           approved_by?: string | null
           contact_email?: string | null
           created_at?: string
+          custom_commission_rate?: number | null
           full_name?: string | null
           id?: string
           level?: Database["public"]["Enums"]["affiliate_level"]
@@ -458,6 +460,7 @@ export type Database = {
           approved_by?: string | null
           contact_email?: string | null
           created_at?: string
+          custom_commission_rate?: number | null
           full_name?: string | null
           id?: string
           level?: Database["public"]["Enums"]["affiliate_level"]
