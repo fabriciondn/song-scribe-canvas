@@ -120,7 +120,7 @@ serve(async (req) => {
       throw new Error('Resposta inválida da Abacate Pay: id ausente');
     }
     // Salva a transação no banco
-    const { error: insertError } = await supabaseService
+    const { data: transaction, error: insertError } = await supabaseService
       .from('credit_transactions')
       .insert({
         user_id: user.id,
@@ -130,10 +130,47 @@ serve(async (req) => {
         total_amount: totalAmount,
         payment_id: abacateData.data.id,
         status: 'pending'
-      });
+      })
+      .select()
+      .single();
+      
     if (insertError) {
       throw new Error('Erro ao salvar transação no banco');
     }
+    
+    // Verificar se usuário tem código de parceiro e processar comissão
+    try {
+      const { data: profile } = await supabaseService
+        .from('profiles')
+        .select('moderator_notes')
+        .eq('id', user.id)
+        .single();
+      
+      const hasAffiliateCode = profile?.moderator_notes?.includes('Indicado por:');
+      
+      if (hasAffiliateCode) {
+        console.log('🎯 Usuário tem código de parceiro, processando comissão...');
+        
+        // Chamar função para processar comissão
+        const { data: commissionResult, error: commissionError } = await supabaseService.rpc(
+          'process_affiliate_first_purchase',
+          {
+            p_user_id: user.id,
+            p_payment_amount: totalAmount,
+            p_payment_id: transaction?.id || abacateData.data.id
+          }
+        );
+        
+        if (commissionError) {
+          console.error('❌ Erro ao processar comissão:', commissionError);
+        } else if (commissionResult) {
+          console.log('✅ Comissão processada com sucesso!');
+        }
+      }
+    } catch (error) {
+      console.error('⚠️ Erro ao verificar/processar comissão (não crítico):', error);
+    }
+    
     // Retorna os dados para o frontend
     return new Response(
       JSON.stringify({

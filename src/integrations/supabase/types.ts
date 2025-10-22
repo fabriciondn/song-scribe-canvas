@@ -142,7 +142,7 @@ export type Database = {
           converted: boolean
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           referrer: string | null
           user_agent: string | null
           utm_campaign: string | null
@@ -156,7 +156,7 @@ export type Database = {
           converted?: boolean
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           referrer?: string | null
           user_agent?: string | null
           utm_campaign?: string | null
@@ -170,7 +170,7 @@ export type Database = {
           converted?: boolean
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           referrer?: string | null
           user_agent?: string | null
           utm_campaign?: string | null
@@ -1284,7 +1284,7 @@ export type Database = {
           email: string | null
           first_submission: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           is_blocked: boolean | null
           last_submission: string | null
           submission_count: number | null
@@ -1294,7 +1294,7 @@ export type Database = {
           email?: string | null
           first_submission?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_blocked?: boolean | null
           last_submission?: string | null
           submission_count?: number | null
@@ -1304,7 +1304,7 @@ export type Database = {
           email?: string | null
           first_submission?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_blocked?: boolean | null
           last_submission?: string | null
           submission_count?: number | null
@@ -1685,10 +1685,7 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: boolean
       }
-      check_admin_access: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      check_admin_access: { Args: never; Returns: boolean }
       check_affiliate_level_upgrade: {
         Args: { p_affiliate_id: string }
         Returns: undefined
@@ -1697,14 +1694,8 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
-      cleanup_old_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_trash: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_old_sessions: { Args: never; Returns: undefined }
+      cleanup_trash: { Args: never; Returns: undefined }
       create_draft: {
         Args: {
           draft_audio_url: string
@@ -1724,25 +1715,22 @@ export type Database = {
           updated_at: string | null
           user_id: string | null
         }
+        SetofOptions: {
+          from: "*"
+          to: "drafts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
-      decrement_user_credit: {
-        Args: { user_id: string }
-        Returns: undefined
-      }
-      delete_draft: {
-        Args: { draft_id: string }
-        Returns: undefined
-      }
+      decrement_user_credit: { Args: { user_id: string }; Returns: undefined }
+      delete_draft: { Args: { draft_id: string }; Returns: undefined }
       generate_affiliate_code: {
         Args: { user_id: string; user_name: string }
         Returns: string
       }
-      get_admin_dashboard_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_admin_dashboard_stats: { Args: never; Returns: Json }
       get_composers_ranking: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           artistic_name: string
           avatar_url: string
@@ -1767,9 +1755,15 @@ export type Database = {
           updated_at: string | null
           user_id: string | null
         }
+        SetofOptions: {
+          from: "*"
+          to: "drafts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       get_drafts: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           audio_files: Json | null
           audio_url: string | null
@@ -1782,17 +1776,17 @@ export type Database = {
           updated_at: string | null
           user_id: string | null
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "drafts"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
-      get_function_status: {
-        Args: { p_function_key: string }
-        Returns: string
-      }
-      get_moderator_dashboard_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_function_status: { Args: { p_function_key: string }; Returns: string }
+      get_moderator_dashboard_stats: { Args: never; Returns: Json }
       get_online_users: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           avatar_url: string
           email: string
@@ -1801,26 +1795,11 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_online_users_count: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      get_user_role: {
-        Args: { user_id: string }
-        Returns: string
-      }
-      is_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_user_admin: {
-        Args: { check_user_id: string }
-        Returns: boolean
-      }
-      is_user_moderator: {
-        Args: { check_user_id: string }
-        Returns: boolean
-      }
+      get_online_users_count: { Args: never; Returns: number }
+      get_user_role: { Args: { user_id: string }; Returns: string }
+      is_admin_user: { Args: never; Returns: boolean }
+      is_user_admin: { Args: { check_user_id: string }; Returns: boolean }
+      is_user_moderator: { Args: { check_user_id: string }; Returns: boolean }
       log_user_activity: {
         Args: { p_action: string; p_metadata?: Json }
         Returns: undefined
@@ -1829,10 +1808,7 @@ export type Database = {
         Args: { new_credits: number; target_user_id: string }
         Returns: undefined
       }
-      populate_menu_functions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      populate_menu_functions: { Args: never; Returns: undefined }
       process_affiliate_conversion: {
         Args: {
           p_affiliate_code: string
@@ -1846,7 +1822,7 @@ export type Database = {
       process_affiliate_first_purchase: {
         Args: {
           p_payment_amount: number
-          p_payment_id: string
+          p_payment_id?: string
           p_user_id: string
         }
         Returns: boolean
@@ -1855,10 +1831,7 @@ export type Database = {
         Args: { p_affiliate_code: string; p_user_id: string }
         Returns: boolean
       }
-      process_pending_registrations: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      process_pending_registrations: { Args: never; Returns: undefined }
       register_moderator_with_token: {
         Args: {
           p_email: string
@@ -1868,9 +1841,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      secure_public_registration: {
-        Args:
-          | {
+      secure_public_registration:
+        | {
+            Args: {
               p_artistic_name?: string
               p_birth_date: string
               p_cep: string
@@ -1885,7 +1858,10 @@ export type Database = {
               p_state: string
               p_street: string
             }
-          | {
+            Returns: Json
+          }
+        | {
+            Args: {
               p_artistic_name?: string
               p_birth_date: string
               p_cep: string
@@ -1899,8 +1875,8 @@ export type Database = {
               p_state: string
               p_street: string
             }
-        Returns: Json
-      }
+            Returns: Json
+          }
       update_draft: {
         Args: { draft_id: string; draft_updates: Json }
         Returns: {
@@ -1914,6 +1890,12 @@ export type Database = {
           title: string
           updated_at: string | null
           user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "drafts"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       update_user_credits: {

@@ -294,8 +294,9 @@ serve(async (req) => {
 
     // Salvar transação no banco
     console.log('💾 Salvando transação no banco...');
+    let transaction;
     try {
-      const { error: insertError } = await supabaseService
+      const { data, error: insertError } = await supabaseService
         .from('credit_transactions')
         .insert({
           user_id: user.id,
@@ -306,7 +307,9 @@ serve(async (req) => {
           payment_id: mercadoPagoData.id.toString(),
           payment_provider: 'mercadopago',
           status: 'pending'
-        });
+        })
+        .select()
+        .single();
 
       if (insertError) {
         console.error('❌ Erro ao salvar transação:', insertError);
@@ -315,12 +318,47 @@ serve(async (req) => {
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      
+      transaction = data;
     } catch (dbError) {
       console.error('❌ Erro de banco de dados:', dbError);
       return new Response(
         JSON.stringify({ error: 'Erro interno do servidor' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+    
+    // Verificar se usuário tem código de parceiro e processar comissão
+    try {
+      const { data: profile } = await supabaseService
+        .from('profiles')
+        .select('moderator_notes')
+        .eq('id', user.id)
+        .single();
+      
+      const hasAffiliateCode = profile?.moderator_notes?.includes('Indicado por:');
+      
+      if (hasAffiliateCode) {
+        console.log('🎯 Usuário tem código de parceiro, processando comissão...');
+        
+        // Chamar função para processar comissão
+        const { data: commissionResult, error: commissionError } = await supabaseService.rpc(
+          'process_affiliate_first_purchase',
+          {
+            p_user_id: user.id,
+            p_payment_amount: totalAmount,
+            p_payment_id: transaction?.id || mercadoPagoData.id.toString()
+          }
+        );
+        
+        if (commissionError) {
+          console.error('❌ Erro ao processar comissão:', commissionError);
+        } else if (commissionResult) {
+          console.log('✅ Comissão processada com sucesso!');
+        }
+      }
+    } catch (error) {
+      console.error('⚠️ Erro ao verificar/processar comissão (não crítico):', error);
     }
 
     // Extrair QR Code do response

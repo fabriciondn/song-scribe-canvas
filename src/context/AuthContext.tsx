@@ -140,10 +140,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('🔍 Verificando localStorage para affiliate_code:', affiliateCode);
         
         if (affiliateCode) {
-          console.log('🎯 CÓDIGO DE AFILIADO ENCONTRADO:', affiliateCode);
-          console.log('⏳ Verificando criação do perfil...');
+          console.log('🎯 CÓDIGO DE PARCEIRO ENCONTRADO:', affiliateCode);
+          console.log('⏳ Aguardando criação do perfil...');
           
-          // Verificar se o perfil foi criado antes de processar (com retry)
+          // Aguardar perfil ser criado (com retry)
           let retries = 0;
           const maxRetries = 5;
           let profileExists = false;
@@ -151,7 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           while (retries < maxRetries && !profileExists) {
             await new Promise(resolve => setTimeout(resolve, 1000));
             
-            const { data: profile, error: profileError } = await supabase
+            const { data: profile } = await supabase
               .from('profiles')
               .select('id')
               .eq('id', authData.user.id)
@@ -161,28 +161,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               profileExists = true;
               console.log(`✅ Perfil confirmado na tentativa ${retries + 1}`);
             } else {
-              console.log(`⏳ Aguardando perfil... tentativa ${retries + 1}/${maxRetries}`);
+              console.log(`⏳ Tentativa ${retries + 1}/${maxRetries}...`);
               retries++;
             }
           }
           
           if (!profileExists) {
-            console.error('❌ Perfil não foi criado após múltiplas tentativas');
-            console.warn('💾 Salvando código para retry no próximo login');
-            localStorage.setItem('affiliate_code_pending', affiliateCode);
+            console.error('❌ Perfil não criado após várias tentativas');
             return;
           }
           
+          // IMPORTANTE: Salvar código no moderator_notes IMEDIATAMENTE
           try {
-            console.log('🚀 INICIANDO PROCESSAMENTO DE CONVERSÃO AFILIADO');
-            console.log('📋 Dados da conversão:', {
-              codigo: affiliateCode,
-              userId: authData.user.id,
-              timestamp: new Date().toISOString()
-            });
+            console.log('💾 Salvando código de parceiro no perfil...');
+            const normalizedCode = affiliateCode.startsWith('compuse-') 
+              ? affiliateCode 
+              : `compuse-${affiliateCode}`;
+              
+            await supabase
+              .from('profiles')
+              .update({ 
+                moderator_notes: `Indicado por: ${normalizedCode}` 
+              })
+              .eq('id', authData.user.id);
             
-            // Chamar função SQL para processar conversão de forma atômica
-            const { data: result, error: functionError } = await supabase.rpc(
+            console.log('✅ Código salvo com sucesso!');
+            
+            // Processar conversão de registro
+            const { data: result } = await supabase.rpc(
               'process_affiliate_registration',
               {
                 p_affiliate_code: affiliateCode,
@@ -190,84 +196,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               }
             );
             
-            console.log('📊 Resultado da função RPC:', { result, error: functionError });
-            
-            if (functionError) {
-              console.error('❌ ERRO ao processar conversão via função:', functionError);
-              
-              // Fallback: tentar processamento manual
-              console.log('🔄 Tentando processamento manual...');
-              
-              // Buscar afiliado com diferentes formatos
-              const possibleCodes = [
-                affiliateCode,
-                affiliateCode.startsWith('compuse-') ? affiliateCode : `compuse-${affiliateCode}`,
-                affiliateCode.replace(/^compuse-/, '')
-              ];
-              
-              let affiliate = null;
-              for (const code of possibleCodes) {
-                const { data, error } = await supabase
-                  .from('affiliates')
-                  .select('id, total_registrations, affiliate_code')
-                  .eq('affiliate_code', code)
-                  .eq('status', 'approved')
-                  .maybeSingle();
-                
-                if (data) {
-                  affiliate = data;
-                  console.log('✅ Afiliado encontrado com código:', code);
-                  break;
-                }
-              }
-              
-              if (!affiliate) {
-                console.error('❌ Afiliado não encontrado');
-                return;
-              }
-              
-              // Processar manualmente
-              try {
-                await supabase.from('affiliate_conversions').insert({
-                  affiliate_id: affiliate.id,
-                  user_id: authData.user.id,
-                  type: 'author_registration',
-                  reference_id: authData.user.id
-                });
-                
-                await supabase.from('affiliates').update({ 
-                  total_registrations: (affiliate.total_registrations || 0) + 1
-                }).eq('id', affiliate.id);
-                
-                await supabase.from('profiles').upsert({ 
-                  id: authData.user.id,
-                  moderator_notes: `Indicado por: ${affiliate.affiliate_code}`
-                }, { onConflict: 'id' });
-                
-                console.log('✅ Conversão processada manualmente');
-              } catch (manualError) {
-                console.error('❌ Erro no processamento manual:', manualError);
-              }
-            } else if (result) {
-              console.log('🎉 CONVERSÃO PROCESSADA COM SUCESSO VIA FUNÇÃO SQL!');
-              console.log('📊 Detalhes do resultado:', result);
+            if (result) {
+              console.log('✅ Conversão de registro processada!');
               localStorage.removeItem('affiliate_code');
-              localStorage.removeItem('affiliate_code_pending');
-              console.log('💾 Códigos de afiliado removidos do localStorage');
-            } else {
-              console.warn('⚠️ Função retornou FALSE - afiliado pode não existir ou não estar aprovado');
-              localStorage.setItem('affiliate_code_pending', affiliateCode);
             }
             
           } catch (error) {
-            console.error('💥 ERRO CRÍTICO ao processar conversão:', error);
-            localStorage.setItem('affiliate_code_pending', affiliateCode);
+            console.error('❌ Erro ao salvar código de parceiro:', error);
           }
-        } else {
-          console.log('⚠️ NENHUM código de afiliado no localStorage após registro');
         }
-      } else {
-        console.log('⚠️ AuthData.user não presente após registro');
       }
     } catch (error: any) {
       throw error;
