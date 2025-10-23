@@ -213,44 +213,44 @@ export const AffiliateMetrics = () => {
 
       {/* Resumo Financeiro */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-200 dark:border-green-800">
           <CardHeader>
-            <CardTitle className="text-green-800">Total Ganho</CardTitle>
+            <CardTitle className="text-green-800 dark:text-green-300">Ganho Total</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-900">
-              R$ {stats.total_earnings.toFixed(2)}
+            <div className="text-3xl font-bold text-green-900 dark:text-green-100">
+              R$ {((affiliate?.total_earnings || 0) + (affiliate?.total_paid || 0)).toFixed(2)}
             </div>
-            <p className="text-sm text-green-700 mt-1">
+            <p className="text-sm text-green-700 dark:text-green-400 mt-1">
               Desde o início do programa
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200">
+        <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 border-yellow-200 dark:border-yellow-800">
           <CardHeader>
-            <CardTitle className="text-yellow-800">A Receber</CardTitle>
+            <CardTitle className="text-yellow-800 dark:text-yellow-300">A Receber</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-yellow-900">
-              R$ {stats.pending_earnings.toFixed(2)}
+            <div className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">
+              R$ {(affiliate?.total_earnings || 0).toFixed(2)}
             </div>
-            <p className="text-sm text-yellow-700 mt-1">
-              Processamento em até 7 dias
+            <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
+              Comissões pendentes
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
           <CardHeader>
-            <CardTitle className="text-blue-800">Já Recebido</CardTitle>
+            <CardTitle className="text-blue-800 dark:text-blue-300">Já Recebido</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-900">
-              R$ {stats.paid_earnings.toFixed(2)}
+            <div className="text-3xl font-bold text-blue-900 dark:text-blue-100">
+              R$ {(affiliate?.total_paid || 0).toFixed(2)}
             </div>
-            <p className="text-sm text-blue-700 mt-1">
-              Pagamentos realizados
+            <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+              Total de comissões pagas
             </p>
           </CardContent>
         </Card>
