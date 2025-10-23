@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAffiliate } from '@/hooks/useAffiliate';
-import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle, Users, Target } from 'lucide-react';
 
 interface WithdrawalRequest {
   id: string;
@@ -24,9 +24,18 @@ interface WithdrawalRequest {
   rejection_reason?: string;
 }
 
+interface ReferredUser {
+  name: string;
+  email: string;
+  conversion_date: string;
+  commission_amount: number | null;
+  commission_status: string | null;
+}
+
 export const AffiliateWithdrawals = () => {
   const { affiliate, stats } = useAffiliate();
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
+  const [referredUsers, setReferredUsers] = useState<ReferredUser[]>([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('pix');
@@ -35,7 +44,46 @@ export const AffiliateWithdrawals = () => {
   const { toast } = useToast();
 
   const minimumWithdrawal = 50; // R$ 50 mínimo
-  const availableBalance = stats?.total_earnings || 0;
+  
+  // A Receber = comissões pendentes (não pagas ainda)
+  const availableBalance = affiliate?.total_earnings || 0;
+  
+  // Ganho Total = tudo que foi ganho (pendente + pago)
+  const totalEarnings = (affiliate?.total_earnings || 0) + (affiliate?.total_paid || 0);
+  
+  // Já Recebido = o que foi pago
+  const paidAmount = affiliate?.total_paid || 0;
+
+  // Buscar usuários indicados
+  useEffect(() => {
+    const loadReferredUsers = async () => {
+      if (!affiliate?.id) return;
+
+      const { data, error } = await supabase
+        .from('affiliate_conversions')
+        .select(`
+          user_id,
+          created_at,
+          profiles!inner(name, email),
+          affiliate_commissions(amount, status)
+        `)
+        .eq('affiliate_id', affiliate.id)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const users = data.map((conv: any) => ({
+          name: conv.profiles?.name || 'Sem nome',
+          email: conv.profiles?.email || 'Sem email',
+          conversion_date: conv.created_at,
+          commission_amount: conv.affiliate_commissions?.[0]?.amount || null,
+          commission_status: conv.affiliate_commissions?.[0]?.status || null
+        }));
+        setReferredUsers(users);
+      }
+    };
+
+    loadReferredUsers();
+  }, [affiliate?.id]);
 
   useEffect(() => {
     if (affiliate?.id) {
@@ -190,64 +238,141 @@ export const AffiliateWithdrawals = () => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  const pendingAmount = withdrawals
-    .filter(w => ['pending', 'approved', 'processing'].includes(w.status))
-    .reduce((sum, w) => sum + w.amount, 0);
-
-  const paidAmount = withdrawals
-    .filter(w => w.status === 'paid')
-    .reduce((sum, w) => sum + w.amount, 0);
-
   return (
     <div className="space-y-6">
-      {/* Balance Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <DollarSign className="h-5 w-5 text-green-500" />
+      {/* Balance Overview - 3 cards principais */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-200 dark:border-green-800">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Saldo Disponível</p>
-                <p className="text-2xl font-bold">R$ {availableBalance.toFixed(2)}</p>
+                <p className="text-sm font-medium text-green-800 dark:text-green-300">Ganho Total</p>
+                <p className="text-3xl font-bold text-green-900 dark:text-green-100 mt-2">
+                  R$ {totalEarnings.toFixed(2)}
+                </p>
+                <p className="text-xs text-green-700 dark:text-green-400 mt-1">
+                  Desde o início do programa
+                </p>
               </div>
+              <DollarSign className="h-8 w-8 text-green-600 dark:text-green-400" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-yellow-500" />
+
+        <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 border-yellow-200 dark:border-yellow-800">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Aguardando</p>
-                <p className="text-2xl font-bold">R$ {pendingAmount.toFixed(2)}</p>
+                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">A Receber</p>
+                <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-100 mt-2">
+                  R$ {availableBalance.toFixed(2)}
+                </p>
+                <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
+                  Comissões pendentes
+                </p>
               </div>
+              <Target className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-blue-500" />
+
+        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Já Recebido</p>
-                <p className="text-2xl font-bold">R$ {paidAmount.toFixed(2)}</p>
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Já Recebido</p>
+                <p className="text-3xl font-bold text-blue-900 dark:text-blue-100 mt-2">
+                  R$ {paidAmount.toFixed(2)}
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">
+                  Total de comissões pagas
+                </p>
               </div>
+              <CheckCircle className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center justify-center">
-            <Button
-              onClick={() => setShowRequestModal(true)}
-              disabled={availableBalance < minimumWithdrawal}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Solicitar Saque
-            </Button>
           </CardContent>
         </Card>
       </div>
+
+      {/* Botão de solicitar saque */}
+      <div className="flex justify-end">
+        <Button
+          onClick={() => setShowRequestModal(true)}
+          disabled={availableBalance < minimumWithdrawal}
+          size="lg"
+          className="gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Solicitar Saque
+        </Button>
+      </div>
+
+      {/* Meus Indicados */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Meus Indicados
+          </CardTitle>
+          <CardDescription>
+            Usuários que se cadastraram através do seu link de parceiro
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {referredUsers.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>Nenhum indicado ainda</p>
+              <p className="text-sm mt-1">Compartilhe seu link para começar a ganhar comissões</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Comissão</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {referredUsers.map((user, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      {new Date(user.conversion_date).toLocaleDateString('pt-BR')}
+                    </TableCell>
+                    <TableCell>
+                      {user.commission_amount ? (
+                        <div className="flex items-center gap-2">
+                          {user.commission_status === 'paid' ? (
+                            <>
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              <span className="text-green-600 font-semibold">
+                                R$ {user.commission_amount.toFixed(2)}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="h-4 w-4 text-orange-600" />
+                              <span className="text-orange-600 font-semibold">
+                                R$ {user.commission_amount.toFixed(2)}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      ) : (
+                        <Badge variant="outline">Aguardando</Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Payment Info */}
       <Card>
