@@ -52,25 +52,37 @@ export const useAffiliateWithdrawals = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // Buscar solicitações com dados do afiliado
+      const { data: withdrawalsData, error } = await supabase
         .from('affiliate_withdrawal_requests')
         .select(`
           *,
-          affiliate:affiliates!inner(
+          affiliates!inner(
             user_id,
             affiliate_code,
             level,
-            total_earnings,
-            profile:profiles!affiliates_user_id_fkey(
-              name,
-              email,
-              avatar_url
-            )
+            total_earnings
           )
         `)
         .order('requested_at', { ascending: false });
 
       if (error) throw error;
+
+      // Buscar perfis dos afiliados
+      const userIds = withdrawalsData?.map(w => w.affiliates.user_id).filter(Boolean) || [];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name, email, avatar_url')
+        .in('id', userIds);
+
+      // Combinar dados
+      const data = withdrawalsData?.map(w => ({
+        ...w,
+        affiliate: {
+          ...w.affiliates,
+          profile: profiles?.filter(p => p.id === w.affiliates.user_id) || []
+        }
+      }));
 
       setWithdrawals(data || []);
 
