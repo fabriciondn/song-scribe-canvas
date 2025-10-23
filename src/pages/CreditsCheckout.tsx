@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Coins, Gift, Check } from 'lucide-react';
+import { ArrowLeft, Coins, Gift, Check, AlertTriangle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
 import { PaymentSuccessModal } from '@/components/checkout/PaymentSuccessModal';
 import { usePaymentConfirmation } from '@/hooks/usePaymentConfirmation';
+import { useProfileValidation } from '@/hooks/useProfileValidation';
 interface PixData {
   qr_code: string;
   qr_code_url: string;
@@ -33,6 +34,7 @@ export default function CreditsCheckout() {
   const {
     theme
   } = useTheme();
+  const { isComplete: isProfileComplete, missingFields, completionPercentage } = useProfileValidation();
   const [credits, setCredits] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [pixData, setPixData] = useState<PixData | null>(null);
@@ -125,17 +127,6 @@ export default function CreditsCheckout() {
         description: "Você precisa estar logado para comprar créditos.",
         variant: "destructive"
       });
-      return;
-    }
-
-    // Validar dados obrigatórios do perfil
-    if (!profile?.name || !profile?.cpf || !profile?.cellphone) {
-      toast({
-        title: "Dados Incompletos",
-        description: "Para continuar, complete seu perfil com nome, CPF e telefone nas configurações.",
-        variant: "destructive"
-      });
-      navigate('/settings');
       return;
     }
     console.log('🔄 Iniciando processamento de pagamento com Mercado Pago...', {
@@ -341,6 +332,44 @@ export default function CreditsCheckout() {
               Voltar ao Dashboard
             </Button>
 
+            {!isProfileComplete && (
+              <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950 mb-6">
+                <CardHeader>
+                  <CardTitle className="text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    Perfil Incompleto ({completionPercentage}%)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted/50 rounded-lg p-2">
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-amber-500 transition-all duration-300"
+                        style={{ width: `${completionPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    Para adicionar saldo, você precisa completar seu perfil. Os seguintes campos são obrigatórios:
+                  </p>
+                  <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-400 space-y-1">
+                    {missingFields.map((field, index) => (
+                      <li key={index}>{field}</li>
+                    ))}
+                  </ul>
+                  <Button 
+                    onClick={() => navigate('/dashboard/settings')} 
+                    className="w-full"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Completar Perfil
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {isProfileComplete && (
+
             <div className="space-y-4">
               {/* Mobile Credit Selection */}
               <Card>
@@ -478,6 +507,7 @@ export default function CreditsCheckout() {
                 </CardContent>
               </Card>
             </div>
+            )}
           </div>
         </div>
       </div>
@@ -495,6 +525,45 @@ export default function CreditsCheckout() {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar ao Dashboard
             </Button>
+
+            {!isProfileComplete && (
+              <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950 mb-6 max-w-2xl mx-auto">
+                <CardHeader>
+                  <CardTitle className="text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    Perfil Incompleto ({completionPercentage}%)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-amber-500 transition-all duration-300"
+                        style={{ width: `${completionPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-amber-700 dark:text-amber-300">
+                    Para adicionar saldo, você precisa completar seu perfil. Os seguintes campos são obrigatórios:
+                  </p>
+                  <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-400 space-y-1">
+                    {missingFields.map((field, index) => (
+                      <li key={index}>{field}</li>
+                    ))}
+                  </ul>
+                  <Button 
+                    onClick={() => navigate('/dashboard/settings')} 
+                    className="w-full"
+                    size="lg"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Completar Perfil
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {isProfileComplete && (
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-h-[calc(100vh-200px)]">
               {/* Left Column - Credit Selection */}
@@ -626,6 +695,7 @@ export default function CreditsCheckout() {
                 </Card>
               </div>
             </div>
+            )}
           </div>
         </div>
       </div>
