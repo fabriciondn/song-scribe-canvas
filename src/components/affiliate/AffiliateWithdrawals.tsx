@@ -41,6 +41,43 @@ export const AffiliateWithdrawals = () => {
     if (affiliate?.id) {
       loadWithdrawals();
     }
+
+    // Listener para mudanças nas solicitações (status updates)
+    const channel = supabase
+      .channel(`affiliate-withdrawals-${affiliate?.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'affiliate_withdrawal_requests',
+          filter: `affiliate_id=eq.${affiliate?.id}`,
+        },
+        (payload) => {
+          console.log('Status de saque atualizado:', payload);
+          
+          // Recarregar lista
+          loadWithdrawals();
+          
+          // Notificar se mudou para 'paid'
+          if (payload.new && (payload.new as any).status === 'paid') {
+            toast({
+              title: "💰 Saque Concluído!",
+              description: `Seu saque de R$ ${(payload.new as any).amount} foi processado com sucesso.`,
+            });
+          } else if (payload.new && (payload.new as any).status === 'approved') {
+            toast({
+              title: "✅ Saque Aprovado!",
+              description: "Sua solicitação foi aprovada e está em processamento.",
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [affiliate]);
 
   const loadWithdrawals = async () => {

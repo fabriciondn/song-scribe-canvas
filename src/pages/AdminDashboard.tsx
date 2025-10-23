@@ -18,6 +18,7 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminModerators } from '@/components/admin/AdminModerators';
 import { AdminMenuFunctions } from '@/components/admin/AdminMenuFunctions';
 import { AdminForms } from '@/components/admin/AdminForms';
+import { AdminAffiliateWithdrawals } from '@/components/admin/AdminAffiliateWithdrawals';
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -106,6 +107,8 @@ const AdminDashboard: React.FC = () => {
         return <AdminRoles />;
       case 'affiliates':
         return <AdminAffiliates />;
+      case 'affiliate-withdrawals':
+        return <AdminAffiliateWithdrawals />;
       case 'content':
         return <AdminContent />;
       case 'tutorials':

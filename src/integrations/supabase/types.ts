@@ -354,6 +354,7 @@ export type Database = {
         Row: {
           affiliate_id: string
           amount: number
+          approved_by: string | null
           created_at: string | null
           id: string
           payment_details: Json | null
@@ -368,6 +369,7 @@ export type Database = {
         Insert: {
           affiliate_id: string
           amount: number
+          approved_by?: string | null
           created_at?: string | null
           id?: string
           payment_details?: Json | null
@@ -382,6 +384,7 @@ export type Database = {
         Update: {
           affiliate_id?: string
           amount?: number
+          approved_by?: string | null
           created_at?: string | null
           id?: string
           payment_details?: Json | null
@@ -399,6 +402,20 @@ export type Database = {
             columns: ["affiliate_id"]
             isOneToOne: false
             referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_withdrawal_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_withdrawal_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1829,6 +1846,10 @@ export type Database = {
       }
       process_affiliate_registration: {
         Args: { p_affiliate_code: string; p_user_id: string }
+        Returns: boolean
+      }
+      process_affiliate_withdrawal_payment: {
+        Args: { p_admin_id: string; p_withdrawal_id: string }
         Returns: boolean
       }
       process_pending_registrations: { Args: never; Returns: undefined }
