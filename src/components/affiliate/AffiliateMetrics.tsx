@@ -23,6 +23,8 @@ interface ReferredUser {
   conversion_date: string;
   commission_amount: number | null;
   commission_status: string | null;
+  has_registered_works: boolean;
+  registered_works_count: number;
 }
 
 export const AffiliateMetrics = () => {
@@ -33,29 +35,71 @@ export const AffiliateMetrics = () => {
   // Buscar usuários indicados
   useEffect(() => {
     const loadReferredUsers = async () => {
-      if (!affiliate?.id) return;
+      if (!affiliate?.id) {
+        console.log('❌ Affiliate ID não disponível');
+        return;
+      }
 
-      const { data, error } = await supabase
+      console.log('🔍 Buscando usuários indicados para affiliate_id:', affiliate.id);
+
+      // Buscar conversões
+      const { data: conversions, error } = await supabase
         .from('affiliate_conversions')
-        .select(`
-          user_id,
-          created_at,
-          profiles!inner(name, email),
-          affiliate_commissions(amount, status)
-        `)
+        .select('user_id, created_at')
         .eq('affiliate_id', affiliate.id)
         .order('created_at', { ascending: false });
 
-      if (!error && data) {
-        const users = data.map((conv: any) => ({
-          name: conv.profiles?.name || 'Sem nome',
-          email: conv.profiles?.email || 'Sem email',
-          conversion_date: conv.created_at,
-          commission_amount: conv.affiliate_commissions?.[0]?.amount || null,
-          commission_status: conv.affiliate_commissions?.[0]?.status || null
-        }));
-        setReferredUsers(users);
+      if (error) {
+        console.error('❌ Erro ao buscar conversões:', error);
+        return;
       }
+
+      if (!conversions || conversions.length === 0) {
+        console.log('⚠️ Nenhuma conversão encontrada');
+        setReferredUsers([]);
+        return;
+      }
+
+      console.log(`✅ ${conversions.length} conversões encontradas`);
+
+      // Para cada conversão, buscar dados do perfil, comissões e obras registradas
+      const usersData = await Promise.all(
+        conversions.map(async (conv) => {
+          // Buscar perfil
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('name, email')
+            .eq('id', conv.user_id)
+            .single();
+
+          // Buscar comissão
+          const { data: commission } = await supabase
+            .from('affiliate_commissions')
+            .select('amount, status')
+            .eq('affiliate_id', affiliate.id)
+            .eq('user_id', conv.user_id)
+            .maybeSingle();
+
+          // Buscar obras registradas
+          const { count: worksCount } = await supabase
+            .from('author_registrations')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', conv.user_id);
+
+          return {
+            name: profile?.name || 'Sem nome',
+            email: profile?.email || 'Sem email',
+            conversion_date: conv.created_at,
+            commission_amount: commission?.amount || null,
+            commission_status: commission?.status || null,
+            has_registered_works: (worksCount || 0) > 0,
+            registered_works_count: worksCount || 0
+          };
+        })
+      );
+
+      console.log('✅ Total de usuários processados:', usersData.length);
+      setReferredUsers(usersData);
     };
 
     loadReferredUsers();
@@ -282,6 +326,7 @@ export const AffiliateMetrics = () => {
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Data de Cadastro</TableHead>
+                    <TableHead>Obras Registradas</TableHead>
                     <TableHead>Comissão</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -294,26 +339,35 @@ export const AffiliateMetrics = () => {
                         {new Date(user.conversion_date).toLocaleDateString('pt-BR')}
                       </TableCell>
                       <TableCell>
+                        {user.has_registered_works ? (
+                          <Badge variant="default" className="bg-green-600">
+                            {user.registered_works_count} {user.registered_works_count === 1 ? 'obra' : 'obras'}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline">Nenhuma obra</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         {user.commission_amount ? (
                           <div className="flex items-center gap-2">
                             {user.commission_status === 'paid' ? (
                               <>
                                 <CheckCircle className="h-4 w-4 text-green-600" />
                                 <span className="text-green-600 font-semibold">
-                                  R$ {user.commission_amount.toFixed(2)} paga
+                                  R$ {user.commission_amount.toFixed(2)}
                                 </span>
                               </>
                             ) : (
                               <>
                                 <Clock className="h-4 w-4 text-orange-600" />
                                 <span className="text-orange-600 font-semibold">
-                                  R$ {user.commission_amount.toFixed(2)} pendente
+                                  R$ {user.commission_amount.toFixed(2)}
                                 </span>
                               </>
                             )}
                           </div>
                         ) : (
-                          <Badge variant="outline">Aguardando pagamento</Badge>
+                          <Badge variant="outline">Aguardando</Badge>
                         )}
                       </TableCell>
                     </TableRow>
