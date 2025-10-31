@@ -42,11 +42,32 @@ export const AffiliateMetrics = () => {
 
       console.log('🔍 Buscando usuários indicados para affiliate_id:', affiliate.id);
 
-      // Buscar conversões
+      // STEP 1: Buscar todos os cliques CONVERTIDOS (que viraram conversão)
+      const { data: convertedClicks, error: clicksError } = await supabase
+        .from('affiliate_clicks')
+        .select('id, created_at')
+        .eq('affiliate_id', affiliate.id)
+        .eq('converted', true);
+
+      if (clicksError) {
+        console.error('❌ Erro ao buscar cliques convertidos:', clicksError);
+        return;
+      }
+
+      if (!convertedClicks || convertedClicks.length === 0) {
+        console.log('⚠️ Nenhum clique convertido encontrado');
+        setReferredUsers([]);
+        return;
+      }
+
+      console.log(`✅ ${convertedClicks.length} cliques convertidos encontrados`);
+
+      // STEP 2: Buscar conversões que correspondem a esses cliques
       const { data: conversions, error } = await supabase
         .from('affiliate_conversions')
-        .select('user_id, created_at')
+        .select('user_id, created_at, click_id')
         .eq('affiliate_id', affiliate.id)
+        .in('click_id', convertedClicks.map(c => c.id))
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -55,14 +76,14 @@ export const AffiliateMetrics = () => {
       }
 
       if (!conversions || conversions.length === 0) {
-        console.log('⚠️ Nenhuma conversão encontrada');
+        console.log('⚠️ Nenhuma conversão válida encontrada (com clique registrado)');
         setReferredUsers([]);
         return;
       }
 
-      console.log(`✅ ${conversions.length} conversões encontradas`);
+      console.log(`✅ ${conversions.length} conversões válidas encontradas`);
 
-      // Para cada conversão, buscar dados do perfil, comissões e obras registradas
+      // STEP 3: Para cada conversão, buscar dados do perfil, comissões e obras registradas
       const usersData = await Promise.all(
         conversions.map(async (conv) => {
           // Buscar perfil
