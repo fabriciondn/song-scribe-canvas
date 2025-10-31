@@ -51,14 +51,14 @@ export const useAffiliate = () => {
     loadAffiliateData();
   }, []);
 
-  // Listener realtime para novas comissões
+  // Listener realtime para novas comissões, conversões e cliques
   useEffect(() => {
     if (!affiliate?.id) return;
     
-    console.log('📡 Configurando listener realtime para comissões do parceiro:', affiliate.id);
+    console.log('📡 Configurando listeners realtime para parceiro:', affiliate.id);
     
     const channel = supabase
-      .channel(`affiliate-commissions-${affiliate.id}`)
+      .channel(`affiliate-updates-${affiliate.id}`)
       .on(
         'postgres_changes',
         {
@@ -69,7 +69,46 @@ export const useAffiliate = () => {
         },
         (payload) => {
           console.log('💰 Nova comissão recebida em tempo real!', payload);
-          refreshData(); // Recarregar todos os dados
+          refreshData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'affiliate_conversions',
+          filter: `affiliate_id=eq.${affiliate.id}`
+        },
+        (payload) => {
+          console.log('🎯 Nova conversão registrada em tempo real!', payload);
+          refreshData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'affiliate_clicks',
+          filter: `affiliate_id=eq.${affiliate.id}`
+        },
+        (payload) => {
+          console.log('👆 Novo clique registrado em tempo real!', payload);
+          refreshData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'affiliates',
+          filter: `id=eq.${affiliate.id}`
+        },
+        (payload) => {
+          console.log('📊 Dados do parceiro atualizados!', payload);
+          refreshData();
         }
       )
       .subscribe((status) => {

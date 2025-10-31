@@ -382,6 +382,10 @@ export async function trackAffiliateClick(affiliateCode: string, utmParams?: Rec
       return;
     }
 
+    // Verificar se usuário está autenticado para marcar conversão automaticamente
+    const { data: { user } } = await supabase.auth.getUser();
+    const isAuthenticated = !!user;
+
     const { data: click, error: clickError } = await supabase
       .from('affiliate_clicks')
       .insert({
@@ -392,16 +396,35 @@ export async function trackAffiliateClick(affiliateCode: string, utmParams?: Rec
         utm_source: utmParams?.utm_source,
         utm_medium: utmParams?.utm_medium,
         utm_campaign: utmParams?.utm_campaign,
-        utm_content: utmParams?.utm_content
+        utm_content: utmParams?.utm_content,
+        converted: isAuthenticated // Marcar como convertido se já autenticado
       })
       .select()
       .single();
 
-    console.log('📊 Clique registrado:', click, 'Erro:', clickError);
+    console.log('📊 Clique registrado:', click, 'Autenticado:', isAuthenticated, 'Erro:', clickError);
 
     // Salvar código completo no localStorage para conversão posterior
     localStorage.setItem('affiliate_code', affiliate.affiliate_code);
     console.log('💾 Código salvo no localStorage:', affiliate.affiliate_code);
+    
+    // Se usuário já está autenticado, processar conversão imediatamente
+    if (isAuthenticated && user) {
+      console.log('✅ Usuário já autenticado, salvando código no perfil...');
+      const normalizedCode = affiliate.affiliate_code.startsWith('compuse-') 
+        ? affiliate.affiliate_code 
+        : `compuse-${affiliate.affiliate_code}`;
+      
+      // Salvar nas notas do perfil
+      await supabase
+        .from('profiles')
+        .update({ 
+          moderator_notes: `Indicado por: ${normalizedCode}` 
+        })
+        .eq('id', user.id);
+      
+      console.log('💾 Código salvo no perfil do usuário autenticado');
+    }
   } catch (error) {
     console.error('❌ Erro ao registrar clique:', error);
   }
