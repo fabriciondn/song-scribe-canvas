@@ -42,11 +42,12 @@ export const AffiliateMetrics = () => {
 
       console.log('🔍 Buscando usuários indicados para affiliate_id:', affiliate.id);
 
-      // Buscar todas as conversões do afiliado (usuários que vieram pelo link)
+      // Buscar APENAS conversões com click_id válido (usuários que realmente clicaram no link)
       const { data: conversions, error } = await supabase
         .from('affiliate_conversions')
-        .select('user_id, created_at')
+        .select('user_id, created_at, click_id')
         .eq('affiliate_id', affiliate.id)
+        .not('click_id', 'is', null)
         .order('created_at', { ascending: false });
 
       if (error) {
