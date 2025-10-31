@@ -24,9 +24,11 @@ import { AffiliateSidebar } from '@/components/affiliate/AffiliateSidebar';
 import { AffiliateMobileLayout } from '@/components/affiliate/AffiliateMobileLayout';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { toast } from '@/hooks/use-toast';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 
 export default function AffiliateDashboard() {
   const { affiliate, stats, isLoading, isAffiliate, isPending, isRejected } = useAffiliate();
+  const { isAdmin } = useAdminAccess();
   const [activeSection, setActiveSection] = useState('overview');
   const { isMobile } = useMobileDetection();
 
@@ -65,11 +67,32 @@ export default function AffiliateDashboard() {
     );
   }
 
-  if (!affiliate) {
+  // Administradores sempre veem o painel completo
+  if (!affiliate && !isAdmin) {
     return <AffiliateApplication />;
   }
 
-  if (isPending) {
+  // Se for admin mas não tem afiliado, mostrar aviso amigável
+  if (!affiliate && isAdmin) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Award className="w-8 h-8 text-primary" />
+            </div>
+            <CardTitle>Visualizando como Administrador</CardTitle>
+            <CardDescription>
+              Você está acessando o painel de afiliados como administrador.
+              Use o botão "Operar como" na lista de afiliados para visualizar dados de um afiliado específico.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isPending && !isAdmin) {
     return (
       <div className="container mx-auto p-6">
         <Card className="max-w-2xl mx-auto">
@@ -96,7 +119,7 @@ export default function AffiliateDashboard() {
     );
   }
 
-  if (isRejected) {
+  if (isRejected && !isAdmin) {
     return (
       <div className="container mx-auto p-6">
         <Card className="max-w-2xl mx-auto">
