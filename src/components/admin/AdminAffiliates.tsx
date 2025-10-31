@@ -20,9 +20,11 @@ import {
   ExternalLink,
   Star,
   TrendingUp,
-  Percent
+  Percent,
+  UserCog
 } from 'lucide-react';
 import AffiliateReferralsModal from './AffiliateReferralsModal';
+import { ImpersonateButton } from '@/components/ui/impersonate-button';
 
 interface Affiliate {
   id: string;
@@ -337,6 +339,17 @@ export const AdminAffiliates = () => {
                   <TableCell>R$ {Number(affiliate.total_earnings || 0).toFixed(2)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
+                      <ImpersonateButton
+                        targetUser={{
+                          id: affiliate.user_id,
+                          email: affiliate.contact_email || '',
+                          name: affiliate.full_name || '',
+                          artistic_name: null
+                        }}
+                        targetRole="user"
+                        variant="outline"
+                        size="sm"
+                      />
                       <Button
                         size="sm"
                         variant="outline"
