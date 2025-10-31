@@ -173,10 +173,26 @@ export async function getMyAffiliateData(): Promise<Affiliate | null> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return null;
 
+    // Verificar se há impersonação ativa
+    const impersonationData = localStorage.getItem('impersonation_data');
+    let targetUserId = user.user.id;
+    
+    if (impersonationData) {
+      try {
+        const parsedData = JSON.parse(impersonationData);
+        if (parsedData.targetUser?.id) {
+          targetUserId = parsedData.targetUser.id;
+          console.log('🎭 Buscando dados de afiliado para usuário impersonado:', targetUserId);
+        }
+      } catch (e) {
+        console.error('Erro ao parsear dados de impersonação:', e);
+      }
+    }
+
     const { data, error } = await supabase
       .from('affiliates')
       .select('*, custom_commission_rate')
-      .eq('user_id', user.user.id)
+      .eq('user_id', targetUserId)
       .single();
 
     if (error && error.code !== 'PGRST116') throw error;
