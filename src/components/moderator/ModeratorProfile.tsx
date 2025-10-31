@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +17,36 @@ export function ModeratorProfile() {
     name: profile?.name || '',
     artistic_name: profile?.artistic_name || '',
     username: profile?.username || '',
+    cpf: profile?.cpf || '',
+    cellphone: profile?.cellphone || '',
+    birth_date: profile?.birth_date || '',
+    cep: profile?.cep || '',
+    street: profile?.street || '',
+    number: profile?.number || '',
+    neighborhood: profile?.neighborhood || '',
+    city: profile?.city || '',
+    state: profile?.state || '',
   });
+
+  // Sincronizar formData quando profile é carregado
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name || '',
+        artistic_name: profile.artistic_name || '',
+        username: profile.username || '',
+        cpf: profile.cpf || '',
+        cellphone: profile.cellphone || '',
+        birth_date: profile.birth_date || '',
+        cep: profile.cep || '',
+        street: profile.street || '',
+        number: profile.number || '',
+        neighborhood: profile.neighborhood || '',
+        city: profile.city || '',
+        state: profile.state || '',
+      });
+    }
+  }, [profile]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -109,7 +138,7 @@ export function ModeratorProfile() {
           {/* Profile Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo</Label>
+              <Label htmlFor="name">Nome Completo *</Label>
               <Input
                 id="name"
                 value={isEditing ? formData.name : profile?.name || ''}
@@ -127,6 +156,106 @@ export function ModeratorProfile() {
                 onChange={(e) => handleInputChange('artistic_name', e.target.value)}
                 disabled={!isEditing}
                 placeholder="Seu nome artístico"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cpf">CPF *</Label>
+              <Input
+                id="cpf"
+                value={isEditing ? formData.cpf : profile?.cpf || ''}
+                onChange={(e) => handleInputChange('cpf', e.target.value)}
+                disabled={!isEditing}
+                placeholder="000.000.000-00"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cellphone">Telefone *</Label>
+              <Input
+                id="cellphone"
+                value={isEditing ? formData.cellphone : profile?.cellphone || ''}
+                onChange={(e) => handleInputChange('cellphone', e.target.value)}
+                disabled={!isEditing}
+                placeholder="(00) 00000-0000"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="birth_date">Data de Nascimento *</Label>
+              <Input
+                id="birth_date"
+                type="date"
+                value={isEditing ? formData.birth_date : profile?.birth_date || ''}
+                onChange={(e) => handleInputChange('birth_date', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cep">CEP *</Label>
+              <Input
+                id="cep"
+                value={isEditing ? formData.cep : profile?.cep || ''}
+                onChange={(e) => handleInputChange('cep', e.target.value)}
+                disabled={!isEditing}
+                placeholder="00000-000"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="street">Endereço *</Label>
+              <Input
+                id="street"
+                value={isEditing ? formData.street : profile?.street || ''}
+                onChange={(e) => handleInputChange('street', e.target.value)}
+                disabled={!isEditing}
+                placeholder="Rua, Avenida, etc."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="number">Número</Label>
+              <Input
+                id="number"
+                value={isEditing ? formData.number : profile?.number || ''}
+                onChange={(e) => handleInputChange('number', e.target.value)}
+                disabled={!isEditing}
+                placeholder="123"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="neighborhood">Bairro</Label>
+              <Input
+                id="neighborhood"
+                value={isEditing ? formData.neighborhood : profile?.neighborhood || ''}
+                onChange={(e) => handleInputChange('neighborhood', e.target.value)}
+                disabled={!isEditing}
+                placeholder="Nome do bairro"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="city">Cidade *</Label>
+              <Input
+                id="city"
+                value={isEditing ? formData.city : profile?.city || ''}
+                onChange={(e) => handleInputChange('city', e.target.value)}
+                disabled={!isEditing}
+                placeholder="Nome da cidade"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="state">Estado *</Label>
+              <Input
+                id="state"
+                value={isEditing ? formData.state : profile?.state || ''}
+                onChange={(e) => handleInputChange('state', e.target.value)}
+                disabled={!isEditing}
+                placeholder="UF"
+                maxLength={2}
               />
             </div>
 
@@ -199,6 +328,15 @@ export function ModeratorProfile() {
                       name: profile?.name || '',
                       artistic_name: profile?.artistic_name || '',
                       username: profile?.username || '',
+                      cpf: profile?.cpf || '',
+                      cellphone: profile?.cellphone || '',
+                      birth_date: profile?.birth_date || '',
+                      cep: profile?.cep || '',
+                      street: profile?.street || '',
+                      number: profile?.number || '',
+                      neighborhood: profile?.neighborhood || '',
+                      city: profile?.city || '',
+                      state: profile?.state || '',
                     });
                   }}
                 >
