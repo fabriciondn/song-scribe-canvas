@@ -84,46 +84,31 @@ export default function PublicRegistrationForm() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
-      // Use the secure registration function instead of direct table insert
-      const { data, error } = await supabase.rpc('secure_public_registration', {
-        p_email: values.email,
-        p_full_name: values.fullName,
-        p_cpf: values.cpf,
-        p_birth_date: values.birthDate,
-        p_cep: values.cep,
-        p_street: values.street,
-        p_number: values.number,
-        p_neighborhood: values.neighborhood,
-        p_city: values.city,
-        p_state: values.state,
-        p_phone: values.phone,
-        p_artistic_name: values.artisticName || null,
-        // p_client_ip would require server-side implementation for security
-      });
+      const { error } = await supabase
+        .from('public_registration_forms')
+        .insert({
+          email: values.email,
+          full_name: values.fullName,
+          cpf: values.cpf,
+          birth_date: values.birthDate,
+          cep: values.cep,
+          street: values.street,
+          number: values.number,
+          neighborhood: values.neighborhood,
+          city: values.city,
+          state: values.state,
+          phone: values.phone,
+          artistic_name: values.artisticName || null,
+        });
 
       if (error) throw error;
-
-      // Check the response from the secure function
-      const result = data as { success: boolean; error?: string; registration_id?: string; message?: string };
-      if (result && result.success === false) {
-        toast.error(result.error || 'Erro ao enviar formulário');
-        return;
-      }
 
       toast.success('Formulário enviado com sucesso!');
       setIsSubmitted(true);
       form.reset();
     } catch (error: any) {
       console.error('Erro ao enviar formulário:', error);
-      
-      // Handle specific error messages from the secure function
-      if (error.message?.includes('already registered')) {
-        toast.error('Este email ou CPF já foi registrado anteriormente.');
-      } else if (error.message?.includes('Too many')) {
-        toast.error('Muitas tentativas de registro. Tente novamente mais tarde.');
-      } else {
-        toast.error('Erro ao enviar formulário. Tente novamente.');
-      }
+      toast.error('Erro ao enviar formulário. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
