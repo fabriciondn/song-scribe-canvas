@@ -22,6 +22,7 @@ import {
   TrendingUp,
   Percent
 } from 'lucide-react';
+import AffiliateReferralsModal from './AffiliateReferralsModal';
 
 interface Affiliate {
   id: string;
@@ -54,6 +55,8 @@ export const AdminAffiliates = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [processingAction, setProcessingAction] = useState(false);
+  const [isReferralsModalOpen, setIsReferralsModalOpen] = useState(false);
+  const [selectedAffiliateForReferrals, setSelectedAffiliateForReferrals] = useState<{ id: string; name: string } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -341,8 +344,23 @@ export const AdminAffiliates = () => {
                           setSelectedAffiliate(affiliate);
                           setShowDetailsModal(true);
                         }}
+                        title="Ver detalhes"
                       >
                         <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedAffiliateForReferrals({
+                            id: affiliate.id,
+                            name: affiliate.full_name,
+                          });
+                          setIsReferralsModalOpen(true);
+                        }}
+                        title="Ver usuários indicados"
+                      >
+                        <Users className="h-4 w-4" />
                       </Button>
                       {affiliate.status === 'pending' && (
                         <>
@@ -526,6 +544,18 @@ export const AdminAffiliates = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {selectedAffiliateForReferrals && (
+        <AffiliateReferralsModal
+          isOpen={isReferralsModalOpen}
+          onClose={() => {
+            setIsReferralsModalOpen(false);
+            setSelectedAffiliateForReferrals(null);
+          }}
+          affiliateId={selectedAffiliateForReferrals.id}
+          affiliateName={selectedAffiliateForReferrals.name}
+        />
+      )}
     </div>
   );
 };
