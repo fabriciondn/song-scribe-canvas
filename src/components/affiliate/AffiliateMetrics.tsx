@@ -32,7 +32,7 @@ export const AffiliateMetrics = () => {
   const [referredUsers, setReferredUsers] = useState<ReferredUser[]>([]);
   
   // Atualizar dados a cada 10 segundos para mostrar em tempo real
-  // Buscar usuários indicados
+  // Buscar usuários indicados (🆕 AGORA POR CLIQUES CONVERTIDOS)
   useEffect(() => {
     const loadReferredUsers = async () => {
       if (!affiliate?.id) {
@@ -42,57 +42,61 @@ export const AffiliateMetrics = () => {
 
       console.log('🔍 Buscando usuários indicados para affiliate_id:', affiliate.id);
 
-      // Buscar APENAS conversões com click_id válido (usuários que realmente clicaram no link)
-      const { data: conversions, error } = await supabase
-        .from('affiliate_conversions')
-        .select('user_id, created_at, click_id')
+      // 🆕 Buscar cliques convertidos (usuários que clicaram no link E se cadastraram)
+      const { data: clicks, error } = await supabase
+        .from('affiliate_clicks')
+        .select('user_id, created_at')
         .eq('affiliate_id', affiliate.id)
-        .not('click_id', 'is', null)
+        .eq('converted', true)
+        .not('user_id', 'is', null)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Erro ao buscar conversões:', error);
+        console.error('❌ Erro ao buscar cliques:', error);
         return;
       }
 
-      if (!conversions || conversions.length === 0) {
-        console.log('⚠️ Nenhuma conversão encontrada');
+      if (!clicks || clicks.length === 0) {
+        console.log('⚠️ Nenhum clique convertido encontrado');
         setReferredUsers([]);
         return;
       }
 
-      console.log(`✅ ${conversions.length} conversões encontradas`);
+      console.log(`✅ ${clicks.length} cliques convertidos encontrados`);
 
-      // Para cada conversão, buscar dados do perfil, comissões e obras registradas
+      // Para cada clique, buscar dados do perfil, comissões e obras registradas
       const usersData = await Promise.all(
-        conversions.map(async (conv) => {
+        clicks.map(async (click) => {
           // Buscar perfil
           const { data: profile } = await supabase
             .from('profiles')
             .select('name, email')
-            .eq('id', conv.user_id)
+            .eq('id', click.user_id)
             .single();
 
-          // Buscar comissão
-          const { data: commission } = await supabase
+          // Buscar comissões
+          const { data: commissions } = await supabase
             .from('affiliate_commissions')
             .select('amount, status')
             .eq('affiliate_id', affiliate.id)
-            .eq('user_id', conv.user_id)
-            .maybeSingle();
+            .eq('user_id', click.user_id);
+
+          const totalCommission = commissions?.reduce((acc, c) => acc + Number(c.amount), 0) || 0;
+          const hasPaidCommission = commissions?.some(c => c.status === 'paid') || false;
 
           // Buscar obras registradas
           const { count: worksCount } = await supabase
             .from('author_registrations')
             .select('*', { count: 'exact', head: true })
-            .eq('user_id', conv.user_id);
+            .eq('user_id', click.user_id)
+            .eq('status', 'registered');
 
           return {
             name: profile?.name || 'Sem nome',
             email: profile?.email || 'Sem email',
-            conversion_date: conv.created_at,
-            commission_amount: commission?.amount || null,
-            commission_status: commission?.status || null,
+            conversion_date: click.created_at,
+            commission_amount: totalCommission,
+            commission_status: hasPaidCommission ? 'paid' : (worksCount || 0) > 0 ? 'pending' : 'none',
             has_registered_works: (worksCount || 0) > 0,
             registered_works_count: worksCount || 0
           };

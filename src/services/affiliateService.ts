@@ -406,6 +406,7 @@ export async function trackAffiliateClick(affiliateCode: string, utmParams?: Rec
       .from('affiliate_clicks')
       .insert({
         affiliate_id: affiliate.id,
+        user_id: user?.id || null, // 🆕 Salvar user_id se autenticado
         ip_address: '127.0.0.1',
         user_agent: navigator.userAgent,
         referrer: document.referrer,

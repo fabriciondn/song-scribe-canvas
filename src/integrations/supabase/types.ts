@@ -145,6 +145,7 @@ export type Database = {
           ip_address: unknown
           referrer: string | null
           user_agent: string | null
+          user_id: string | null
           utm_campaign: string | null
           utm_content: string | null
           utm_medium: string | null
@@ -159,6 +160,7 @@ export type Database = {
           ip_address?: unknown
           referrer?: string | null
           user_agent?: string | null
+          user_id?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null
@@ -173,6 +175,7 @@ export type Database = {
           ip_address?: unknown
           referrer?: string | null
           user_agent?: string | null
+          user_id?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null
@@ -191,6 +194,20 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "affiliate_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_clicks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_clicks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]

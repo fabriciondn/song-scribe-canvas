@@ -45,6 +45,52 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
           throw new Error('Nome é obrigatório');
         }
         await register(name, email, password);
+        
+        // 🆕 Processar afiliação após signup bem-sucedido
+        const affiliateCode = localStorage.getItem('affiliate_code');
+        if (affiliateCode) {
+          console.log('🔗 Vinculando usuário ao afiliado:', affiliateCode);
+          
+          try {
+            // Importar supabase
+            const { supabase } = await import('@/integrations/supabase/client');
+            
+            // Aguardar um pouco para garantir que o usuário foi criado
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Buscar usuário autenticado
+            const { data: { user: newUser } } = await supabase.auth.getUser();
+            
+            if (newUser) {
+              // Buscar ID do afiliado
+              const { data: affiliate } = await supabase
+                .from('affiliates')
+                .select('id')
+                .eq('affiliate_code', affiliateCode)
+                .eq('status', 'approved')
+                .single();
+              
+              if (affiliate) {
+                // Atualizar clique com user_id e marcar como convertido
+                await supabase
+                  .from('affiliate_clicks')
+                  .update({ 
+                    user_id: newUser.id,
+                    converted: true 
+                  })
+                  .eq('affiliate_id', affiliate.id)
+                  .is('user_id', null)
+                  .order('created_at', { ascending: false })
+                  .limit(1);
+                
+                console.log('✅ Clique atualizado com user_id');
+              }
+            }
+          } catch (error) {
+            console.error('❌ Erro ao vincular afiliado:', error);
+          }
+        }
+        
         toast({
           title: 'Conta criada com sucesso!',
           description: 'Bem-vindo ao Compuse.',
