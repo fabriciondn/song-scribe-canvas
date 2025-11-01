@@ -24,14 +24,92 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [credits, setCredits] = useState(user?.credits || 0);
   const [moderatorNotes, setModeratorNotes] = useState(user?.moderator_notes || '');
+  const [userOrigin, setUserOrigin] = useState<{
+    type: 'affiliate' | 'moderator' | 'direct';
+    referrerName?: string;
+    referrerId?: string;
+  } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
       setCredits(user.credits || 0);
       setModeratorNotes(user.moderator_notes || '');
+      fetchUserOrigin();
     }
   }, [user]);
+
+  const fetchUserOrigin = async () => {
+    if (!user?.id) return;
+
+    try {
+      // Verificar se veio por afiliado
+      const { data: affiliateClick, error: affiliateError } = await supabase
+        .from('affiliate_clicks')
+        .select('affiliate_id')
+        .eq('user_id', user.id)
+        .eq('converted', true)
+        .maybeSingle();
+
+      if (affiliateClick && !affiliateError) {
+        // Buscar dados do afiliado
+        const { data: affiliate } = await supabase
+          .from('affiliates')
+          .select('user_id')
+          .eq('id', affiliateClick.affiliate_id)
+          .single();
+
+        if (affiliate) {
+          // Buscar perfil do afiliado
+          const { data: affiliateProfile } = await supabase
+            .from('profiles')
+            .select('name, artistic_name')
+            .eq('id', affiliate.user_id)
+            .single();
+
+          setUserOrigin({
+            type: 'affiliate',
+            referrerName: affiliateProfile?.artistic_name || affiliateProfile?.name || 'Afiliado',
+            referrerId: affiliate.user_id
+          });
+          return;
+        }
+      }
+
+      // Verificar se foi criado por moderador
+      const { data: moderatorUser, error: moderatorError } = await supabase
+        .from('moderator_users')
+        .select('moderator_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (moderatorUser && !moderatorError) {
+        // Buscar perfil do moderador
+        const { data: moderatorProfile } = await supabase
+          .from('profiles')
+          .select('name, artistic_name')
+          .eq('id', moderatorUser.moderator_id)
+          .single();
+
+        setUserOrigin({
+          type: 'moderator',
+          referrerName: moderatorProfile?.artistic_name || moderatorProfile?.name || 'Moderador',
+          referrerId: moderatorUser.moderator_id
+        });
+        return;
+      }
+
+      // Se não encontrou em nenhum, é cadastro direto
+      setUserOrigin({
+        type: 'direct'
+      });
+    } catch (error) {
+      console.error('Erro ao buscar origem do usuário:', error);
+      setUserOrigin({
+        type: 'direct'
+      });
+    }
+  };
 
   const handleUpdateCredits = async () => {
     if (!user?.id) return;
@@ -103,6 +181,47 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Origem do Usuário */}
+          <div className="p-4 rounded-lg bg-muted/50 border">
+            <Label className="text-base font-semibold mb-2 block">Origem do Cadastro</Label>
+            {userOrigin ? (
+              <div className="flex items-center gap-2">
+                {userOrigin.type === 'affiliate' && (
+                  <>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                      Via Afiliado
+                    </Badge>
+                    <span className="text-sm">
+                      Indicado por: <span className="font-semibold">{userOrigin.referrerName}</span>
+                    </span>
+                  </>
+                )}
+                {userOrigin.type === 'moderator' && (
+                  <>
+                    <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                      Criado por Moderador
+                    </Badge>
+                    <span className="text-sm">
+                      Moderador: <span className="font-semibold">{userOrigin.referrerName}</span>
+                    </span>
+                  </>
+                )}
+                {userOrigin.type === 'direct' && (
+                  <>
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      Cadastro Direto
+                    </Badge>
+                    <span className="text-sm">
+                      Usuário se cadastrou de forma independente
+                    </span>
+                  </>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Carregando origem...</p>
+            )}
+          </div>
+
           {/* Informações Básicas */}
           <div className="grid grid-cols-2 gap-4">
             <div>

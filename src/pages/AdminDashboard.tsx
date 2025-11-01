@@ -19,7 +19,7 @@ import { AdminModerators } from '@/components/admin/AdminModerators';
 import { AdminMenuFunctions } from '@/components/admin/AdminMenuFunctions';
 import { AdminForms } from '@/components/admin/AdminForms';
 import { AdminAffiliateWithdrawals } from '@/components/admin/AdminAffiliateWithdrawals';
-import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -143,7 +143,6 @@ const AdminDashboard: React.FC = () => {
           {/* Header + Status do Sistema */}
           <header className="flex flex-col gap-2 md:gap-0 md:flex-row h-auto md:h-16 shrink-0 items-start md:items-center border-b px-2 md:px-4 bg-background sticky top-0 z-30">
             <div className="flex items-center space-x-2 flex-1 py-2 md:py-0">
-              <SidebarTrigger className="-ml-1 block md:hidden" />
               <Shield className="h-7 w-7 text-primary" />
               <div>
                 <h1 className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">

@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -108,23 +109,26 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   return (
   <Sidebar className="bg-black border-r border-gray-800 w-64 md:w-64 fixed md:fixed md:top-0 md:left-0 md:h-screen inset-y-0 left-0 z-50 md:z-auto transition-transform duration-300 md:translate-x-0 translate-x-[-100%] md:block" collapsible="icon">
       <SidebarHeader className="border-b border-gray-800 p-4">
-        <div className="flex items-center gap-3">
-          {!collapsed && (
-            <img 
-              src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
-              alt="Compuse Logo" 
-              className="h-8"
-            />
-          )}
-          {collapsed && (
-            <Shield className="h-8 w-8 text-primary" />
-          )}
-          {!collapsed && (
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-white">Admin Panel</span>
-              <span className="text-xs text-gray-400">Compuse</span>
-            </div>
-          )}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            {!collapsed && (
+              <img 
+                src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+                alt="Compuse Logo" 
+                className="h-8"
+              />
+            )}
+            {collapsed && (
+              <Shield className="h-8 w-8 text-primary" />
+            )}
+            {!collapsed && (
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-white">Admin Panel</span>
+                <span className="text-xs text-gray-400">Compuse</span>
+              </div>
+            )}
+          </div>
+          <SidebarTrigger className="text-gray-400 hover:text-white" />
         </div>
       </SidebarHeader>
 
