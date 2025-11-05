@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Users, UserPlus, Edit, Trash2, AlertTriangle, Crown, Clock, CircleDot } from 'lucide-react';
+import { Search, Users, UserPlus, Edit, Trash2, AlertTriangle, Crown, Clock, CircleDot, Download, Filter } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -13,12 +13,18 @@ import { UserDetailsModal } from './UserDetailsModal';
 import { AdvancedUserModal } from './AdvancedUserModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import * as XLSX from 'xlsx';
 
 export const AdminUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isAdvancedModalOpen, setIsAdvancedModalOpen] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [originFilter, setOriginFilter] = useState<'all' | 'affiliate' | 'moderator'>('all');
   const { toast } = useToast();
 
   // Buscar todos os usuários com subscription e última atividade
@@ -36,7 +42,7 @@ export const AdminUsers = () => {
       // Buscar subscriptions e última atividade para cada usuário
       const userIds = profiles?.map(p => p.id) || [];
       
-      const [subscriptionsData, sessionsData] = await Promise.all([
+      const [subscriptionsData, sessionsData, affiliateData, moderatorData] = await Promise.all([
         supabase
           .from('subscriptions')
           .select('*')
@@ -47,7 +53,18 @@ export const AdminUsers = () => {
           .from('user_sessions')
           .select('user_id, last_activity')
           .in('user_id', userIds)
-          .order('last_activity', { ascending: false })
+          .order('last_activity', { ascending: false }),
+        
+        supabase
+          .from('affiliate_clicks')
+          .select('user_id')
+          .in('user_id', userIds)
+          .eq('converted', true),
+        
+        supabase
+          .from('moderator_users')
+          .select('user_id')
+          .in('user_id', userIds)
       ]);
 
       // Mapear subscriptions e sessões
@@ -65,11 +82,16 @@ export const AdminUsers = () => {
         }
       });
 
+      // Mapear origem dos usuários
+      const affiliateUsers = new Set(affiliateData.data?.map((a: any) => a.user_id) || []);
+      const moderatorUsers = new Set(moderatorData.data?.map((m: any) => m.user_id) || []);
+
       // Combinar dados
       const enrichedUsers = profiles?.map(profile => ({
         ...profile,
         subscription: subscriptionsMap.get(profile.id),
-        last_activity: sessionsMap.get(profile.id)
+        last_activity: sessionsMap.get(profile.id),
+        origin: moderatorUsers.has(profile.id) ? 'moderator' : affiliateUsers.has(profile.id) ? 'affiliate' : 'direct'
       })) || [];
 
       return enrichedUsers;
@@ -123,16 +145,124 @@ export const AdminUsers = () => {
     }
   };
 
-  // Filtrar usuários baseado no termo de busca
+  // Filtrar usuários baseado nos filtros aplicados
   const filteredUsers = users?.filter(user => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      user.name?.toLowerCase().includes(searchLower) ||
-      user.email?.toLowerCase().includes(searchLower) ||
-      user.artistic_name?.toLowerCase().includes(searchLower)
-    );
+    // Filtro de busca
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = 
+        user.name?.toLowerCase().includes(searchLower) ||
+        user.email?.toLowerCase().includes(searchLower) ||
+        user.artistic_name?.toLowerCase().includes(searchLower);
+      if (!matchesSearch) return false;
+    }
+
+    // Filtro de data
+    if (startDate) {
+      const userDate = new Date(user.created_at);
+      const filterStartDate = new Date(startDate);
+      if (userDate < filterStartDate) return false;
+    }
+    
+    if (endDate) {
+      const userDate = new Date(user.created_at);
+      const filterEndDate = new Date(endDate);
+      filterEndDate.setHours(23, 59, 59, 999); // Final do dia
+      if (userDate > filterEndDate) return false;
+    }
+
+    // Filtro de origem
+    if (originFilter !== 'all') {
+      if (originFilter === 'affiliate' && user.origin !== 'affiliate') return false;
+      if (originFilter === 'moderator' && user.origin !== 'moderator') return false;
+    }
+
+    return true;
   }) || [];
+
+  // Função para exportar usuários para Excel
+  const handleExportToExcel = () => {
+    if (filteredUsers.length === 0) {
+      toast({
+        title: 'Aviso',
+        description: 'Nenhum usuário para exportar',
+        variant: 'default',
+      });
+      return;
+    }
+
+    // Preparar dados para exportação
+    const exportData = filteredUsers.map(user => {
+      const subscriptionStatus = (() => {
+        const sub = user.subscription;
+        if (!sub) return 'Gratuito';
+        
+        const now = new Date();
+        const expiresAt = sub.expires_at ? new Date(sub.expires_at) : null;
+        
+        if (sub.status === 'active' && sub.plan_type === 'pro') return 'Pro Ativo';
+        if (sub.status === 'trial') {
+          if (expiresAt && now <= expiresAt) {
+            const daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            return `Trial (${daysLeft}d)`;
+          }
+          return 'Trial Expirado';
+        }
+        if (sub.status === 'expired') return 'Expirado';
+        return 'Gratuito';
+      })();
+
+      const originLabel = user.origin === 'moderator' ? 'Moderador' : 
+                         user.origin === 'affiliate' ? 'Afiliado' : 
+                         'Cadastro Direto';
+
+      return {
+        'Nome': user.name || '-',
+        'Nome Artístico': user.artistic_name || '-',
+        'Email': user.email || '-',
+        'CPF': user.cpf || '-',
+        'Celular': user.cellphone || '-',
+        'Status': subscriptionStatus,
+        'Créditos': user.credits || 0,
+        'Origem': originLabel,
+        'Data de Cadastro': user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '-',
+        'CEP': user.cep || '-',
+        'Cidade': user.city || '-',
+        'Estado': user.state || '-',
+      };
+    });
+
+    // Criar planilha Excel
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Usuários');
+
+    // Ajustar largura das colunas
+    const colWidths = [
+      { wch: 30 }, // Nome
+      { wch: 30 }, // Nome Artístico
+      { wch: 35 }, // Email
+      { wch: 15 }, // CPF
+      { wch: 15 }, // Celular
+      { wch: 15 }, // Status
+      { wch: 10 }, // Créditos
+      { wch: 15 }, // Origem
+      { wch: 15 }, // Data de Cadastro
+      { wch: 12 }, // CEP
+      { wch: 20 }, // Cidade
+      { wch: 10 }, // Estado
+    ];
+    ws['!cols'] = colWidths;
+
+    // Gerar arquivo e fazer download
+    const fileName = `usuarios_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+
+    toast({
+      title: 'Sucesso',
+      description: `${filteredUsers.length} usuário(s) exportado(s) com sucesso`,
+    });
+  };
 
   return (
     <div className="space-y-4 md:space-y-6 px-1 md:px-0">
@@ -147,7 +277,7 @@ export const AdminUsers = () => {
           </p>
         </div>
         
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto">
           <div className="relative flex-1 md:w-80">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -157,6 +287,77 @@ export const AdminUsers = () => {
               className="pl-10"
             />
           </div>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Filtros
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80" align="end">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-3">Filtros de Pesquisa</h4>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Data Inicial</label>
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    placeholder="Data inicial"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Data Final</label>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    placeholder="Data final"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Origem do Cadastro</label>
+                  <Select value={originFilter} onValueChange={(value: any) => setOriginFilter(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a origem" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="affiliate">Afiliado</SelectItem>
+                      <SelectItem value="moderator">Moderador</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={() => {
+                    setStartDate('');
+                    setEndDate('');
+                    setOriginFilter('all');
+                  }}
+                >
+                  Limpar Filtros
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Button 
+            onClick={handleExportToExcel}
+            className="gap-2"
+            disabled={filteredUsers.length === 0}
+          >
+            <Download className="h-4 w-4" />
+            Exportar Excel
+          </Button>
         </div>
       </div>
 
