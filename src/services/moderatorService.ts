@@ -71,10 +71,22 @@ export const getManagedUsers = async (): Promise<ManagedUserData[]> => {
   try {
     console.log('👥 Fetching managed users...');
     
+    // Obter o ID do usuário autenticado
+    const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !currentUser) {
+      console.error('❌ Error getting authenticated user:', authError);
+      return [];
+    }
+    
+    console.log('🔑 Authenticated moderator ID:', currentUser.id);
+    
     // Fazemos duas consultas separadas para evitar problemas de join
+    // CRÍTICO: Filtrar apenas pelos usuários deste moderador específico
     const { data: moderatorUsers, error: moderatorError } = await supabase
       .from('moderator_users')
       .select('user_id, created_at')
+      .eq('moderator_id', currentUser.id)
       .order('created_at', { ascending: false });
 
     if (moderatorError) {
