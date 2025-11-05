@@ -71,20 +71,45 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
                 .single();
               
               if (affiliate) {
-                // Atualizar clique com user_id e marcar como convertido
-                await supabase
+                // Buscar o último clique não convertido
+                const { data: lastClick } = await supabase
                   .from('affiliate_clicks')
-                  .update({ 
-                    user_id: newUser.id,
-                    converted: true 
-                  })
+                  .select('id')
                   .eq('affiliate_id', affiliate.id)
                   .is('user_id', null)
                   .order('created_at', { ascending: false })
-                  .limit(1);
+                  .limit(1)
+                  .single();
                 
-                console.log('✅ Clique atualizado com user_id');
+                // Atualizar clique com user_id e marcar como convertido
+                if (lastClick) {
+                  await supabase
+                    .from('affiliate_clicks')
+                    .update({ 
+                      user_id: newUser.id,
+                      converted: true 
+                    })
+                    .eq('id', lastClick.id);
+                  
+                  console.log('✅ Clique atualizado com user_id');
+                  
+                  // 🆕 Criar registro de conversão
+                  await supabase
+                    .from('affiliate_conversions')
+                    .insert({
+                      affiliate_id: affiliate.id,
+                      user_id: newUser.id,
+                      click_id: lastClick.id,
+                      type: 'author_registration',
+                      reference_id: newUser.id
+                    });
+                  
+                  console.log('✅ Conversão registrada');
+                }
               }
+              
+              // Limpar código do localStorage
+              localStorage.removeItem('affiliate_code');
             }
           } catch (error) {
             console.error('❌ Erro ao vincular afiliado:', error);

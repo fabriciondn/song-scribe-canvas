@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { getAdminDashboardStats, getRevenueTransactions, getUsersByPlan } from '@/services/adminService';
 import { RevenueDetailsModal } from './RevenueDetailsModal';
 import { UsersByPlanModal } from './UsersByPlanModal';
+import { UserOriginReport } from './UserOriginReport';
 import { 
   Users, 
   Shield,
@@ -49,6 +50,9 @@ export const AdminOverview: React.FC = () => {
   return (
     <>
       <div className="space-y-6">
+        {/* Relatório de Origem dos Usuários */}
+        <UserOriginReport />
+        
         <div className="grid gap-4 md:grid-cols-3">
           <Card className="bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800/30">
             <CardContent className="p-4">
