@@ -218,9 +218,9 @@ export const AffiliateMetrics = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.registrations_count}</div>
+            <div className="text-2xl font-bold">{referredUsers.filter(u => u.has_registered_works).length}</div>
             <p className="text-xs text-muted-foreground">
-              Obras registradas através do seu link
+              Pessoas que registraram obras
             </p>
           </CardContent>
         </Card>
@@ -302,16 +302,16 @@ export const AffiliateMetrics = () => {
                          )}
                        </TableCell>
                        <TableCell>
-                         {user.commission_amount && user.commission_amount > 0 ? (
-                           <Badge className="bg-yellow-600 hover:bg-yellow-700">
-                             Aguardando
-                           </Badge>
-                         ) : (
-                           <Badge variant="secondary">
-                             Aguardando
-                           </Badge>
-                         )}
-                       </TableCell>
+                          {user.has_registered_works ? (
+                            <Badge className="bg-green-600 hover:bg-green-700">
+                              Confirmada
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">
+                              Aguardando
+                            </Badge>
+                          )}
+                        </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
