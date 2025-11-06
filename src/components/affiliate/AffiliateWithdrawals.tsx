@@ -56,88 +56,76 @@ export const AffiliateWithdrawals = () => {
   // Já Recebido = o que foi pago
   const paidAmount = affiliate?.total_paid || 0;
 
-  // Buscar usuários indicados com status de obras registradas
+  // Buscar usuários indicados através das notas do perfil
   useEffect(() => {
     const loadReferredUsers = async () => {
-      if (!affiliate?.id) {
-        console.log('❌ Affiliate ID não disponível');
+      if (!affiliate?.affiliate_code) {
+        console.log('❌ Affiliate code não disponível');
         return;
       }
 
-      console.log('🔍 Buscando usuários indicados para affiliate_id:', affiliate.id);
+      console.log('🔍 Buscando usuários indicados para código:', affiliate.affiliate_code);
 
-      // Buscar conversões com JOIN de profiles
-      const { data: conversions, error } = await supabase
-        .from('affiliate_conversions')
-        .select(`
-          user_id,
-          created_at
-        `)
-        .eq('affiliate_id', affiliate.id)
+      // Buscar todos os perfis que têm o código do afiliado nas notas
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, name, email, created_at')
+        .ilike('moderator_notes', `%${affiliate.affiliate_code}%`)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Erro ao buscar conversões:', error);
+        console.error('❌ Erro ao buscar perfis:', error);
         return;
       }
 
-      if (!conversions || conversions.length === 0) {
-        console.log('⚠️ Nenhuma conversão encontrada');
+      if (!profiles || profiles.length === 0) {
+        console.log('⚠️ Nenhum usuário indicado encontrado');
         setReferredUsers([]);
         return;
       }
 
-      console.log(`✅ ${conversions.length} conversões encontradas`, conversions);
+      console.log(`✅ ${profiles.length} usuários indicados encontrados`, profiles);
 
-      // Para cada conversão, buscar dados do perfil, comissões e obras registradas
+      // Para cada perfil, buscar comissões e verificar se tem obras registradas
       const usersData = await Promise.all(
-        conversions.map(async (conv) => {
-          console.log('🔍 Buscando dados para user_id:', conv.user_id);
-
-          // Buscar perfil
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('name, email')
-            .eq('id', conv.user_id)
-            .single();
-
-          if (profileError) {
-            console.error('❌ Erro ao buscar perfil:', profileError);
-          }
+        profiles.map(async (profile) => {
+          console.log('🔍 Processando dados para:', profile.email);
 
           // Buscar comissão
           const { data: commission, error: commissionError } = await supabase
             .from('affiliate_commissions')
             .select('amount, status')
             .eq('affiliate_id', affiliate.id)
-            .eq('user_id', conv.user_id)
+            .eq('user_id', profile.id)
             .maybeSingle();
 
           if (commissionError) {
             console.error('❌ Erro ao buscar comissão:', commissionError);
           }
 
-          // Buscar obras registradas
-          const { count: worksCount, error: worksError } = await supabase
+          // Verificar se tem obras registradas (sem buscar a quantidade)
+          const { data: works, error: worksError } = await supabase
             .from('author_registrations')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', conv.user_id);
+            .select('id')
+            .eq('user_id', profile.id)
+            .eq('status', 'registered')
+            .limit(1);
 
           if (worksError) {
             console.error('❌ Erro ao buscar obras:', worksError);
           }
 
           const userData = {
-            name: profile?.name || 'Sem nome',
-            email: profile?.email || 'Sem email',
-            conversion_date: conv.created_at,
+            name: profile.name || 'Sem nome',
+            email: profile.email || 'Sem email',
+            conversion_date: profile.created_at,
             commission_amount: commission?.amount || null,
             commission_status: commission?.status || null,
-            has_registered_works: (worksCount || 0) > 0,
-            registered_works_count: worksCount || 0
+            has_registered_works: (works && works.length > 0),
+            registered_works_count: 0 // Não mostrar números
           };
 
-          console.log('✅ Dados do usuário processados:', userData);
+          console.log('✅ Usuário processado:', userData);
           return userData;
         })
       );
@@ -147,7 +135,7 @@ export const AffiliateWithdrawals = () => {
     };
 
     loadReferredUsers();
-  }, [affiliate?.id]);
+  }, [affiliate?.id, affiliate?.affiliate_code]);
 
   useEffect(() => {
     if (affiliate?.id) {
@@ -396,7 +384,7 @@ export const AffiliateWithdrawals = () => {
                   <TableHead>Nome</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Data</TableHead>
-                  <TableHead>Obras</TableHead>
+                  <TableHead>Registrou Obra?</TableHead>
                   <TableHead>Comissão</TableHead>
                 </TableRow>
               </TableHeader>
@@ -411,10 +399,10 @@ export const AffiliateWithdrawals = () => {
                     <TableCell>
                       {user.has_registered_works ? (
                         <Badge variant="default" className="bg-green-600">
-                          {user.registered_works_count} {user.registered_works_count === 1 ? 'obra' : 'obras'}
+                          Sim
                         </Badge>
                       ) : (
-                        <Badge variant="outline">Nenhuma obra</Badge>
+                        <Badge variant="outline">Não</Badge>
                       )}
                     </TableCell>
                     <TableCell>
