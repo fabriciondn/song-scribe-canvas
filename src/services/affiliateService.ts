@@ -215,20 +215,30 @@ export async function getAffiliateStats(): Promise<AffiliateStats | null> {
       .select('*', { count: 'exact', head: true })
       .eq('affiliate_id', affiliate.id);
 
-    // Buscar conversões totais
+    // Buscar conversões (usuários que se cadastraram via link)
     const { count: total_conversions } = await supabase
-      .from('affiliate_conversions')
+      .from('profiles')
       .select('*', { count: 'exact', head: true })
-      .eq('affiliate_id', affiliate.id);
+      .ilike('moderator_notes', `%${affiliate.affiliate_code}%`);
 
-    // Buscar comissões pendentes
-    const { data: pendingCommissions } = await supabase
-      .from('affiliate_commissions')
-      .select('amount')
-      .eq('affiliate_id', affiliate.id)
-      .eq('status', 'pending');
+    // Buscar registros autorais dos indicados
+    const { data: referredProfiles } = await supabase
+      .from('profiles')
+      .select('id')
+      .ilike('moderator_notes', `%${affiliate.affiliate_code}%`);
 
-    const pending_earnings = pendingCommissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
+    const referredIds = referredProfiles?.map(p => p.id) || [];
+    
+    let registrations_count = 0;
+    if (referredIds.length > 0) {
+      const { count } = await supabase
+        .from('author_registrations')
+        .select('*', { count: 'exact', head: true })
+        .in('user_id', referredIds)
+        .eq('status', 'registered');
+      
+      registrations_count = count || 0;
+    }
 
     // Buscar comissões deste mês
     const startOfMonth = new Date();
@@ -246,12 +256,12 @@ export async function getAffiliateStats(): Promise<AffiliateStats | null> {
     return {
       total_clicks: total_clicks || 0,
       total_conversions: total_conversions || 0,
-      conversion_rate: total_clicks ? (total_conversions || 0) / total_clicks * 100 : 0,
+      conversion_rate: total_clicks ? ((total_conversions || 0) / total_clicks) * 100 : 0,
       total_earnings: Number(affiliate.total_earnings),
-      pending_earnings,
+      pending_earnings: Number(affiliate.total_earnings),
       paid_earnings: Number(affiliate.total_paid),
       this_month_earnings,
-      registrations_count: affiliate.total_registrations,
+      registrations_count,
       subscriptions_count: affiliate.total_subscriptions
     };
   } catch (error) {

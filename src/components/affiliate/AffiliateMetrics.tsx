@@ -32,54 +32,45 @@ export const AffiliateMetrics = () => {
   const [referredUsers, setReferredUsers] = useState<ReferredUser[]>([]);
   
   // Atualizar dados a cada 10 segundos para mostrar em tempo real
-  // Buscar usuários indicados (🆕 AGORA POR CLIQUES CONVERTIDOS)
+  // Buscar usuários indicados pelo código do afiliado
   useEffect(() => {
     const loadReferredUsers = async () => {
-      if (!affiliate?.id) {
-        console.log('❌ Affiliate ID não disponível');
+      if (!affiliate?.affiliate_code) {
+        console.log('❌ Affiliate code não disponível');
         return;
       }
 
-      console.log('🔍 Buscando usuários indicados para affiliate_id:', affiliate.id);
+      console.log('🔍 Buscando usuários indicados para código:', affiliate.affiliate_code);
 
-      // 🆕 Buscar cliques convertidos (usuários que clicaram no link E se cadastraram)
-      const { data: clicks, error } = await supabase
-        .from('affiliate_clicks')
-        .select('user_id, created_at')
-        .eq('affiliate_id', affiliate.id)
-        .eq('converted', true)
-        .not('user_id', 'is', null)
+      // Buscar perfis que têm o código do afiliado nas notas
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, name, email, created_at, moderator_notes')
+        .ilike('moderator_notes', `%${affiliate.affiliate_code}%`)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Erro ao buscar cliques:', error);
+        console.error('❌ Erro ao buscar perfis:', error);
         return;
       }
 
-      if (!clicks || clicks.length === 0) {
-        console.log('⚠️ Nenhum clique convertido encontrado');
+      if (!profiles || profiles.length === 0) {
+        console.log('⚠️ Nenhum usuário indicado encontrado');
         setReferredUsers([]);
         return;
       }
 
-      console.log(`✅ ${clicks.length} cliques convertidos encontrados`);
+      console.log(`✅ ${profiles.length} usuários indicados encontrados`);
 
-      // Para cada clique, buscar dados do perfil, comissões e obras registradas
+      // Para cada perfil, buscar comissões e obras registradas
       const usersData = await Promise.all(
-        clicks.map(async (click) => {
-          // Buscar perfil
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name, email')
-            .eq('id', click.user_id)
-            .single();
-
+        profiles.map(async (profile) => {
           // Buscar comissões
           const { data: commissions } = await supabase
             .from('affiliate_commissions')
             .select('amount, status')
             .eq('affiliate_id', affiliate.id)
-            .eq('user_id', click.user_id);
+            .eq('user_id', profile.id);
 
           const totalCommission = commissions?.reduce((acc, c) => acc + Number(c.amount), 0) || 0;
           const hasPaidCommission = commissions?.some(c => c.status === 'paid') || false;
@@ -88,13 +79,13 @@ export const AffiliateMetrics = () => {
           const { count: worksCount } = await supabase
             .from('author_registrations')
             .select('*', { count: 'exact', head: true })
-            .eq('user_id', click.user_id)
+            .eq('user_id', profile.id)
             .eq('status', 'registered');
 
           return {
-            name: profile?.name || 'Sem nome',
-            email: profile?.email || 'Sem email',
-            conversion_date: click.created_at,
+            name: profile.name || 'Sem nome',
+            email: profile.email || 'Sem email',
+            conversion_date: profile.created_at,
             commission_amount: totalCommission,
             commission_status: hasPaidCommission ? 'paid' : (worksCount || 0) > 0 ? 'pending' : 'none',
             has_registered_works: (worksCount || 0) > 0,
@@ -108,7 +99,7 @@ export const AffiliateMetrics = () => {
     };
 
     loadReferredUsers();
-  }, [affiliate?.id]);
+  }, [affiliate?.affiliate_code, affiliate?.id]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -179,86 +170,6 @@ export const AffiliateMetrics = () => {
         </CardContent>
       </Card>
 
-      {/* Grid de Métricas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cliques Totais</CardTitle>
-            <MousePointer className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total_clicks}</div>
-            <p className="text-xs text-muted-foreground">
-              Links de parceiro acessados
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conversões</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total_conversions}</div>
-            <p className="text-xs text-muted-foreground">
-              Registros + Assinaturas
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.conversion_rate.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.total_clicks > 0 ? 'Ótima performance!' : 'Comece a divulgar'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Registros Autorais</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.registrations_count}</div>
-            <p className="text-xs text-muted-foreground">
-              Obras registradas através do seu link
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Assinaturas Ativas</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.subscriptions_count}</div>
-            <p className="text-xs text-muted-foreground">
-              {affiliate.level === 'gold' ? 'Gerando comissão recorrente' : 'Disponível no nível Gold'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Este Mês</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">R$ {stats.this_month_earnings.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              Ganhos em {new Date().toLocaleDateString('pt-BR', { month: 'long' })}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Resumo Financeiro */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -326,55 +237,45 @@ export const AffiliateMetrics = () => {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Data de Cadastro</TableHead>
-                    <TableHead>Obras Registradas</TableHead>
-                    <TableHead>Comissão</TableHead>
-                  </TableRow>
-                </TableHeader>
+                 <TableHeader>
+                   <TableRow>
+                     <TableHead>Nome</TableHead>
+                     <TableHead>Email</TableHead>
+                     <TableHead>Data</TableHead>
+                     <TableHead>Registrou Obra?</TableHead>
+                     <TableHead>Comissão</TableHead>
+                   </TableRow>
+                 </TableHeader>
                 <TableBody>
                   {referredUsers.map((user, index) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        {new Date(user.conversion_date).toLocaleDateString('pt-BR')}
-                      </TableCell>
-                      <TableCell>
-                        {user.has_registered_works ? (
-                          <Badge variant="default" className="bg-green-600">
-                            {user.registered_works_count} {user.registered_works_count === 1 ? 'obra' : 'obras'}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline">Nenhuma obra</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {user.commission_amount ? (
-                          <div className="flex items-center gap-2">
-                            {user.commission_status === 'paid' ? (
-                              <>
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                                <span className="text-green-600 font-semibold">
-                                  R$ {user.commission_amount.toFixed(2)}
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <Clock className="h-4 w-4 text-orange-600" />
-                                <span className="text-orange-600 font-semibold">
-                                  R$ {user.commission_amount.toFixed(2)}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        ) : (
-                          <Badge variant="outline">Aguardando</Badge>
-                        )}
-                      </TableCell>
+                       <TableCell>
+                         {new Date(user.conversion_date).toLocaleDateString('pt-BR')}
+                       </TableCell>
+                       <TableCell>
+                         {user.has_registered_works ? (
+                           <Badge className="bg-green-600 hover:bg-green-700">
+                             Sim
+                           </Badge>
+                         ) : (
+                           <Badge variant="secondary">
+                             Não
+                           </Badge>
+                         )}
+                       </TableCell>
+                       <TableCell>
+                         {user.commission_amount && user.commission_amount > 0 ? (
+                           <Badge className="bg-yellow-600 hover:bg-yellow-700">
+                             Aguardando
+                           </Badge>
+                         ) : (
+                           <Badge variant="secondary">
+                             Aguardando
+                           </Badge>
+                         )}
+                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
