@@ -226,6 +226,9 @@ export type Database = {
           type: Database["public"]["Enums"]["commission_type"]
           updated_at: string
           user_id: string
+          validated_at: string | null
+          validation_deadline: string | null
+          validation_notes: string | null
         }
         Insert: {
           affiliate_id: string
@@ -240,6 +243,9 @@ export type Database = {
           type: Database["public"]["Enums"]["commission_type"]
           updated_at?: string
           user_id: string
+          validated_at?: string | null
+          validation_deadline?: string | null
+          validation_notes?: string | null
         }
         Update: {
           affiliate_id?: string
@@ -254,6 +260,9 @@ export type Database = {
           type?: Database["public"]["Enums"]["commission_type"]
           updated_at?: string
           user_id?: string
+          validated_at?: string | null
+          validation_deadline?: string | null
+          validation_notes?: string | null
         }
         Relationships: [
           {
@@ -1944,6 +1953,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_affiliate_commissions: { Args: never; Returns: Json }
     }
     Enums: {
       affiliate_level: "bronze" | "silver" | "gold"

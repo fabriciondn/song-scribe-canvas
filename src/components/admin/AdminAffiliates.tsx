@@ -21,7 +21,9 @@ import {
   Star,
   TrendingUp,
   Percent,
-  UserCog
+  UserCog,
+  RefreshCw,
+  CheckCircle2
 } from 'lucide-react';
 import AffiliateReferralsModal from './AffiliateReferralsModal';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
@@ -59,6 +61,7 @@ export const AdminAffiliates = () => {
   const [processingAction, setProcessingAction] = useState(false);
   const [isReferralsModalOpen, setIsReferralsModalOpen] = useState(false);
   const [selectedAffiliateForReferrals, setSelectedAffiliateForReferrals] = useState<{ id: string; name: string } | null>(null);
+  const [isValidatingCommissions, setIsValidatingCommissions] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,6 +86,39 @@ export const AdminAffiliates = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleValidateCommissions = async () => {
+    setIsValidatingCommissions(true);
+    try {
+      console.log('🔍 Executando validação manual de comissões...');
+      
+      const { data, error } = await supabase.functions.invoke('validate-affiliate-commissions');
+
+      if (error) throw error;
+
+      const result = data as any;
+      
+      toast({
+        title: "✅ Validação Concluída",
+        description: `${result.result.approved} comissões aprovadas, ${result.result.cancelled} canceladas`,
+      });
+
+      console.log('✅ Resultado da validação:', result);
+      
+      // Recarregar afiliados para atualizar saldos
+      loadAffiliates();
+      
+    } catch (error) {
+      console.error('❌ Erro ao validar comissões:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao validar comissões",
+        variant: "destructive"
+      });
+    } finally {
+      setIsValidatingCommissions(false);
     }
   };
 
@@ -297,9 +333,30 @@ export const AdminAffiliates = () => {
       {/* Affiliates Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Afiliados ({filteredAffiliates.length})</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Afiliados ({filteredAffiliates.length})</CardTitle>
+            <Button
+              onClick={handleValidateCommissions}
+              disabled={isValidatingCommissions}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              {isValidatingCommissions ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Validando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  Validar Comissões (90 dias)
+                </>
+              )}
+            </Button>
+          </div>
           <CardDescription>
-            Gerencie todas as solicitações e afiliados ativos. * = comissão personalizada
+            Gerencie afiliados e suas comissões. Validação automática verifica se indicados registraram obras em 90 dias. * = comissão personalizada
           </CardDescription>
         </CardHeader>
         <CardContent>
