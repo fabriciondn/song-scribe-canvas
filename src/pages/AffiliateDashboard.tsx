@@ -20,6 +20,7 @@ import { AffiliateCommissions } from '@/components/affiliate/AffiliateCommission
 import { AffiliateAchievements } from '@/components/affiliate/AffiliateAchievements';
 import { AffiliateWithdrawals } from '@/components/affiliate/AffiliateWithdrawals';
 import { AffiliateApplication } from '@/components/affiliate/AffiliateApplication';
+import { AffiliateReferrals } from '@/components/affiliate/AffiliateReferrals';
 import { AffiliateSidebar } from '@/components/affiliate/AffiliateSidebar';
 import { AffiliateMobileLayout } from '@/components/affiliate/AffiliateMobileLayout';
 import { useMobileDetection } from '@/hooks/use-mobile';
@@ -213,6 +214,7 @@ export default function AffiliateDashboard() {
         {/* Content Sections */}
         <div className="space-y-4">
           {activeSection === 'overview' && <AffiliateMetrics />}
+          {activeSection === 'referrals' && <AffiliateReferrals />}
           {activeSection === 'links' && <AffiliateLinks affiliateCode={affiliate.affiliate_code} affiliate={affiliate} />}
           {activeSection === 'campaigns' && <AffiliateCampaigns />}
           {activeSection === 'commissions' && <AffiliateCommissions />}
@@ -300,6 +302,7 @@ export default function AffiliateDashboard() {
         {/* Content Sections */}
         <div>
           {activeSection === 'overview' && <AffiliateMetrics />}
+          {activeSection === 'referrals' && <AffiliateReferrals />}
           {activeSection === 'links' && <AffiliateLinks affiliateCode={affiliate.affiliate_code} affiliate={affiliate} />}
           {activeSection === 'campaigns' && <AffiliateCampaigns />}
           {activeSection === 'commissions' && <AffiliateCommissions />}

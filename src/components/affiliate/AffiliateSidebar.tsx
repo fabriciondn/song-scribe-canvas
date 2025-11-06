@@ -7,7 +7,8 @@ import {
   Trophy,
   ChevronLeft,
   Sun,
-  Moon
+  Moon,
+  Users
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,7 @@ export function AffiliateSidebar({ activeSection, onSectionChange, affiliate }: 
 
   const menuItems = [
     { id: 'overview', label: 'Visão Geral', icon: Home },
+    { id: 'referrals', label: 'Meus Indicados', icon: Users },
     { id: 'links', label: 'Links', icon: LinkIcon },
     { id: 'campaigns', label: 'Campanhas', icon: BarChart3 },
     { id: 'commissions', label: 'Comissões', icon: DollarSign },
