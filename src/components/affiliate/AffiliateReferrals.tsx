@@ -49,7 +49,7 @@ export function AffiliateReferrals() {
       // Buscar usuários indicados pelo código do afiliado
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, name, email, created_at, moderator_notes')
+        .select('id, name, email, created_at, moderator_notes, credits')
         .ilike('moderator_notes', `%${affiliate.affiliate_code}%`);
 
       if (error) throw error;
@@ -81,28 +81,43 @@ export function AffiliateReferrals() {
         const userCommission = commissions?.find(c => c.user_id === profile.id);
         const commissionAmount = userCommission?.amount || 0;
         const hasRegisteredWork = userRegistrations.length > 0;
+        const userHasCredits = (profile.credits || 0) > 0;
         const createdAt = new Date(profile.created_at);
         const expirationDate = addDays(createdAt, 90);
         const daysRemaining = differenceInDays(expirationDate, new Date());
         const isExpired = daysRemaining < 0;
 
-        let commissionStatus: 'confirmed' | 'waiting' | 'expired' = 'waiting';
-        
-        // ✅ NOVA LÓGICA: Verificar paid_in_withdrawal_id primeiro
+        let commissionStatus: 'confirmed' | 'waiting' | 'expired' = 'expired';
+
         if (userCommission) {
+          // Se tem comissão paga
           if (userCommission.paid_in_withdrawal_id) {
             commissionStatus = 'confirmed'; // Paga
-          } else if (userCommission.validated_at && !userCommission.paid_in_withdrawal_id) {
+          } 
+          // Se foi validada mas não paga
+          else if (userCommission.validated_at && !userCommission.paid_in_withdrawal_id) {
             commissionStatus = 'waiting'; // A Receber
-          } else if (userCommission.status === 'cancelled') {
-            commissionStatus = 'expired'; // Cancelada
-          } else {
-            commissionStatus = 'waiting'; // Aguardando validação
+          } 
+          // Se foi cancelada
+          else if (userCommission.status === 'cancelled') {
+            commissionStatus = 'expired'; // Aguardando
+          } 
+          // Comissão pendente
+          else {
+            commissionStatus = 'waiting'; // A Receber
           }
-        } else if (hasRegisteredWork) {
-          commissionStatus = 'waiting'; // Tem obra mas comissão não criada ainda
-        } else if (isExpired) {
-          commissionStatus = 'expired';
+        } 
+        // Usuário tem obra registrada ou créditos
+        else if (hasRegisteredWork || userHasCredits) {
+          commissionStatus = 'waiting'; // A Receber
+        } 
+        // Usuário cadastrado mas sem atividade
+        else if (!isExpired) {
+          commissionStatus = 'expired'; // Aguardando
+        } 
+        // Expirado
+        else {
+          commissionStatus = 'expired'; // Aguardando
         }
 
         return {

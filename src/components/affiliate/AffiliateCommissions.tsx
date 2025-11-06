@@ -1,28 +1,69 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { 
   DollarSign, 
-  Calendar, 
-  Users, 
   CreditCard,
   Filter,
-  Download
+  Download,
+  User
 } from 'lucide-react';
 import { useAffiliate } from '@/hooks/useAffiliate';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export const AffiliateCommissions = () => {
-  const { commissions, stats } = useAffiliate();
+  const { commissions, stats, affiliate } = useAffiliate();
+  const [commissionsWithUsers, setCommissionsWithUsers] = useState<any[]>([]);
 
-  const getStatusBadge = (status: string) => {
+  // Buscar dados dos usuários para cada comissão
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!commissions || commissions.length === 0) return;
+
+      const userIds = [...new Set(commissions.map(c => c.user_id))];
+      
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name, email, avatar_url')
+        .in('id', userIds);
+
+      const commissionsWithUserData = commissions.map(commission => {
+        const userProfile = profiles?.find(p => p.id === commission.user_id);
+        return {
+          ...commission,
+          user_name: userProfile?.name || 'Usuário',
+          user_email: userProfile?.email || '',
+          user_avatar: userProfile?.avatar_url || null
+        };
+      });
+
+      setCommissionsWithUsers(commissionsWithUserData);
+    };
+
+    loadUserData();
+  }, [commissions]);
+
+  const getStatusBadge = (commission: any) => {
+    // Verificar se foi paga (tem withdrawal_id)
+    if (commission.paid_in_withdrawal_id) {
+      return <Badge variant="default" className="bg-green-600">Paga</Badge>;
+    }
+    
+    // Verificar se foi validada mas não paga
+    if (commission.validated_at) {
+      return <Badge variant="secondary" className="bg-yellow-600 text-white">A Receber</Badge>;
+    }
+    
+    // Status baseado no campo status
     const statusConfig = {
       pending: { variant: 'secondary' as const, label: 'Pendente' },
-      approved: { variant: 'default' as const, label: 'Aprovada' },
-      paid: { variant: 'outline' as const, label: 'Paga' },
+      validated: { variant: 'default' as const, label: 'A Receber' },
       cancelled: { variant: 'destructive' as const, label: 'Cancelada' }
     };
     
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    const config = statusConfig[commission.status as keyof typeof statusConfig] || statusConfig.pending;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
@@ -50,50 +91,23 @@ export const AffiliateCommissions = () => {
     });
   };
 
+  const totalRecebido = affiliate?.total_paid || 0;
+  const aReceber = Math.max(0, (affiliate?.total_earnings || 0) - (affiliate?.total_paid || 0));
+
   return (
     <div className="space-y-6">
-      {/* Resumo Financeiro */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Resumo Financeiro - 2 Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Acumulado</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Recebido em Comissão</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              R$ {stats?.total_earnings.toFixed(2) || '0.00'}
+            <div className="text-3xl font-bold text-green-600">
+              R$ {totalRecebido.toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Desde o início
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">A Receber</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
-              R$ {stats?.pending_earnings.toFixed(2) || '0.00'}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Processamento em 7 dias
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Já Recebido</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              R$ {stats?.paid_earnings.toFixed(2) || '0.00'}
-            </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Pagamentos realizados
             </p>
           </CardContent>
@@ -101,15 +115,15 @@ export const AffiliateCommissions = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Este Mês</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">A Receber</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              R$ {stats?.this_month_earnings.toFixed(2) || '0.00'}
+            <div className="text-3xl font-bold text-yellow-600">
+              R$ {aReceber.toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {new Date().toLocaleDateString('pt-BR', { month: 'long' })}
+            <p className="text-xs text-muted-foreground mt-1">
+              Disponível para saque
             </p>
           </CardContent>
         </Card>
@@ -136,7 +150,7 @@ export const AffiliateCommissions = () => {
       </div>
 
       {/* Lista de Comissões */}
-      {commissions.length === 0 ? (
+      {commissionsWithUsers.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
             <DollarSign className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -151,20 +165,32 @@ export const AffiliateCommissions = () => {
           <CardHeader>
             <CardTitle>Todas as Comissões</CardTitle>
             <CardDescription>
-              {commissions.length} comissão{commissions.length !== 1 ? 'ões' : ''} registrada{commissions.length !== 1 ? 's' : ''}
+              {commissionsWithUsers.length} comissão{commissionsWithUsers.length !== 1 ? 'ões' : ''} registrada{commissionsWithUsers.length !== 1 ? 's' : ''}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {commissions.map((commission) => (
+              {commissionsWithUsers.map((commission) => (
                 <div
                   key={commission.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                 >
+                  {/* Avatar do Usuário */}
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={commission.user_avatar || undefined} />
+                    <AvatarFallback>
+                      <User className="h-6 w-6" />
+                    </AvatarFallback>
+                  </Avatar>
+
                   <div className="flex-1 space-y-1">
-                    <div className="flex items-center gap-3">
+                    {/* Nome e Email do Usuário */}
+                    <div className="font-medium">{commission.user_name}</div>
+                    <div className="text-xs text-muted-foreground">{commission.user_email}</div>
+                    
+                    <div className="flex items-center gap-3 mt-2">
                       {getTypeBadge(commission.type)}
-                      {getStatusBadge(commission.status)}
+                      {getStatusBadge(commission)}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {formatDate(commission.created_at)}

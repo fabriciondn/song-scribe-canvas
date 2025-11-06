@@ -196,19 +196,36 @@ export default function AffiliateDashboard() {
                     </CardContent>
                   </Card>
 
+                  <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-200 dark:border-green-800">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-green-800 dark:text-green-300">Já Recebido</p>
+                          <p className="text-2xl font-bold text-green-900 dark:text-green-100 mt-2">
+                            R$ {(affiliate.total_paid || 0).toFixed(2)}
+                          </p>
+                          <p className="text-xs text-green-700 dark:text-green-400 mt-1">
+                            Total de comissões pagas
+                          </p>
+                        </div>
+                        <Award className="h-6 w-6 text-green-600 dark:text-green-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
                   <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Já Recebido</p>
+                          <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Saldo Atual</p>
                           <p className="text-2xl font-bold text-blue-900 dark:text-blue-100 mt-2">
-                            R$ {(affiliate.total_paid || 0).toFixed(2)}
+                            R$ {Math.max(0, (affiliate.total_earnings || 0) - (affiliate.total_paid || 0)).toFixed(2)}
                           </p>
                           <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">
-                            Total de comissões pagas
+                            Disponível para saque
                           </p>
                         </div>
-                        <Award className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        <DollarSign className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                       </div>
                     </CardContent>
                   </Card>
@@ -270,40 +287,51 @@ export default function AffiliateDashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 border-yellow-200 dark:border-yellow-800">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">A Receber</p>
-                          <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-100 mt-2">
-                            R$ {Math.max(0, (affiliate.total_earnings || 0) - (affiliate.total_paid || 0)).toFixed(2)}
-                          </p>
-                          <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
-                            Comissões pendentes
-                          </p>
-                        </div>
-                        <Target className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Já Recebido</p>
-                          <p className="text-3xl font-bold text-blue-900 dark:text-blue-100 mt-2">
-                            R$ {(affiliate.total_paid || 0).toFixed(2)}
-                          </p>
-                          <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">
-                            Total de comissões pagas
-                          </p>
-                        </div>
-                        <Award className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                      </div>
-                    </CardContent>
-                  </Card>
+          <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/20 dark:to-yellow-900/20 border-yellow-200 dark:border-yellow-800/30">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400">A Receber</p>
+                  <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-200">
+                    R$ {Math.max(0, (affiliate.total_earnings || 0) - (affiliate.total_paid || 0)).toFixed(2)}
+                  </p>
+                  <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-1">Disponível após validação</p>
                 </div>
+                <Target className="h-10 w-10 text-yellow-600 dark:text-yellow-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800/30">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-green-700 dark:text-green-400">Já Recebido</p>
+                  <p className="text-3xl font-bold text-green-900 dark:text-green-200">
+                    R$ {(affiliate.total_paid || 0).toFixed(2)}
+                  </p>
+                  <p className="text-xs text-green-600 dark:text-green-500 mt-1">Pagamentos realizados</p>
+                </div>
+                <TrendingUp className="h-10 w-10 text-green-600 dark:text-green-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800/30">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-blue-700 dark:text-blue-400">Saldo Atual</p>
+                  <p className="text-3xl font-bold text-blue-900 dark:text-blue-200">
+                    R$ {Math.max(0, (affiliate.total_earnings || 0) - (affiliate.total_paid || 0)).toFixed(2)}
+                  </p>
+                  <p className="text-xs text-blue-600 dark:text-blue-500 mt-1">Disponível para saque</p>
+                </div>
+                <DollarSign className="h-10 w-10 text-blue-600 dark:text-blue-400" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
               )}
               <AffiliateMetrics />
             </>

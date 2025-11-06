@@ -57,11 +57,11 @@ export const AffiliateWithdrawals = () => {
 
   const minimumWithdrawal = 50; // R$ 50 mínimo
   
-  // A Receber = comissões pendentes (não pagas ainda)
-  const availableBalance = affiliate?.total_earnings || 0;
+  // Saldo Atual (Disponível para Saque) = total_earnings - total_paid
+  const availableBalance = Math.max(0, (affiliate?.total_earnings || 0) - (affiliate?.total_paid || 0));
   
-  // Ganho Total = tudo que foi ganho (pendente + pago)
-  const totalEarnings = (affiliate?.total_earnings || 0) + (affiliate?.total_paid || 0);
+  // Ganho Total = tudo que foi ganho (total_earnings)
+  const totalEarnings = affiliate?.total_earnings || 0;
   
   // Já Recebido = o que foi pago
   const paidAmount = affiliate?.total_paid || 0;

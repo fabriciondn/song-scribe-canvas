@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Users, UserPlus, Edit, Trash2, AlertTriangle, Crown, Clock, CircleDot, Download, Filter } from 'lucide-react';
+import { Search, Users, UserPlus, Edit, Trash2, AlertTriangle, Crown, Clock, CircleDot, Download, Filter, Target } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -288,11 +288,41 @@ export const AdminUsers = () => {
             />
           </div>
           
+          <div className="flex gap-2">
+            <Button 
+              variant={originFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setOriginFilter('all')}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Todos
+            </Button>
+            <Button 
+              variant={originFilter === 'affiliate' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setOriginFilter('affiliate')}
+              className="gap-2"
+            >
+              <Target className="h-4 w-4" />
+              Afiliados
+            </Button>
+            <Button 
+              variant={originFilter === 'moderator' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setOriginFilter('moderator')}
+              className="gap-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              Moderadores
+            </Button>
+          </div>
+          
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <Filter className="h-4 w-4" />
-                Filtros
+                Mais Filtros
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80" align="end">
