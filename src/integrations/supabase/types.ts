@@ -220,6 +220,7 @@ export type Database = {
           commission_rate: number
           created_at: string
           id: string
+          paid_in_withdrawal_id: string | null
           processed_at: string | null
           reference_id: string
           status: Database["public"]["Enums"]["commission_status"]
@@ -237,6 +238,7 @@ export type Database = {
           commission_rate: number
           created_at?: string
           id?: string
+          paid_in_withdrawal_id?: string | null
           processed_at?: string | null
           reference_id: string
           status?: Database["public"]["Enums"]["commission_status"]
@@ -254,6 +256,7 @@ export type Database = {
           commission_rate?: number
           created_at?: string
           id?: string
+          paid_in_withdrawal_id?: string | null
           processed_at?: string | null
           reference_id?: string
           status?: Database["public"]["Enums"]["commission_status"]
@@ -270,6 +273,13 @@ export type Database = {
             columns: ["affiliate_id"]
             isOneToOne: false
             referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_paid_in_withdrawal_id_fkey"
+            columns: ["paid_in_withdrawal_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_withdrawal_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -1845,6 +1855,14 @@ export type Database = {
       is_user_moderator: { Args: { check_user_id: string }; Returns: boolean }
       log_user_activity: {
         Args: { p_action: string; p_metadata?: Json }
+        Returns: undefined
+      }
+      mark_commissions_as_paid: {
+        Args: {
+          p_affiliate_id: string
+          p_amount: number
+          p_withdrawal_id: string
+        }
         Returns: undefined
       }
       moderator_update_user_credits: {
