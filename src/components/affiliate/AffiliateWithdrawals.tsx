@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAffiliate } from '@/hooks/useAffiliate';
 import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle, Users, Target, ChevronDown, ChevronUp } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface WithdrawalRequest {
   id: string;
@@ -402,81 +401,80 @@ export const AffiliateWithdrawals = () => {
                 const isExpanded = expandedWithdrawals.has(withdrawal.id);
                 
                 return (
-                  <Collapsible key={withdrawal.id} open={isExpanded} onOpenChange={() => toggleWithdrawalExpansion(withdrawal.id)}>
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="grid grid-cols-5 gap-4 flex-1">
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">Data</p>
-                            <p className="font-medium">{formatDate(withdrawal.requested_at)}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">Valor</p>
-                            <p className="font-bold text-lg">R$ {withdrawal.amount.toFixed(2)}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">Método</p>
-                            <p className="capitalize">{withdrawal.payment_method}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">Status</p>
-                            {getStatusBadge(withdrawal.status)}
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">Processado em</p>
-                            <p>{withdrawal.processed_at ? formatDate(withdrawal.processed_at) : '-'}</p>
-                          </div>
+                  <div key={withdrawal.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="grid grid-cols-5 gap-4 flex-1">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Data</p>
+                          <p className="font-medium">{formatDate(withdrawal.requested_at)}</p>
                         </div>
-                        
-                        {hasCommissions && (
-                          <CollapsibleTrigger asChild>
-                            <Button variant="ghost" size="sm" className="ml-4">
-                              {isExpanded ? (
-                                <ChevronUp className="h-4 w-4" />
-                              ) : (
-                                <ChevronDown className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </CollapsibleTrigger>
-                        )}
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Valor</p>
+                          <p className="font-bold text-lg">R$ {withdrawal.amount.toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Método</p>
+                          <p className="capitalize">{withdrawal.payment_method}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Status</p>
+                          {getStatusBadge(withdrawal.status)}
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Processado em</p>
+                          <p>{withdrawal.processed_at ? formatDate(withdrawal.processed_at) : '-'}</p>
+                        </div>
                       </div>
                       
                       {hasCommissions && (
-                        <CollapsibleContent>
-                          <div className="mt-4 pt-4 border-t">
-                            <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                              Comissões Pagas Neste Saque
-                            </h4>
-                            <div className="space-y-2">
-                              {commissions.map((comm, idx) => (
-                                <div key={comm.id} className="flex items-center justify-between bg-muted/50 rounded-md p-3">
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-xs font-medium text-muted-foreground">#{idx + 1}</span>
-                                    <div>
-                                      <p className="text-sm font-medium">R$ {comm.amount.toFixed(2)}</p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {formatDate(comm.created_at)}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <Badge variant="outline" className="text-xs">
-                                    {comm.type === 'author_registration' ? 'Registro Autoral' : 'Assinatura'}
-                                  </Badge>
-                                </div>
-                              ))}
-                              <div className="flex items-center justify-between pt-2 border-t">
-                                <span className="text-sm font-medium">Total Pago:</span>
-                                <span className="text-lg font-bold text-green-600">
-                                  R$ {commissions.reduce((sum, c) => sum + c.amount, 0).toFixed(2)}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </CollapsibleContent>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="ml-4"
+                          onClick={() => toggleWithdrawalExpansion(withdrawal.id)}
+                        >
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
                       )}
                     </div>
-                  </Collapsible>
+                    
+                    {hasCommissions && isExpanded && (
+                      <div className="mt-4 pt-4 border-t">
+                        <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          Comissões Pagas Neste Saque
+                        </h4>
+                        <div className="space-y-2">
+                          {commissions.map((comm, idx) => (
+                            <div key={comm.id} className="flex items-center justify-between bg-muted/50 rounded-md p-3">
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs font-medium text-muted-foreground">#{idx + 1}</span>
+                                <div>
+                                  <p className="text-sm font-medium">R$ {comm.amount.toFixed(2)}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatDate(comm.created_at)}
+                                  </p>
+                                </div>
+                              </div>
+                              <Badge variant="outline" className="text-xs">
+                                {comm.type === 'author_registration' ? 'Registro Autoral' : 'Assinatura'}
+                              </Badge>
+                            </div>
+                          ))}
+                          <div className="flex items-center justify-between pt-2 border-t">
+                            <span className="text-sm font-medium">Total Pago:</span>
+                            <span className="text-lg font-bold text-green-600">
+                              R$ {commissions.reduce((sum, c) => sum + c.amount, 0).toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
