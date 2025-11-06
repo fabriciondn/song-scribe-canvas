@@ -171,46 +171,82 @@ export const AffiliateMetrics = () => {
       </Card>
 
 
-      {/* Resumo Financeiro */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-200 dark:border-green-800">
-          <CardHeader>
-            <CardTitle className="text-green-800 dark:text-green-300">Ganho Total</CardTitle>
+      {/* Grid de Métricas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cliques Totais</CardTitle>
+            <MousePointer className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-900 dark:text-green-100">
-              R$ {((affiliate?.total_earnings || 0) + (affiliate?.total_paid || 0)).toFixed(2)}
-            </div>
-            <p className="text-sm text-green-700 dark:text-green-400 mt-1">
-              Desde o início do programa
+            <div className="text-2xl font-bold">{stats.total_clicks}</div>
+            <p className="text-xs text-muted-foreground">
+              Links de parceiro acessados
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 border-yellow-200 dark:border-yellow-800">
-          <CardHeader>
-            <CardTitle className="text-yellow-800 dark:text-yellow-300">A Receber</CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Conversões</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">
-              R$ {(affiliate?.total_earnings || 0).toFixed(2)}
-            </div>
-            <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
-              Comissões pendentes
+            <div className="text-2xl font-bold">{stats.total_conversions}</div>
+            <p className="text-xs text-muted-foreground">
+              Registros + Assinaturas
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
-          <CardHeader>
-            <CardTitle className="text-blue-800 dark:text-blue-300">Já Recebido</CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-900 dark:text-blue-100">
-              R$ {(affiliate?.total_paid || 0).toFixed(2)}
-            </div>
-            <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-              Total de comissões pagas
+            <div className="text-2xl font-bold">{stats.conversion_rate.toFixed(1)}%</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.total_clicks > 0 ? 'Ótima performance!' : 'Comece a divulgar'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Registros Autorais</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.registrations_count}</div>
+            <p className="text-xs text-muted-foreground">
+              Obras registradas através do seu link
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Assinaturas Ativas</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.subscriptions_count}</div>
+            <p className="text-xs text-muted-foreground">
+              {affiliate.level === 'gold' ? 'Gerando comissão recorrente' : 'Disponível no nível Gold'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Este Mês</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">R$ {stats.this_month_earnings.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              Ganhos em {new Date().toLocaleDateString('pt-BR', { month: 'long' })}
             </p>
           </CardContent>
         </Card>
