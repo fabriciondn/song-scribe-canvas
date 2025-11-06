@@ -24,12 +24,16 @@ export const useAffiliate = () => {
       setIsLoading(true);
       setError(null);
 
+      console.log('🔄 Recarregando dados do afiliado...');
+      
       const [affiliateData, statsData, commissionsData, campaignsData] = await Promise.all([
         getMyAffiliateData(),
         getAffiliateStats(),
         getAffiliateCommissions(),
         getAffiliateCampaigns()
       ]);
+
+      console.log('✅ Dados atualizados:', { affiliateData, statsData });
 
       setAffiliate(affiliateData);
       setStats(statsData);
@@ -62,13 +66,13 @@ export const useAffiliate = () => {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'affiliate_commissions',
           filter: `affiliate_id=eq.${affiliate.id}`
         },
         (payload) => {
-          console.log('💰 Nova comissão recebida em tempo real!', payload);
+          console.log('💰 Alteração em comissões detectada!', payload);
           refreshData();
         }
       )
