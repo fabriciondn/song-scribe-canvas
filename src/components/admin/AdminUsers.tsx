@@ -44,7 +44,7 @@ export const AdminUsers = () => {
       // Buscar subscriptions e última atividade para cada usuário
       const userIds = profiles?.map(p => p.id) || [];
       
-      const [subscriptionsData, sessionsData, affiliateData, moderatorData] = await Promise.all([
+      const [subscriptionsData, sessionsData, affiliateDataResponse, moderatorDataResponse] = await Promise.all([
         supabase
           .from('subscriptions')
           .select('*')
@@ -57,24 +57,26 @@ export const AdminUsers = () => {
           .in('user_id', userIds)
           .order('last_activity', { ascending: false }),
         
-        // Buscar TODOS os usuários de afiliados (não filtrar por userIds)
+        // Buscar TODOS os usuários de afiliados via conversões confirmadas
         supabase
-          .from('affiliate_clicks')
-          .select('user_id, affiliate_id')
-          .not('user_id', 'is', null),
+          .from('affiliate_conversions')
+          .select('user_id, affiliate_id'),
         
-        // Buscar TODOS os usuários de moderadores (não filtrar por userIds)
+        // Buscar TODOS os usuários de moderadores
         supabase
           .from('moderator_users')
           .select('user_id, moderator_id')
       ]);
 
+      const affiliateData = affiliateDataResponse.data || [];
+      const moderatorData = moderatorDataResponse.data || [];
+
       // 🔍 DEBUG ETAPA 1: Verificar dados retornados das queries
-      console.log('📊 DEBUG - Dados retornados:');
-      console.log('  Affiliate data length:', affiliateData.data?.length);
-      console.log('  Moderator data length:', moderatorData.data?.length);
-      console.log('  Sample affiliate:', affiliateData.data?.[0]);
-      console.log('  Sample moderator:', moderatorData.data?.[0]);
+        console.log('📊 DEBUG - Dados retornados:');
+        console.log('  Affiliate data length:', affiliateData.length);
+        console.log('  Moderator data length:', moderatorData.length);
+        console.log('  Sample affiliate:', affiliateData[0]);
+        console.log('  Sample moderator:', moderatorData[0]);
 
       // Mapear subscriptions e sessões
       const subscriptionsMap = new Map();
@@ -93,14 +95,14 @@ export const AdminUsers = () => {
 
       // Mapear origem dos usuários com IDs
       const affiliateMap = new Map();
-      affiliateData.data?.forEach((a: any) => {
+      affiliateData.forEach((a: any) => {
         if (!affiliateMap.has(a.user_id)) {
           affiliateMap.set(a.user_id, a.affiliate_id);
         }
       });
       
       const moderatorMap = new Map();
-      moderatorData.data?.forEach((m: any) => {
+      moderatorData.forEach((m: any) => {
         if (!moderatorMap.has(m.user_id)) {
           moderatorMap.set(m.user_id, m.moderator_id);
         }
