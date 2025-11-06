@@ -67,9 +67,17 @@ export function AffiliateReferrals() {
         .in('user_id', userIds)
         .in('status', ['registered', 'completed']);
 
+      // 🆕 Buscar comissões dos indicados
+      const { data: commissions } = await supabase
+        .from('affiliate_commissions')
+        .select('*')
+        .eq('affiliate_id', affiliate.id)
+        .in('user_id', userIds);
+
       // Processar dados
       const processedReferrals: ReferredUser[] = profiles.map(profile => {
         const userRegistrations = registrations?.filter(r => r.user_id === profile.id) || [];
+        const userCommission = commissions?.find(c => c.user_id === profile.id);
         const hasRegisteredWork = userRegistrations.length > 0;
         const createdAt = new Date(profile.created_at);
         const expirationDate = addDays(createdAt, 90);
@@ -77,7 +85,17 @@ export function AffiliateReferrals() {
         const isExpired = daysRemaining < 0;
 
         let commissionStatus: 'confirmed' | 'waiting' | 'expired' = 'waiting';
-        if (hasRegisteredWork) {
+        
+        // 🆕 Verificar status real da comissão no banco
+        if (userCommission) {
+          if (userCommission.validated_at && userCommission.status !== 'cancelled') {
+            commissionStatus = 'confirmed';
+          } else if (userCommission.status === 'cancelled') {
+            commissionStatus = 'expired';
+          } else {
+            commissionStatus = 'waiting';
+          }
+        } else if (hasRegisteredWork) {
           commissionStatus = 'confirmed';
         } else if (isExpired) {
           commissionStatus = 'expired';

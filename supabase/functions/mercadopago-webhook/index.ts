@@ -215,6 +215,29 @@ serve(async (req) => {
       transactionId: transaction.id
     });
 
+    // ⭐ PROCESSAR COMISSÃO DE AFILIADO (se aplicável)
+    console.log('🎯 Verificando comissão de afiliado...');
+    try {
+      const { data: commissionResult, error: commissionError } = await supabaseService.rpc(
+        'process_affiliate_first_purchase',
+        {
+          p_user_id: transaction.user_id,
+          p_payment_amount: transaction.total_amount,
+          p_payment_id: transaction.id
+        }
+      );
+      
+      if (commissionError) {
+        console.error('❌ Erro ao processar comissão:', commissionError);
+      } else if (commissionResult) {
+        console.log('✅ Comissão processada com sucesso!');
+      } else {
+        console.log('ℹ️ Comissão não aplicável (usuário não indicado ou já processado)');
+      }
+    } catch (error) {
+      console.error('⚠️ Erro ao processar comissão (não crítico):', error);
+    }
+
     return new Response('OK', { status: 200, headers: corsHeaders });
 
   } catch (error) {

@@ -328,38 +328,8 @@ serve(async (req) => {
       );
     }
     
-    // Verificar se usuário tem código de parceiro e processar comissão
-    try {
-      const { data: profile } = await supabaseService
-        .from('profiles')
-        .select('moderator_notes')
-        .eq('id', user.id)
-        .single();
-      
-      const hasAffiliateCode = profile?.moderator_notes?.includes('Indicado por:');
-      
-      if (hasAffiliateCode) {
-        console.log('🎯 Usuário tem código de parceiro, processando comissão...');
-        
-        // Chamar função para processar comissão
-        const { data: commissionResult, error: commissionError } = await supabaseService.rpc(
-          'process_affiliate_first_purchase',
-          {
-            p_user_id: user.id,
-            p_payment_amount: totalAmount,
-            p_payment_id: transaction?.id || mercadoPagoData.id.toString()
-          }
-        );
-        
-        if (commissionError) {
-          console.error('❌ Erro ao processar comissão:', commissionError);
-        } else if (commissionResult) {
-          console.log('✅ Comissão processada com sucesso!');
-        }
-      }
-    } catch (error) {
-      console.error('⚠️ Erro ao verificar/processar comissão (não crítico):', error);
-    }
+    // ⚠️ REMOVIDO: Comissão agora é processada APENAS no webhook após pagamento aprovado
+    console.log('💡 Comissão será processada pelo webhook após confirmação do pagamento');
 
     // Extrair QR Code do response
     const qrCodeData = mercadoPagoData.point_of_interaction?.transaction_data?.qr_code;
