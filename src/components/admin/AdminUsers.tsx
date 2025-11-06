@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Users, UserPlus, Edit, Trash2, AlertTriangle, Crown, Clock, CircleDot, Download, Filter, Target } from 'lucide-react';
+import { Search, Users, UserPlus, Edit, Trash2, AlertTriangle, Crown, Clock, CircleDot, Download, Filter, Target, Shield } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -56,10 +56,9 @@ export const AdminUsers = () => {
           .order('last_activity', { ascending: false }),
         
         supabase
-          .from('affiliate_clicks')
+          .from('affiliate_conversions')
           .select('user_id')
-          .in('user_id', userIds)
-          .eq('converted', true),
+          .in('user_id', userIds),
         
         supabase
           .from('moderator_users')
@@ -485,7 +484,21 @@ export const AdminUsers = () => {
                         <AvatarFallback>{user.name?.[0] || user.email?.[0] || 'U'}</AvatarFallback>
                       </Avatar>
                     </TableCell>
-                    <TableCell>{user.name || '-'}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span>{user.name || '-'}</span>
+                        {user.origin === 'affiliate' && (
+                          <div className="flex items-center" title="Veio por Afiliado">
+                            <Target className="h-4 w-4 text-green-500" />
+                          </div>
+                        )}
+                        {user.origin === 'moderator' && (
+                          <div className="flex items-center" title="Veio por Moderador">
+                            <Shield className="h-4 w-4 text-blue-500" />
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="max-w-[200px] truncate">{user.email || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={subscriptionStatus.variant} className="gap-1">
