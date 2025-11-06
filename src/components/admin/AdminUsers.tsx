@@ -25,6 +25,8 @@ export const AdminUsers = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [originFilter, setOriginFilter] = useState<'all' | 'affiliate' | 'moderator'>('all');
+  const [specificAffiliateId, setSpecificAffiliateId] = useState<string>('');
+  const [specificModeratorId, setSpecificModeratorId] = useState<string>('');
   const { toast } = useToast();
 
   // Buscar todos os usuários com subscription e última atividade
@@ -56,13 +58,14 @@ export const AdminUsers = () => {
           .order('last_activity', { ascending: false }),
         
         supabase
-          .from('affiliate_conversions')
-          .select('user_id')
-          .in('user_id', userIds),
+          .from('affiliate_clicks')
+          .select('user_id, affiliate_id')
+          .in('user_id', userIds)
+          .not('user_id', 'is', null),
         
         supabase
           .from('moderator_users')
-          .select('user_id')
+          .select('user_id, moderator_id')
           .in('user_id', userIds)
       ]);
 
@@ -81,19 +84,93 @@ export const AdminUsers = () => {
         }
       });
 
-      // Mapear origem dos usuários
-      const affiliateUsers = new Set(affiliateData.data?.map((a: any) => a.user_id) || []);
-      const moderatorUsers = new Set(moderatorData.data?.map((m: any) => m.user_id) || []);
+      // Mapear origem dos usuários com IDs
+      const affiliateMap = new Map();
+      affiliateData.data?.forEach((a: any) => {
+        if (!affiliateMap.has(a.user_id)) {
+          affiliateMap.set(a.user_id, a.affiliate_id);
+        }
+      });
+      
+      const moderatorMap = new Map();
+      moderatorData.data?.forEach((m: any) => {
+        if (!moderatorMap.has(m.user_id)) {
+          moderatorMap.set(m.user_id, m.moderator_id);
+        }
+      });
 
       // Combinar dados
-      const enrichedUsers = profiles?.map(profile => ({
-        ...profile,
-        subscription: subscriptionsMap.get(profile.id),
-        last_activity: sessionsMap.get(profile.id),
-        origin: moderatorUsers.has(profile.id) ? 'moderator' : affiliateUsers.has(profile.id) ? 'affiliate' : 'direct'
-      })) || [];
+      const enrichedUsers = profiles?.map(profile => {
+        const moderatorId = moderatorMap.get(profile.id);
+        const affiliateId = affiliateMap.get(profile.id);
+        
+        return {
+          ...profile,
+          subscription: subscriptionsMap.get(profile.id),
+          last_activity: sessionsMap.get(profile.id),
+          origin: moderatorId ? 'moderator' : affiliateId ? 'affiliate' : 'direct',
+          affiliate_id: affiliateId,
+          moderator_id: moderatorId
+        };
+      }) || [];
 
       return enrichedUsers;
+    },
+  });
+
+  // Buscar lista de afiliados com perfis
+  const { data: affiliatesList } = useQuery({
+    queryKey: ['affiliates-list'],
+    queryFn: async () => {
+      const { data: affiliatesData, error: affError } = await supabase
+        .from('affiliates')
+        .select('id, affiliate_code, user_id')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false });
+      
+      if (affError) throw affError;
+      if (!affiliatesData) return [];
+
+      const userIds = affiliatesData.map(a => a.user_id);
+      const { data: profilesData, error: profError } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .in('id', userIds);
+
+      if (profError) throw profError;
+
+      return affiliatesData.map(aff => ({
+        ...aff,
+        profile: profilesData?.find(p => p.id === aff.user_id)
+      }));
+    },
+  });
+
+  // Buscar lista de moderadores com perfis
+  const { data: moderatorsList } = useQuery({
+    queryKey: ['moderators-list'],
+    queryFn: async () => {
+      const { data: moderatorsData, error: modError } = await supabase
+        .from('admin_users')
+        .select('user_id')
+        .eq('role', 'moderator')
+        .order('created_at', { ascending: false });
+      
+      if (modError) throw modError;
+      if (!moderatorsData) return [];
+
+      const userIds = moderatorsData.map(m => m.user_id);
+      const { data: profilesData, error: profError } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .in('id', userIds);
+
+      if (profError) throw profError;
+
+      return moderatorsData.map(mod => ({
+        user_id: mod.user_id,
+        profile: profilesData?.find(p => p.id === mod.user_id)
+      }));
     },
   });
 
@@ -174,6 +251,16 @@ export const AdminUsers = () => {
     if (originFilter !== 'all') {
       if (originFilter === 'affiliate' && user.origin !== 'affiliate') return false;
       if (originFilter === 'moderator' && user.origin !== 'moderator') return false;
+    }
+
+    // Filtro específico de afiliado
+    if (specificAffiliateId && user.affiliate_id !== specificAffiliateId) {
+      return false;
+    }
+
+    // Filtro específico de moderador
+    if (specificModeratorId && user.moderator_id !== specificModeratorId) {
+      return false;
     }
 
     return true;
@@ -291,7 +378,11 @@ export const AdminUsers = () => {
             <Button 
               variant={originFilter === 'all' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setOriginFilter('all')}
+              onClick={() => {
+                setOriginFilter('all');
+                setSpecificAffiliateId('');
+                setSpecificModeratorId('');
+              }}
               className="gap-2"
             >
               <Users className="h-4 w-4" />
@@ -300,7 +391,10 @@ export const AdminUsers = () => {
             <Button 
               variant={originFilter === 'affiliate' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setOriginFilter('affiliate')}
+              onClick={() => {
+                setOriginFilter('affiliate');
+                setSpecificModeratorId('');
+              }}
               className="gap-2"
             >
               <Target className="h-4 w-4" />
@@ -309,13 +403,54 @@ export const AdminUsers = () => {
             <Button 
               variant={originFilter === 'moderator' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setOriginFilter('moderator')}
+              onClick={() => {
+                setOriginFilter('moderator');
+                setSpecificAffiliateId('');
+              }}
               className="gap-2"
             >
               <UserPlus className="h-4 w-4" />
               Moderadores
             </Button>
           </div>
+          
+          {/* Filtro específico de afiliado */}
+          {originFilter === 'affiliate' && affiliatesList && affiliatesList.length > 0 && (
+            <div className="w-full md:w-60">
+              <Select value={specificAffiliateId} onValueChange={setSpecificAffiliateId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filtrar por afiliado..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os afiliados</SelectItem>
+                  {affiliatesList.map((aff: any) => (
+                    <SelectItem key={aff.id} value={aff.id}>
+                      {aff.profile?.name || aff.profile?.email || aff.affiliate_code}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
+          {/* Filtro específico de moderador */}
+          {originFilter === 'moderator' && moderatorsList && moderatorsList.length > 0 && (
+            <div className="w-full md:w-60">
+              <Select value={specificModeratorId} onValueChange={setSpecificModeratorId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filtrar por moderador..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os moderadores</SelectItem>
+                  {moderatorsList.map((mod: any) => (
+                    <SelectItem key={mod.user_id} value={mod.user_id}>
+                      {mod.profile?.name || mod.profile?.email || 'Moderador'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           
           <Popover>
             <PopoverTrigger asChild>
@@ -488,12 +623,26 @@ export const AdminUsers = () => {
                       <div className="flex items-center gap-2">
                         <span>{user.name || '-'}</span>
                         {user.origin === 'affiliate' && (
-                          <div className="flex items-center" title="Veio por Afiliado">
+                          <div 
+                            className="flex items-center" 
+                            title={`Afiliado: ${
+                              affiliatesList?.find((a: any) => a.id === user.affiliate_id)?.profile?.name || 
+                              affiliatesList?.find((a: any) => a.id === user.affiliate_id)?.affiliate_code || 
+                              'Desconhecido'
+                            }`}
+                          >
                             <Target className="h-4 w-4 text-green-500" />
                           </div>
                         )}
                         {user.origin === 'moderator' && (
-                          <div className="flex items-center" title="Veio por Moderador">
+                          <div 
+                            className="flex items-center" 
+                            title={`Moderador: ${
+                              moderatorsList?.find((m: any) => m.user_id === user.moderator_id)?.profile?.name || 
+                              moderatorsList?.find((m: any) => m.user_id === user.moderator_id)?.profile?.email || 
+                              'Desconhecido'
+                            }`}
+                          >
                             <Shield className="h-4 w-4 text-blue-500" />
                           </div>
                         )}
