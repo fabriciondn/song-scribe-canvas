@@ -59,12 +59,23 @@ export const AffiliateWithdrawals = () => {
   // Buscar usuários indicados através das notas do perfil
   useEffect(() => {
     const loadReferredUsers = async () => {
-      if (!affiliate?.affiliate_code) {
-        console.log('❌ Affiliate code não disponível');
+      console.log('🔍 [AffiliateWithdrawals] Iniciando loadReferredUsers', {
+        affiliateId: affiliate?.id,
+        affiliateCode: affiliate?.affiliate_code,
+        affiliateStatus: affiliate?.status
+      });
+
+      if (!affiliate?.id) {
+        console.log('❌ [AffiliateWithdrawals] Affiliate ID não disponível');
         return;
       }
 
-      console.log('🔍 Buscando usuários indicados para código:', affiliate.affiliate_code);
+      if (!affiliate?.affiliate_code) {
+        console.log('❌ [AffiliateWithdrawals] Affiliate code não disponível');
+        return;
+      }
+
+      console.log('✅ [AffiliateWithdrawals] Buscando usuários para código:', affiliate.affiliate_code);
 
       // Buscar todos os perfis que têm o código do afiliado nas notas
       const { data: profiles, error } = await supabase
@@ -292,60 +303,6 @@ export const AffiliateWithdrawals = () => {
 
   return (
     <div className="space-y-6">
-      {/* Balance Overview - 3 cards principais */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-200 dark:border-green-800">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-800 dark:text-green-300">Ganho Total</p>
-                <p className="text-3xl font-bold text-green-900 dark:text-green-100 mt-2">
-                  R$ {totalEarnings.toFixed(2)}
-                </p>
-                <p className="text-xs text-green-700 dark:text-green-400 mt-1">
-                  Desde o início do programa
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-600 dark:text-green-400" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 border-yellow-200 dark:border-yellow-800">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">A Receber</p>
-                <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-100 mt-2">
-                  R$ {availableBalance.toFixed(2)}
-                </p>
-                <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
-                  Comissões pendentes
-                </p>
-              </div>
-              <Target className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Já Recebido</p>
-                <p className="text-3xl font-bold text-blue-900 dark:text-blue-100 mt-2">
-                  R$ {paidAmount.toFixed(2)}
-                </p>
-                <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">
-                  Total de comissões pagas
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Botão de solicitar saque */}
       <div className="flex justify-end">
         <Button
