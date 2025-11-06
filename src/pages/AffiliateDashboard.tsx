@@ -168,7 +168,7 @@ export default function AffiliateDashboard() {
                         <div>
                           <p className="text-sm font-medium text-green-800 dark:text-green-300">Total Ganho</p>
                           <p className="text-2xl font-bold text-green-900 dark:text-green-100 mt-2">
-                            R$ {((affiliate.total_earnings || 0) + (affiliate.total_paid || 0)).toFixed(2)}
+                            R$ {(affiliate.total_earnings || 0).toFixed(2)}
                           </p>
                           <p className="text-xs text-green-700 dark:text-green-400 mt-1">
                             {stats && `+R$ ${stats.this_month_earnings.toFixed(2)} este mês`}
@@ -185,7 +185,7 @@ export default function AffiliateDashboard() {
                         <div>
                           <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">A Receber</p>
                           <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100 mt-2">
-                            R$ {(affiliate.total_earnings || 0).toFixed(2)}
+                            R$ {Math.max(0, (affiliate.total_earnings || 0) - (affiliate.total_paid || 0)).toFixed(2)}
                           </p>
                           <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
                             Comissões pendentes
@@ -259,7 +259,7 @@ export default function AffiliateDashboard() {
                         <div>
                           <p className="text-sm font-medium text-green-800 dark:text-green-300">Total Ganho</p>
                           <p className="text-3xl font-bold text-green-900 dark:text-green-100 mt-2">
-                            R$ {((affiliate.total_earnings || 0) + (affiliate.total_paid || 0)).toFixed(2)}
+                            R$ {(affiliate.total_earnings || 0).toFixed(2)}
                           </p>
                           <p className="text-xs text-green-700 dark:text-green-400 mt-1">
                             {stats && `+R$ ${stats.this_month_earnings.toFixed(2)} este mês`}
@@ -276,7 +276,7 @@ export default function AffiliateDashboard() {
                         <div>
                           <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">A Receber</p>
                           <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-100 mt-2">
-                            R$ {(affiliate.total_earnings || 0).toFixed(2)}
+                            R$ {Math.max(0, (affiliate.total_earnings || 0) - (affiliate.total_paid || 0)).toFixed(2)}
                           </p>
                           <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
                             Comissões pendentes

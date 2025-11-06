@@ -19,6 +19,7 @@ interface ReferredUser {
   days_remaining: number;
   has_registered_work: boolean;
   commission_status: 'confirmed' | 'waiting' | 'expired';
+  commission_amount: number;
   total_works: number;
 }
 
@@ -78,6 +79,7 @@ export function AffiliateReferrals() {
       const processedReferrals: ReferredUser[] = profiles.map(profile => {
         const userRegistrations = registrations?.filter(r => r.user_id === profile.id) || [];
         const userCommission = commissions?.find(c => c.user_id === profile.id);
+        const commissionAmount = userCommission?.amount || 0;
         const hasRegisteredWork = userRegistrations.length > 0;
         const createdAt = new Date(profile.created_at);
         const expirationDate = addDays(createdAt, 90);
@@ -86,17 +88,19 @@ export function AffiliateReferrals() {
 
         let commissionStatus: 'confirmed' | 'waiting' | 'expired' = 'waiting';
         
-        // 🆕 Verificar status real da comissão no banco
+        // ✅ NOVA LÓGICA: Verificar paid_in_withdrawal_id primeiro
         if (userCommission) {
-          if (userCommission.validated_at && userCommission.status !== 'cancelled') {
-            commissionStatus = 'confirmed';
+          if (userCommission.paid_in_withdrawal_id) {
+            commissionStatus = 'confirmed'; // Paga
+          } else if (userCommission.validated_at && !userCommission.paid_in_withdrawal_id) {
+            commissionStatus = 'waiting'; // A Receber
           } else if (userCommission.status === 'cancelled') {
-            commissionStatus = 'expired';
+            commissionStatus = 'expired'; // Cancelada
           } else {
-            commissionStatus = 'waiting';
+            commissionStatus = 'waiting'; // Aguardando validação
           }
         } else if (hasRegisteredWork) {
-          commissionStatus = 'confirmed';
+          commissionStatus = 'waiting'; // Tem obra mas comissão não criada ainda
         } else if (isExpired) {
           commissionStatus = 'expired';
         }
@@ -110,6 +114,7 @@ export function AffiliateReferrals() {
           days_remaining: Math.max(0, daysRemaining),
           has_registered_work: hasRegisteredWork,
           commission_status: commissionStatus,
+          commission_amount: commissionAmount,
           total_works: userRegistrations.length,
         };
       });
@@ -150,9 +155,9 @@ export function AffiliateReferrals() {
 
   const getStatusBadge = (status: 'confirmed' | 'waiting' | 'expired') => {
     const variants = {
-      confirmed: { color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300', icon: CheckCircle, label: 'Confirmada' },
-      waiting: { color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300', icon: Clock, label: 'Aguardando' },
-      expired: { color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300', icon: AlertTriangle, label: 'Expirada' }
+      confirmed: { color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300', icon: CheckCircle, label: 'Paga' },
+      waiting: { color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300', icon: Clock, label: 'A Receber' },
+      expired: { color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300', icon: AlertTriangle, label: 'Aguardando' }
     };
 
     const variant = variants[status];
@@ -226,7 +231,7 @@ export function AffiliateReferrals() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-800 dark:text-green-300">Confirmadas</p>
+                <p className="text-sm text-green-800 dark:text-green-300">Pagas</p>
                 <p className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.confirmed}</p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
@@ -238,7 +243,7 @@ export function AffiliateReferrals() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-yellow-800 dark:text-yellow-300">Aguardando</p>
+                <p className="text-sm text-yellow-800 dark:text-yellow-300">A Receber</p>
                 <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">{stats.waiting}</p>
               </div>
               <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
@@ -250,7 +255,7 @@ export function AffiliateReferrals() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-red-800 dark:text-red-300">Expiradas</p>
+                <p className="text-sm text-red-800 dark:text-red-300">Aguardando</p>
                 <p className="text-2xl font-bold text-red-900 dark:text-red-100">{stats.expired}</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
@@ -281,9 +286,9 @@ export function AffiliateReferrals() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os Status</SelectItem>
-                <SelectItem value="confirmed">Confirmadas</SelectItem>
-                <SelectItem value="waiting">Aguardando</SelectItem>
-                <SelectItem value="expired">Expiradas</SelectItem>
+                <SelectItem value="confirmed">Pagas</SelectItem>
+                <SelectItem value="waiting">A Receber</SelectItem>
+                <SelectItem value="expired">Aguardando</SelectItem>
               </SelectContent>
             </Select>
 
@@ -308,7 +313,7 @@ export function AffiliateReferrals() {
                   <TableHead>Email</TableHead>
                   <TableHead>Data de Cadastro</TableHead>
                   <TableHead>Prazo</TableHead>
-                  <TableHead>Obras Registradas</TableHead>
+                  <TableHead>Valor da Comissão</TableHead>
                   <TableHead>Status da Comissão</TableHead>
                 </TableRow>
               </TableHeader>
@@ -334,8 +339,8 @@ export function AffiliateReferrals() {
                         {getExpirationBadge(referral.days_remaining, referral.has_registered_work)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={referral.total_works > 0 ? "default" : "secondary"}>
-                          {referral.total_works} {referral.total_works === 1 ? 'obra' : 'obras'}
+                        <Badge variant={referral.commission_amount > 0 ? "default" : "secondary"}>
+                          R$ {referral.commission_amount.toFixed(2)}
                         </Badge>
                       </TableCell>
                       <TableCell>
