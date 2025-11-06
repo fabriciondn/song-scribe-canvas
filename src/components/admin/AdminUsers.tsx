@@ -69,6 +69,13 @@ export const AdminUsers = () => {
           .select('user_id, moderator_id')
       ]);
 
+      // 🔍 DEBUG ETAPA 1: Verificar dados retornados das queries
+      console.log('📊 DEBUG - Dados retornados:');
+      console.log('  Affiliate data length:', affiliateData.data?.length);
+      console.log('  Moderator data length:', moderatorData.data?.length);
+      console.log('  Sample affiliate:', affiliateData.data?.[0]);
+      console.log('  Sample moderator:', moderatorData.data?.[0]);
+
       // Mapear subscriptions e sessões
       const subscriptionsMap = new Map();
       subscriptionsData.data?.forEach((sub: any) => {
@@ -99,6 +106,13 @@ export const AdminUsers = () => {
         }
       });
 
+      // 🔍 DEBUG ETAPA 2: Verificar Maps populados
+      console.log('🗺️ DEBUG - Maps criados:');
+      console.log('  Affiliate map size:', affiliateMap.size);
+      console.log('  Moderator map size:', moderatorMap.size);
+      console.log('  Sample from affiliate map:', Array.from(affiliateMap.entries())[0]);
+      console.log('  Sample from moderator map:', Array.from(moderatorMap.entries())[0]);
+
       // Combinar dados
       const enrichedUsers = profiles?.map(profile => {
         const moderatorId = moderatorMap.get(profile.id);
@@ -113,6 +127,18 @@ export const AdminUsers = () => {
           moderator_id: moderatorId
         };
       }) || [];
+
+      // 🔍 DEBUG ETAPA 3: Verificar dados enriquecidos
+      const usersWithAffiliate = enrichedUsers.filter(u => u.origin === 'affiliate');
+      const usersWithModerator = enrichedUsers.filter(u => u.origin === 'moderator');
+      const usersWithDirect = enrichedUsers.filter(u => u.origin === 'direct');
+      console.log('👥 DEBUG - Usuários enriquecidos por origem:');
+      console.log('  Total users:', enrichedUsers.length);
+      console.log('  Users with affiliate origin:', usersWithAffiliate.length);
+      console.log('  Users with moderator origin:', usersWithModerator.length);
+      console.log('  Users with direct origin:', usersWithDirect.length);
+      console.log('  Sample affiliate user:', usersWithAffiliate[0]);
+      console.log('  Sample moderator user:', usersWithModerator[0]);
 
       return enrichedUsers;
     },
@@ -266,6 +292,24 @@ export const AdminUsers = () => {
     return true;
   }) || [];
 
+  // 🔍 DEBUG ETAPA 4: Verificar dados após filtro
+  console.log('🔍 DEBUG - Após aplicar filtros:');
+  console.log('  Origin filter:', originFilter);
+  console.log('  Specific affiliate ID:', specificAffiliateId);
+  console.log('  Specific moderator ID:', specificModeratorId);
+  console.log('  Filtered users count:', filteredUsers.length);
+  console.log('  Total users count:', users?.length);
+  console.log('  Sample filtered user:', filteredUsers[0]);
+
+  // Contadores para os botões
+  const affiliateCount = users?.filter(u => u.origin === 'affiliate').length || 0;
+  const moderatorCount = users?.filter(u => u.origin === 'moderator').length || 0;
+  const directCount = users?.filter(u => u.origin === 'direct').length || 0;
+  console.log('📊 DEBUG - Contadores:');
+  console.log('  Affiliate count:', affiliateCount);
+  console.log('  Moderator count:', moderatorCount);
+  console.log('  Direct count:', directCount);
+
   // Função para exportar usuários para Excel
   const handleExportToExcel = () => {
     if (filteredUsers.length === 0) {
@@ -386,7 +430,7 @@ export const AdminUsers = () => {
               className="gap-2"
             >
               <Users className="h-4 w-4" />
-              Todos
+              Todos ({(users?.length || 0)})
             </Button>
             <Button 
               variant={originFilter === 'affiliate' ? 'default' : 'outline'}
@@ -398,7 +442,7 @@ export const AdminUsers = () => {
               className="gap-2"
             >
               <Target className="h-4 w-4" />
-              Afiliados
+              Afiliados ({affiliateCount})
             </Button>
             <Button 
               variant={originFilter === 'moderator' ? 'default' : 'outline'}
@@ -410,7 +454,7 @@ export const AdminUsers = () => {
               className="gap-2"
             >
               <UserPlus className="h-4 w-4" />
-              Moderadores
+              Moderadores ({moderatorCount})
             </Button>
           </div>
           
