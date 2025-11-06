@@ -417,12 +417,12 @@ export const AdminUsers = () => {
           {/* Filtro específico de afiliado */}
           {originFilter === 'affiliate' && affiliatesList && affiliatesList.length > 0 && (
             <div className="w-full md:w-60">
-              <Select value={specificAffiliateId} onValueChange={setSpecificAffiliateId}>
+              <Select value={specificAffiliateId || 'all'} onValueChange={(value) => setSpecificAffiliateId(value === 'all' ? '' : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filtrar por afiliado..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os afiliados</SelectItem>
+                  <SelectItem value="all">Todos os afiliados</SelectItem>
                   {affiliatesList.map((aff: any) => (
                     <SelectItem key={aff.id} value={aff.id}>
                       {aff.profile?.name || aff.profile?.email || aff.affiliate_code}
@@ -436,12 +436,12 @@ export const AdminUsers = () => {
           {/* Filtro específico de moderador */}
           {originFilter === 'moderator' && moderatorsList && moderatorsList.length > 0 && (
             <div className="w-full md:w-60">
-              <Select value={specificModeratorId} onValueChange={setSpecificModeratorId}>
+              <Select value={specificModeratorId || 'all'} onValueChange={(value) => setSpecificModeratorId(value === 'all' ? '' : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filtrar por moderador..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os moderadores</SelectItem>
+                  <SelectItem value="all">Todos os moderadores</SelectItem>
                   {moderatorsList.map((mod: any) => (
                     <SelectItem key={mod.user_id} value={mod.user_id}>
                       {mod.profile?.name || mod.profile?.email || 'Moderador'}
