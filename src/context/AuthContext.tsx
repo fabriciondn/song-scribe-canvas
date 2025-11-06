@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, ReactNode } from 'react';
+import { createContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import { 
@@ -36,9 +36,9 @@ export const AuthContext = createContext<AuthContextType>({
 
 // Auth provider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = React.useState<User | null>(null);
-  const [session, setSession] = React.useState<Session | null>(null);
-  const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Debounced session handler to prevent excessive calls
   const debouncedSessionHandler = debounce((event: string, newSession: Session | null) => {
@@ -308,7 +308,7 @@ export const LoginMessageContext = createContext<LoginMessageContextType>({
 
 export const LoginMessageProvider = ({ children }: { children: ReactNode }) => {
   // Use localStorage to track if the login message has been shown in this session
-  const [showLoginMessage, setShowLoginMessage] = React.useState<boolean>(() => {
+  const [showLoginMessage, setShowLoginMessage] = useState<boolean>(() => {
     const shown = localStorage.getItem('login_message_shown');
     return !shown;
   });
