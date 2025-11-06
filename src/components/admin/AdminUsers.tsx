@@ -57,16 +57,16 @@ export const AdminUsers = () => {
           .in('user_id', userIds)
           .order('last_activity', { ascending: false }),
         
+        // Buscar TODOS os usuários de afiliados (não filtrar por userIds)
         supabase
           .from('affiliate_clicks')
           .select('user_id, affiliate_id')
-          .in('user_id', userIds)
           .not('user_id', 'is', null),
         
+        // Buscar TODOS os usuários de moderadores (não filtrar por userIds)
         supabase
           .from('moderator_users')
           .select('user_id, moderator_id')
-          .in('user_id', userIds)
       ]);
 
       // Mapear subscriptions e sessões
