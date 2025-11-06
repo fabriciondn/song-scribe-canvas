@@ -177,17 +177,17 @@ export const AdminModerators = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(moderators as any[])?.map((mod: any) => (
+                 {(moderators as any[])?.map((mod: any) => (
                   <TableRow key={mod.user_id}>
                     <TableCell>
                       <Avatar className="w-8 h-8">
-                        <AvatarImage src={mod.profile.avatar_url} alt={mod.profile.name} />
-                        <AvatarFallback>{mod.profile.name?.[0] || 'M'}</AvatarFallback>
+                        <AvatarImage src={mod.profile?.avatar_url} alt={mod.profile?.name} />
+                        <AvatarFallback>{mod.profile?.name?.[0] || 'M'}</AvatarFallback>
                       </Avatar>
                     </TableCell>
-                    <TableCell>{mod.profile.name || '-'}</TableCell>
-                    <TableCell>{mod.profile.email || '-'}</TableCell>
-                    <TableCell>{mod.profile.credits || 0}</TableCell>
+                    <TableCell>{mod.profile?.name || '-'}</TableCell>
+                    <TableCell>{mod.profile?.email || '-'}</TableCell>
+                    <TableCell>{mod.profile?.credits || 0}</TableCell>
                     <TableCell>{new Date(mod.created_at).toLocaleDateString('pt-BR')}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 justify-center">
@@ -203,8 +203,8 @@ export const AdminModerators = () => {
                         <ImpersonateButton
                           targetUser={{
                             id: mod.user_id,
-                            name: mod.profile.name,
-                            email: mod.profile.email,
+                            name: mod.profile?.name || 'Moderador',
+                            email: mod.profile?.email || '',
                             artistic_name: null
                           }}
                           targetRole="moderator"
@@ -233,7 +233,7 @@ export const AdminModerators = () => {
                                 Excluir Moderador
                               </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Tem certeza que deseja excluir o moderador <strong>{mod.profile.name}</strong>?
+                                Tem certeza que deseja excluir o moderador <strong>{mod.profile?.name || 'este moderador'}</strong>?
                                 Esta ação não pode ser desfeita. Os usuários criados por este moderador 
                                 permanecerão na plataforma.
                               </AlertDialogDescription>
