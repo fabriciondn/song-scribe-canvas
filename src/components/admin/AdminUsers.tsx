@@ -33,117 +33,189 @@ export const AdminUsers = () => {
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .not('name', 'like', '%[USUÁRIO EXCLUÍDO]%')
-        .order('created_at', { ascending: false });
-      
-      if (profilesError) throw profilesError;
+      try {
+        // ETAPA 1: Buscar TODOS os user_ids de afiliados e moderadores PRIMEIRO
+        const [allAffiliateDataResponse, allModeratorDataResponse] = await Promise.all([
+          supabase
+            .from('affiliate_clicks')
+            .select('user_id, affiliate_id')
+            .not('user_id', 'is', null),
+          
+          supabase
+            .from('moderator_users')
+            .select('user_id, moderator_id')
+        ]);
 
-      // Buscar subscriptions e última atividade para cada usuário
-      const userIds = profiles?.map(p => p.id) || [];
-      
-      const [subscriptionsData, sessionsData, affiliateDataResponse, moderatorDataResponse] = await Promise.all([
-        supabase
-          .from('subscriptions')
+        const affiliateData = allAffiliateDataResponse.data || [];
+        const moderatorData = allModeratorDataResponse.data || [];
+
+        console.log('🔥 ETAPA 1 - User IDs de origem:');
+        console.log('  Affiliate user_ids encontrados:', affiliateData.length);
+        console.log('  Moderator user_ids encontrados:', moderatorData.length);
+
+        // Criar Sets com TODOS os user_ids de afiliados e moderadores
+        const allAffiliateUserIds = new Set(affiliateData.map((a: any) => a.user_id));
+        const allModeratorUserIds = new Set(moderatorData.map((m: any) => m.user_id));
+
+        console.log('  Affiliate unique user_ids:', allAffiliateUserIds.size);
+        console.log('  Moderator unique user_ids:', allModeratorUserIds.size);
+
+        // ETAPA 2: Buscar profiles existentes
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
           .select('*')
-          .in('user_id', userIds)
-          .order('created_at', { ascending: false }),
+          .not('name', 'like', '%[USUÁRIO EXCLUÍDO]%')
+          .order('created_at', { ascending: false });
         
-        supabase
-          .from('user_sessions')
-          .select('user_id, last_activity')
-          .in('user_id', userIds)
-          .order('last_activity', { ascending: false }),
+        if (profilesError) {
+          console.error('❌ Erro ao buscar profiles:', profilesError);
+          throw profilesError;
+        }
+
+        console.log('🔥 ETAPA 2 - Profiles encontrados:', profiles?.length || 0);
+
+        // ETAPA 3: Identificar user_ids que existem em origem mas NÃO têm profile
+        const profileIds = new Set(profiles?.map(p => p.id) || []);
+        const missingAffiliateProfiles = Array.from(allAffiliateUserIds).filter(id => !profileIds.has(id));
+        const missingModeratorProfiles = Array.from(allModeratorUserIds).filter(id => !profileIds.has(id));
+
+        console.log('🔥 ETAPA 3 - Profiles faltantes:');
+        console.log('  Affiliate users sem profile:', missingAffiliateProfiles.length);
+        console.log('  Moderator users sem profile:', missingModeratorProfiles.length);
+
+        // Buscar subscriptions e última atividade para TODOS os user_ids (incluindo os sem profile)
+        const allUserIds = Array.from(new Set([
+          ...profileIds,
+          ...allAffiliateUserIds,
+          ...allModeratorUserIds
+        ]));
+
+        console.log('🔥 ETAPA 4 - Buscando dados adicionais para:', allUserIds.length, 'usuários');
+
+        const [subscriptionsData, sessionsData] = await Promise.all([
+          supabase
+            .from('subscriptions')
+            .select('*')
+            .in('user_id', allUserIds),
+          
+          supabase
+            .from('user_sessions')
+            .select('user_id, last_activity')
+            .in('user_id', allUserIds)
+        ]);
+
+        // Mapear subscriptions e sessões
+        const subscriptionsMap = new Map();
+        subscriptionsData.data?.forEach((sub: any) => {
+          if (!subscriptionsMap.has(sub.user_id)) {
+            subscriptionsMap.set(sub.user_id, sub);
+          }
+        });
+
+        const sessionsMap = new Map();
+        sessionsData.data?.forEach((session: any) => {
+          if (!sessionsMap.has(session.user_id)) {
+            sessionsMap.set(session.user_id, session.last_activity);
+          }
+        });
+
+        // Mapear origem dos usuários com IDs
+        const affiliateMap = new Map();
+        affiliateData.forEach((a: any) => {
+          if (!affiliateMap.has(a.user_id)) {
+            affiliateMap.set(a.user_id, a.affiliate_id);
+          }
+        });
         
-        // Buscar TODOS os usuários que vieram por afiliados (clicks com cadastro completo)
-        supabase
-          .from('affiliate_clicks')
-          .select('user_id, affiliate_id')
-          .not('user_id', 'is', null),
-        
-        // Buscar TODOS os usuários criados por moderadores
-        supabase
-          .from('moderator_users')
-          .select('user_id, moderator_id')
-      ]);
+        const moderatorMap = new Map();
+        moderatorData.forEach((m: any) => {
+          if (!moderatorMap.has(m.user_id)) {
+            moderatorMap.set(m.user_id, m.moderator_id);
+          }
+        });
 
-      const affiliateData = affiliateDataResponse.data || [];
-      const moderatorData = moderatorDataResponse.data || [];
+        console.log('🔥 ETAPA 5 - Maps criados:');
+        console.log('  Affiliate map size:', affiliateMap.size);
+        console.log('  Moderator map size:', moderatorMap.size);
 
-      // 🔍 DEBUG ETAPA 1: Verificar dados retornados das queries
-        console.log('📊 DEBUG - Dados retornados:');
-        console.log('  Affiliate data length:', affiliateData.length);
-        console.log('  Moderator data length:', moderatorData.length);
-        console.log('  Sample affiliate:', affiliateData[0]);
-        console.log('  Sample moderator:', moderatorData[0]);
+        // ETAPA 6: Criar registros para usuários SEM profile
+        const usersWithoutProfile: any[] = [];
 
-      // Mapear subscriptions e sessões
-      const subscriptionsMap = new Map();
-      subscriptionsData.data?.forEach((sub: any) => {
-        if (!subscriptionsMap.has(sub.user_id)) {
-          subscriptionsMap.set(sub.user_id, sub);
-        }
-      });
+        // Adicionar usuários de afiliados sem profile
+        missingAffiliateProfiles.forEach(userId => {
+          usersWithoutProfile.push({
+            id: userId,
+            name: '[Perfil Incompleto]',
+            email: '[Sem email]',
+            created_at: new Date().toISOString(),
+            credits: 0,
+            subscription: subscriptionsMap.get(userId),
+            last_activity: sessionsMap.get(userId),
+            origin: 'affiliate',
+            affiliate_id: affiliateMap.get(userId),
+            moderator_id: undefined,
+            hasIncompleteProfile: true
+          });
+        });
 
-      const sessionsMap = new Map();
-      sessionsData.data?.forEach((session: any) => {
-        if (!sessionsMap.has(session.user_id)) {
-          sessionsMap.set(session.user_id, session.last_activity);
-        }
-      });
+        // Adicionar usuários de moderadores sem profile
+        missingModeratorProfiles.forEach(userId => {
+          // Evitar duplicatas (um usuário pode estar em ambas as listas)
+          if (!allAffiliateUserIds.has(userId)) {
+            usersWithoutProfile.push({
+              id: userId,
+              name: '[Perfil Incompleto]',
+              email: '[Sem email]',
+              created_at: new Date().toISOString(),
+              credits: 0,
+              subscription: subscriptionsMap.get(userId),
+              last_activity: sessionsMap.get(userId),
+              origin: 'moderator',
+              affiliate_id: undefined,
+              moderator_id: moderatorMap.get(userId),
+              hasIncompleteProfile: true
+            });
+          }
+        });
 
-      // Mapear origem dos usuários com IDs
-      const affiliateMap = new Map();
-      affiliateData.forEach((a: any) => {
-        if (!affiliateMap.has(a.user_id)) {
-          affiliateMap.set(a.user_id, a.affiliate_id);
-        }
-      });
-      
-      const moderatorMap = new Map();
-      moderatorData.forEach((m: any) => {
-        if (!moderatorMap.has(m.user_id)) {
-          moderatorMap.set(m.user_id, m.moderator_id);
-        }
-      });
+        console.log('🔥 ETAPA 6 - Usuários sem profile criados:', usersWithoutProfile.length);
 
-      // 🔍 DEBUG ETAPA 2: Verificar Maps populados
-      console.log('🗺️ DEBUG - Maps criados:');
-      console.log('  Affiliate map size:', affiliateMap.size);
-      console.log('  Moderator map size:', moderatorMap.size);
-      console.log('  Sample from affiliate map:', Array.from(affiliateMap.entries())[0]);
-      console.log('  Sample from moderator map:', Array.from(moderatorMap.entries())[0]);
+        // ETAPA 7: Combinar profiles existentes com usuários sem profile
+        const enrichedProfiles = profiles?.map(profile => {
+          const moderatorId = moderatorMap.get(profile.id);
+          const affiliateId = affiliateMap.get(profile.id);
+          
+          return {
+            ...profile,
+            subscription: subscriptionsMap.get(profile.id),
+            last_activity: sessionsMap.get(profile.id),
+            origin: moderatorId ? 'moderator' : affiliateId ? 'affiliate' : 'direct',
+            affiliate_id: affiliateId,
+            moderator_id: moderatorId,
+            hasIncompleteProfile: false
+          };
+        }) || [];
 
-      // Combinar dados
-      const enrichedUsers = profiles?.map(profile => {
-        const moderatorId = moderatorMap.get(profile.id);
-        const affiliateId = affiliateMap.get(profile.id);
-        
-        return {
-          ...profile,
-          subscription: subscriptionsMap.get(profile.id),
-          last_activity: sessionsMap.get(profile.id),
-          origin: moderatorId ? 'moderator' : affiliateId ? 'affiliate' : 'direct',
-          affiliate_id: affiliateId,
-          moderator_id: moderatorId
-        };
-      }) || [];
+        // Combinar todos os usuários
+        const allEnrichedUsers = [...enrichedProfiles, ...usersWithoutProfile];
 
-      // 🔍 DEBUG ETAPA 3: Verificar dados enriquecidos
-      const usersWithAffiliate = enrichedUsers.filter(u => u.origin === 'affiliate');
-      const usersWithModerator = enrichedUsers.filter(u => u.origin === 'moderator');
-      const usersWithDirect = enrichedUsers.filter(u => u.origin === 'direct');
-      console.log('👥 DEBUG - Usuários enriquecidos por origem:');
-      console.log('  Total users:', enrichedUsers.length);
-      console.log('  Users with affiliate origin:', usersWithAffiliate.length);
-      console.log('  Users with moderator origin:', usersWithModerator.length);
-      console.log('  Users with direct origin:', usersWithDirect.length);
-      console.log('  Sample affiliate user:', usersWithAffiliate[0]);
-      console.log('  Sample moderator user:', usersWithModerator[0]);
+        // ETAPA 8: Verificar contagem final
+        const finalAffiliateCount = allEnrichedUsers.filter(u => u.origin === 'affiliate').length;
+        const finalModeratorCount = allEnrichedUsers.filter(u => u.origin === 'moderator').length;
+        const finalDirectCount = allEnrichedUsers.filter(u => u.origin === 'direct').length;
 
-      return enrichedUsers;
+        console.log('✅ ETAPA 8 - Resultado FINAL:');
+        console.log('  Total de usuários:', allEnrichedUsers.length);
+        console.log('  Usuários de Afiliados:', finalAffiliateCount);
+        console.log('  Usuários de Moderadores:', finalModeratorCount);
+        console.log('  Usuários Diretos:', finalDirectCount);
+        console.log('  Usuários com profile incompleto:', usersWithoutProfile.length);
+
+        return allEnrichedUsers;
+      } catch (error) {
+        console.error('❌ ERRO FATAL na query:', error);
+        throw error;
+      }
     },
   });
 
@@ -295,23 +367,10 @@ export const AdminUsers = () => {
     return true;
   }) || [];
 
-  // 🔍 DEBUG ETAPA 4: Verificar dados após filtro
-  console.log('🔍 DEBUG - Após aplicar filtros:');
-  console.log('  Origin filter:', originFilter);
-  console.log('  Specific affiliate ID:', specificAffiliateId);
-  console.log('  Specific moderator ID:', specificModeratorId);
-  console.log('  Filtered users count:', filteredUsers.length);
-  console.log('  Total users count:', users?.length);
-  console.log('  Sample filtered user:', filteredUsers[0]);
-
   // Contadores para os botões
   const affiliateCount = users?.filter(u => u.origin === 'affiliate').length || 0;
   const moderatorCount = users?.filter(u => u.origin === 'moderator').length || 0;
   const directCount = users?.filter(u => u.origin === 'direct').length || 0;
-  console.log('📊 DEBUG - Contadores:');
-  console.log('  Affiliate count:', affiliateCount);
-  console.log('  Moderator count:', moderatorCount);
-  console.log('  Direct count:', directCount);
 
   // Função para exportar usuários para Excel
   const handleExportToExcel = () => {
@@ -669,6 +728,12 @@ export const AdminUsers = () => {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <span>{user.name || '-'}</span>
+                        {user.hasIncompleteProfile && (
+                          <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            Perfil Incompleto
+                          </Badge>
+                        )}
                         {user.origin === 'affiliate' && (
                           <div 
                             className="flex items-center" 
@@ -711,22 +776,35 @@ export const AdminUsers = () => {
                     <TableCell>{user.credits || 0}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 justify-center">
-                        <ImpersonateButton
-                          targetUser={{
-                            id: user.id,
-                            name: user.name,
-                            email: user.email,
-                            artistic_name: user.artistic_name
-                          }}
-                          targetRole="user"
-                          size="sm"
-                          variant="outline"
-                        />
+                        {!user.hasIncompleteProfile ? (
+                          <ImpersonateButton
+                            targetUser={{
+                              id: user.id,
+                              name: user.name,
+                              email: user.email,
+                              artistic_name: user.artistic_name
+                            }}
+                            targetRole="user"
+                            size="sm"
+                            variant="outline"
+                          />
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled
+                            title="Usuário com perfil incompleto não pode ser impersonado"
+                          >
+                            <Users className="h-4 w-4" />
+                          </Button>
+                        )}
                         
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleViewUser(user)}
+                          disabled={user.hasIncompleteProfile}
+                          title={user.hasIncompleteProfile ? 'Usuário com perfil incompleto não pode ser editado' : 'Editar usuário'}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
