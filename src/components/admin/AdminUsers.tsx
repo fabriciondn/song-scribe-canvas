@@ -36,11 +36,13 @@ export const AdminUsers = () => {
       try {
         // ETAPA 1: Buscar TODOS os user_ids de afiliados e moderadores PRIMEIRO
         const [allAffiliateDataResponse, allModeratorDataResponse] = await Promise.all([
+          // Para afiliados: buscar profiles com código nas notas
           supabase
-            .from('affiliate_clicks')
-            .select('user_id, affiliate_id')
-            .not('user_id', 'is', null),
+            .from('profiles')
+            .select('id')
+            .ilike('moderator_notes', '%Indicado por: compuse-%'),
           
+          // Para moderadores: buscar da tabela moderator_users
           supabase
             .from('moderator_users')
             .select('user_id, moderator_id')
@@ -50,11 +52,12 @@ export const AdminUsers = () => {
         const moderatorData = allModeratorDataResponse.data || [];
 
         console.log('🔥 ETAPA 1 - User IDs de origem:');
-        console.log('  Affiliate user_ids encontrados:', affiliateData.length);
+        console.log('  Affiliate profiles encontrados:', affiliateData.length);
         console.log('  Moderator user_ids encontrados:', moderatorData.length);
 
         // Criar Sets com TODOS os user_ids de afiliados e moderadores
-        const allAffiliateUserIds = new Set(affiliateData.map((a: any) => a.user_id));
+        // Para afiliados, o id do profile JÁ É o user_id
+        const allAffiliateUserIds = new Set(affiliateData.map((a: any) => a.id));
         const allModeratorUserIds = new Set(moderatorData.map((m: any) => m.user_id));
 
         console.log('  Affiliate unique user_ids:', allAffiliateUserIds.size);
@@ -119,14 +122,9 @@ export const AdminUsers = () => {
           }
         });
 
-        // Mapear origem dos usuários com IDs
-        const affiliateMap = new Map();
-        affiliateData.forEach((a: any) => {
-          if (!affiliateMap.has(a.user_id)) {
-            affiliateMap.set(a.user_id, a.affiliate_id);
-          }
-        });
-        
+        // Mapear origem dos usuários
+        // Para afiliados: apenas marcar que vieram de afiliado (já temos o Set)
+        // Para moderadores: guardar o moderator_id para referência
         const moderatorMap = new Map();
         moderatorData.forEach((m: any) => {
           if (!moderatorMap.has(m.user_id)) {
@@ -135,7 +133,7 @@ export const AdminUsers = () => {
         });
 
         console.log('🔥 ETAPA 5 - Maps criados:');
-        console.log('  Affiliate map size:', affiliateMap.size);
+        console.log('  Affiliate users (Set):', allAffiliateUserIds.size);
         console.log('  Moderator map size:', moderatorMap.size);
 
         // ETAPA 6: Criar registros para usuários SEM profile
@@ -152,7 +150,7 @@ export const AdminUsers = () => {
             subscription: subscriptionsMap.get(userId),
             last_activity: sessionsMap.get(userId),
             origin: 'affiliate',
-            affiliate_id: affiliateMap.get(userId),
+            affiliate_id: undefined,
             moderator_id: undefined,
             hasIncompleteProfile: true
           });
@@ -183,14 +181,14 @@ export const AdminUsers = () => {
         // ETAPA 7: Combinar profiles existentes com usuários sem profile
         const enrichedProfiles = profiles?.map(profile => {
           const moderatorId = moderatorMap.get(profile.id);
-          const affiliateId = affiliateMap.get(profile.id);
+          const isAffiliate = allAffiliateUserIds.has(profile.id);
           
           return {
             ...profile,
             subscription: subscriptionsMap.get(profile.id),
             last_activity: sessionsMap.get(profile.id),
-            origin: moderatorId ? 'moderator' : affiliateId ? 'affiliate' : 'direct',
-            affiliate_id: affiliateId,
+            origin: moderatorId ? 'moderator' : isAffiliate ? 'affiliate' : 'direct',
+            affiliate_id: undefined,
             moderator_id: moderatorId,
             hasIncompleteProfile: false
           };
