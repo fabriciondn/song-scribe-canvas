@@ -57,12 +57,13 @@ export const AdminUsers = () => {
           .in('user_id', userIds)
           .order('last_activity', { ascending: false }),
         
-        // Buscar TODOS os usuários de afiliados via conversões confirmadas
+        // Buscar TODOS os usuários que vieram por afiliados (clicks com cadastro completo)
         supabase
-          .from('affiliate_conversions')
-          .select('user_id, affiliate_id'),
+          .from('affiliate_clicks')
+          .select('user_id, affiliate_id')
+          .not('user_id', 'is', null),
         
-        // Buscar TODOS os usuários de moderadores
+        // Buscar TODOS os usuários criados por moderadores
         supabase
           .from('moderator_users')
           .select('user_id, moderator_id')
