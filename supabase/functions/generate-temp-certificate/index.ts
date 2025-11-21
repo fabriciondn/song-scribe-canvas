@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     const pdfBuffer = await generatePDF(work, user || {})
 
     // Upload para Storage
-    const fileName = `${work.user_id}.pdf`
+    const fileName = `${work.id}_${Date.now()}.pdf`
     const { error: uploadError } = await supabase.storage
       .from('temp-pdfs')
       .upload(fileName, pdfBuffer, {
@@ -131,174 +131,325 @@ Deno.serve(async (req) => {
   }
 })
 
+async function loadImageAsBase64(url: string): Promise<string> {
+  try {
+    const response = await fetch(url)
+    const blob = await response.blob()
+    const buffer = await blob.arrayBuffer()
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)))
+    return `data:${blob.type};base64,${base64}`
+  } catch (error) {
+    console.error('Erro ao carregar imagem:', url, error)
+    return ''
+  }
+}
+
 async function generatePDF(work: WorkData, user: UserData): Promise<Uint8Array> {
-  const doc = new jsPDF({
+  const pdf = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4'
   })
 
-  // Cores
-  const primaryColor = [106, 13, 173]
-  const secondaryColor = [251, 146, 60]
-  const textColor = [51, 51, 51]
-  const lightGray = [240, 240, 240]
+  // Cores (exatamente como no frontend)
+  const blackColor: [number, number, number] = [0, 0, 0]
+  const whiteColor: [number, number, number] = [255, 255, 255]
+  const grayColor: [number, number, number] = [64, 64, 64]
+  const lightGrayColor: [number, number, number] = [128, 128, 128]
+  const accentColor: [number, number, number] = [0, 100, 200]
 
-  // Fundo com gradiente simulado
-  doc.setFillColor(...lightGray)
-  doc.rect(0, 0, 210, 297, 'F')
+  // URLs das imagens no Storage do Supabase
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')
+  const templateUrl = `${supabaseUrl}/storage/v1/object/public/temp-pdfs/template-background.png`
+  const sealUrl = `${supabaseUrl}/storage/v1/object/public/temp-pdfs/compuse-seal.png`
+  const waveformUrl = `${supabaseUrl}/storage/v1/object/public/temp-pdfs/waveform.png`
 
-  // Cabeçalho decorativo
-  doc.setFillColor(...primaryColor)
-  doc.rect(0, 0, 210, 50, 'F')
+  try {
+    // Carregar o template de fundo
+    const templateImage = await loadImageAsBase64(templateUrl)
+    if (templateImage) {
+      pdf.addImage(templateImage, 'PNG', 0, 0, 210, 297)
+    }
+
+    // Carregar e adicionar o selo da Compuse (centralizado, 1,5cm da barra cinza)
+    const compuseSeal = await loadImageAsBase64(sealUrl)
+    if (compuseSeal) {
+      pdf.addImage(compuseSeal, 'PNG', 80, 15, 50, 50)
+    }
+
+    // Carregar e adicionar a nova waveform (1cm de espaçamento do selo)
+    const waveform = await loadImageAsBase64(waveformUrl)
+    if (waveform) {
+      pdf.addImage(waveform, 'PNG', 20, 75, 170, 15)
+    }
+  } catch (error) {
+    console.error('Erro ao carregar imagens:', error)
+    // Fallback para o método original se as imagens não carregarem
+    pdf.setFillColor(240, 240, 240)
+    pdf.rect(0, 0, 210, 297, 'F')
+    pdf.setTextColor(0, 0, 0)
+    pdf.setFontSize(16)
+    pdf.text('CERTIFICADO DE REGISTRO DE OBRA MUSICAL', 105, 30, { align: 'center' })
+  }
+
+  // **DADOS PRINCIPAIS** - Layout organizado e responsivo
+  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2])
+  let yPosition = 100 // 1cm abaixo da waveform
   
-  doc.setFillColor(...secondaryColor)
-  doc.circle(200, 10, 15, 'F')
-  doc.circle(10, 40, 20, 'F')
-
-  // Logo/Nome Compuse
-  doc.setFontSize(28)
-  doc.setTextColor(255, 255, 255)
-  doc.setFont('helvetica', 'bold')
-  doc.text('COMPUSE', 105, 25, { align: 'center' })
+  // Seção título
+  pdf.setFontSize(14)
+  pdf.setFont('helvetica', 'bold')
+  pdf.text('DADOS DA OBRA REGISTRADA', 20, yPosition)
   
-  doc.setFontSize(12)
-  doc.setFont('helvetica', 'normal')
-  doc.text('Plataforma de Registro de Obras Musicais', 105, 35, { align: 'center' })
-
-  // Título
-  doc.setFontSize(24)
-  doc.setTextColor(...primaryColor)
-  doc.setFont('helvetica', 'bold')
-  doc.text('CERTIFICADO DE REGISTRO', 105, 70, { align: 'center' })
-
-  // Subtítulo
-  doc.setFontSize(14)
-  doc.setTextColor(...secondaryColor)
-  doc.text('Obra Musical Protegida', 105, 80, { align: 'center' })
-
   // Linha decorativa
-  doc.setDrawColor(...primaryColor)
-  doc.setLineWidth(0.5)
-  doc.line(30, 85, 180, 85)
-
-  // Box branco para informações
-  doc.setFillColor(255, 255, 255)
-  doc.roundedRect(25, 92, 160, 160, 3, 3, 'F')
-  doc.setDrawColor(...primaryColor)
-  doc.setLineWidth(0.3)
-  doc.roundedRect(25, 92, 160, 160, 3, 3, 'S')
-
-  // Informações da obra
-  let yPos = 105
-  doc.setFontSize(11)
-  doc.setTextColor(...textColor)
-  doc.setFont('helvetica', 'normal')
-
-  const addField = (label: string, value: string) => {
-    doc.setFont('helvetica', 'bold')
-    doc.text(`${label}:`, 30, yPos)
-    doc.setFont('helvetica', 'normal')
-    doc.text(value || 'Não informado', 80, yPos)
-    yPos += 8
-  }
-
-  addField('Título da Obra', work.title)
-  addField('Autor(a) Principal', work.author)
-  if (work.other_authors) {
-    addField('Coautores', work.other_authors)
-  }
-  addField('Gênero Musical', work.genre)
-  addField('Ritmo', work.rhythm)
-  addField('Versão', work.song_version)
-
+  pdf.setDrawColor(lightGrayColor[0], lightGrayColor[1], lightGrayColor[2])
+  pdf.setLineWidth(0.5)
+  pdf.line(20, yPosition + 3, 190, yPosition + 3)
+  
+  yPosition += 15
+  pdf.setFontSize(10)
+  
+  // **PRIMEIRA LINHA** - Título (linha completa para títulos longos)
+  pdf.setFont('helvetica', 'bold')
+  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2])
+  pdf.text('TÍTULO:', 20, yPosition)
+  pdf.setFont('helvetica', 'normal')
+  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2])
+  const titleLines = pdf.splitTextToSize(work.title, 155)
+  pdf.text(titleLines, 45, yPosition)
+  yPosition += Math.max(12, titleLines.length * 6 + 6)
+  
+  // **SEGUNDA LINHA** - Autor Principal e Gênero Musical
+  pdf.setFont('helvetica', 'bold')
+  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2])
+  pdf.text('AUTOR PRINCIPAL:', 20, yPosition)
+  pdf.text('GÊNERO MUSICAL:', 110, yPosition)
+  
+  pdf.setFont('helvetica', 'normal')
+  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2])
+  const authorLines = pdf.splitTextToSize(work.author, 85)
+  pdf.text(authorLines, 20, yPosition + 8)
+  pdf.text(work.genre, 110, yPosition + 8)
+  yPosition += 20
+  
+  // **TERCEIRA LINHA** - CPF e Ritmo
+  let hasThirdLineContent = false
   if (user.cpf) {
-    addField('CPF do Autor', user.cpf)
+    pdf.setFont('helvetica', 'bold')
+    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2])
+    pdf.text('CPF:', 20, yPosition)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2])
+    pdf.text(user.cpf, 20, yPosition + 8)
+    hasThirdLineContent = true
   }
-
+  
+  if (work.rhythm) {
+    pdf.setFont('helvetica', 'bold')
+    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2])
+    pdf.text('RITMO:', 110, yPosition)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2])
+    pdf.text(work.rhythm, 110, yPosition + 8)
+    hasThirdLineContent = true
+  }
+  
+  if (hasThirdLineContent) {
+    yPosition += 20
+  }
+  
+  // **QUARTA LINHA** - Endereço e Versão
+  let hasFourthLineContent = false
   if (user.street && user.city && user.state) {
     const address = `${user.street}, ${user.number || 'S/N'} - ${user.neighborhood || ''}, ${user.city}/${user.state}`
-    addField('Endereço', address)
+    pdf.setFont('helvetica', 'bold')
+    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2])
+    pdf.text('ENDEREÇO:', 20, yPosition)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2])
+    const addressLines = pdf.splitTextToSize(address, 85)
+    pdf.text(addressLines, 20, yPosition + 8)
+    hasFourthLineContent = true
   }
-
-  yPos += 5
-  addField('Data de Registro', new Date(work.created_at).toLocaleDateString('pt-BR'))
-  addField('ID do Documento', work.id)
-
-  if (work.hash) {
-    yPos += 5
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Hash de Integridade:', 30, yPos)
-    doc.setFont('helvetica', 'normal')
-    const hashLines = doc.splitTextToSize(work.hash, 150)
-    doc.text(hashLines, 30, yPos + 5)
-    yPos += (hashLines.length * 4) + 5
+  
+  pdf.setFont('helvetica', 'bold')
+  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2])
+  pdf.text('VERSÃO:', 110, yPosition)
+  pdf.setFont('helvetica', 'normal')
+  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2])
+  pdf.text(work.song_version, 110, yPosition + 8)
+  hasFourthLineContent = true
+  
+  if (hasFourthLineContent) {
+    const addressLinesCount = (user.street && user.city) ? pdf.splitTextToSize(`${user.street}, ${user.number || 'S/N'}`, 85).length : 1
+    yPosition += Math.max(20, addressLinesCount * 6 + 12)
   }
-
-  // Rodapé
-  doc.setFontSize(8)
-  doc.setTextColor(128, 128, 128)
-  doc.text('Este certificado comprova o registro da obra no sistema Compuse', 105, 270, { align: 'center' })
-  doc.text('Para validar a autenticidade, acesse: www.compuse.com.br', 105, 275, { align: 'center' })
-  doc.text(`Documento gerado em ${new Date().toLocaleString('pt-BR')}`, 105, 280, { align: 'center' })
-
-  // Segunda página com letra
-  doc.addPage()
   
-  // Cabeçalho da segunda página
-  doc.setFillColor(...primaryColor)
-  doc.rect(0, 0, 210, 40, 'F')
-  
-  doc.setFontSize(20)
-  doc.setTextColor(255, 255, 255)
-  doc.setFont('helvetica', 'bold')
-  doc.text('LETRA DA MÚSICA', 105, 25, { align: 'center' })
-
-  // Box branco para a letra
-  doc.setFillColor(255, 255, 255)
-  doc.roundedRect(15, 50, 180, 220, 3, 3, 'F')
-  doc.setDrawColor(...primaryColor)
-  doc.setLineWidth(0.3)
-  doc.roundedRect(15, 50, 180, 220, 3, 3, 'S')
-
-  doc.setFontSize(10)
-  doc.setTextColor(...textColor)
-  doc.setFont('helvetica', 'normal')
-
-  const lyricsLines = work.lyrics.split('\n')
-  const maxLinesPerColumn = 40
-  const columnWidth = 85
-
-  if (lyricsLines.length > maxLinesPerColumn) {
-    // Duas colunas
-    let leftColumnY = 60
-    let rightColumnY = 60
-
-    lyricsLines.forEach((line, index) => {
-      if (index < maxLinesPerColumn) {
-        doc.text(line, 20, leftColumnY)
-        leftColumnY += 5
-      } else {
-        doc.text(line, 110, rightColumnY)
-        rightColumnY += 5
+  // **CO-AUTORES** - Seção separada com largura completa se necessário
+  const parseCoAuthors = (otherAuthors: string | undefined): string => {
+    if (!otherAuthors || otherAuthors.trim === '') return ''
+    
+    try {
+      if (otherAuthors.startsWith('{') || otherAuthors.startsWith('[')) {
+        const parsed = JSON.parse(otherAuthors)
+        if (parsed.has_other_authors === false || 
+            (Array.isArray(parsed.other_authors) && parsed.other_authors.length === 0)) {
+          return ''
+        }
+        if (Array.isArray(parsed.other_authors) && parsed.other_authors.length > 0) {
+          return parsed.other_authors
+            .map((author: any) => `${author.name} (CPF: ${author.cpf})`)
+            .join(', ')
+        }
+        return otherAuthors
       }
-    })
-  } else {
-    // Uma coluna centralizada
-    let yPosition = 60
-    lyricsLines.forEach(line => {
-      doc.text(line, 105, yPosition, { align: 'center', maxWidth: 170 })
-      yPosition += 5
-    })
+      return otherAuthors
+    } catch {
+      return otherAuthors
+    }
   }
 
-  // Rodapé da segunda página
-  doc.setFontSize(8)
-  doc.setTextColor(128, 128, 128)
-  doc.text('Compuse - Plataforma de Registro de Obras Musicais', 105, 285, { align: 'center' })
+  const coAuthorsText = parseCoAuthors(work.other_authors)
+  if (coAuthorsText) {
+    pdf.setFont('helvetica', 'bold')
+    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2])
+    pdf.text('CO-AUTORES:', 20, yPosition)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2])
+    const coAuthorsLines = pdf.splitTextToSize(coAuthorsText, 170)
+    pdf.text(coAuthorsLines, 20, yPosition + 8)
+    yPosition += 8 + (coAuthorsLines.length * 6) + 5
+  }
+  
+  // **SEÇÃO DE REGISTRO**
+  yPosition += 10
+  
+  // Data e hora de registro
+  pdf.setFont('helvetica', 'bold')
+  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2])
+  pdf.text('DATA DE REGISTRO:', 20, yPosition)
+  pdf.setFont('helvetica', 'normal')
+  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2])
+  
+  const registrationDate = new Date(work.created_at).toLocaleDateString('pt-BR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Sao_Paulo'
+  })
+  pdf.text(registrationDate, 20, yPosition + 8)
+  
+  // ID do documento
+  pdf.setFont('helvetica', 'bold')
+  pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2])
+  pdf.text('ID DO DOCUMENTO:', 110, yPosition)
+  pdf.setFont('helvetica', 'normal')
+  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2])
+  pdf.text(work.id.substring(0, 16) + '...', 110, yPosition + 8)
+  
+  yPosition += 25
+  
+  // **HASH DE INTEGRIDADE**
+  if (work.hash) {
+    pdf.setFont('helvetica', 'bold')
+    pdf.setTextColor(blackColor[0], blackColor[1], blackColor[2])
+    pdf.text('HASH DE INTEGRIDADE (SHA-256):', 20, yPosition)
+    
+    yPosition += 10
+    pdf.setFontSize(8)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setTextColor(accentColor[0], accentColor[1], accentColor[2])
+    
+    // Formatação do hash em blocos
+    const hashChunks = work.hash.match(/.{1,40}/g) || []
+    hashChunks.forEach((chunk, index) => {
+      pdf.text(chunk, 20, yPosition + (index * 6))
+    })
+    
+    yPosition += (hashChunks.length * 6) + 10
+  }
+  
+  // **FOOTER** - Tarja preta inferior da primeira página
+  pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2])
+  pdf.rect(0, 275, 210, 22, 'F')
+  
+  pdf.setTextColor(whiteColor[0], whiteColor[1], whiteColor[2])
+  pdf.setFontSize(10)
+  pdf.setFont('helvetica', 'normal')
+  pdf.text('Este certificado comprova o registro da obra musical na plataforma COMPUSE', 105, 285, { align: 'center' })
+  pdf.text(`compuse.com.br | Documento gerado em ${new Date().toLocaleDateString('pt-BR')}`, 105, 292, { align: 'center' })
+  
+  // **SEGUNDA PÁGINA** - Letra completa
+  pdf.addPage()
+  
+  // Header da segunda página - faixa mais fina
+  pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2])
+  pdf.rect(0, 0, 210, 25, 'F')
+
+  pdf.setTextColor(whiteColor[0], whiteColor[1], whiteColor[2])
+  pdf.setFontSize(14)
+  pdf.setFont('helvetica', 'bold')
+  pdf.text('LETRA COMPLETA', 105, 16, { align: 'center' })
+  
+  // Letra completa com sistema de duas colunas
+  pdf.setTextColor(grayColor[0], grayColor[1], grayColor[2])
+  pdf.setFontSize(10)
+  pdf.setFont('helvetica', 'normal')
+  
+  // Configurações para layout em duas colunas
+  const pageHeight = 297
+  const footerHeight = 22
+  const headerHeight = 25
+  const availableHeight = pageHeight - headerHeight - footerHeight - 10
+  const startY = 40
+  const lineHeight = 5
+  const maxLinesPerColumn = Math.floor(availableHeight / lineHeight)
+  
+  // Largura das colunas
+  const columnWidth = 80
+  const leftColumnX = 20
+  const rightColumnX = 110
+  
+  // Quebrar a letra em linhas que cabem na largura da coluna
+  const fullLyricsLines = pdf.splitTextToSize(work.lyrics, columnWidth)
+  
+  // Se a letra cabe em uma coluna, usar layout simples
+  if (fullLyricsLines.length <= maxLinesPerColumn) {
+    pdf.text(fullLyricsLines, leftColumnX, startY)
+  } else {
+    // Layout de duas colunas para letras longas
+    const firstColumnLines = fullLyricsLines.slice(0, maxLinesPerColumn)
+    const secondColumnLines = fullLyricsLines.slice(maxLinesPerColumn)
+    
+    // Primeira coluna (esquerda)
+    pdf.text(firstColumnLines, leftColumnX, startY)
+    
+    // Segunda coluna (direita)
+    if (secondColumnLines.length > 0) {
+      pdf.text(secondColumnLines, rightColumnX, startY)
+    }
+    
+    // Se ainda houver mais texto, adicionar uma nota
+    if (secondColumnLines.length > maxLinesPerColumn) {
+      const remainingLines = secondColumnLines.length - maxLinesPerColumn
+      pdf.setFontSize(8)
+      pdf.setTextColor(lightGrayColor[0], lightGrayColor[1], lightGrayColor[2])
+      pdf.text(`[+${remainingLines} linhas adicionais da letra]`, rightColumnX, startY + (maxLinesPerColumn * lineHeight) + 10)
+    }
+  }
+  
+  // Footer da segunda página
+  pdf.setFillColor(blackColor[0], blackColor[1], blackColor[2])
+  pdf.rect(0, 275, 210, 22, 'F')
+  
+  pdf.setTextColor(whiteColor[0], whiteColor[1], whiteColor[2])
+  pdf.setFontSize(10)
+  pdf.setFont('helvetica', 'normal')
+  pdf.text('COMPUSE - Plataforma de Registro Musical', 105, 286, { align: 'center' })
 
   // Retornar PDF como Uint8Array
-  const pdfOutput = doc.output('arraybuffer')
+  const pdfOutput = pdf.output('arraybuffer')
   return new Uint8Array(pdfOutput)
 }
