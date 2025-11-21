@@ -547,6 +547,7 @@ export type Database = {
           id: string
           lyrics: string
           other_authors: string | null
+          pdf_provisorio: string | null
           rhythm: string
           song_version: string
           status: string
@@ -567,6 +568,7 @@ export type Database = {
           id?: string
           lyrics: string
           other_authors?: string | null
+          pdf_provisorio?: string | null
           rhythm: string
           song_version: string
           status?: string
@@ -587,6 +589,7 @@ export type Database = {
           id?: string
           lyrics?: string
           other_authors?: string | null
+          pdf_provisorio?: string | null
           rhythm?: string
           song_version?: string
           status?: string
