@@ -16,69 +16,14 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    console.log('Iniciando limpeza de PDFs temporários expirados...')
-
-    // Buscar todos os arquivos na pasta temp-pdfs
-    const { data: files, error: listError } = await supabase.storage
-      .from('temp-pdfs')
-      .list()
-
-    if (listError) {
-      throw new Error(`Erro ao listar arquivos: ${listError.message}`)
-    }
-
-    if (!files || files.length === 0) {
-      console.log('Nenhum arquivo encontrado para limpar')
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Nenhum arquivo para limpar',
-          deleted: 0
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      )
-    }
-
-    let deletedCount = 0
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000)
-
-    // Verificar e deletar APENAS arquivos PDF expirados
-    for (const file of files) {
-      if (!file.created_at) continue
-      
-      // Filtrar apenas arquivos .pdf (ignorar .png e outros)
-      if (!file.name.endsWith('.pdf')) {
-        console.log(`Ignorando arquivo não-PDF: ${file.name}`)
-        continue
-      }
-
-      const fileCreatedAt = new Date(file.created_at)
-      
-      if (fileCreatedAt < thirtyMinutesAgo) {
-        const { error: deleteError } = await supabase.storage
-          .from('temp-pdfs')
-          .remove([file.name])
-
-        if (deleteError) {
-          console.error(`Erro ao deletar ${file.name}:`, deleteError.message)
-        } else {
-          console.log(`PDF expirado deletado: ${file.name}`)
-          deletedCount++
-        }
-      }
-    }
-
-    console.log(`Limpeza concluída: ${deletedCount} arquivos deletados`)
+    console.log('Função de limpeza desabilitada - arquivos PDF mantidos permanentemente')
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Limpeza concluída com sucesso',
-        deleted: deletedCount,
-        checked: files.length
+        message: 'Limpeza desabilitada - PDFs mantidos permanentemente',
+        deleted: 0,
+        checked: 0
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
