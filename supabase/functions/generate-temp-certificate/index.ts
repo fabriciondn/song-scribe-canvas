@@ -176,26 +176,26 @@ async function generatePDF(work: WorkData, user: UserData): Promise<Uint8Array> 
   const waveformUrl = `${supabaseUrl}/storage/v1/object/public/temp-pdfs/waveform.png`
 
   try {
-    // Carregar o template de fundo
+    // Carregar o template de fundo com compressão JPEG
     const templateImage = await loadImageAsBase64(templateUrl)
     if (templateImage) {
-      pdf.addImage(templateImage, 'PNG', 0, 0, 210, 297)
+      pdf.addImage(templateImage, 'JPEG', 0, 0, 210, 297, undefined, 'MEDIUM')
     }
 
-    // Carregar e adicionar o selo da Compuse (centralizado, 1,5cm da barra cinza)
+    // Carregar e adicionar o selo da Compuse
     const compuseSeal = await loadImageAsBase64(sealUrl)
     if (compuseSeal) {
-      pdf.addImage(compuseSeal, 'PNG', 80, 15, 50, 50)
+      pdf.addImage(compuseSeal, 'PNG', 80, 15, 50, 50, undefined, 'FAST')
     }
 
-    // Carregar e adicionar a nova waveform (1cm de espaçamento do selo)
+    // Carregar e adicionar a waveform
     const waveform = await loadImageAsBase64(waveformUrl)
     if (waveform) {
-      pdf.addImage(waveform, 'PNG', 20, 75, 170, 15)
+      pdf.addImage(waveform, 'PNG', 20, 75, 170, 15, undefined, 'FAST')
     }
   } catch (error) {
     console.error('Erro ao carregar imagens:', error)
-    // Fallback para fundo simples se as imagens falharem
+    // Fallback para fundo simples
     pdf.setFillColor(240, 240, 240)
     pdf.rect(0, 0, 210, 297, 'F')
     pdf.setTextColor(0, 0, 0)
