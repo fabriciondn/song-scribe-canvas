@@ -158,39 +158,38 @@ async function generatePDF(work: WorkData, user: UserData): Promise<Uint8Array> 
   const lightGrayColor: [number, number, number] = [128, 128, 128]
   const accentColor: [number, number, number] = [0, 100, 200]
 
-  // Design completo sem dependência de imagens externas
-  // Fundo principal com gradiente simulado
-  pdf.setFillColor(245, 245, 247)
-  pdf.rect(0, 0, 210, 297, 'F')
-  
-  // Barra superior decorativa
-  pdf.setFillColor(0, 0, 0)
-  pdf.rect(0, 0, 210, 12, 'F')
-  
-  // Selo/Logo simulado (círculo centralizado)
-  pdf.setFillColor(255, 255, 255)
-  pdf.circle(105, 35, 20, 'F')
-  pdf.setFillColor(0, 0, 0)
-  pdf.circle(105, 35, 18, 'S')
-  
-  // Texto do logo
-  pdf.setTextColor(0, 0, 0)
-  pdf.setFontSize(14)
-  pdf.setFont('helvetica', 'bold')
-  pdf.text('COMPUSE', 105, 38, { align: 'center' })
-  
-  // Linha decorativa inferior ao logo
-  pdf.setDrawColor(0, 100, 200)
-  pdf.setLineWidth(1)
-  pdf.line(40, 60, 170, 60)
-  
-  // Waveform simulada
-  pdf.setDrawColor(0, 100, 200)
-  pdf.setLineWidth(0.5)
-  for (let i = 0; i < 50; i++) {
-    const x = 30 + (i * 3)
-    const height = Math.random() * 8 + 2
-    pdf.line(x, 70, x, 70 + height)
+  // URLs das imagens no Storage do Supabase
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')
+  const templateUrl = `${supabaseUrl}/storage/v1/object/public/temp-pdfs/template-background.png`
+  const sealUrl = `${supabaseUrl}/storage/v1/object/public/temp-pdfs/compuse-seal.png`
+  const waveformUrl = `${supabaseUrl}/storage/v1/object/public/temp-pdfs/waveform.png`
+
+  try {
+    // Carregar o template de fundo
+    const templateImage = await loadImageAsBase64(templateUrl)
+    if (templateImage) {
+      pdf.addImage(templateImage, 'PNG', 0, 0, 210, 297)
+    }
+
+    // Carregar e adicionar o selo da Compuse (centralizado, 1,5cm da barra cinza)
+    const compuseSeal = await loadImageAsBase64(sealUrl)
+    if (compuseSeal) {
+      pdf.addImage(compuseSeal, 'PNG', 80, 15, 50, 50)
+    }
+
+    // Carregar e adicionar a nova waveform (1cm de espaçamento do selo)
+    const waveform = await loadImageAsBase64(waveformUrl)
+    if (waveform) {
+      pdf.addImage(waveform, 'PNG', 20, 75, 170, 15)
+    }
+  } catch (error) {
+    console.error('Erro ao carregar imagens:', error)
+    // Fallback para fundo simples se as imagens falharem
+    pdf.setFillColor(240, 240, 240)
+    pdf.rect(0, 0, 210, 297, 'F')
+    pdf.setTextColor(0, 0, 0)
+    pdf.setFontSize(16)
+    pdf.text('CERTIFICADO DE REGISTRO DE OBRA MUSICAL', 105, 30, { align: 'center' })
   }
 
   // **DADOS PRINCIPAIS** - Layout organizado e responsivo
