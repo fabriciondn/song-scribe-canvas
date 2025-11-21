@@ -67,14 +67,6 @@ Deno.serve(async (req) => {
         } else {
           console.log(`PDF expirado deletado: ${file.name}`)
           deletedCount++
-
-          // Limpar coluna pdf_provisorio do registro correspondente
-          const userId = file.name.replace('.pdf', '')
-          await supabase
-            .from('author_registrations')
-            .update({ pdf_provisorio: null })
-            .eq('user_id', userId)
-            .not('pdf_provisorio', 'is', null)
         }
       }
     }
