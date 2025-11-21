@@ -48,3 +48,17 @@ export const ensureMusicBasesBucketExists = async (): Promise<void> => {
     // Não lançamos o erro para evitar falhas na interface do usuário
   }
 };
+
+export const ensureCertificateAssetsBucketExists = async (): Promise<void> => {
+  try {
+    // O bucket já foi criado via SQL, então só precisamos verificar
+    // se conseguimos acessá-lo para confirmar que está tudo certo
+    const { data } = await supabase.storage.from('certificate-assets').list();
+    
+    // Se chegamos aqui, o bucket existe e está acessível
+    console.log('Certificate assets bucket is accessible');
+  } catch (error) {
+    console.error('Error accessing certificate assets bucket:', error);
+    // Não lançamos o erro para evitar falhas na interface do usuário
+  }
+};

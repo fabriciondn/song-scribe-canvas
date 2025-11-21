@@ -169,11 +169,11 @@ async function generatePDF(work: WorkData, user: UserData): Promise<Uint8Array> 
   const lightGrayColor: [number, number, number] = [128, 128, 128]
   const accentColor: [number, number, number] = [0, 100, 200]
 
-  // URLs das imagens no Storage do Supabase
+  // URLs das imagens no Storage do Supabase (bucket certificate-assets)
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
-  const templateUrl = `${supabaseUrl}/storage/v1/object/public/temp-pdfs/template-background.png`
-  const sealUrl = `${supabaseUrl}/storage/v1/object/public/temp-pdfs/compuse-seal.png`
-  const waveformUrl = `${supabaseUrl}/storage/v1/object/public/temp-pdfs/waveform.png`
+  const templateUrl = `${supabaseUrl}/storage/v1/object/public/certificate-assets/template-background.png`
+  const sealUrl = `${supabaseUrl}/storage/v1/object/public/certificate-assets/compuse-seal.png`
+  const waveformUrl = `${supabaseUrl}/storage/v1/object/public/certificate-assets/waveform.png`
 
   try {
     // Carregar o template de fundo com compressão JPEG
