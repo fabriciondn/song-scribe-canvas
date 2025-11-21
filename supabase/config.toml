@@ -22,3 +22,6 @@ verify_jwt = true
 
 [functions.validate-affiliate-commissions]
 verify_jwt = false
+
+[functions.generate-temp-certificate]
+verify_jwt = false
