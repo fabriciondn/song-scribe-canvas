@@ -45,9 +45,15 @@ Deno.serve(async (req) => {
     let deletedCount = 0
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000)
 
-    // Verificar e deletar arquivos expirados
+    // Verificar e deletar APENAS arquivos PDF expirados
     for (const file of files) {
       if (!file.created_at) continue
+      
+      // Filtrar apenas arquivos .pdf (ignorar .png e outros)
+      if (!file.name.endsWith('.pdf')) {
+        console.log(`Ignorando arquivo não-PDF: ${file.name}`)
+        continue
+      }
 
       const fileCreatedAt = new Date(file.created_at)
       
