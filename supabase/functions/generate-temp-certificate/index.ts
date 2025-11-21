@@ -131,19 +131,6 @@ Deno.serve(async (req) => {
   }
 })
 
-async function loadImageAsBase64(url: string): Promise<string> {
-  try {
-    const response = await fetch(url)
-    const blob = await response.blob()
-    const buffer = await blob.arrayBuffer()
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)))
-    return `data:${blob.type};base64,${base64}`
-  } catch (error) {
-    console.error('Erro ao carregar imagem:', url, error)
-    return ''
-  }
-}
-
 async function generatePDF(work: WorkData, user: UserData): Promise<Uint8Array> {
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -155,25 +142,29 @@ async function generatePDF(work: WorkData, user: UserData): Promise<Uint8Array> 
   const primaryColor = [106, 13, 173]
   const secondaryColor = [251, 146, 60]
   const textColor = [51, 51, 51]
+  const lightGray = [240, 240, 240]
 
-  // Carregar imagens
-  const templateUrl = 'https://hnencfkdsyiwtvktdvzy.supabase.co/storage/v1/object/public/temp-pdfs/template-background.png'
-  const sealUrl = 'https://hnencfkdsyiwtvktdvzy.supabase.co/storage/v1/object/public/temp-pdfs/seal.png'
-  const waveformUrl = 'https://hnencfkdsyiwtvktdvzy.supabase.co/storage/v1/object/public/temp-pdfs/waveform.png'
+  // Fundo com gradiente simulado
+  doc.setFillColor(...lightGray)
+  doc.rect(0, 0, 210, 297, 'F')
 
-  const templateImg = await loadImageAsBase64(templateUrl)
-  const sealImg = await loadImageAsBase64(sealUrl)
-  const waveformImg = await loadImageAsBase64(waveformUrl)
+  // Cabeçalho decorativo
+  doc.setFillColor(...primaryColor)
+  doc.rect(0, 0, 210, 50, 'F')
+  
+  doc.setFillColor(...secondaryColor)
+  doc.circle(200, 10, 15, 'F')
+  doc.circle(10, 40, 20, 'F')
 
-  // Adicionar template de fundo
-  if (templateImg) {
-    doc.addImage(templateImg, 'PNG', 0, 0, 210, 297)
-  }
-
-  // Adicionar selo Compuse
-  if (sealImg) {
-    doc.addImage(sealImg, 'PNG', 160, 15, 35, 35)
-  }
+  // Logo/Nome Compuse
+  doc.setFontSize(28)
+  doc.setTextColor(255, 255, 255)
+  doc.setFont('helvetica', 'bold')
+  doc.text('COMPUSE', 105, 25, { align: 'center' })
+  
+  doc.setFontSize(12)
+  doc.setFont('helvetica', 'normal')
+  doc.text('Plataforma de Registro de Obras Musicais', 105, 35, { align: 'center' })
 
   // Título
   doc.setFontSize(24)
@@ -191,8 +182,15 @@ async function generatePDF(work: WorkData, user: UserData): Promise<Uint8Array> 
   doc.setLineWidth(0.5)
   doc.line(30, 85, 180, 85)
 
+  // Box branco para informações
+  doc.setFillColor(255, 255, 255)
+  doc.roundedRect(25, 92, 160, 160, 3, 3, 'F')
+  doc.setDrawColor(...primaryColor)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(25, 92, 160, 160, 3, 3, 'S')
+
   // Informações da obra
-  let yPos = 100
+  let yPos = 105
   doc.setFontSize(11)
   doc.setTextColor(...textColor)
   doc.setFont('helvetica', 'normal')
@@ -238,37 +236,44 @@ async function generatePDF(work: WorkData, user: UserData): Promise<Uint8Array> 
     yPos += (hashLines.length * 4) + 5
   }
 
-  // Adicionar forma de onda decorativa
-  if (waveformImg) {
-    doc.addImage(waveformImg, 'PNG', 30, yPos, 150, 20)
-    yPos += 25
-  }
-
   // Rodapé
   doc.setFontSize(8)
   doc.setTextColor(128, 128, 128)
-  doc.text('Este certificado comprova o registro da obra no sistema Compuse', 105, 280, { align: 'center' })
-  doc.text('Para validar a autenticidade, acesse: www.compuse.com.br', 105, 285, { align: 'center' })
+  doc.text('Este certificado comprova o registro da obra no sistema Compuse', 105, 270, { align: 'center' })
+  doc.text('Para validar a autenticidade, acesse: www.compuse.com.br', 105, 275, { align: 'center' })
+  doc.text(`Documento gerado em ${new Date().toLocaleString('pt-BR')}`, 105, 280, { align: 'center' })
 
   // Segunda página com letra
   doc.addPage()
-  doc.setFontSize(16)
-  doc.setTextColor(...primaryColor)
+  
+  // Cabeçalho da segunda página
+  doc.setFillColor(...primaryColor)
+  doc.rect(0, 0, 210, 40, 'F')
+  
+  doc.setFontSize(20)
+  doc.setTextColor(255, 255, 255)
   doc.setFont('helvetica', 'bold')
-  doc.text('LETRA DA MÚSICA', 105, 30, { align: 'center' })
+  doc.text('LETRA DA MÚSICA', 105, 25, { align: 'center' })
+
+  // Box branco para a letra
+  doc.setFillColor(255, 255, 255)
+  doc.roundedRect(15, 50, 180, 220, 3, 3, 'F')
+  doc.setDrawColor(...primaryColor)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(15, 50, 180, 220, 3, 3, 'S')
 
   doc.setFontSize(10)
   doc.setTextColor(...textColor)
   doc.setFont('helvetica', 'normal')
 
   const lyricsLines = work.lyrics.split('\n')
-  const maxLinesPerColumn = 45
+  const maxLinesPerColumn = 40
   const columnWidth = 85
 
   if (lyricsLines.length > maxLinesPerColumn) {
     // Duas colunas
-    let leftColumnY = 45
-    let rightColumnY = 45
+    let leftColumnY = 60
+    let rightColumnY = 60
 
     lyricsLines.forEach((line, index) => {
       if (index < maxLinesPerColumn) {
@@ -281,7 +286,7 @@ async function generatePDF(work: WorkData, user: UserData): Promise<Uint8Array> 
     })
   } else {
     // Uma coluna centralizada
-    let yPosition = 45
+    let yPosition = 60
     lyricsLines.forEach(line => {
       doc.text(line, 105, yPosition, { align: 'center', maxWidth: 170 })
       yPosition += 5
