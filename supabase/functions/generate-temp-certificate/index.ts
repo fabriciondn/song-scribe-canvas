@@ -136,7 +136,18 @@ async function loadImageAsBase64(url: string): Promise<string> {
     const response = await fetch(url)
     const blob = await response.blob()
     const buffer = await blob.arrayBuffer()
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)))
+    
+    // Processar buffer em chunks para evitar stack overflow com imagens grandes
+    const uint8Array = new Uint8Array(buffer)
+    const chunkSize = 8192
+    let binaryString = ''
+    
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.slice(i, i + chunkSize)
+      binaryString += String.fromCharCode(...chunk)
+    }
+    
+    const base64 = btoa(binaryString)
     return `data:${blob.type};base64,${base64}`
   } catch (error) {
     console.error('Erro ao carregar imagem:', url, error)
