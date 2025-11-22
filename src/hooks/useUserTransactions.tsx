@@ -48,12 +48,12 @@ export const useUserTransactions = () => {
       
       // Mapear transações de créditos
       const creditTransactions = (creditData || []).map(transaction => {
-        // Determinar o método de pagamento baseado no payment_id ou payment_provider
-        let paymentMethod = 'Mercado Pago';
-        if (transaction.payment_id && transaction.payment_id.toLowerCase().includes('pix')) {
+        // Determinar o método de pagamento baseado no payment_provider
+        let paymentMethod = 'PIX';
+        if (transaction.payment_provider === 'mercadopago') {
           paymentMethod = 'PIX';
-        } else if (transaction.payment_provider === 'mercadopago') {
-          paymentMethod = 'Mercado Pago';
+        } else if (transaction.payment_provider === 'stripe') {
+          paymentMethod = 'Cartão de Crédito';
         }
 
         return {
