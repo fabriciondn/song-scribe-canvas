@@ -210,7 +210,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {!isCollapsed && <span>Suporte</span>}
           </button>
 
-          {!isCollapsed && (
+          {/* Status do Plano - Só mostra após carregar */}
+          {!isLoading && !isCollapsed && (
             <>
               {isPro ? (
                 <div className="flex items-center justify-center gap-2 px-3 py-2 bg-green-600/20 rounded-lg">

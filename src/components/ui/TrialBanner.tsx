@@ -7,9 +7,10 @@ import { useSubscription } from '@/hooks/useSubscription';
 
 export const TrialBanner: React.FC = () => {
   const navigate = useNavigate();
-  const { isTrialActive, trialDaysRemaining } = useSubscription();
+  const { isTrialActive, trialDaysRemaining, isLoading } = useSubscription();
 
-  if (!isTrialActive || trialDaysRemaining === 0) {
+  // Não mostrar nada durante o carregamento para evitar flickering
+  if (isLoading || !isTrialActive || trialDaysRemaining === 0) {
     return null;
   }
 
