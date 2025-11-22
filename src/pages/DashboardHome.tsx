@@ -63,10 +63,12 @@ const DashboardHome: React.FC = () => {
   return (
     <div className="container mx-auto pt-2 space-y-6">
       
-      {/* Banner Carousel Moderno - Fixo */}
-      <div className="sticky top-0 z-10 bg-background pb-4 -mx-6 px-6">
-        <FeatureCarousel />
-      </div>
+      {/* Banner Carousel Moderno - Fixo - Apenas Desktop */}
+      {!isMobile.isMobile && (
+        <div className="sticky top-0 z-10 bg-background pb-4 -mx-6 px-6">
+          <FeatureCarousel />
+        </div>
+      )}
       
       <div className="flex items-center justify-end">
         <CardSelector 
