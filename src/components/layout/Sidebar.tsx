@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Edit, FileText, Folder, BookText, Users, Menu, X, FileMusic, ListMusic, DollarSign, BarChart3, Trash2, Shield, User, Settings, Crown, TrendingUp } from 'lucide-react';
+import { Edit, FileText, Folder, BookText, Users, Menu, X, FileMusic, ListMusic, DollarSign, BarChart3, Trash2, Shield, User, Settings, Crown, TrendingUp, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -191,6 +191,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         <div className="pt-4 mt-auto border-t border-sidebar-border space-y-2">
+          {/* Botão Suporte WhatsApp */}
+          <button
+            onClick={() => {
+              window.open('https://w.app/compuse', '_blank');
+              if (window.innerWidth < 768) {
+                toggleSidebar();
+              }
+            }}
+            className={cn(
+              "flex items-center rounded-lg transition-colors w-full",
+              isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3",
+              "text-white hover:bg-[#111111] cursor-pointer"
+            )}
+            title={isCollapsed ? "Suporte" : undefined}
+          >
+            <MessageCircle size={isCollapsed ? 24 : 20} />
+            {!isCollapsed && <span>Suporte</span>}
+          </button>
+
           {!isCollapsed && (
             <>
               {isPro ? (

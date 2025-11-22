@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, LoginMessageProvider } from "./context/AuthContext";
 import { ImpersonationProvider } from "./context/ImpersonationContext";
-import { WhatsAppSupport } from "@/components/ui/whatsapp-support";
 import { useImpersonationSync } from "./hooks/useImpersonationSync";
 import { NotificationProvider } from "@/components/ui/notification";
 import { ImpersonationBanner } from "@/components/ui/impersonation-banner";
@@ -150,7 +149,6 @@ const App = () => {
                 <Sonner />
                 <BrowserRouter>
                   <AppContent />
-                  <WhatsAppSupport />
                 </BrowserRouter>
               </TooltipProvider>
             </NotificationProvider>

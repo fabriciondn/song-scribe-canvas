@@ -18,7 +18,8 @@ import {
   Mic,
   Trash2,
   BookOpen,
-  Users
+  Users,
+  MessageCircle
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -214,6 +215,18 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
         >
           <Settings className="h-5 w-5" />
           <span>Configurações</span>
+        </Button>
+        
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3"
+          onClick={() => {
+            window.open('https://w.app/compuse', '_blank');
+            onClose();
+          }}
+        >
+          <MessageCircle className="h-5 w-5" />
+          <span>Suporte</span>
         </Button>
         
         <Button
