@@ -110,11 +110,11 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full max-h-screen bg-background overflow-hidden">
       {/* User Profile Section */}
-      <div className="p-6 border-b border-border">
+      <div className="p-4 border-b border-border flex-shrink-0">
         <div className="flex items-center space-x-3">
-          <Avatar className="h-12 w-12">
+          <Avatar className="h-10 w-10 flex-shrink-0">
             <AvatarImage 
               src={profile?.avatar_url || ""} 
               alt={profile?.name || user?.email || "User"} 
@@ -135,7 +135,7 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
             <div className="flex items-center gap-2 mt-1">
               <Badge variant="secondary" className="text-xs">
                 <CreditCard className="h-3 w-3 mr-1" />
-                {credits || 0} créditos
+                {credits || 0}
               </Badge>
             </div>
           </div>
@@ -145,20 +145,20 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
         <Button 
           size="sm" 
           variant="outline" 
-          className="w-full mt-3"
+          className="w-full mt-3 h-8 text-xs"
           onClick={() => {
             navigate('/credits-checkout');
             onClose();
           }}
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-3 w-3 mr-1" />
           Adicionar Créditos
         </Button>
       </div>
 
       {/* Navigation Menu */}
-      <div className="flex-1 overflow-y-auto py-4">
-        <nav className="space-y-1 px-3">
+      <div className="flex-1 overflow-y-auto py-2">
+        <nav className="space-y-0.5 px-2">
           {mainNavigationItems.map((item) => {
             const isActive = location.pathname === item.href;
             
@@ -167,75 +167,75 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
                 key={item.href}
                 variant={isActive ? "secondary" : "ghost"}
                 className={cn(
-                  'w-full justify-start gap-3 h-12',
+                  'w-full justify-start gap-2 h-9 text-sm',
                   isActive && 'bg-primary/10 text-primary font-medium'
                 )}
                 onClick={() => handleNavigation(item.href)}
               >
-                <item.icon className="h-5 w-5" />
-                <span>{item.title}</span>
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{item.title}</span>
               </Button>
             );
           })}
         </nav>
 
-        <Separator className="my-4 mx-3" />
+        <Separator className="my-2 mx-2" />
 
         {/* Admin/Moderator Section */}
         {(userRole?.role === 'admin' || userRole?.role === 'moderator') && (
-          <div className="px-3 space-y-1">
+          <div className="px-2 space-y-0.5">
             <Button
               variant="ghost"
-              className="w-full justify-start gap-3 h-12"
+              className="w-full justify-start gap-2 h-9 text-sm"
               onClick={handleDashboardClick}
             >
               {userRole?.role === 'admin' ? (
                 <>
-                  <Settings className="h-5 w-5" />
-                  <span>Painel Admin</span>
+                  <Settings className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">Painel Admin</span>
                 </>
               ) : (
                 <>
-                  <Shield className="h-5 w-5" />
-                  <span>Painel Moderador</span>
+                  <Shield className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">Painel Moderador</span>
                 </>
               )}
             </Button>
-            <Separator className="my-4" />
+            <Separator className="my-2" />
           </div>
         )}
       </div>
 
       {/* Footer Actions */}
-      <div className="p-4 border-t border-border space-y-2">
+      <div className="p-2 border-t border-border space-y-0.5 flex-shrink-0">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3"
+          className="w-full justify-start gap-2 h-9 text-sm"
           onClick={() => handleNavigation('/dashboard/settings')}
         >
-          <Settings className="h-5 w-5" />
-          <span>Configurações</span>
+          <Settings className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">Configurações</span>
         </Button>
         
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3"
+          className="w-full justify-start gap-2 h-9 text-sm"
           onClick={() => {
             window.open('https://w.app/compuse', '_blank');
             onClose();
           }}
         >
-          <MessageCircle className="h-5 w-5" />
-          <span>Suporte</span>
+          <MessageCircle className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">Suporte</span>
         </Button>
         
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 text-destructive hover:text-destructive"
+          className="w-full justify-start gap-2 h-9 text-sm text-destructive hover:text-destructive"
           onClick={handleLogout}
         >
-          <LogOut className="h-5 w-5" />
-          <span>Sair</span>
+          <LogOut className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">Sair</span>
         </Button>
       </div>
     </div>
