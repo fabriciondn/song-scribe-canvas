@@ -72,7 +72,6 @@ const Dashboard: React.FC = () => {
     return (
       <MobileLayout toggleSidebar={toggleSidebar}>
         <div className="p-4">
-          <ImpersonationBanner />
           <Outlet />
         </div>
       </MobileLayout>
