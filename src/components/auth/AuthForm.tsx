@@ -176,10 +176,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
       await resetPassword(resetEmail);
       toast({
         title: 'E-mail enviado!',
-        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+        description: 'Enviamos um link de confirmação para seu e-mail para redefinir sua senha.',
+        duration: 5000,
       });
       setShowForgotPassword(false);
       setResetEmail('');
+      setMode('login');
     } catch (error: any) {
       console.error('Erro ao enviar e-mail:', error);
       setError('Erro ao enviar e-mail de redefinição. Tente novamente.');
