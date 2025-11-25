@@ -42,6 +42,7 @@ import ModeratorRecharge from "./pages/ModeratorRecharge";
 import AffiliateLink from "./pages/AffiliateLink";
 import PublicRegistrationForm from "./pages/PublicRegistrationForm";
 import Ranking from "./pages/Ranking";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -121,6 +122,7 @@ const AppContent = () => {
             <Route path="/moderator-auth" element={<ModeratorAuth />} />
             <Route path="/ref/:code" element={<AffiliateLink />} />
             <Route path="/formulario" element={<PublicRegistrationForm />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/plans" element={<Dashboard />}>
               <Route index element={<Plans />} />
             </Route>
