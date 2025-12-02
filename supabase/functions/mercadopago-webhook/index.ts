@@ -86,24 +86,51 @@ serve(async (req) => {
     // Verificar se é pagamento de assinatura ou créditos
     const externalReference = paymentData.external_reference || '';
     const isSubscription = externalReference.startsWith('subscription_');
+    const isPendriveSubscription = externalReference.startsWith('pendrive_');
 
-    if (isSubscription) {
-      console.log('🎯 Processing subscription payment');
+    if (isSubscription || isPendriveSubscription) {
+      const planType = isPendriveSubscription ? 'pendrive' : 'pro';
+      console.log(`🎯 Processing ${planType} subscription payment`);
       
-      // Buscar subscription pendente
-      const { data: subscription, error: subscriptionError } = await supabaseService
+      // Buscar subscription pendente pelo preference_id ou payment_id
+      let subscription = null;
+      
+      // Primeiro tentar buscar pelo payment_id
+      const { data: subByPayment } = await supabaseService
         .from('subscriptions')
         .select('*')
         .eq('payment_provider_subscription_id', paymentId.toString())
         .eq('status', 'pending')
-        .single();
+        .maybeSingle();
+      
+      subscription = subByPayment;
+      
+      // Se não encontrou, tentar extrair user_id do external_reference
+      if (!subscription) {
+        // external_reference format: pendrive_{userId}_{timestamp} ou subscription_{userId}_{timestamp}
+        const parts = externalReference.split('_');
+        if (parts.length >= 2) {
+          const userId = parts[1];
+          console.log('🔍 Searching subscription by user_id:', userId);
+          
+          const { data: subByUser } = await supabaseService
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('plan_type', planType)
+            .eq('status', 'pending')
+            .maybeSingle();
+          
+          subscription = subByUser;
+        }
+      }
 
-      if (subscriptionError || !subscription) {
-        console.error('❌ Error finding subscription:', subscriptionError);
+      if (!subscription) {
+        console.error('❌ Subscription not found for payment:', paymentId);
         return new Response('Subscription not found', { status: 200, headers: corsHeaders });
       }
 
-      console.log('📋 Found subscription:', subscription.id);
+      console.log('📋 Found subscription:', subscription.id, 'Plan:', subscription.plan_type);
 
       // Ativar subscription por 30 dias
       const expiresAt = new Date();
@@ -115,6 +142,7 @@ serve(async (req) => {
           status: 'active',
           started_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),
+          payment_provider_subscription_id: paymentId.toString(),
           updated_at: new Date().toISOString()
         })
         .eq('id', subscription.id);
@@ -124,13 +152,14 @@ serve(async (req) => {
         return new Response('Error activating subscription', { status: 500, headers: corsHeaders });
       }
 
-      console.log('🎉 Subscription activated successfully!', {
+      console.log(`🎉 ${planType.toUpperCase()} subscription activated successfully!`, {
         userId: subscription.user_id,
         subscriptionId: subscription.id,
+        planType: subscription.plan_type,
         expiresAt: expiresAt.toISOString()
       });
 
-      return new Response('OK - Subscription activated', { status: 200, headers: corsHeaders });
+      return new Response(`OK - ${planType} subscription activated`, { status: 200, headers: corsHeaders });
     }
 
     // Processar créditos (fluxo existente)
