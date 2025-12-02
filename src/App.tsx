@@ -43,6 +43,7 @@ import AffiliateLink from "./pages/AffiliateLink";
 import PublicRegistrationForm from "./pages/PublicRegistrationForm";
 import Ranking from "./pages/Ranking";
 import ResetPassword from "./pages/ResetPassword";
+import Pendrive from "./pages/Pendrive";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -108,6 +109,9 @@ const AppContent = () => {
             </Route>
             <Route path="/partnerships" element={<Dashboard />}>
               <Route index element={<Partnerships />} />
+            </Route>
+            <Route path="/pendrive" element={<Dashboard />}>
+              <Route index element={<Pendrive />} />
             </Route>
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/moderator" element={<ModeratorDashboard />} />

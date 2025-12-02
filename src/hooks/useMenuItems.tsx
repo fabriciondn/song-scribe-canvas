@@ -18,7 +18,8 @@ import {
   CreditCard,
   ArrowUp,
   TrendingUp,
-  Trophy
+  Trophy,
+  Usb
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -92,6 +93,13 @@ export const useMenuItems = () => {
         path: '/folders',
         functionKey: 'folders',
         isPro: true
+      },
+      {
+        label: 'Pendrive',
+        icon: Usb,
+        path: '/pendrive',
+        functionKey: 'pendrive',
+        isPro: false
       },
       {
         label: 'Rascunho',
