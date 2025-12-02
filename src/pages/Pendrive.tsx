@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useSubscription } from '@/hooks/useSubscription';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,16 +10,19 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { UsbIcon, Search, Download, Music, Filter, FolderOpen, Calendar, Play, Pause, Volume2 } from 'lucide-react';
+import { UsbIcon, Search, Download, Music, Filter, FolderOpen, Calendar, Play, Pause, Volume2, Crown, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import PendriveUpgradeModal from '@/components/pendrive/PendriveUpgradeModal';
 
 const Pendrive = () => {
   const user = useCurrentUser();
+  const { hasPendriveAccess, isPro, isPendrive, isLoading: subscriptionLoading } = useSubscription();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string>('all');
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Buscar todas as músicas registradas do usuário
@@ -76,6 +80,12 @@ const Pendrive = () => {
   }, [filteredRegistrations]);
 
   const handleDownload = async (registration: any) => {
+    // Verificar se tem acesso ao Pendrive
+    if (!hasPendriveAccess) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     try {
       if (registration.pdf_provisorio) {
         // Extrair o nome do arquivo da URL (ignorando tokens/query params)
@@ -187,9 +197,26 @@ const Pendrive = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Music className="h-3.5 w-3.5" />
-          <span>{registrations?.length || 0} músicas</span>
+        <div className="flex items-center gap-2">
+          {hasPendriveAccess ? (
+            <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs gap-1">
+              <Crown className="h-3 w-3" />
+              {isPro ? 'Pro' : 'Pendrive'}
+            </Badge>
+          ) : (
+            <Badge 
+              variant="outline" 
+              className="text-xs gap-1 cursor-pointer hover:bg-primary/10"
+              onClick={() => setShowUpgradeModal(true)}
+            >
+              <Lock className="h-3 w-3" />
+              Assinar
+            </Badge>
+          )}
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Music className="h-3.5 w-3.5" />
+            <span>{registrations?.length || 0} músicas</span>
+          </div>
         </div>
       </div>
 
@@ -306,6 +333,12 @@ const Pendrive = () => {
           </div>
         )}
       </ScrollArea>
+
+      {/* Modal de Upgrade */}
+      <PendriveUpgradeModal 
+        open={showUpgradeModal} 
+        onOpenChange={setShowUpgradeModal} 
+      />
     </div>
   );
 };
