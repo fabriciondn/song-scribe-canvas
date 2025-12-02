@@ -90,13 +90,21 @@ export default {
 				'slide-in': {
 					'0%': { transform: 'translateX(-100%)' },
 					'100%': { transform: 'translateX(0)' }
+				},
+				'swing': {
+					'0%, 100%': { transform: 'rotate(0deg)' },
+					'20%': { transform: 'rotate(15deg)' },
+					'40%': { transform: 'rotate(-10deg)' },
+					'60%': { transform: 'rotate(5deg)' },
+					'80%': { transform: 'rotate(-5deg)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
-				'slide-in': 'slide-in 0.3s ease-out'
+				'slide-in': 'slide-in 0.3s ease-out',
+				'swing': 'swing 1s ease-in-out infinite'
 			}
 		}
 	},

@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Users, BarChart3, User, Moon, Sun, LogOut, UserCircle, Receipt, Bug } from 'lucide-react';
+import { Users, BarChart3, User, Moon, Sun, LogOut, UserCircle, Receipt, Bell } from 'lucide-react';
+import { useHasUnseenUpdates } from './ModeratorUpdates';
 import { 
   Sidebar, 
   SidebarContent, 
@@ -27,7 +28,7 @@ const moderatorNavItems = [
   { title: 'Usuários', url: '/moderator/users', icon: Users },
   { title: 'Transações', url: '/moderator/transactions', icon: Receipt },
   { title: 'Perfil', url: '/moderator/profile', icon: UserCircle },
-  { title: 'Debug Acesso', url: '/moderator/debug', icon: Bug },
+  { title: 'Atualizações', url: '/moderator/updates', icon: Bell, hasNotification: true },
 ];
 
 export function ModeratorSidebar() {
@@ -38,6 +39,7 @@ export function ModeratorSidebar() {
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const hasUnseenUpdates = useHasUnseenUpdates();
 
   const handleLogout = async () => {
     try {
@@ -93,7 +95,12 @@ export function ModeratorSidebar() {
                            : "hover:bg-muted/50"
                        }
                      >
-                       <item.icon className="mr-2 h-4 w-4" />
+                       <span className="relative">
+                         <item.icon className={`mr-2 h-4 w-4 ${item.hasNotification && hasUnseenUpdates ? 'animate-[swing_1s_ease-in-out_infinite]' : ''}`} />
+                         {item.hasNotification && hasUnseenUpdates && (
+                           <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse" />
+                         )}
+                       </span>
                        {!collapsed && <span>{item.title}</span>}
                      </NavLink>
                    </SidebarMenuButton>
