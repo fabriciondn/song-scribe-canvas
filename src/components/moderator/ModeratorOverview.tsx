@@ -79,6 +79,7 @@ export const ModeratorOverview = () => {
     total_managed_drafts: stats?.total_managed_drafts || 0,
     total_managed_registered_works: stats?.total_managed_registered_works || 0,
     total_credits_distributed: stats?.total_credits_distributed || 0,
+    total_current_credits: stats?.total_current_credits || 0,
   };
 
   const metricCards = [
@@ -181,14 +182,18 @@ export const ModeratorOverview = () => {
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Créditos Distribuídos:</span>
+                <span className="text-sm text-muted-foreground">Créditos Distribuídos (histórico):</span>
                 <span className="text-sm font-medium">{safeStats.total_credits_distributed}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Créditos Atuais dos Usuários:</span>
+                <span className="text-sm font-medium">{safeStats.total_current_credits}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Média por Usuário:</span>
                 <span className="text-sm font-medium">
                   {safeStats.total_managed_users > 0 
-                    ? Math.round(safeStats.total_credits_distributed / safeStats.total_managed_users)
+                    ? Math.round(safeStats.total_current_credits / safeStats.total_managed_users)
                     : 0
                   }
                 </span>

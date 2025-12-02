@@ -7,6 +7,7 @@ export interface ModeratorDashboardStats {
   total_managed_drafts: number;
   total_managed_registered_works: number;
   total_credits_distributed: number;
+  total_current_credits: number;
 }
 
 export interface ManagedUserData {
@@ -34,7 +35,8 @@ export const getModeratorDashboardStats = async (): Promise<ModeratorDashboardSt
         total_managed_songs: 0,
         total_managed_drafts: 0,
         total_managed_registered_works: 0,
-        total_credits_distributed: 0
+        total_credits_distributed: 0,
+        total_current_credits: 0
       };
     }
     
@@ -50,7 +52,8 @@ export const getModeratorDashboardStats = async (): Promise<ModeratorDashboardSt
       total_managed_songs: 0,
       total_managed_drafts: 0,
       total_managed_registered_works: 0,
-      total_credits_distributed: 0
+      total_credits_distributed: 0,
+      total_current_credits: 0
     };
   } catch (error) {
     console.error('❌ Unexpected error fetching moderator dashboard stats:', error);
@@ -61,7 +64,8 @@ export const getModeratorDashboardStats = async (): Promise<ModeratorDashboardSt
       total_managed_songs: 0,
       total_managed_drafts: 0,
       total_managed_registered_works: 0,
-      total_credits_distributed: 0
+      total_credits_distributed: 0,
+      total_current_credits: 0
     };
   }
 };
