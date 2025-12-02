@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { WorkCard } from '@/components/registered-works/WorkCard';
 import { WorkDetailsModal } from '@/components/registered-works/WorkDetailsModal';
 import { useMobileDetection } from '@/hooks/use-mobile';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface RegisteredWork {
   id: string;
@@ -27,21 +28,26 @@ interface RegisteredWork {
 
 const RegisteredWorks: React.FC = () => {
   const { isMobile } = useMobileDetection();
+  const currentUser = useCurrentUser();
   const [selectedWork, setSelectedWork] = useState<RegisteredWork | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: works, isLoading, error } = useQuery({
-    queryKey: ['registered-works'],
+    queryKey: ['registered-works', currentUser?.id],
     queryFn: async (): Promise<RegisteredWork[]> => {
+      if (!currentUser?.id) return [];
+      
       const { data, error } = await supabase
         .from('author_registrations')
         .select('*')
+        .eq('user_id', currentUser.id)
         .in('status', ['registered', 'em análise'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data || [];
     },
+    enabled: !!currentUser?.id,
   });
 
   const handleViewDetails = (work: RegisteredWork) => {
