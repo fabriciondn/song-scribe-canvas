@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,11 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Trash2, Key, AlertTriangle, UserCheck } from 'lucide-react';
+import { Plus, Edit, Trash2, Key, AlertTriangle, Search, Trophy, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { getManagedUsers, createUserForModerator, updateManagedUserCredits } from '@/services/moderatorService';
 import { supabase } from '@/integrations/supabase/client';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export const ModeratorUsers = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -21,6 +22,11 @@ export const ModeratorUsers = () => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  
+  // Filtros
+  const [searchName, setSearchName] = useState('');
+  const [searchEmail, setSearchEmail] = useState('');
+  const [creditFilter, setCreditFilter] = useState<string>('all');
   
   const [newUserData, setNewUserData] = useState({
     name: '',
@@ -43,6 +49,94 @@ export const ModeratorUsers = () => {
     queryKey: ['managed-users'],
     queryFn: getManagedUsers,
   });
+
+  // Buscar contagem de obras registradas por usuário
+  const { data: worksCount } = useQuery({
+    queryKey: ['managed-users-works-count', users?.map(u => u.id)],
+    queryFn: async () => {
+      if (!users || users.length === 0) return {};
+      
+      const userIds = users.map(u => u.id);
+      const { data, error } = await supabase
+        .from('author_registrations')
+        .select('user_id')
+        .in('user_id', userIds);
+      
+      if (error) {
+        console.error('Erro ao buscar obras:', error);
+        return {};
+      }
+      
+      // Contar obras por usuário
+      const counts: Record<string, number> = {};
+      data?.forEach(item => {
+        counts[item.user_id] = (counts[item.user_id] || 0) + 1;
+      });
+      
+      return counts;
+    },
+    enabled: !!users && users.length > 0,
+  });
+
+  // Top 10 usuários com mais obras
+  const topUsers = useMemo(() => {
+    if (!users || !worksCount) return [];
+    
+    return users
+      .map(user => ({
+        ...user,
+        worksCount: worksCount[user.id] || 0
+      }))
+      .filter(user => user.worksCount > 0)
+      .sort((a, b) => b.worksCount - a.worksCount)
+      .slice(0, 10);
+  }, [users, worksCount]);
+
+  // Filtrar usuários
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    
+    return users.filter(user => {
+      // Filtro por nome
+      if (searchName && !user.name?.toLowerCase().includes(searchName.toLowerCase())) {
+        return false;
+      }
+      
+      // Filtro por email
+      if (searchEmail && !user.email?.toLowerCase().includes(searchEmail.toLowerCase())) {
+        return false;
+      }
+      
+      // Filtro por créditos
+      if (creditFilter !== 'all') {
+        const credits = user.credits || 0;
+        switch (creditFilter) {
+          case 'zero':
+            if (credits !== 0) return false;
+            break;
+          case '1-10':
+            if (credits < 1 || credits > 10) return false;
+            break;
+          case '11-50':
+            if (credits < 11 || credits > 50) return false;
+            break;
+          case '51+':
+            if (credits <= 50) return false;
+            break;
+        }
+      }
+      
+      return true;
+    });
+  }, [users, searchName, searchEmail, creditFilter]);
+
+  const clearFilters = () => {
+    setSearchName('');
+    setSearchEmail('');
+    setCreditFilter('all');
+  };
+
+  const hasActiveFilters = searchName || searchEmail || creditFilter !== 'all';
 
   const createUserMutation = useMutation({
     mutationFn: createUserForModerator,
@@ -398,15 +492,112 @@ export const ModeratorUsers = () => {
         </Dialog>
       </div>
 
+      {/* Top 10 Usuários com Mais Obras */}
+      {topUsers.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-yellow-500" />
+              Top 10 - Mais Obras Registradas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-5">
+              {topUsers.map((user, index) => (
+                <div
+                  key={user.id}
+                  className="flex items-center gap-2 p-2 rounded-lg bg-muted/50"
+                >
+                  <span className={`font-bold text-lg ${
+                    index === 0 ? 'text-yellow-500' :
+                    index === 1 ? 'text-gray-400' :
+                    index === 2 ? 'text-amber-600' :
+                    'text-muted-foreground'
+                  }`}>
+                    #{index + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{user.name || 'Sem nome'}</p>
+                    <p className="text-xs text-muted-foreground">{user.worksCount} obras</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Filtros */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Filtros
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="space-y-2">
+              <Label htmlFor="filter-name">Nome</Label>
+              <Input
+                id="filter-name"
+                placeholder="Buscar por nome..."
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="filter-email">Email</Label>
+              <Input
+                id="filter-email"
+                placeholder="Buscar por email..."
+                value={searchEmail}
+                onChange={(e) => setSearchEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="filter-credits">Créditos</Label>
+              <Select value={creditFilter} onValueChange={setCreditFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="zero">Sem créditos (0)</SelectItem>
+                  <SelectItem value="1-10">1 a 10 créditos</SelectItem>
+                  <SelectItem value="11-50">11 a 50 créditos</SelectItem>
+                  <SelectItem value="51+">Mais de 50 créditos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-end">
+              {hasActiveFilters && (
+                <Button variant="outline" onClick={clearFilters} className="w-full">
+                  <X className="h-4 w-4 mr-2" />
+                  Limpar Filtros
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Lista de Usuários */}
       <Card>
         <CardHeader>
-          <CardTitle>Usuários Cadastrados ({users?.length || 0})</CardTitle>
+          <CardTitle>
+            Usuários Cadastrados ({filteredUsers.length})
+            {hasActiveFilters && users && (
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                de {users.length} total
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="text-center py-8">Carregando usuários...</div>
-          ) : users && users.length > 0 ? (
+          ) : filteredUsers.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -415,18 +606,22 @@ export const ModeratorUsers = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>Nome Artístico</TableHead>
                     <TableHead>Créditos</TableHead>
+                    <TableHead>Obras</TableHead>
                     <TableHead>Criado em</TableHead>
                     <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>{user.name || '-'}</TableCell>
                       <TableCell>{user.email || '-'}</TableCell>
                       <TableCell>{user.artistic_name || '-'}</TableCell>
                       <TableCell>
                         <Badge variant="secondary">{user.credits}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{worksCount?.[user.id] || 0}</Badge>
                       </TableCell>
                       <TableCell>
                         {new Date(user.created_at).toLocaleDateString('pt-BR')}
@@ -522,7 +717,9 @@ export const ModeratorUsers = () => {
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              Nenhum usuário encontrado
+              {hasActiveFilters 
+                ? 'Nenhum usuário encontrado com os filtros aplicados' 
+                : 'Nenhum usuário encontrado'}
             </div>
           )}
         </CardContent>
