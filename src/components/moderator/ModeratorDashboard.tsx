@@ -20,9 +20,6 @@ const ModeratorOverview = lazy(() =>
 const ModeratorUsers = lazy(() => 
   import('./ModeratorUsers').then(module => ({ default: module.ModeratorUsers }))
 );
-const ModeratorForms = lazy(() => 
-  import('./ModeratorForms').then(module => ({ default: module.ModeratorForms }))
-);
 const ModeratorProfile = lazy(() => 
   import('./ModeratorProfile').then(module => ({ default: module.ModeratorProfile }))
 );
@@ -60,8 +57,6 @@ export const ModeratorDashboard = ({ activeTab = 'overview' }: ModeratorDashboar
     
     if (path.includes('/users')) {
       setCurrentTab('users');
-    } else if (path.includes('/forms')) {
-      setCurrentTab('forms');
     } else if (path.includes('/transactions')) {
       setCurrentTab('transactions');
     } else if (path.includes('/profile')) {
@@ -116,12 +111,6 @@ export const ModeratorDashboard = ({ activeTab = 'overview' }: ModeratorDashboar
           return (
             <Suspense fallback={<LoadingComponent />}>
               <ModeratorUsers />
-            </Suspense>
-          );
-        case 'forms':
-          return (
-            <Suspense fallback={<LoadingComponent />}>
-              <ModeratorForms />
             </Suspense>
           );
         case 'transactions':

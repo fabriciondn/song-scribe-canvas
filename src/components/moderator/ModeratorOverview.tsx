@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { getModeratorDashboardStats } from '@/services/moderatorService';
 
 export const ModeratorOverview = () => {
-  const { data: stats, isLoading, error, refetch } = useQuery({
+  const { data: stats, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ['moderator-dashboard-stats'],
     queryFn: getModeratorDashboardStats,
     retry: 3,
@@ -123,9 +123,9 @@ export const ModeratorOverview = () => {
             Visão geral dos usuários e atividades que você gerencia
           </p>
         </div>
-        <Button onClick={() => refetch()} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Atualizar
+        <Button onClick={() => refetch()} variant="outline" size="sm" disabled={isFetching}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+          {isFetching ? 'Atualizando...' : 'Atualizar'}
         </Button>
       </div>
 
