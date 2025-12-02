@@ -86,30 +86,34 @@ const Pendrive = () => {
       return;
     }
 
-    try {
-      if (registration.pdf_provisorio) {
-        // Extrair o nome do arquivo da URL (ignorando tokens/query params)
-        const urlParts = registration.pdf_provisorio.split('/');
-        const fileNameWithParams = urlParts[urlParts.length - 1];
-        const fileName = fileNameWithParams.split('?')[0];
-        
-        // Gerar URL pública válida do bucket temp-pdfs
-        const { data } = supabase.storage
-          .from('temp-pdfs')
-          .getPublicUrl(fileName);
+    // Verificar se tem áudio disponível
+    if (!registration.audio_file_path) {
+      toast.error('Esta música não possui áudio disponível para download');
+      return;
+    }
 
-        if (data?.publicUrl) {
-          window.open(data.publicUrl, '_blank');
-          toast.success('Download iniciado!');
-        } else {
-          toast.error('Erro ao gerar link de download');
-        }
+    try {
+      // Gerar URL pública do áudio do bucket author-registrations
+      const { data } = supabase.storage
+        .from('author-registrations')
+        .getPublicUrl(registration.audio_file_path);
+
+      if (data?.publicUrl) {
+        // Criar link para download forçado
+        const link = document.createElement('a');
+        link.href = data.publicUrl;
+        link.download = `${registration.title} - ${registration.author}.mp3`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('Download da música iniciado!');
       } else {
-        toast.error('Certificado não disponível para download ainda');
+        toast.error('Erro ao gerar link de download');
       }
     } catch (error) {
       console.error('Erro ao baixar:', error);
-      toast.error('Erro ao baixar o certificado');
+      toast.error('Erro ao baixar a música');
     }
   };
 
@@ -317,7 +321,7 @@ const Pendrive = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDownload(song)}
-                            disabled={!song.pdf_provisorio && song.status !== 'registered' && song.status !== 'completed'}
+                            disabled={!song.audio_file_path}
                             className="h-8 gap-1.5 text-xs"
                           >
                             <Download className="h-3.5 w-3.5" />
