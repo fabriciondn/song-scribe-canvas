@@ -110,12 +110,21 @@ export const useSubscription = () => {
     }
   };
 
+  const isActive = subscription?.status === 'active' || subscription?.status === 'trial';
+  const isPendrive = subscription?.plan_type === 'pendrive' && isActive;
+  const isPro = (subscription?.plan_type === 'pro' && isActive) || subscription?.status === 'trial';
+  
+  // Pendrive access: has pendrive OR pro subscription
+  const hasPendriveAccess = isPendrive || isPro;
+
   return {
     subscription,
     isLoading,
     error,
     refreshSubscription,
-    isPro: subscription?.status === 'active' || subscription?.status === 'trial',
+    isPro,
+    isPendrive,
+    hasPendriveAccess,
     isFree: !subscription || subscription.status === 'expired' || subscription.status === 'free',
     isTrialActive: subscription?.status === 'trial',
     trialDaysRemaining: subscription?.status === 'trial' && subscription.expires_at 
