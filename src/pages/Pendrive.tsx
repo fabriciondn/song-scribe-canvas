@@ -78,16 +78,22 @@ const Pendrive = () => {
   const handleDownload = async (registration: any) => {
     try {
       if (registration.pdf_provisorio) {
-        // Criar um link temporário para download
-        const link = document.createElement('a');
-        link.href = registration.pdf_provisorio;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.download = `${registration.title}_certificado.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success('Download iniciado!');
+        // Extrair o nome do arquivo da URL (ignorando tokens/query params)
+        const urlParts = registration.pdf_provisorio.split('/');
+        const fileNameWithParams = urlParts[urlParts.length - 1];
+        const fileName = fileNameWithParams.split('?')[0];
+        
+        // Gerar URL pública válida do bucket temp-pdfs
+        const { data } = supabase.storage
+          .from('temp-pdfs')
+          .getPublicUrl(fileName);
+
+        if (data?.publicUrl) {
+          window.open(data.publicUrl, '_blank');
+          toast.success('Download iniciado!');
+        } else {
+          toast.error('Erro ao gerar link de download');
+        }
       } else {
         toast.error('Certificado não disponível para download ainda');
       }
@@ -116,9 +122,9 @@ const Pendrive = () => {
     }
 
     try {
-      // Obter URL pública do áudio
+      // Obter URL pública do áudio do bucket author-registrations
       const { data } = supabase.storage
-        .from('audio_files')
+        .from('author-registrations')
         .getPublicUrl(registration.audio_file_path);
 
       if (data?.publicUrl) {
