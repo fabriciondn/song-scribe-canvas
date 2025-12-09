@@ -1926,7 +1926,6 @@ export type Database = {
               p_full_name: string
               p_neighborhood: string
               p_number: string
-              p_phone?: string
               p_state: string
               p_street: string
             }
@@ -1944,6 +1943,7 @@ export type Database = {
               p_full_name: string
               p_neighborhood: string
               p_number: string
+              p_phone?: string
               p_state: string
               p_street: string
             }
