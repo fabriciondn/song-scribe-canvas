@@ -19,6 +19,7 @@ import { AdminModerators } from '@/components/admin/AdminModerators';
 import { AdminMenuFunctions } from '@/components/admin/AdminMenuFunctions';
 import { AdminForms } from '@/components/admin/AdminForms';
 import { AdminAffiliateWithdrawals } from '@/components/admin/AdminAffiliateWithdrawals';
+import { AdminCoupons } from '@/components/admin/AdminCoupons';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -109,6 +110,8 @@ const AdminDashboard: React.FC = () => {
         return <AdminAffiliates />;
       case 'affiliate-withdrawals':
         return <AdminAffiliateWithdrawals />;
+      case 'coupons':
+        return <AdminCoupons />;
       case 'content':
         return <AdminContent />;
       case 'tutorials':

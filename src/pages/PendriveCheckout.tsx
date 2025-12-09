@@ -5,17 +5,27 @@ import { useProfile } from '@/hooks/useProfile';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { UsbIcon, Check, Shield, CreditCard, ArrowLeft, Loader2 } from 'lucide-react';
+import { UsbIcon, Check, Shield, CreditCard, ArrowLeft, Loader2, Ticket, X, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+interface AppliedCoupon {
+  code: string;
+  discount_percentage: number;
+  id: string;
+}
 
 const PendriveCheckout = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile } = useProfile();
   const [isLoading, setIsLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
   const planDetails = {
     name: 'Pendrive',
@@ -27,6 +37,70 @@ const PendriveCheckout = () => {
       'Organização por gênero',
       'Histórico completo de registros',
     ],
+  };
+
+  const calculateFinalPrice = () => {
+    if (!appliedCoupon) return planDetails.price;
+    const discount = planDetails.price * (appliedCoupon.discount_percentage / 100);
+    return planDetails.price - discount;
+  };
+
+  const handleValidateCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error('Digite um código de cupom');
+      return;
+    }
+
+    setIsValidatingCoupon(true);
+    try {
+      const { data, error } = await supabase
+        .from('discount_coupons')
+        .select('*')
+        .eq('code', couponCode.toUpperCase().trim())
+        .eq('is_active', true)
+        .single();
+
+      if (error || !data) {
+        toast.error('Cupom inválido ou não encontrado');
+        return;
+      }
+
+      // Check if coupon is expired
+      if (data.valid_until && new Date(data.valid_until) < new Date()) {
+        toast.error('Este cupom expirou');
+        return;
+      }
+
+      // Check if coupon has reached max uses
+      if (data.max_uses && data.current_uses >= data.max_uses) {
+        toast.error('Este cupom atingiu o limite de usos');
+        return;
+      }
+
+      // Check if coupon applies to pendrive
+      if (!data.applies_to?.includes('pendrive')) {
+        toast.error('Este cupom não é válido para o plano Pendrive');
+        return;
+      }
+
+      setAppliedCoupon({
+        code: data.code,
+        discount_percentage: data.discount_percentage,
+        id: data.id,
+      });
+      toast.success(`Cupom aplicado! ${data.discount_percentage}% de desconto`);
+    } catch (error) {
+      console.error('Erro ao validar cupom:', error);
+      toast.error('Erro ao validar cupom');
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    toast.success('Cupom removido');
   };
 
   const handleCheckout = async () => {
@@ -49,6 +123,8 @@ const PendriveCheckout = () => {
           userId: user.id,
           email: profile.email,
           name: profile.name,
+          couponId: appliedCoupon?.id || null,
+          couponCode: appliedCoupon?.code || null,
         },
       });
 
@@ -66,6 +142,9 @@ const PendriveCheckout = () => {
       setIsLoading(false);
     }
   };
+
+  const finalPrice = calculateFinalPrice();
+  const discount = appliedCoupon ? planDetails.price - finalPrice : 0;
 
   return (
     <ResponsiveContainer>
@@ -114,6 +193,55 @@ const PendriveCheckout = () => {
             </CardContent>
           </Card>
 
+          {/* Coupon Section */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Ticket className="h-5 w-5" />
+                Cupom de Desconto
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg border border-green-500/30">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <div>
+                      <span className="font-mono font-bold">{appliedCoupon.code}</span>
+                      <span className="text-sm text-muted-foreground ml-2">
+                        ({appliedCoupon.discount_percentage}% de desconto)
+                      </span>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={handleRemoveCoupon}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Digite o código do cupom"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    className="uppercase"
+                    onKeyDown={(e) => e.key === 'Enter' && handleValidateCoupon()}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={handleValidateCoupon}
+                    disabled={isValidatingCoupon}
+                  >
+                    {isValidatingCoupon ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      'Aplicar'
+                    )}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Payment Summary */}
           <Card>
             <CardHeader>
@@ -124,10 +252,23 @@ const PendriveCheckout = () => {
                 <span className="text-muted-foreground">Plano Pendrive (mensal)</span>
                 <span>R$ {planDetails.price.toFixed(2)}</span>
               </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-green-500">
+                  <span>Desconto ({appliedCoupon.discount_percentage}%)</span>
+                  <span>- R$ {discount.toFixed(2)}</span>
+                </div>
+              )}
               <Separator />
               <div className="flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span>R$ {planDetails.price.toFixed(2)}/mês</span>
+                <div className="text-right">
+                  {appliedCoupon && (
+                    <span className="text-sm line-through text-muted-foreground mr-2">
+                      R$ {planDetails.price.toFixed(2)}
+                    </span>
+                  )}
+                  <span>R$ {finalPrice.toFixed(2)}/mês</span>
+                </div>
               </div>
               
               <Button 
