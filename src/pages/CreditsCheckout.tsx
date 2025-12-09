@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Coins, Gift, Check, AlertTriangle, User } from 'lucide-react';
+import { ArrowLeft, Coins, Gift, Check, AlertTriangle, User, Ticket, X, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,10 +14,18 @@ import { useTheme } from '@/hooks/useTheme';
 import { PaymentSuccessModal } from '@/components/checkout/PaymentSuccessModal';
 import { usePaymentConfirmation } from '@/hooks/usePaymentConfirmation';
 import { useProfileValidation } from '@/hooks/useProfileValidation';
+import { toast as sonnerToast } from 'sonner';
+
 interface PixData {
   qr_code: string;
   qr_code_url: string;
   payment_id: string;
+}
+
+interface AppliedCoupon {
+  code: string;
+  discount_percentage: number;
+  id: string;
 }
 export default function CreditsCheckout() {
   const navigate = useNavigate();
@@ -42,6 +50,9 @@ export default function CreditsCheckout() {
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [creditsAdded, setCreditsAdded] = useState(0);
+  const [couponCode, setCouponCode] = useState('');
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const {
     isChecking
   } = usePaymentConfirmation({
@@ -94,6 +105,59 @@ export default function CreditsCheckout() {
       }
     }
   }, [theme]);
+
+  const handleValidateCoupon = async () => {
+    if (!couponCode.trim()) {
+      sonnerToast.error('Digite um código de cupom');
+      return;
+    }
+
+    setIsValidatingCoupon(true);
+    try {
+      const { data, error } = await supabase
+        .from('discount_coupons')
+        .select('*')
+        .eq('code', couponCode.toUpperCase().trim())
+        .eq('is_active', true)
+        .single();
+
+      if (error || !data) {
+        sonnerToast.error('Cupom inválido ou não encontrado');
+        return;
+      }
+
+      // Check if coupon is expired
+      if (data.valid_until && new Date(data.valid_until) < new Date()) {
+        sonnerToast.error('Este cupom expirou');
+        return;
+      }
+
+      // Check if coupon has reached max uses
+      if (data.max_uses && data.current_uses >= data.max_uses) {
+        sonnerToast.error('Este cupom atingiu o limite de usos');
+        return;
+      }
+
+      setAppliedCoupon({
+        code: data.code,
+        discount_percentage: data.discount_percentage,
+        id: data.id,
+      });
+      sonnerToast.success(`Cupom aplicado! ${data.discount_percentage}% de desconto`);
+    } catch (error) {
+      console.error('Erro ao validar cupom:', error);
+      sonnerToast.error('Erro ao validar cupom');
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    sonnerToast.success('Cupom removido');
+  };
+
   const calculatePricing = (creditAmount: number) => {
     let unitPrice = 19.99;
     let bonusCredits = 0;
@@ -110,13 +174,22 @@ export default function CreditsCheckout() {
       savings = originalPrice - 10 * unitPrice; // 239,88 - 179,90 = 59,98
     }
     let totalAmount = creditAmount * unitPrice;
+    
+    // Aplicar desconto do cupom
+    let couponDiscount = 0;
+    if (appliedCoupon) {
+      couponDiscount = totalAmount * (appliedCoupon.discount_percentage / 100);
+      totalAmount = totalAmount - couponDiscount;
+    }
+    
     return {
       unitPrice,
       totalAmount,
       originalPrice,
       bonusCredits,
       savings,
-      finalCredits: creditAmount + bonusCredits
+      finalCredits: creditAmount + bonusCredits,
+      couponDiscount
     };
   };
   const pricing = calculatePricing(credits);
@@ -447,6 +520,52 @@ export default function CreditsCheckout() {
                 </CardContent>
               </Card>
 
+              {/* Mobile Coupon Section */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-foreground text-base flex items-center gap-2">
+                    <Ticket className="h-4 w-4" />
+                    Cupom de Desconto
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between p-2 bg-green-500/10 rounded-lg border border-green-500/30">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <div>
+                          <span className="font-mono font-bold text-sm">{appliedCoupon.code}</span>
+                          <span className="text-xs text-muted-foreground ml-1">
+                            ({appliedCoupon.discount_percentage}% off)
+                          </span>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={handleRemoveCoupon}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Digite o cupom"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        className="uppercase text-sm"
+                        onKeyDown={(e) => e.key === 'Enter' && handleValidateCoupon()}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleValidateCoupon}
+                        disabled={isValidatingCoupon}
+                      >
+                        {isValidatingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Aplicar'}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
               {/* Mobile Summary */}
               <Card>
                 <CardHeader className="pb-3">
@@ -492,6 +611,12 @@ export default function CreditsCheckout() {
                       <span className="text-muted-foreground">Total de créditos:</span>
                       <span className="font-bold text-primary">{pricing.finalCredits}</span>
                     </div>
+                    {appliedCoupon && pricing.couponDiscount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Desconto ({appliedCoupon.discount_percentage}%):</span>
+                        <span>- R$ {pricing.couponDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-base">
                       <span className="font-bold">Valor total:</span>
                       <span className="font-bold text-primary">R$ {pricing.totalAmount.toFixed(2)}</span>
@@ -665,6 +790,50 @@ export default function CreditsCheckout() {
 
                     <hr />
 
+                    {/* Desktop Coupon Section */}
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        <Ticket className="h-4 w-4" />
+                        Cupom de Desconto
+                      </h4>
+                      {appliedCoupon ? (
+                        <div className="flex items-center justify-between p-2 bg-green-500/10 rounded-lg border border-green-500/30">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <div>
+                              <span className="font-mono font-bold text-sm">{appliedCoupon.code}</span>
+                              <span className="text-xs text-muted-foreground ml-1">
+                                ({appliedCoupon.discount_percentage}% off)
+                              </span>
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={handleRemoveCoupon}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Digite o cupom"
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                            className="uppercase text-sm"
+                            onKeyDown={(e) => e.key === 'Enter' && handleValidateCoupon()}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleValidateCoupon}
+                            disabled={isValidatingCoupon}
+                          >
+                            {isValidatingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Aplicar'}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    <hr />
+
                     <div className="space-y-2">
                       <h4 className="font-semibold text-foreground">Detalhes da Compra</h4>
                       <div className="flex justify-between">
@@ -679,6 +848,12 @@ export default function CreditsCheckout() {
                         <span className="text-muted-foreground">Total de créditos:</span>
                         <span className="font-bold text-primary">{pricing.finalCredits}</span>
                       </div>
+                      {appliedCoupon && pricing.couponDiscount > 0 && (
+                        <div className="flex justify-between text-green-600">
+                          <span>Desconto ({appliedCoupon.discount_percentage}%):</span>
+                          <span>- R$ {pricing.couponDiscount.toFixed(2)}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between text-lg">
                         <span className="font-bold">Valor total:</span>
                         <span className="font-bold text-primary">R$ {pricing.totalAmount.toFixed(2)}</span>
