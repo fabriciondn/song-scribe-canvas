@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield, Users, FileText, BarChart3, Settings, ScrollText, Moon, Sun, UserCheck, DollarSign } from "lucide-react";
+import { Shield, Users, FileText, BarChart3, Settings, ScrollText, Moon, Sun, UserCheck, DollarSign, Ticket } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -48,6 +48,11 @@ const adminMenuItems = [
     title: "Comissões",
     icon: DollarSign,
     id: "affiliate-withdrawals",
+  },
+  {
+    title: "Cupons",
+    icon: Ticket,
+    id: "coupons",
   },
   {
     title: "Gerenciar Funções",

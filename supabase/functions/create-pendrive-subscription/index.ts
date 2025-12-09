@@ -10,6 +10,8 @@ interface RequestBody {
   userId: string;
   email: string;
   name: string;
+  couponId?: string;
+  couponCode?: string;
 }
 
 serve(async (req) => {
@@ -43,9 +45,9 @@ serve(async (req) => {
   );
 
   try {
-    const { userId, email, name }: RequestBody = await req.json();
+    const { userId, email, name, couponId, couponCode }: RequestBody = await req.json();
     
-    console.log('📝 Dados recebidos:', { userId, email, name });
+    console.log('📝 Dados recebidos:', { userId, email, name, couponId, couponCode });
 
     if (!userId || !email) {
       return new Response(
@@ -56,6 +58,75 @@ serve(async (req) => {
         }
       );
     }
+
+    // Validar cupom se informado
+    let discountPercentage = 0;
+    let validCouponId: string | null = null;
+    
+    if (couponId && couponCode) {
+      console.log('🎟️ Validando cupom:', couponCode);
+      
+      const { data: coupon, error: couponError } = await supabaseService
+        .from('discount_coupons')
+        .select('*')
+        .eq('id', couponId)
+        .eq('code', couponCode)
+        .eq('is_active', true)
+        .single();
+      
+      if (couponError || !coupon) {
+        console.log('❌ Cupom inválido');
+        return new Response(
+          JSON.stringify({ error: 'Cupom inválido ou não encontrado' }),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400
+          }
+        );
+      }
+      
+      // Verificar validade
+      if (coupon.valid_until && new Date(coupon.valid_until) < new Date()) {
+        return new Response(
+          JSON.stringify({ error: 'Este cupom expirou' }),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400
+          }
+        );
+      }
+      
+      // Verificar limite de usos
+      if (coupon.max_uses && coupon.current_uses >= coupon.max_uses) {
+        return new Response(
+          JSON.stringify({ error: 'Este cupom atingiu o limite de usos' }),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400
+          }
+        );
+      }
+      
+      // Verificar se aplica ao pendrive
+      if (!coupon.applies_to?.includes('pendrive')) {
+        return new Response(
+          JSON.stringify({ error: 'Este cupom não é válido para o plano Pendrive' }),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400
+          }
+        );
+      }
+      
+      discountPercentage = coupon.discount_percentage;
+      validCouponId = coupon.id;
+      console.log('✅ Cupom válido! Desconto:', discountPercentage + '%');
+    }
+
+    // Calcular preço final
+    const basePrice = 10.00;
+    const finalPrice = basePrice - (basePrice * (discountPercentage / 100));
+    console.log('💰 Preço final:', finalPrice);
 
     // Verificar se usuário já tem assinatura Pendrive ou Pro ativa
     const { data: existingSubscription } = await supabaseService
@@ -97,11 +168,13 @@ serve(async (req) => {
     const preferencePayload = {
       items: [
         {
-          title: 'Assinatura Pendrive - Acesso às Músicas',
+          title: discountPercentage > 0 
+            ? `Assinatura Pendrive - ${discountPercentage}% OFF` 
+            : 'Assinatura Pendrive - Acesso às Músicas',
           description: 'Assinatura mensal para download de músicas registradas',
           quantity: 1,
           currency_id: 'BRL',
-          unit_price: 10.00,
+          unit_price: finalPrice,
         }
       ],
       payer: {
@@ -159,7 +232,7 @@ serve(async (req) => {
         .update({
           status: 'pending',
           plan_type: 'pendrive',
-          amount: 10.00,
+          amount: finalPrice,
           currency: 'BRL',
           payment_provider: 'mercadopago',
           payment_provider_subscription_id: preferenceData.id,
@@ -178,7 +251,7 @@ serve(async (req) => {
           user_id: userId,
           status: 'pending',
           plan_type: 'pendrive',
-          amount: 10.00,
+          amount: finalPrice,
           currency: 'BRL',
           payment_provider: 'mercadopago',
           payment_provider_subscription_id: preferenceData.id,
@@ -186,6 +259,52 @@ serve(async (req) => {
         });
 
       console.log('✅ Subscription pendrive criada como pending');
+    }
+
+    // Incrementar uso do cupom se foi usado
+    if (validCouponId) {
+      console.log('🎟️ Incrementando uso do cupom:', validCouponId);
+      
+      await supabaseService.rpc('increment', { 
+        x: 1, 
+        row_id: validCouponId 
+      }).catch(async () => {
+        // Fallback: atualizar diretamente
+        await supabaseService
+          .from('discount_coupons')
+          .update({ current_uses: supabaseService.rpc('') })
+          .eq('id', validCouponId);
+      });
+      
+      // Usar SQL direto para incrementar
+      const { error: updateError } = await supabaseService
+        .from('discount_coupons')
+        .update({ 
+          current_uses: (await supabaseService
+            .from('discount_coupons')
+            .select('current_uses')
+            .eq('id', validCouponId)
+            .single()).data?.current_uses + 1 || 1 
+        })
+        .eq('id', validCouponId);
+      
+      if (updateError) {
+        console.log('⚠️ Erro ao incrementar cupom:', updateError);
+      }
+      
+      // Registrar uso do cupom
+      await supabaseService
+        .from('coupon_usage_logs')
+        .insert({
+          coupon_id: validCouponId,
+          user_id: userId,
+          subscription_type: 'pendrive',
+          original_amount: basePrice,
+          discount_amount: basePrice - finalPrice,
+          final_amount: finalPrice,
+        });
+      
+      console.log('✅ Uso do cupom registrado');
     }
 
     // Retornar URL do checkout

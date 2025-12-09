@@ -678,6 +678,47 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_usage_logs: {
+        Row: {
+          coupon_id: string
+          discount_amount: number
+          final_amount: number
+          id: string
+          original_amount: number
+          subscription_type: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          coupon_id: string
+          discount_amount: number
+          final_amount: number
+          id?: string
+          original_amount: number
+          subscription_type: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          coupon_id?: string
+          discount_amount?: number
+          final_amount?: number
+          id?: string
+          original_amount?: number
+          subscription_type?: string
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_usage_logs_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "discount_coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_transactions: {
         Row: {
           bonus_credits: number | null
@@ -720,6 +761,54 @@ export type Database = {
           unit_price?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      discount_coupons: {
+        Row: {
+          applies_to: string[] | null
+          code: string
+          created_at: string
+          created_by: string | null
+          current_uses: number
+          description: string | null
+          discount_percentage: number
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          updated_at: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          applies_to?: string[] | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number
+          description?: string | null
+          discount_percentage: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          applies_to?: string[] | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number
+          description?: string | null
+          discount_percentage?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
         }
         Relationships: []
       }
