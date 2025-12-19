@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -120,17 +120,17 @@ const NotificationContext = React.createContext<NotificationContextType | null>(
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
 
-  const addNotification = (notification: Omit<NotificationProps, 'id'>) => {
+  const addNotification = useCallback((notification: Omit<NotificationProps, 'id'>) => {
     const id = Date.now().toString();
     const newNotification = { ...notification, id };
     
     setNotifications(prev => [...prev, newNotification]);
     return id;
-  };
+  }, []);
 
-  const removeNotification = (id: string) => {
+  const removeNotification = useCallback((id: string) => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
-  };
+  }, []);
 
   return (
     <NotificationContext.Provider value={{ notifications, addNotification, removeNotification }}>
