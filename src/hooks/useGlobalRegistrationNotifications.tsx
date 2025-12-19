@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotification } from '@/components/ui/notification';
 import { toast } from 'sonner';
@@ -13,13 +13,21 @@ export const useGlobalRegistrationNotifications = () => {
   // Usar o ID do usuário correto (impersonado ou real)
   const currentUserId = isImpersonating && impersonatedUser ? impersonatedUser.id : user?.id;
 
+  // Ref para manter a referência mais recente de addNotification
+  const addNotificationRef = useRef(addNotification);
+  
+  // Atualizar a ref sempre que addNotification mudar
+  useEffect(() => {
+    addNotificationRef.current = addNotification;
+  }, [addNotification]);
+
   useEffect(() => {
     if (!currentUserId) return;
 
     console.log('🔔 Configurando notificações globais de registro para usuário:', currentUserId);
 
     const channel = supabase
-      .channel('global-registration-notifications')
+      .channel(`global-registration-notifications-${currentUserId}`)
       .on(
         'postgres_changes',
         {
@@ -29,15 +37,17 @@ export const useGlobalRegistrationNotifications = () => {
           filter: `user_id=eq.${currentUserId}`
         },
         (payload) => {
-          const { new: updatedRegistration } = payload;
+          const { new: updatedRegistration, old: oldRegistration } = payload;
           console.log('🎵 Atualização de registro detectada:', updatedRegistration);
+          console.log('📝 Status anterior:', oldRegistration?.status);
+          console.log('📝 Novo status:', updatedRegistration.status);
 
-          // Se o status mudou para 'registered', mostrar notificação
-          if (updatedRegistration.status === 'registered') {
+          // Se o status mudou para 'registered' (e não era 'registered' antes)
+          if (updatedRegistration.status === 'registered' && oldRegistration?.status !== 'registered') {
             console.log('🎉 Música registrada! Enviando notificação...');
             
-            // Notificação principal no canto da tela
-            addNotification({
+            // Usar a ref para garantir a referência mais recente
+            addNotificationRef.current({
               title: '🎉 Parabéns! Sua obra está protegida!',
               message: `A música "${updatedRegistration.title}" foi analisada e registrada com sucesso. Seus direitos autorais estão agora protegidos.`,
               type: 'success',
@@ -52,11 +62,13 @@ export const useGlobalRegistrationNotifications = () => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Status da subscrição realtime:', status);
+      });
 
     return () => {
       console.log('🔔 Removendo notificações globais de registro');
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, addNotification]);
+  }, [currentUserId]); // Removido addNotification das dependências
 };
