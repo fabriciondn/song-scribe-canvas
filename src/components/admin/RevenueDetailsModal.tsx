@@ -103,10 +103,10 @@ export const RevenueDetailsModal: React.FC<RevenueDetailsModalProps> = ({
                           <div>
                             <span className="text-muted-foreground">Créditos: </span>
                             <span className="font-medium">
-                              {Number(transaction.credits_purchased) || 0}
-                              {transaction.bonus_credits && Number(transaction.bonus_credits) > 0 && (
+                              {transaction.credits_purchased ?? 0}
+                              {transaction.bonus_credits && transaction.bonus_credits > 0 && (
                                 <span className="text-green-600 dark:text-green-400">
-                                  {' '}+{Number(transaction.bonus_credits)} bônus
+                                  {' '}+{transaction.bonus_credits} bônus
                                 </span>
                               )}
                             </span>
