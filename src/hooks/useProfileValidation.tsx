@@ -20,6 +20,7 @@ export const useProfileValidation = (): ProfileCompletionStatus => {
   const requiredFields = [
     { field: 'name', label: 'Nome completo' },
     { field: 'cpf', label: 'CPF' },
+    { field: 'cellphone', label: 'Telefone' },
     { field: 'birth_date', label: 'Data de nascimento' },
     { field: 'cep', label: 'CEP' },
     { field: 'street', label: 'Endereço' },
