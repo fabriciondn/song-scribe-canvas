@@ -202,6 +202,26 @@ export default function CreditsCheckout() {
       });
       return;
     }
+
+    // Verificação adicional do perfil
+    if (!profile) {
+      toast({
+        title: "Erro",
+        description: "Perfil não carregado. Recarregue a página e tente novamente.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!isProfileComplete) {
+      toast({
+        title: "Perfil Incompleto",
+        description: `Complete seu perfil antes de realizar o pagamento. Campos faltando: ${missingFields.join(', ')}`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     console.log('🔄 Iniciando processamento de pagamento com Mercado Pago...', {
       credits: credits,
       bonusCredits: pricing.bonusCredits,
