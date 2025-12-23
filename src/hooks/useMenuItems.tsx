@@ -60,7 +60,7 @@ export const useMenuItems = () => {
         isPro: false
       },
       {
-        label: 'Compor',
+        label: 'Rascunho',
         icon: Edit,
         path: '/composer',
         functionKey: 'composer',
@@ -102,7 +102,7 @@ export const useMenuItems = () => {
         isPro: false
       },
       {
-        label: 'Rascunho',
+        label: 'Compor',
         icon: BookText,
         path: '/drafts',
         functionKey: 'drafts',
