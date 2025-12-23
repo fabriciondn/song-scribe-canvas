@@ -114,24 +114,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
         isOpen ? "translate-x-0" : "-translate-x-full",
         isCollapsed ? "w-16" : "w-64"
       )}>
-        <div className="flex items-center justify-between mb-8">
-          {!isCollapsed && (
-            <img 
-              src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
-              alt="Logo" 
-              className="h-10"
-            />
-          )}
-          <div className="flex gap-2">
-            {toggleCollapse && (
-              <Button variant="ghost" size="icon" className="hidden md:flex text-white" onClick={toggleCollapse}>
-                <Menu size={20} />
-              </Button>
-            )}
-            <Button variant="ghost" size="icon" className="md:hidden text-white" onClick={toggleSidebar}>
-              <X size={20} />
+        <div className={cn("flex items-center mb-8", isCollapsed ? "justify-center" : "justify-between")}>
+          {isCollapsed ? (
+            <Button variant="ghost" size="icon" className="hidden md:flex text-white" onClick={toggleCollapse}>
+              <Menu size={24} />
             </Button>
-          </div>
+          ) : (
+            <>
+              <img 
+                src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
+                alt="Logo" 
+                className="h-10"
+              />
+              <div className="flex gap-2">
+                {toggleCollapse && (
+                  <Button variant="ghost" size="icon" className="hidden md:flex text-white" onClick={toggleCollapse}>
+                    <Menu size={20} />
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" className="md:hidden text-white" onClick={toggleSidebar}>
+                  <X size={20} />
+                </Button>
+              </div>
+            </>
+          )}
         </div>
 
         <nav className="space-y-2 flex-1">
@@ -181,7 +187,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   )}
                   title={isCollapsed ? item.label : undefined}
                 >
-                  <item.icon size={isCollapsed ? 24 : 20} />
+                  <item.icon size={isCollapsed ? 28 : 20} />
                   {!isCollapsed && (
                     <div className="flex items-center justify-between w-full">
                       <span>{item.label}</span>
@@ -222,7 +228,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
             title={isCollapsed ? "Suporte" : undefined}
           >
-            <MessageCircle size={isCollapsed ? 24 : 20} />
+            <MessageCircle size={isCollapsed ? 28 : 20} />
             {!isCollapsed && <span>Suporte</span>}
           </button>
 
