@@ -46,17 +46,67 @@ export const useMenuItems = () => {
         isPro: false
       },
       {
-        label: 'Minhas Compras',
-        icon: CreditCard,
-        path: '/dashboard/my-purchases',
-        functionKey: 'my-purchases',
-        isPro: false
-      },
-      {
         label: 'Registro autoral',
         icon: Shield,
         path: '/dashboard/author-registration',
         functionKey: 'author-registration',
+        isPro: false
+      },
+      {
+        label: 'Compor',
+        icon: BookText,
+        path: '/drafts',
+        functionKey: 'drafts',
+        isPro: true
+      },
+      {
+        label: 'Pendrive',
+        icon: Usb,
+        path: '/pendrive',
+        functionKey: 'pendrive',
+        isPro: false
+      },
+      {
+        label: 'Ranking',
+        icon: Trophy,
+        path: '/dashboard/ranking',
+        functionKey: 'ranking',
+        isPro: false
+      },
+      {
+        label: 'Tutoriais',
+        icon: ListMusic,
+        path: '/dashboard/tutorials',
+        functionKey: 'tutorials',
+        isPro: true
+      },
+      {
+        label: 'Configurações',
+        icon: User,
+        path: '/dashboard/settings',
+        functionKey: 'settings',
+        isPro: false
+      },
+      {
+        label: 'Lixeira',
+        icon: Trash2,
+        path: '/dashboard/trash',
+        functionKey: 'trash',
+        isPro: true
+      },
+      {
+        label: 'Afiliados',
+        icon: TrendingUp,
+        path: '/affiliate',
+        functionKey: 'affiliate',
+        isPro: false
+      },
+      // Itens ocultos ou secundários
+      {
+        label: 'Minhas Compras',
+        icon: CreditCard,
+        path: '/dashboard/my-purchases',
+        functionKey: 'my-purchases',
         isPro: false
       },
       {
@@ -95,46 +145,11 @@ export const useMenuItems = () => {
         isPro: true
       },
       {
-        label: 'Pendrive',
-        icon: Usb,
-        path: '/pendrive',
-        functionKey: 'pendrive',
-        isPro: false
-      },
-      {
-        label: 'Compor',
-        icon: BookText,
-        path: '/drafts',
-        functionKey: 'drafts',
-        isPro: true
-      },
-      {
         label: 'Parcerias',
         icon: Users,
         path: '/partnerships',
         functionKey: 'partnerships',
         isPro: true
-      },
-      {
-        label: 'Tutoriais',
-        icon: ListMusic,
-        path: '/dashboard/tutorials',
-        functionKey: 'tutorials',
-        isPro: true
-      },
-      {
-        label: 'Ranking',
-        icon: Trophy,
-        path: '/dashboard/ranking',
-        functionKey: 'ranking',
-        isPro: false
-      },
-      {
-        label: 'Configurações',
-        icon: User,
-        path: '/dashboard/settings',
-        functionKey: 'settings',
-        isPro: false
       },
       {
         label: 'Upgrade Pro',
@@ -151,13 +166,6 @@ export const useMenuItems = () => {
         isPro: false
       },
       {
-        label: 'Lixeira',
-        icon: Trash2,
-        path: '/dashboard/trash',
-        functionKey: 'trash',
-        isPro: true
-      },
-      {
         label: 'Administração',
         icon: Settings,
         path: '/admin',
@@ -169,13 +177,6 @@ export const useMenuItems = () => {
         icon: Shield,
         path: '/moderator',
         functionKey: 'moderator',
-        isPro: false
-      },
-      {
-        label: 'Afiliados',
-        icon: TrendingUp,
-        path: '/affiliate',
-        functionKey: 'affiliate',
         isPro: false
       }
     ];
