@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Save, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, Loader2, Folder, FolderOpen, ChevronDown, ChevronRight } from 'lucide-react';
 import { AudioRecorder } from '../components/drafts/AudioRecorder';
 import { BasesSelector } from '../components/drafts/BasesSelector';
 import { useToast } from '@/components/ui/use-toast';
@@ -22,9 +22,31 @@ import { Draft, AudioFile } from '../services/drafts/types';
 import { prepareAudioFilesForStorage } from '../services/drafts/audioService';
 import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
 import { BaseMusical } from '@/services/basesMusicais/basesService';
+import { getFolders, createFolder, Folder as FolderType } from '@/services/folderService';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const Drafts: React.FC = () => {
   const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [folders, setFolders] = useState<FolderType[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -33,6 +55,14 @@ const Drafts: React.FC = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedBase, setSelectedBase] = useState<BaseMusical | null>(null);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  
+  // Estados para modal de nova pasta
+  const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  
+  // Estado para controlar pastas expandidas
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['unorganized']));
   
   // Novo estado para gerenciar múltiplos arquivos de áudio
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
@@ -42,7 +72,7 @@ const Drafts: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   
-  // Check authentication and load drafts
+  // Check authentication and load drafts and folders
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate('/');
@@ -52,20 +82,24 @@ const Drafts: React.FC = () => {
         variant: 'destructive',
       });
     } else if (isAuthenticated && !authLoading) {
-      loadDrafts();
+      loadData();
     }
   }, [isAuthenticated, authLoading, navigate, toast]);
   
-  const loadDrafts = async () => {
+  const loadData = async () => {
     setIsLoading(true);
     try {
-      const fetchedDrafts = await draftService.getDrafts();
+      const [fetchedDrafts, fetchedFolders] = await Promise.all([
+        draftService.getDrafts(),
+        getFolders()
+      ]);
       setDrafts(fetchedDrafts);
+      setFolders(fetchedFolders);
     } catch (error) {
-      console.error('Failed to load drafts:', error);
+      console.error('Failed to load data:', error);
       toast({
-        title: 'Erro ao carregar rascunhos',
-        description: 'Não foi possível carregar seus rascunhos.',
+        title: 'Erro ao carregar dados',
+        description: 'Não foi possível carregar seus rascunhos e pastas.',
         variant: 'destructive',
       });
     } finally {
@@ -73,12 +107,76 @@ const Drafts: React.FC = () => {
     }
   };
   
+  const toggleFolder = (folderId: string) => {
+    setExpandedFolders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(folderId)) {
+        newSet.delete(folderId);
+      } else {
+        newSet.add(folderId);
+      }
+      return newSet;
+    });
+  };
+  
+  const handleAddFolder = async () => {
+    if (!newFolderName.trim()) {
+      toast({
+        title: 'Nome inválido',
+        description: 'Por favor, insira um nome para a pasta.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    try {
+      const newFolder = await createFolder(newFolderName);
+      setFolders(prev => [newFolder, ...prev]);
+      setNewFolderName('');
+      setIsNewFolderModalOpen(false);
+      
+      toast({
+        title: 'Pasta criada',
+        description: `A pasta "${newFolderName}" foi criada com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao criar pasta:', error);
+      toast({
+        title: 'Erro ao criar pasta',
+        description: 'Não foi possível criar a pasta.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  // Agrupar rascunhos por pasta
+  const getDraftsByFolder = () => {
+    const grouped: Record<string, Draft[]> = { unorganized: [] };
+    
+    folders.forEach(folder => {
+      grouped[folder.id] = [];
+    });
+    
+    drafts.forEach(draft => {
+      if (draft.folder_id && grouped[draft.folder_id]) {
+        grouped[draft.folder_id].push(draft);
+      } else {
+        grouped.unorganized.push(draft);
+      }
+    });
+    
+    return grouped;
+  };
+  
+  const draftsByFolder = getDraftsByFolder();
+  
   const startNewDraft = () => {
     setTitle('');
     setContent('');
     setAudioFiles([]);
     setAudioBlobs(new Map());
     setSelectedBase(null);
+    setSelectedFolderId(null);
     setActiveId(null);
     setIsEditing(true);
   };
@@ -86,6 +184,7 @@ const Drafts: React.FC = () => {
   const startEditingDraft = async (draft: Draft) => {
     setTitle(draft.title);
     setContent(draft.content);
+    setSelectedFolderId(draft.folder_id || null);
     
     // Inicializar os arquivos de áudio do rascunho
     if (draft.audio_files && draft.audio_files.length > 0) {
@@ -184,7 +283,8 @@ const Drafts: React.FC = () => {
           title,
           content,
           audioFiles: uploadedFiles,
-          selectedBaseId: selectedBase?.id || null
+          selectedBaseId: selectedBase?.id || null,
+          folderId: selectedFolderId
         });
         
         setDrafts(drafts.map(d => d.id === activeId ? updatedDraft : d));
@@ -199,7 +299,8 @@ const Drafts: React.FC = () => {
           title,
           content,
           audioFiles: uploadedFiles,
-          selectedBaseId: selectedBase?.id || null
+          selectedBaseId: selectedBase?.id || null,
+          folderId: selectedFolderId
         });
         
         setDrafts([newDraft, ...drafts]);
@@ -264,10 +365,16 @@ const Drafts: React.FC = () => {
       <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Seus Rascunhos</h2>
-        <Button onClick={startNewDraft}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Rascunho
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsNewFolderModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Pasta
+          </Button>
+          <Button onClick={startNewDraft}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Rascunho
+          </Button>
+        </div>
       </div>
       
       {/* Seção de Bases Musicais - sempre visível na tela principal */}
@@ -287,6 +394,35 @@ const Drafts: React.FC = () => {
               selectedBase={selectedBase}
               onSelectBase={setSelectedBase}
             />
+            
+            {/* Seletor de Pasta */}
+            <div>
+              <Label htmlFor="draft-folder">Pasta</Label>
+              <Select
+                value={selectedFolderId || 'none'}
+                onValueChange={(value) => setSelectedFolderId(value === 'none' ? null : value)}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Selecione uma pasta (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    <div className="flex items-center gap-2">
+                      <Folder className="h-4 w-4" />
+                      Sem pasta
+                    </div>
+                  </SelectItem>
+                  {folders.map((folder) => (
+                    <SelectItem key={folder.id} value={folder.id}>
+                      <div className="flex items-center gap-2">
+                        <Folder className="h-4 w-4" />
+                        {folder.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             
             <div>
               <Label htmlFor="draft-title">Título</Label>
@@ -343,86 +479,199 @@ const Drafts: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {drafts.length === 0 ? (
-            <div className="col-span-full text-center py-12 text-muted-foreground">
+        <div className="space-y-6">
+          {/* Rascunhos sem pasta */}
+          {draftsByFolder.unorganized.length > 0 && (
+            <Collapsible
+              open={expandedFolders.has('unorganized')}
+              onOpenChange={() => toggleFolder('unorganized')}
+            >
+              <CollapsibleTrigger className="flex items-center gap-2 w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+                {expandedFolders.has('unorganized') ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                <FolderOpen className="h-5 w-5 text-muted-foreground" />
+                <span className="font-medium">Sem pasta</span>
+                <span className="text-sm text-muted-foreground ml-auto">
+                  {draftsByFolder.unorganized.length} {draftsByFolder.unorganized.length === 1 ? 'rascunho' : 'rascunhos'}
+                </span>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  {draftsByFolder.unorganized.map(draft => (
+                    <DraftCard 
+                      key={draft.id} 
+                      draft={draft} 
+                      onEdit={startEditingDraft}
+                      onDelete={handleDeleteDraft}
+                    />
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+          
+          {/* Pastas */}
+          {folders.map(folder => (
+            <Collapsible
+              key={folder.id}
+              open={expandedFolders.has(folder.id)}
+              onOpenChange={() => toggleFolder(folder.id)}
+            >
+              <CollapsibleTrigger className="flex items-center gap-2 w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+                {expandedFolders.has(folder.id) ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                <Folder className="h-5 w-5 text-primary" />
+                <span className="font-medium">{folder.name}</span>
+                <span className="text-sm text-muted-foreground ml-auto">
+                  {(draftsByFolder[folder.id] || []).length} {(draftsByFolder[folder.id] || []).length === 1 ? 'rascunho' : 'rascunhos'}
+                </span>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                {(draftsByFolder[folder.id] || []).length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground mt-4">
+                    <p>Nenhum rascunho nesta pasta</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    {(draftsByFolder[folder.id] || []).map(draft => (
+                      <DraftCard 
+                        key={draft.id} 
+                        draft={draft} 
+                        onEdit={startEditingDraft}
+                        onDelete={handleDeleteDraft}
+                      />
+                    ))}
+                  </div>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
+          ))}
+          
+          {/* Mensagem se não houver nenhum rascunho */}
+          {drafts.length === 0 && folders.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <Folder className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Você ainda não possui rascunhos. Crie um agora!</p>
             </div>
-          ) : (
-            drafts.map(draft => (
-              <Card key={draft.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg">{draft.title}</CardTitle>
-                    <div className="flex space-x-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
-                        onClick={() => startEditingDraft(draft)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
-                        onClick={() => handleDeleteDraft(draft.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(draft.created_at).toLocaleDateString('pt-BR', { 
-                      day: '2-digit', 
-                      month: '2-digit', 
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm whitespace-pre-line line-clamp-4">
-                    {draft.content || <span className="text-muted-foreground italic">Sem conteúdo</span>}
-                  </p>
-                  
-                  {draft.audio_files && draft.audio_files.length > 0 ? (
-                    <div className="mt-4">
-                      <p className="text-xs text-muted-foreground mb-1">
-                        {draft.audio_files.length} {draft.audio_files.length === 1 ? 'áudio' : 'áudios'} gravados
-                      </p>
-                      {/* Mostra apenas o primeiro áudio na visualização do card */}
-                      <audio 
-                        controls 
-                        src={draft.audio_files[0].url} 
-                        className="w-full h-8"
-                        title={draft.audio_files[0].name} 
-                      />
-                    </div>
-                  ) : draft.audio_url ? (
-                    <div className="mt-4">
-                      <audio controls src={draft.audio_url} className="w-full h-8" />
-                    </div>
-                  ) : null}
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => startEditingDraft(draft)}
-                  >
-                    Continuar Trabalhando
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))
           )}
         </div>
       )}
+      
+      {/* Modal de Nova Pasta */}
+      <Dialog open={isNewFolderModalOpen} onOpenChange={setIsNewFolderModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Pasta</DialogTitle>
+            <DialogDescription>
+              Crie uma nova pasta para organizar seus rascunhos.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Input
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Nome da pasta"
+              autoFocus
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewFolderModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAddFolder}>
+              Criar Pasta
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </div>
     </ProOnlyWrapper>
+  );
+};
+
+// Componente separado para o card de rascunho
+interface DraftCardProps {
+  draft: Draft;
+  onEdit: (draft: Draft) => void;
+  onDelete: (id: string) => void;
+}
+
+const DraftCard: React.FC<DraftCardProps> = ({ draft, onEdit, onDelete }) => {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg">{draft.title}</CardTitle>
+          <div className="flex space-x-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={() => onEdit(draft)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={() => onDelete(draft.id)}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {new Date(draft.created_at).toLocaleDateString('pt-BR', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </p>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm whitespace-pre-line line-clamp-4">
+          {draft.content || <span className="text-muted-foreground italic">Sem conteúdo</span>}
+        </p>
+        
+        {draft.audio_files && draft.audio_files.length > 0 ? (
+          <div className="mt-4">
+            <p className="text-xs text-muted-foreground mb-1">
+              {draft.audio_files.length} {draft.audio_files.length === 1 ? 'áudio' : 'áudios'} gravados
+            </p>
+            <audio 
+              controls 
+              src={draft.audio_files[0].url} 
+              className="w-full h-8"
+              title={draft.audio_files[0].name} 
+            />
+          </div>
+        ) : draft.audio_url ? (
+          <div className="mt-4">
+            <audio controls src={draft.audio_url} className="w-full h-8" />
+          </div>
+        ) : null}
+      </CardContent>
+      <CardFooter>
+        <Button 
+          variant="outline" 
+          className="w-full"
+          onClick={() => onEdit(draft)}
+        >
+          Continuar Trabalhando
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 
