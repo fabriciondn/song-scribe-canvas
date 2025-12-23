@@ -240,7 +240,7 @@ const Drafts: React.FC = () => {
   }
 
   return (
-    <ProOnlyWrapper featureName="Rascunhos">
+    <ProOnlyWrapper featureName="Compor">
       <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Seus Rascunhos</h2>

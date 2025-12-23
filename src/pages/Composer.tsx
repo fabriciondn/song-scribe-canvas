@@ -29,7 +29,7 @@ const Composer: React.FC = () => {
   };
 
   return (
-    <ProOnlyWrapper featureName="Compor">
+    <ProOnlyWrapper featureName="Rascunho">
       <div className="composer-page">
         <style>{styles}</style>
         <Editor onToolsRequest={handleToolsRequest} />
