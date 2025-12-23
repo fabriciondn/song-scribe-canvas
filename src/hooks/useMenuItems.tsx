@@ -38,6 +38,7 @@ export const useMenuItems = () => {
 
   const menuItems = useMemo(() => {
     const baseItems: MenuItem[] = [
+      // Menu principal na ordem definida
       {
         label: 'Dashboard',
         icon: BarChart3,
@@ -57,6 +58,13 @@ export const useMenuItems = () => {
         icon: BookText,
         path: '/drafts',
         functionKey: 'drafts',
+        isPro: true
+      },
+      {
+        label: 'Pastas',
+        icon: Folder,
+        path: '/folders',
+        functionKey: 'folders',
         isPro: true
       },
       {
@@ -81,6 +89,13 @@ export const useMenuItems = () => {
         isPro: true
       },
       {
+        label: 'Lixeira',
+        icon: Trash2,
+        path: '/dashboard/trash',
+        functionKey: 'trash',
+        isPro: true
+      },
+      {
         label: 'Configurações',
         icon: User,
         path: '/dashboard/settings',
@@ -88,11 +103,11 @@ export const useMenuItems = () => {
         isPro: false
       },
       {
-        label: 'Lixeira',
-        icon: Trash2,
-        path: '/dashboard/trash',
-        functionKey: 'trash',
-        isPro: true
+        label: 'Minhas Compras',
+        icon: CreditCard,
+        path: '/dashboard/my-purchases',
+        functionKey: 'my-purchases',
+        isPro: false
       },
       {
         label: 'Afiliados',
@@ -102,13 +117,6 @@ export const useMenuItems = () => {
         isPro: false
       },
       // Itens ocultos ou secundários
-      {
-        label: 'Minhas Compras',
-        icon: CreditCard,
-        path: '/dashboard/my-purchases',
-        functionKey: 'my-purchases',
-        isPro: false
-      },
       {
         label: 'Rascunho',
         icon: Edit,
@@ -129,13 +137,6 @@ export const useMenuItems = () => {
         path: '/cifrador-neo',
         functionKey: 'cifrador-neo',
         isPro: true,
-      },
-      {
-        label: 'Pastas',
-        icon: Folder,
-        path: '/folders',
-        functionKey: 'folders',
-        isPro: true
       },
       {
         label: 'Parcerias',
