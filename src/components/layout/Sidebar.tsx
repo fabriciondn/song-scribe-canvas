@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Edit, FileText, Folder, BookText, Users, Menu, X, FileMusic, ListMusic, DollarSign, BarChart3, Trash2, Shield, User, Settings, Crown, TrendingUp, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -32,27 +32,43 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { theme } = useTheme();
   const { menuItems, isLoading: menuLoading } = useMenuItems();
 
+  // Evita “flash” de estado (grátis/trial → pro) quando o Sidebar monta/remonta.
+  // Mantém o último estado estável do role enquanto estiver carregando.
+  const lastStableRoleRef = useRef<{ isPro: boolean; isAdmin: boolean }>({
+    isPro: false,
+    isAdmin: false,
+  });
+
+  useEffect(() => {
+    if (!isLoading) {
+      lastStableRoleRef.current = { isPro, isAdmin };
+    }
+  }, [isLoading, isPro, isAdmin]);
+
+  const effectiveIsPro = isLoading ? lastStableRoleRef.current.isPro : isPro;
+  const effectiveIsAdmin = isLoading ? lastStableRoleRef.current.isAdmin : isAdmin;
+
   // Retorna o status de acesso para uma função
   const getAccessStatus = (functionKey: string) => {
     // Admins têm acesso total
-    if (isAdmin) return { canAccess: true, showDisabled: false };
-    
+    if (effectiveIsAdmin) return { canAccess: true, showDisabled: false };
+
     // Funções básicas: acessíveis para todos
     const basicFunctions = ['author-registration', 'settings', 'dashboard', 'my-purchases', 'upgrade', 'ranking'];
     if (basicFunctions.includes(functionKey)) {
       return { canAccess: true, showDisabled: false };
     }
-    
+
     // Funções Pro: usuários grátis veem cinza mas item continua visível
     const proFunctions = ['composer', 'cifrador', 'cifrador-neo', 'bases', 'folders', 'drafts', 'partnerships', 'tutorials', 'trash'];
     if (proFunctions.includes(functionKey)) {
-      if (isPro) {
+      if (effectiveIsPro) {
         return { canAccess: true, showDisabled: false };
       } else {
         return { canAccess: false, showDisabled: true }; // Mostra cinza com badge Pro
       }
     }
-    
+
     return { canAccess: true, showDisabled: false };
   };
 
@@ -71,19 +87,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // Filter menu items by admin access and user access
   const visibleMenuItems = useMemo(() => {
     let items = menuItems;
-    
+
     // Filter by admin status
-    if (!isAdmin) {
+    if (!effectiveIsAdmin) {
       items = items.filter(item => !['admin', 'moderator'].includes(item.functionKey));
     }
-    
+
     // Show "Upgrade Pro" only for non-Pro users
-    if (isPro) {
+    if (effectiveIsPro) {
       items = items.filter(item => item.functionKey !== 'upgrade');
     }
-    
+
     return items;
-  }, [menuItems, isAdmin, isPro]);
+  }, [menuItems, effectiveIsAdmin, effectiveIsPro]);
 
   return (
     <>
@@ -213,7 +229,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Status do Plano - Só mostra após carregar */}
           {!isLoading && !isCollapsed && (
             <>
-              {isPro ? (
+              {effectiveIsPro ? (
                 <div className="flex items-center justify-center gap-2 px-3 py-2 bg-green-600/20 rounded-lg">
                   <Crown className="h-4 w-4 text-green-400" />
                   <span className="text-sm text-green-400 font-medium">Pro Ativo</span>
