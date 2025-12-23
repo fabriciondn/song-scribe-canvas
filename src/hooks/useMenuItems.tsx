@@ -131,13 +131,6 @@ export const useMenuItems = () => {
         isPro: true,
       },
       {
-        label: 'Bases',
-        icon: FileMusic,
-        path: '/bases',
-        functionKey: 'bases',
-        isPro: true
-      },
-      {
         label: 'Pastas',
         icon: Folder,
         path: '/folders',
