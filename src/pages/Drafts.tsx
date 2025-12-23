@@ -83,7 +83,7 @@ const Drafts: React.FC = () => {
     setIsEditing(true);
   };
   
-  const startEditingDraft = (draft: Draft) => {
+  const startEditingDraft = async (draft: Draft) => {
     setTitle(draft.title);
     setContent(draft.content);
     
@@ -100,6 +100,20 @@ const Drafts: React.FC = () => {
       }]);
     } else {
       setAudioFiles([]);
+    }
+    
+    // Carregar a base musical associada ao rascunho
+    if (draft.selected_base_id) {
+      try {
+        const { getBaseById } = await import('@/services/basesMusicais/basesService');
+        const base = await getBaseById(draft.selected_base_id);
+        setSelectedBase(base);
+      } catch (error) {
+        console.error('Erro ao carregar base associada:', error);
+        setSelectedBase(null);
+      }
+    } else {
+      setSelectedBase(null);
     }
     
     setAudioBlobs(new Map());
@@ -169,7 +183,8 @@ const Drafts: React.FC = () => {
         const updatedDraft = await draftService.updateDraft(activeId, {
           title,
           content,
-          audioFiles: uploadedFiles
+          audioFiles: uploadedFiles,
+          selectedBaseId: selectedBase?.id || null
         });
         
         setDrafts(drafts.map(d => d.id === activeId ? updatedDraft : d));
@@ -183,7 +198,8 @@ const Drafts: React.FC = () => {
         const newDraft = await draftService.createDraft({
           title,
           content,
-          audioFiles: uploadedFiles
+          audioFiles: uploadedFiles,
+          selectedBaseId: selectedBase?.id || null
         });
         
         setDrafts([newDraft, ...drafts]);

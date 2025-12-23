@@ -6,6 +6,7 @@ export interface Draft {
   content: string;
   audio_files?: AudioFile[];
   audio_url?: string; // Mantido para compatibilidade com versões anteriores
+  selected_base_id?: string | null; // ID da base musical associada
   created_at: string;
   updated_at?: string;
   user_id?: string;
@@ -16,6 +17,7 @@ export interface DraftInput {
   content: string;
   audioUrl?: string;
   audioFiles?: AudioFile[];
+  selectedBaseId?: string | null;
 }
 
 export interface AudioFile {

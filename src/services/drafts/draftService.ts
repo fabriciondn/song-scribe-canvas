@@ -125,6 +125,11 @@ export const createDraft = async (draft: DraftInput): Promise<Draft> => {
       draftData.audio_url = draft.audioUrl;
     }
     
+    // Adicionar base musical selecionada, se disponível
+    if (draft.selectedBaseId !== undefined) {
+      draftData.selected_base_id = draft.selectedBaseId;
+    }
+    
     // Direct insert since RPC function doesn't support the new audio_files field
     const { data: newDraft, error } = await supabase
       .from('drafts')
@@ -150,6 +155,7 @@ export const updateDraft = async (
     content?: string;
     audioUrl?: string;
     audioFiles?: AudioFile[];
+    selectedBaseId?: string | null;
   }
 ): Promise<Draft> => {
   try {
@@ -166,6 +172,11 @@ export const updateDraft = async (
       updateData.audio_url = updates.audioFiles[0].url;
     } else if (updates.audioUrl) {
       updateData.audio_url = updates.audioUrl;
+    }
+    
+    // Atualizar base musical selecionada
+    if (updates.selectedBaseId !== undefined) {
+      updateData.selected_base_id = updates.selectedBaseId;
     }
     
     // Direct update since RPC function doesn't support the new audio_files field
