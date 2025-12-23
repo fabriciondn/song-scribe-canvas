@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Slider } from '@/components/ui/slider';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +18,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { Music, Upload, ChevronDown, ChevronUp, Play, Pause, Trash2, Check } from 'lucide-react';
+import { Music, Upload, ChevronDown, ChevronUp, Play, Pause, Trash2, Check, Gauge } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -44,6 +45,9 @@ export const BasesSelector: React.FC<BasesSelectorProps> = ({
   const [isAddingBase, setIsAddingBase] = useState(false);
   const [playingBaseId, setPlayingBaseId] = useState<string | null>(null);
   const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [isPlayingSelected, setIsPlayingSelected] = useState(false);
+  const selectedAudioRef = useRef<HTMLAudioElement | null>(null);
   const [newBase, setNewBase] = useState({
     name: '',
     genre: '',
@@ -324,7 +328,7 @@ export const BasesSelector: React.FC<BasesSelectorProps> = ({
           </div>
         )}
 
-        {/* Player da base selecionada */}
+        {/* Player da base selecionada com controle de velocidade */}
         {selectedBase && (
           <Card className="bg-primary/5 border-primary/20">
             <CardHeader className="pb-2">
@@ -333,13 +337,160 @@ export const BasesSelector: React.FC<BasesSelectorProps> = ({
                 Base selecionada
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm font-medium mb-2">{selectedBase.name}</p>
-              <audio
-                controls
-                src={selectedBase.file_url}
-                className="w-full h-8"
-              />
+            <CardContent className="space-y-4">
+              <p className="text-sm font-medium">{selectedBase.name}</p>
+              
+              {/* Player customizado com controle de velocidade */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10"
+                    onClick={() => {
+                      if (selectedAudioRef.current) {
+                        if (isPlayingSelected) {
+                          selectedAudioRef.current.pause();
+                          setIsPlayingSelected(false);
+                        } else {
+                          selectedAudioRef.current.play();
+                          setIsPlayingSelected(true);
+                        }
+                      }
+                    }}
+                  >
+                    {isPlayingSelected ? (
+                      <Pause className="h-5 w-5" />
+                    ) : (
+                      <Play className="h-5 w-5" />
+                    )}
+                  </Button>
+                  <audio
+                    ref={(el) => {
+                      selectedAudioRef.current = el;
+                      if (el) {
+                        el.playbackRate = playbackRate;
+                        el.onended = () => setIsPlayingSelected(false);
+                      }
+                    }}
+                    src={selectedBase.file_url}
+                    className="flex-1 h-8"
+                    controls
+                  />
+                </div>
+                
+                {/* Controle de velocidade */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm flex items-center gap-2">
+                      <Gauge className="h-4 w-4" />
+                      Velocidade
+                    </Label>
+                    <span className="text-sm font-medium text-primary">
+                      {playbackRate.toFixed(2)}x
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-2 text-xs"
+                      onClick={() => {
+                        const newRate = Math.max(0.25, playbackRate - 0.25);
+                        setPlaybackRate(newRate);
+                        if (selectedAudioRef.current) {
+                          selectedAudioRef.current.playbackRate = newRate;
+                        }
+                      }}
+                      disabled={playbackRate <= 0.25}
+                    >
+                      -
+                    </Button>
+                    <Slider
+                      value={[playbackRate]}
+                      min={0.25}
+                      max={2}
+                      step={0.05}
+                      onValueChange={(value) => {
+                        setPlaybackRate(value[0]);
+                        if (selectedAudioRef.current) {
+                          selectedAudioRef.current.playbackRate = value[0];
+                        }
+                      }}
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-2 text-xs"
+                      onClick={() => {
+                        const newRate = Math.min(2, playbackRate + 0.25);
+                        setPlaybackRate(newRate);
+                        if (selectedAudioRef.current) {
+                          selectedAudioRef.current.playbackRate = newRate;
+                        }
+                      }}
+                      disabled={playbackRate >= 2}
+                    >
+                      +
+                    </Button>
+                  </div>
+                  <div className="flex justify-center gap-2">
+                    <Button
+                      variant={playbackRate === 0.75 ? "default" : "ghost"}
+                      size="sm"
+                      className="h-7 px-3 text-xs"
+                      onClick={() => {
+                        setPlaybackRate(0.75);
+                        if (selectedAudioRef.current) {
+                          selectedAudioRef.current.playbackRate = 0.75;
+                        }
+                      }}
+                    >
+                      0.75x
+                    </Button>
+                    <Button
+                      variant={playbackRate === 1 ? "default" : "ghost"}
+                      size="sm"
+                      className="h-7 px-3 text-xs"
+                      onClick={() => {
+                        setPlaybackRate(1);
+                        if (selectedAudioRef.current) {
+                          selectedAudioRef.current.playbackRate = 1;
+                        }
+                      }}
+                    >
+                      1x
+                    </Button>
+                    <Button
+                      variant={playbackRate === 1.25 ? "default" : "ghost"}
+                      size="sm"
+                      className="h-7 px-3 text-xs"
+                      onClick={() => {
+                        setPlaybackRate(1.25);
+                        if (selectedAudioRef.current) {
+                          selectedAudioRef.current.playbackRate = 1.25;
+                        }
+                      }}
+                    >
+                      1.25x
+                    </Button>
+                    <Button
+                      variant={playbackRate === 1.5 ? "default" : "ghost"}
+                      size="sm"
+                      className="h-7 px-3 text-xs"
+                      onClick={() => {
+                        setPlaybackRate(1.5);
+                        if (selectedAudioRef.current) {
+                          selectedAudioRef.current.playbackRate = 1.5;
+                        }
+                      }}
+                    >
+                      1.5x
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
