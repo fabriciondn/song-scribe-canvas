@@ -33,7 +33,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 
 const DashboardHome: React.FC = () => {
   const { stats, isLoading, error } = useDashboardStats();
-  const isMobile = useMobileDetection();
+  const { isMobile } = useMobileDetection();
   const { expandedSections, toggleSection, isExpanded } = useDashboardCardSelection();
   const { isPro } = useUserRole();
 
@@ -64,7 +64,7 @@ const DashboardHome: React.FC = () => {
     <div className="container mx-auto pt-2 space-y-6">
       
       {/* Banner Carousel Moderno - Fixo - Apenas Desktop */}
-      {!isMobile.isMobile && (
+      {!isMobile && (
         <div className="sticky top-0 z-10 bg-background pb-4 -mx-6 px-6">
           <FeatureCarousel />
         </div>
