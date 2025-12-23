@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Plus, Edit, Trash2, Save, Loader2 } from 'lucide-react';
 import { AudioRecorder } from '../components/drafts/AudioRecorder';
+import { BasesSelector } from '../components/drafts/BasesSelector';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Draft, AudioFile } from '../services/drafts/types';
 import { prepareAudioFilesForStorage } from '../services/drafts/audioService';
 import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
+import { BaseMusical } from '@/services/basesMusicais/basesService';
 
 const Drafts: React.FC = () => {
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -30,6 +32,7 @@ const Drafts: React.FC = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [selectedBase, setSelectedBase] = useState<BaseMusical | null>(null);
   
   // Novo estado para gerenciar múltiplos arquivos de áudio
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
@@ -75,6 +78,7 @@ const Drafts: React.FC = () => {
     setContent('');
     setAudioFiles([]);
     setAudioBlobs(new Map());
+    setSelectedBase(null);
     setActiveId(null);
     setIsEditing(true);
   };
@@ -278,6 +282,11 @@ const Drafts: React.FC = () => {
             <AudioRecorder 
               onSaveRecordings={handleSaveRecordings} 
               initialAudioFiles={audioFiles}
+            />
+            
+            <BasesSelector
+              selectedBase={selectedBase}
+              onSelectBase={setSelectedBase}
             />
             
             <div className="flex justify-end space-x-2 pt-4">
