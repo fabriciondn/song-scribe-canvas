@@ -283,6 +283,11 @@ const Drafts: React.FC = () => {
       {isEditing ? (
         <div className="bg-card p-6 rounded-lg border animate-fade-in">
           <div className="space-y-4">
+            <BasesSelector
+              selectedBase={selectedBase}
+              onSelectBase={setSelectedBase}
+            />
+            
             <div>
               <Label htmlFor="draft-title">Título</Label>
               <Input
@@ -308,11 +313,6 @@ const Drafts: React.FC = () => {
             <AudioRecorder 
               onSaveRecordings={handleSaveRecordings} 
               initialAudioFiles={audioFiles}
-            />
-            
-            <BasesSelector
-              selectedBase={selectedBase}
-              onSelectBase={setSelectedBase}
             />
             
             <div className="flex justify-end space-x-2 pt-4">
