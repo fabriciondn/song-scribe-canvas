@@ -194,7 +194,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Botão Suporte WhatsApp */}
           <button
             onClick={() => {
-              window.open('https://w.app/compuse', '_blank');
+              window.open('https://wa.me/5519995081355?text=oi%20vim%20pelo%20site%20da%20compuse%2C%20poderia%20me%20ajudar%3F', '_blank');
               if (window.innerWidth < 768) {
                 toggleSidebar();
               }

@@ -221,7 +221,7 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
           variant="ghost"
           className="w-full justify-start gap-2 h-9 text-sm"
           onClick={() => {
-            window.open('https://w.app/compuse', '_blank');
+            window.open('https://wa.me/5519995081355?text=oi%20vim%20pelo%20site%20da%20compuse%2C%20poderia%20me%20ajudar%3F', '_blank');
             onClose();
           }}
         >
