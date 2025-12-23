@@ -254,6 +254,16 @@ const Drafts: React.FC = () => {
         </Button>
       </div>
       
+      {/* Seção de Bases Musicais - sempre visível na tela principal */}
+      {!isEditing && (
+        <div className="mb-6">
+          <BasesSelector
+            selectedBase={selectedBase}
+            onSelectBase={setSelectedBase}
+          />
+        </div>
+      )}
+      
       {isEditing ? (
         <div className="bg-card p-6 rounded-lg border animate-fade-in">
           <div className="space-y-4">
