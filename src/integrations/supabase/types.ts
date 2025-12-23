@@ -821,6 +821,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           id: string
+          selected_base_id: string | null
           title: string
           updated_at: string | null
           user_id: string | null
@@ -833,6 +834,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           id?: string
+          selected_base_id?: string | null
           title: string
           updated_at?: string | null
           user_id?: string | null
@@ -845,11 +847,20 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           id?: string
+          selected_base_id?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "drafts_selected_base_id_fkey"
+            columns: ["selected_base_id"]
+            isOneToOne: false
+            referencedRelation: "music_bases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       folders: {
         Row: {
@@ -1860,6 +1871,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           id: string
+          selected_base_id: string | null
           title: string
           updated_at: string | null
           user_id: string | null
@@ -1900,6 +1912,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           id: string
+          selected_base_id: string | null
           title: string
           updated_at: string | null
           user_id: string | null
@@ -1921,6 +1934,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           id: string
+          selected_base_id: string | null
           title: string
           updated_at: string | null
           user_id: string | null
@@ -2048,6 +2062,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           id: string
+          selected_base_id: string | null
           title: string
           updated_at: string | null
           user_id: string | null

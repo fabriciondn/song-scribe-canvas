@@ -342,42 +342,20 @@ export const BasesSelector: React.FC<BasesSelectorProps> = ({
               
               {/* Player customizado com controle de velocidade */}
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10"
-                    onClick={() => {
-                      if (selectedAudioRef.current) {
-                        if (isPlayingSelected) {
-                          selectedAudioRef.current.pause();
-                          setIsPlayingSelected(false);
-                        } else {
-                          selectedAudioRef.current.play();
-                          setIsPlayingSelected(true);
-                        }
-                      }
-                    }}
-                  >
-                    {isPlayingSelected ? (
-                      <Pause className="h-5 w-5" />
-                    ) : (
-                      <Play className="h-5 w-5" />
-                    )}
-                  </Button>
-                  <audio
-                    ref={(el) => {
-                      selectedAudioRef.current = el;
-                      if (el) {
-                        el.playbackRate = playbackRate;
-                        el.onended = () => setIsPlayingSelected(false);
-                      }
-                    }}
-                    src={selectedBase.file_url}
-                    className="flex-1 h-8"
-                    controls
-                  />
-                </div>
+                <audio
+                  ref={(el) => {
+                    selectedAudioRef.current = el;
+                    if (el) {
+                      el.playbackRate = playbackRate;
+                      el.onended = () => setIsPlayingSelected(false);
+                      el.onplay = () => setIsPlayingSelected(true);
+                      el.onpause = () => setIsPlayingSelected(false);
+                    }
+                  }}
+                  src={selectedBase.file_url}
+                  className="w-full h-10"
+                  controls
+                />
                 
                 {/* Controle de velocidade */}
                 <div className="space-y-2">
