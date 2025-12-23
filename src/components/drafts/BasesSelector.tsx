@@ -276,15 +276,13 @@ export const BasesSelector: React.FC<BasesSelectorProps> = ({
           </div>
         ) : (
           <div className="space-y-2 max-h-60 overflow-y-auto">
-            {bases.map((base) => (
+            {bases
+              .filter((base) => selectedBase?.id !== base.id)
+              .map((base) => (
               <div
                 key={base.id}
-                className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                  selectedBase?.id === base.id
-                    ? 'border-primary bg-primary/10'
-                    : 'hover:bg-muted/50'
-                }`}
-                onClick={() => onSelectBase(selectedBase?.id === base.id ? null : base)}
+                className="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors hover:bg-muted/50"
+                onClick={() => onSelectBase(base)}
               >
                 <div className="flex items-center gap-3 flex-1">
                   <Button
@@ -308,9 +306,6 @@ export const BasesSelector: React.FC<BasesSelectorProps> = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {selectedBase?.id === base.id && (
-                    <Check className="h-4 w-4 text-primary" />
-                  )}
                   <Button
                     variant="ghost"
                     size="icon"
