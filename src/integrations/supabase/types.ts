@@ -820,6 +820,7 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
+          folder_id: string | null
           id: string
           selected_base_id: string | null
           title: string
@@ -833,6 +834,7 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          folder_id?: string | null
           id?: string
           selected_base_id?: string | null
           title: string
@@ -846,6 +848,7 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          folder_id?: string | null
           id?: string
           selected_base_id?: string | null
           title?: string
@@ -853,6 +856,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "drafts_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "drafts_selected_base_id_fkey"
             columns: ["selected_base_id"]
@@ -1870,6 +1880,7 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
+          folder_id: string | null
           id: string
           selected_base_id: string | null
           title: string
@@ -1911,6 +1922,7 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
+          folder_id: string | null
           id: string
           selected_base_id: string | null
           title: string
@@ -1933,6 +1945,7 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
+          folder_id: string | null
           id: string
           selected_base_id: string | null
           title: string
@@ -2061,6 +2074,7 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
+          folder_id: string | null
           id: string
           selected_base_id: string | null
           title: string
