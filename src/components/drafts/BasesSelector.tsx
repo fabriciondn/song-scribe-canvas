@@ -209,61 +209,63 @@ export const BasesSelector: React.FC<BasesSelectorProps> = ({
       </CollapsibleTrigger>
 
       <CollapsibleContent className="p-4 pt-0 space-y-4">
-        {/* Botão de adicionar nova base */}
-        <Dialog open={isAddingBase} onOpenChange={setIsAddingBase}>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="w-full">
-              <Upload className="mr-2 h-4 w-4" />
-              Enviar Nova Base
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Adicionar Base Musical</DialogTitle>
-              <DialogDescription>
-                Faça upload de uma base musical para usar em suas composições.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="base-name">Nome da Base</Label>
-                <Input
-                  id="base-name"
-                  value={newBase.name}
-                  onChange={(e) => setNewBase(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Ex: Forró Pé de Serra 120 BPM"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="base-genre">Gênero</Label>
-                <Input
-                  id="base-genre"
-                  value={newBase.genre}
-                  onChange={(e) => setNewBase(prev => ({ ...prev, genre: e.target.value }))}
-                  placeholder="Ex: Forró"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="base-file">Arquivo de Áudio</Label>
-                <Input
-                  id="base-file"
-                  type="file"
-                  accept=".mp3,audio/*"
-                  onChange={handleFileChange}
-                />
-                <p className="text-xs text-muted-foreground">Formatos aceitos: MP3, WAV. Máximo: 10MB</p>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddingBase(false)}>
-                Cancelar
+        {/* Botão de adicionar nova base - só mostra se não tem base selecionada */}
+        {!selectedBase && (
+          <Dialog open={isAddingBase} onOpenChange={setIsAddingBase}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full">
+                <Upload className="mr-2 h-4 w-4" />
+                Enviar Nova Base
               </Button>
-              <Button onClick={handleAddBase} disabled={isLoading}>
-                {isLoading ? 'Enviando...' : 'Adicionar'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Adicionar Base Musical</DialogTitle>
+                <DialogDescription>
+                  Faça upload de uma base musical para usar em suas composições.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="base-name">Nome da Base</Label>
+                  <Input
+                    id="base-name"
+                    value={newBase.name}
+                    onChange={(e) => setNewBase(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Ex: Forró Pé de Serra 120 BPM"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="base-genre">Gênero</Label>
+                  <Input
+                    id="base-genre"
+                    value={newBase.genre}
+                    onChange={(e) => setNewBase(prev => ({ ...prev, genre: e.target.value }))}
+                    placeholder="Ex: Forró"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="base-file">Arquivo de Áudio</Label>
+                  <Input
+                    id="base-file"
+                    type="file"
+                    accept=".mp3,audio/*"
+                    onChange={handleFileChange}
+                  />
+                  <p className="text-xs text-muted-foreground">Formatos aceitos: MP3, WAV. Máximo: 10MB</p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddingBase(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleAddBase} disabled={isLoading}>
+                  {isLoading ? 'Enviando...' : 'Adicionar'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {/* Lista de bases */}
         {isLoading && bases.length === 0 ? (
