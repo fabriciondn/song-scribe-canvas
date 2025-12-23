@@ -96,17 +96,17 @@ export const useMenuItems = () => {
         isPro: true
       },
       {
-        label: 'Configurações',
-        icon: User,
-        path: '/dashboard/settings',
-        functionKey: 'settings',
-        isPro: false
-      },
-      {
         label: 'Minhas Compras',
         icon: CreditCard,
         path: '/dashboard/my-purchases',
         functionKey: 'my-purchases',
+        isPro: false
+      },
+      {
+        label: 'Configurações',
+        icon: User,
+        path: '/dashboard/settings',
+        functionKey: 'settings',
         isPro: false
       },
       {
