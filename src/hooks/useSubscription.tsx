@@ -1,5 +1,5 @@
 import { useImpersonation } from '@/context/ImpersonationContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -17,24 +17,71 @@ export interface Subscription {
   currency: string;
 }
 
+// Cache key para sessionStorage
+const SUBSCRIPTION_CACHE_KEY = 'user_subscription_cache';
+
+// Função para obter subscription do cache
+const getCachedSubscription = (userId: string): Subscription | null => {
+  try {
+    const cached = sessionStorage.getItem(SUBSCRIPTION_CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      // Verificar se o cache é do mesmo usuário
+      if (parsed.user_id === userId) {
+        return parsed;
+      }
+    }
+  } catch {
+    // Ignorar erros de parse
+  }
+  return null;
+};
+
+// Função para salvar subscription no cache
+const setCachedSubscription = (subscription: Subscription | null) => {
+  try {
+    if (subscription) {
+      sessionStorage.setItem(SUBSCRIPTION_CACHE_KEY, JSON.stringify(subscription));
+    } else {
+      sessionStorage.removeItem(SUBSCRIPTION_CACHE_KEY);
+    }
+  } catch {
+    // Ignorar erros de storage
+  }
+};
+
 export const useSubscription = () => {
   const { user } = useAuth();
   const { isImpersonating, impersonatedUser } = useImpersonation();
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const currentUserId = isImpersonating && impersonatedUser?.id ? impersonatedUser.id : user?.id;
+  
+  // Inicializar com cache se disponível para evitar flickering
+  const cachedSub = currentUserId ? getCachedSubscription(currentUserId) : null;
+  const [subscription, setSubscription] = useState<Subscription | null>(cachedSub);
+  const [isLoading, setIsLoading] = useState(!cachedSub); // Se tem cache, não está carregando
   const [error, setError] = useState<string | null>(null);
+  const lastFetchedUserId = useRef<string | null>(null);
 
   useEffect(() => {
     const fetchSubscription = async () => {
-      const currentUserId = isImpersonating && impersonatedUser?.id ? impersonatedUser.id : user?.id;
       if (!currentUserId) {
         setSubscription(null);
+        setCachedSubscription(null);
         setIsLoading(false);
         return;
       }
 
+      // Se já buscamos para este usuário e temos cache, não precisa mostrar loading
+      const cached = getCachedSubscription(currentUserId);
+      if (cached && lastFetchedUserId.current === currentUserId) {
+        return;
+      }
+
       try {
-        setIsLoading(true);
+        // Só mostra loading se não tiver cache
+        if (!cached) {
+          setIsLoading(true);
+        }
         setError(null);
 
         const { data, error } = await supabase
@@ -46,6 +93,8 @@ export const useSubscription = () => {
           .maybeSingle();
 
         if (error) throw error;
+
+        let finalSubscription = data;
 
         if (data) {
           // Verificar se subscription expirou (incluindo trial)
@@ -62,9 +111,7 @@ export const useSubscription = () => {
               .single();
             
             if (updateError) throw updateError;
-            setSubscription(updatedSub);
-          } else {
-            setSubscription(data);
+            finalSubscription = updatedSub;
           }
         } else {
           // Se não tem subscription, o trigger já deve ter criado uma trial
@@ -77,8 +124,13 @@ export const useSubscription = () => {
             .limit(1)
             .maybeSingle();
           
-          setSubscription(retryData);
+          finalSubscription = retryData;
         }
+
+        // Atualizar estado e cache
+        setSubscription(finalSubscription);
+        setCachedSubscription(finalSubscription);
+        lastFetchedUserId.current = currentUserId;
       } catch (err) {
         console.error('Erro ao buscar subscription:', err);
         setError('Erro ao carregar subscription');
@@ -88,10 +140,9 @@ export const useSubscription = () => {
     };
 
     fetchSubscription();
-  }, [user?.id, isImpersonating, impersonatedUser?.id]);
+  }, [currentUserId]);
 
   const refreshSubscription = async () => {
-    const currentUserId = isImpersonating && impersonatedUser?.id ? impersonatedUser.id : user?.id;
     if (!currentUserId) return;
 
     try {
@@ -105,6 +156,7 @@ export const useSubscription = () => {
 
       if (error) throw error;
       setSubscription(data);
+      setCachedSubscription(data);
     } catch (err) {
       console.error('Erro ao atualizar subscription:', err);
     }
