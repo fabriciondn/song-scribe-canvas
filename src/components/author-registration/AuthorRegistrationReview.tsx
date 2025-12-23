@@ -319,8 +319,8 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
 
   const startAnalysisSimulation = async (registrationId: string, title: string) => {
     try {
-      // Gerar tempo aleatório entre 1 e 5 minutos (60000ms a 300000ms)
-      const randomTime = Math.floor(Math.random() * (300000 - 60000 + 1)) + 60000;
+      // Gerar tempo aleatório entre 2 e 5 minutos (120000ms a 300000ms)
+      const randomTime = Math.floor(Math.random() * (300000 - 120000 + 1)) + 120000;
       
       console.log(`🔍 Iniciando análise para registro ${registrationId}. Tempo estimado: ${Math.floor(randomTime / 1000 / 60)}m${Math.floor((randomTime / 1000) % 60)}s`);
       
