@@ -117,7 +117,7 @@ export const Header = ({
   const shouldShowLogo = isSidebarCollapsed || !isSidebarOpen;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border py-2 px-6 flex items-center">
+    <header className={`fixed top-0 right-0 z-50 bg-background border-b border-border py-2 px-6 flex items-center left-0 ${isSidebarCollapsed ? 'md:left-16' : 'md:left-64'}`}>
       {/* Left section */}
       <div className="flex items-center flex-1">
         <Button variant="ghost" size="icon" className="mr-2 lg:hidden" onClick={toggleSidebar}>

@@ -187,7 +187,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   )}
                   title={isCollapsed ? item.label : undefined}
                 >
-                  <item.icon size={isCollapsed ? 28 : 20} />
+                  <item.icon size={isCollapsed ? 32 : 20} />
                   {!isCollapsed && (
                     <div className="flex items-center justify-between w-full">
                       <span>{item.label}</span>
@@ -228,7 +228,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
             title={isCollapsed ? "Suporte" : undefined}
           >
-            <MessageCircle size={isCollapsed ? 28 : 20} />
+            <MessageCircle size={isCollapsed ? 32 : 20} />
             {!isCollapsed && <span>Suporte</span>}
           </button>
 
