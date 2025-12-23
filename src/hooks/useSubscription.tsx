@@ -50,6 +50,24 @@ const setCachedSubscription = (subscription: Subscription | null) => {
   }
 };
 
+// Função para selecionar a melhor subscription entre várias
+const pickBestSubscription = (subscriptions: Subscription[]): Subscription | null => {
+  if (!subscriptions || subscriptions.length === 0) return null;
+  
+  // Prioridade: active pro > active pendrive > trial > expired/free
+  const priority = (sub: Subscription): number => {
+    if (sub.status === 'active' && sub.plan_type === 'pro') return 4;
+    if (sub.status === 'active' && sub.plan_type === 'pendrive') return 3;
+    if (sub.status === 'trial') return 2;
+    if (sub.status === 'active') return 1;
+    return 0;
+  };
+  
+  return subscriptions.reduce((best, current) => 
+    priority(current) > priority(best) ? current : best
+  , subscriptions[0]);
+};
+
 export const useSubscription = () => {
   const { user } = useAuth();
   const { isImpersonating, impersonatedUser } = useImpersonation();
@@ -58,7 +76,8 @@ export const useSubscription = () => {
   // Inicializar com cache se disponível para evitar flickering
   const cachedSub = currentUserId ? getCachedSubscription(currentUserId) : null;
   const [subscription, setSubscription] = useState<Subscription | null>(cachedSub);
-  const [isLoading, setIsLoading] = useState(!cachedSub); // Se tem cache, não está carregando
+  const [isLoading, setIsLoading] = useState(!cachedSub);
+  const [isHydrated, setIsHydrated] = useState(false); // Indica se já consultou o servidor
   const [error, setError] = useState<string | null>(null);
   const lastFetchedUserId = useRef<string | null>(null);
 
@@ -68,74 +87,66 @@ export const useSubscription = () => {
         setSubscription(null);
         setCachedSubscription(null);
         setIsLoading(false);
+        setIsHydrated(true);
         return;
       }
 
-      // Se já buscamos para este usuário e temos cache, não precisa mostrar loading
-      const cached = getCachedSubscription(currentUserId);
-      if (cached && lastFetchedUserId.current === currentUserId) {
+      // Se já buscamos para este usuário, não precisa buscar novamente
+      if (lastFetchedUserId.current === currentUserId && isHydrated) {
         return;
       }
 
       try {
         // Só mostra loading se não tiver cache
+        const cached = getCachedSubscription(currentUserId);
         if (!cached) {
           setIsLoading(true);
         }
         setError(null);
 
+        // Buscar últimas 5 subscriptions para escolher a melhor
         const { data, error } = await supabase
           .from('subscriptions')
           .select('*')
           .eq('user_id', currentUserId)
           .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+          .limit(5);
 
         if (error) throw error;
 
-        let finalSubscription = data;
+        // Selecionar a melhor subscription
+        let bestSubscription = pickBestSubscription(data || []);
 
-        if (data) {
+        if (bestSubscription) {
           // Verificar se subscription expirou (incluindo trial)
           const now = new Date();
-          const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
+          const expiresAt = bestSubscription.expires_at ? new Date(bestSubscription.expires_at) : null;
           
-          if (expiresAt && now > expiresAt && (data.status === 'active' || data.status === 'trial')) {
+          if (expiresAt && now > expiresAt && (bestSubscription.status === 'active' || bestSubscription.status === 'trial')) {
             // Marcar como expirada
             const { data: updatedSub, error: updateError } = await supabase
               .from('subscriptions')
               .update({ status: 'expired' })
-              .eq('id', data.id)
+              .eq('id', bestSubscription.id)
               .select()
               .single();
             
-            if (updateError) throw updateError;
-            finalSubscription = updatedSub;
+            if (!updateError && updatedSub) {
+              bestSubscription = updatedSub;
+            }
           }
-        } else {
-          // Se não tem subscription, o trigger já deve ter criado uma trial
-          // Mas vamos verificar novamente
-          const { data: retryData } = await supabase
-            .from('subscriptions')
-            .select('*')
-            .eq('user_id', currentUserId)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          
-          finalSubscription = retryData;
         }
 
         // Atualizar estado e cache
-        setSubscription(finalSubscription);
-        setCachedSubscription(finalSubscription);
+        setSubscription(bestSubscription);
+        setCachedSubscription(bestSubscription);
         lastFetchedUserId.current = currentUserId;
       } catch (err) {
         console.error('Erro ao buscar subscription:', err);
         setError('Erro ao carregar subscription');
       } finally {
         setIsLoading(false);
+        setIsHydrated(true); // Marca que já consultou o servidor
       }
     };
 
@@ -151,12 +162,13 @@ export const useSubscription = () => {
         .select('*')
         .eq('user_id', currentUserId)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(5);
 
       if (error) throw error;
-      setSubscription(data);
-      setCachedSubscription(data);
+      
+      const bestSubscription = pickBestSubscription(data || []);
+      setSubscription(bestSubscription);
+      setCachedSubscription(bestSubscription);
     } catch (err) {
       console.error('Erro ao atualizar subscription:', err);
     }
@@ -172,6 +184,7 @@ export const useSubscription = () => {
   return {
     subscription,
     isLoading,
+    isHydrated, // Novo: indica se já consultou o servidor
     error,
     refreshSubscription,
     isPro,
