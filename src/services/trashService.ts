@@ -263,3 +263,181 @@ export const restoreItem = async (item: TrashItem): Promise<void> => {
       throw new Error(`Unknown item type: ${item.type}`);
   }
 };
+
+// Permanent delete functions for each type
+export const permanentDeleteSong = async (songId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('songs')
+    .delete()
+    .eq('id', songId);
+
+  if (error) throw error;
+};
+
+export const permanentDeleteDraft = async (draftId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('drafts')
+    .delete()
+    .eq('id', draftId);
+
+  if (error) throw error;
+};
+
+export const permanentDeleteFolder = async (folderId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('folders')
+    .delete()
+    .eq('id', folderId);
+
+  if (error) throw error;
+};
+
+export const permanentDeleteTemplate = async (templateId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('templates')
+    .delete()
+    .eq('id', templateId);
+
+  if (error) throw error;
+};
+
+export const permanentDeleteMusicBase = async (musicBaseId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('music_bases')
+    .delete()
+    .eq('id', musicBaseId);
+
+  if (error) throw error;
+};
+
+// Generic permanent delete function
+export const permanentDeleteItem = async (item: TrashItem): Promise<void> => {
+  switch (item.type) {
+    case 'song':
+      await permanentDeleteSong(item.id);
+      break;
+    case 'draft':
+      await permanentDeleteDraft(item.id);
+      break;
+    case 'folder':
+      await permanentDeleteFolder(item.id);
+      break;
+    case 'template':
+      await permanentDeleteTemplate(item.id);
+      break;
+    case 'music_base':
+      await permanentDeleteMusicBase(item.id);
+      break;
+    default:
+      throw new Error(`Unknown item type: ${item.type}`);
+  }
+};
+
+// Clean up expired items (older than 7 days)
+export const cleanupExpiredTrashItems = async (): Promise<number> => {
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+  if (!userId) throw new Error('User not authenticated');
+
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const expiryDate = sevenDaysAgo.toISOString();
+
+  let deletedCount = 0;
+
+  // Delete expired songs
+  const { data: expiredSongs } = await supabase
+    .from('songs')
+    .select('id')
+    .eq('user_id', userId)
+    .not('deleted_at', 'is', null)
+    .lt('deleted_at', expiryDate);
+
+  if (expiredSongs && expiredSongs.length > 0) {
+    const { error } = await supabase
+      .from('songs')
+      .delete()
+      .eq('user_id', userId)
+      .not('deleted_at', 'is', null)
+      .lt('deleted_at', expiryDate);
+    
+    if (!error) deletedCount += expiredSongs.length;
+  }
+
+  // Delete expired drafts
+  const { data: expiredDrafts } = await supabase
+    .from('drafts')
+    .select('id')
+    .eq('user_id', userId)
+    .not('deleted_at', 'is', null)
+    .lt('deleted_at', expiryDate);
+
+  if (expiredDrafts && expiredDrafts.length > 0) {
+    const { error } = await supabase
+      .from('drafts')
+      .delete()
+      .eq('user_id', userId)
+      .not('deleted_at', 'is', null)
+      .lt('deleted_at', expiryDate);
+    
+    if (!error) deletedCount += expiredDrafts.length;
+  }
+
+  // Delete expired folders
+  const { data: expiredFolders } = await supabase
+    .from('folders')
+    .select('id')
+    .eq('user_id', userId)
+    .not('deleted_at', 'is', null)
+    .lt('deleted_at', expiryDate);
+
+  if (expiredFolders && expiredFolders.length > 0) {
+    const { error } = await supabase
+      .from('folders')
+      .delete()
+      .eq('user_id', userId)
+      .not('deleted_at', 'is', null)
+      .lt('deleted_at', expiryDate);
+    
+    if (!error) deletedCount += expiredFolders.length;
+  }
+
+  // Delete expired templates
+  const { data: expiredTemplates } = await supabase
+    .from('templates')
+    .select('id')
+    .eq('user_id', userId)
+    .not('deleted_at', 'is', null)
+    .lt('deleted_at', expiryDate);
+
+  if (expiredTemplates && expiredTemplates.length > 0) {
+    const { error } = await supabase
+      .from('templates')
+      .delete()
+      .eq('user_id', userId)
+      .not('deleted_at', 'is', null)
+      .lt('deleted_at', expiryDate);
+    
+    if (!error) deletedCount += expiredTemplates.length;
+  }
+
+  // Delete expired music bases
+  const { data: expiredMusicBases } = await supabase
+    .from('music_bases')
+    .select('id')
+    .eq('user_id', userId)
+    .not('deleted_at', 'is', null)
+    .lt('deleted_at', expiryDate);
+
+  if (expiredMusicBases && expiredMusicBases.length > 0) {
+    const { error } = await supabase
+      .from('music_bases')
+      .delete()
+      .eq('user_id', userId)
+      .not('deleted_at', 'is', null)
+      .lt('deleted_at', expiryDate);
+    
+    if (!error) deletedCount += expiredMusicBases.length;
+  }
+
+  return deletedCount;
+};

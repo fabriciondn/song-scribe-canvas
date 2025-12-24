@@ -13,7 +13,7 @@ import {
   AlertTriangle 
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getTrashItems, restoreItem, TrashItem } from '@/services/trashService';
+import { getTrashItems, restoreItem, cleanupExpiredTrashItems, TrashItem } from '@/services/trashService';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -41,6 +41,14 @@ const Trash: React.FC = () => {
   const loadTrashItems = async () => {
     try {
       setLoading(true);
+      
+      // First, cleanup expired items (older than 7 days)
+      const deletedCount = await cleanupExpiredTrashItems();
+      if (deletedCount > 0) {
+        console.log(`${deletedCount} itens expirados foram removidos permanentemente.`);
+      }
+      
+      // Then load remaining items
       const items = await getTrashItems();
       setTrashItems(items);
     } catch (error) {
