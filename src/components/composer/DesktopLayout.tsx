@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { EditorHeader } from './EditorHeader';
 import { SoloEditor } from './SoloEditor';
-import { CollaborativeEditor } from './CollaborativeEditor';
 import { MultiToolPanel } from './MultiToolPanel';
 import { ToolType } from './ToolSelector';
 
@@ -64,19 +63,15 @@ export const DesktopLayout: React.FC<DesktopLayoutProps> = ({
           onAddTool={handleAddTool}
         />
         
-        {partnershipId ? (
-          <CollaborativeEditor partnershipId={partnershipId} />
-        ) : (
-          <SoloEditor
-            title={title}
-            content={content}
-            onTitleChange={onTitleChange}
-            onContentChange={onContentChange}
-            onSectionClick={onSectionClick}
-            onTextAreaDrop={onTextAreaDrop}
-            textareaRef={textareaRef}
-          />
-        )}
+        <SoloEditor
+          title={title}
+          content={content}
+          onTitleChange={onTitleChange}
+          onContentChange={onContentChange}
+          onSectionClick={onSectionClick}
+          onTextAreaDrop={onTextAreaDrop}
+          textareaRef={textareaRef}
+        />
       </div>
       
       {/* Painel de Múltiplas Ferramentas */}
