@@ -678,6 +678,82 @@ export type Database = {
         }
         Relationships: []
       }
+      collaborative_participants: {
+        Row: {
+          id: string
+          is_online: boolean
+          joined_at: string
+          last_activity: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_online?: boolean
+          joined_at?: string
+          last_activity?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_online?: boolean
+          joined_at?: string
+          last_activity?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborative_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "collaborative_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collaborative_sessions: {
+        Row: {
+          created_at: string
+          draft_id: string | null
+          expires_at: string
+          host_user_id: string
+          id: string
+          is_active: boolean
+          session_token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          draft_id?: string | null
+          expires_at?: string
+          host_user_id: string
+          id?: string
+          is_active?: boolean
+          session_token: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          draft_id?: string | null
+          expires_at?: string
+          host_user_id?: string
+          id?: string
+          is_active?: boolean
+          session_token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborative_sessions_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       composer_tokens: {
         Row: {
           created_at: string
