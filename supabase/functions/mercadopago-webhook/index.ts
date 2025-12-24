@@ -143,6 +143,7 @@ serve(async (req) => {
           started_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),
           payment_provider_subscription_id: paymentId.toString(),
+          last_credit_grant_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
         .eq('id', subscription.id);
@@ -150,6 +151,25 @@ serve(async (req) => {
       if (updateError) {
         console.error('❌ Error activating subscription:', updateError);
         return new Response('Error activating subscription', { status: 500, headers: corsHeaders });
+      }
+
+      // 🎁 Conceder créditos mensais para assinatura Pro
+      if (planType === 'pro') {
+        console.log('💰 Granting monthly credits for Pro subscription...');
+        try {
+          const { data: creditsResult, error: creditsError } = await supabaseService.rpc(
+            'grant_monthly_subscription_credits',
+            { p_user_id: subscription.user_id }
+          );
+          
+          if (creditsError) {
+            console.error('❌ Error granting monthly credits:', creditsError);
+          } else {
+            console.log('✅ Monthly credits granted:', creditsResult);
+          }
+        } catch (creditsErr) {
+          console.error('⚠️ Error granting credits (non-critical):', creditsErr);
+        }
       }
 
       console.log(`🎉 ${planType.toUpperCase()} subscription activated successfully!`, {

@@ -17,48 +17,51 @@ const Plans = () => {
   const plans = [
     {
       id: 'free',
-      name: 'Free',
+      name: 'Gratuito',
       price: 0,
       description: 'Para começar sua jornada musical',
       icon: Star,
       features: [
-        'Dashboard básico',
+        'Dashboard pessoal',
+        'Registro autoral (usa créditos)',
+        'Ranking de compositores',
+        'Minhas Compras',
         'Configurações de perfil',
-        'Acesso limitado às funcionalidades',
-        'Suporte por email',
       ],
       limitations: [
         'Sem acesso ao Compositor',
         'Sem acesso às Bases Musicais',
         'Sem acesso ao Cifrador',
-        'Sem acesso aos Rascunhos avançados',
+        'Sem acesso às Pastas',
+        'Sem créditos mensais',
       ],
       buttonText: subscription?.plan_type === 'free' ? 'Plano Atual' : 'Gratuito',
       isPopular: false,
-      current: subscription?.plan_type === 'free'
+      current: subscription?.plan_type === 'free' || !subscription
     },
     {
       id: 'pro',
       name: 'Pro',
-      price: 14.99,
-      originalPrice: 49.99,
-      description: 'Todas as funcionalidades para profissionais',
+      price: 29.99,
+      description: 'Acesso total + créditos mensais garantidos',
       icon: Crown,
       features: [
+        'Tudo do plano Gratuito',
+        '2 créditos garantidos por mês',
+        '+1 crédito de bônus mensal',
         'Acesso total ao Compositor',
         'Biblioteca completa de Bases Musicais',
         'Cifrador avançado',
-        'Rascunhos ilimitados',
         'Organizador de pastas',
+        'Rascunhos ilimitados',
         'Sistema de Parcerias',
-        'Registro de obras autorais',
         'Tutoriais exclusivos',
         'Suporte prioritário',
-        'Certificados profissionais',
       ],
+      highlight: 'Bônus só disponíveis com assinatura em dia. Congelam se inativo e expiram após 2 meses.',
       buttonText: subscription?.plan_type === 'pro' && subscription?.status === 'active' 
         ? 'Plano Atual' 
-        : 'Fazer Upgrade',
+        : 'Assinar Pro',
       isPopular: true,
       current: subscription?.plan_type === 'pro' && subscription?.status === 'active'
     }
@@ -145,11 +148,6 @@ const Plans = () => {
                   <CardDescription>{plan.description}</CardDescription>
                   
                   <div className="space-y-1">
-                    {plan.originalPrice && (
-                      <p className="text-sm text-muted-foreground">
-                        <span className="line-through">R$ {plan.originalPrice.toFixed(2)}</span>
-                      </p>
-                    )}
                     <div className="text-3xl font-bold">
                       {plan.price === 0 ? (
                         'Grátis'
@@ -160,9 +158,9 @@ const Plans = () => {
                         </>
                       )}
                     </div>
-                    {plan.originalPrice && (
+                    {plan.id === 'pro' && (
                       <p className="text-sm text-green-600 font-semibold">
-                        Economia de R$ {(plan.originalPrice - plan.price).toFixed(2)}/mês
+                        2 créditos + 1 bônus mensal
                       </p>
                     )}
                   </div>
@@ -192,6 +190,12 @@ const Plans = () => {
                           </li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {'highlight' in plan && plan.highlight && (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-xs text-amber-700">{plan.highlight}</p>
                     </div>
                   )}
 
