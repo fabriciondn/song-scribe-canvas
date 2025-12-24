@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Save, Loader2, Folder, FolderOpen, ChevronDown, ChevronRight, FolderInput } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, Loader2, Folder, FolderOpen, ChevronDown, ChevronRight, FolderInput, Users } from 'lucide-react';
 import { AudioRecorder } from '../components/drafts/AudioRecorder';
 import { BasesSelector } from '../components/drafts/BasesSelector';
 import { useToast } from '@/components/ui/use-toast';
@@ -23,6 +23,15 @@ import { prepareAudioFilesForStorage } from '../services/drafts/audioService';
 import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
 import { BaseMusical } from '@/services/basesMusicais/basesService';
 import { getFolders, createFolder, Folder as FolderType } from '@/services/folderService';
+import { CollaborativeSessionModal } from '@/components/collaborative/CollaborativeSessionModal';
+import { CollaborativeHeader } from '@/components/collaborative/CollaborativeHeader';
+import { useCollaborativeSession } from '@/hooks/useCollaborativeSession';
+import { 
+  CollaborativeSession, 
+  getActiveSessionForDraft,
+  endSession as endCollaborativeSession,
+  leaveSession as leaveCollaborativeSession
+} from '@/services/collaborativeSessionService';
 import { 
   Select,
   SelectContent,
@@ -73,10 +82,40 @@ const Drafts: React.FC = () => {
   // Novo estado para gerenciar múltiplos arquivos de áudio
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
   const [audioBlobs, setAudioBlobs] = useState<Map<string, Blob>>(new Map());
+
+  // Estados para sessão colaborativa
+  const [isCollaborativeModalOpen, setIsCollaborativeModalOpen] = useState(false);
+  const [collaborativeSession, setCollaborativeSession] = useState<CollaborativeSession | null>(null);
+  const [collaborativeDraftId, setCollaborativeDraftId] = useState<string | null>(null);
   
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Hook de sessão colaborativa
+  const handleDraftUpdate = useCallback((updatedDraft: Partial<Draft>) => {
+    // Atualizar o conteúdo quando outro participante editar
+    if (updatedDraft.title !== undefined && updatedDraft.title !== title) {
+      setTitle(updatedDraft.title);
+    }
+    if (updatedDraft.content !== undefined && updatedDraft.content !== content) {
+      setContent(updatedDraft.content);
+    }
+    // Atualizar lista de drafts
+    setDrafts(prev => prev.map(d => 
+      d.id === updatedDraft.id ? { ...d, ...updatedDraft } : d
+    ));
+  }, [title, content]);
+
+  const { 
+    participants, 
+    isConnected, 
+    isHost 
+  } = useCollaborativeSession({
+    session: collaborativeSession,
+    draftId: collaborativeDraftId,
+    onDraftUpdate: handleDraftUpdate
+  });
   
   // Check authentication and load drafts and folders
   useEffect(() => {
@@ -374,6 +413,75 @@ const Drafts: React.FC = () => {
       });
     }
   };
+
+  // Handlers para sessão colaborativa
+  const handleOpenCollaborativeModal = (draftIdToShare?: string) => {
+    if (draftIdToShare) {
+      setCollaborativeDraftId(draftIdToShare);
+    }
+    setIsCollaborativeModalOpen(true);
+  };
+
+  const handleSessionCreated = (session: CollaborativeSession) => {
+    setCollaborativeSession(session);
+    toast({
+      title: 'Sessão colaborativa ativa',
+      description: 'Seu parceiro pode entrar usando o token.',
+    });
+  };
+
+  const handleSessionJoined = async (session: CollaborativeSession, draftId: string) => {
+    setCollaborativeSession(session);
+    setCollaborativeDraftId(draftId);
+    
+    // Carregar o rascunho da sessão
+    try {
+      const draft = await draftService.getDraftById(draftId);
+      if (draft) {
+        startEditingDraft(draft);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar rascunho da sessão:', error);
+    }
+  };
+
+  const handleEndSession = async () => {
+    if (!collaborativeSession) return;
+    
+    try {
+      await endCollaborativeSession(collaborativeSession.id);
+      setCollaborativeSession(null);
+      setCollaborativeDraftId(null);
+      toast({
+        title: 'Sessão encerrada',
+        description: 'A sessão colaborativa foi encerrada.',
+      });
+    } catch (error) {
+      console.error('Erro ao encerrar sessão:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível encerrar a sessão.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleLeaveSession = async () => {
+    if (!collaborativeSession) return;
+    
+    try {
+      await leaveCollaborativeSession(collaborativeSession.id);
+      setCollaborativeSession(null);
+      setCollaborativeDraftId(null);
+      setIsEditing(false);
+      toast({
+        title: 'Você saiu da sessão',
+        description: 'Você não está mais na sessão colaborativa.',
+      });
+    } catch (error) {
+      console.error('Erro ao sair da sessão:', error);
+    }
+  };
   
   if (isLoading) {
     return (
@@ -398,6 +506,10 @@ const Drafts: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Seus Rascunhos</h2>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => handleOpenCollaborativeModal()}>
+            <Users className="mr-2 h-4 w-4" />
+            Compor em Parceria
+          </Button>
           <Button variant="outline" onClick={() => setIsNewFolderModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Nova Pasta
@@ -422,6 +534,31 @@ const Drafts: React.FC = () => {
       {isEditing ? (
         <div className="bg-card p-6 rounded-lg border animate-fade-in">
           <div className="space-y-4">
+            {/* Header colaborativo */}
+            {collaborativeSession && (
+              <CollaborativeHeader
+                session={collaborativeSession}
+                participants={participants}
+                isHost={isHost}
+                isConnected={isConnected}
+                currentUserId={user?.id}
+                onEndSession={handleEndSession}
+                onLeaveSession={handleLeaveSession}
+              />
+            )}
+
+            {/* Botão para iniciar sessão colaborativa (se editando um rascunho existente) */}
+            {activeId && !collaborativeSession && (
+              <Button 
+                variant="outline" 
+                onClick={() => handleOpenCollaborativeModal(activeId)}
+                className="w-full"
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Convidar Parceiro para Compor
+              </Button>
+            )}
+
             <BasesSelector
               selectedBase={selectedBase}
               onSelectBase={setSelectedBase}
@@ -478,7 +615,7 @@ const Drafts: React.FC = () => {
               />
             </div>
             
-            <AudioRecorder 
+            <AudioRecorder
               onSaveRecordings={handleSaveRecordings} 
               initialAudioFiles={audioFiles}
             />
@@ -628,6 +765,19 @@ const Drafts: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Sessão Colaborativa */}
+      <CollaborativeSessionModal
+        isOpen={isCollaborativeModalOpen}
+        onClose={() => {
+          setIsCollaborativeModalOpen(false);
+          setCollaborativeDraftId(null);
+        }}
+        draftId={collaborativeDraftId || activeId || undefined}
+        draftTitle={title || undefined}
+        onSessionCreated={handleSessionCreated}
+        onSessionJoined={handleSessionJoined}
+      />
       </div>
     </ProOnlyWrapper>
   );
