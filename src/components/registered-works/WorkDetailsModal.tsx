@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Download, 
   FileText, 
   Calendar, 
   User, 
@@ -376,31 +375,20 @@ export const WorkDetailsModal: React.FC<WorkDetailsModalProps> = ({
                 )}
               </Button>
 
-              {/* Controles de Áudio */}
+              {/* Controle de Áudio */}
               {work.audio_file_path && (
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline"
-                    onClick={handlePlayAudio}
-                    className="flex-1"
-                  >
-                    {playingAudio && !currentAudio?.paused ? (
-                      <Pause className="h-4 w-4 mr-2" />
-                    ) : (
-                      <Play className="h-4 w-4 mr-2" />
-                    )}
-                    {playingAudio && !currentAudio?.paused ? 'Pausar' : 'Reproduzir'}
-                  </Button>
-                  
-                  <Button 
-                    variant="outline"
-                    onClick={handleDownloadAudio}
-                    className="flex-1"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
-                </div>
+                <Button 
+                  variant="outline"
+                  onClick={handlePlayAudio}
+                  className="w-full"
+                >
+                  {playingAudio && !currentAudio?.paused ? (
+                    <Pause className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Play className="h-4 w-4 mr-2" />
+                  )}
+                  {playingAudio && !currentAudio?.paused ? 'Pausar' : 'Reproduzir'}
+                </Button>
               )}
             </div>
           </div>
