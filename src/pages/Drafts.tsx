@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Save, Loader2, Folder, FolderOpen, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, Loader2, Folder, FolderOpen, ChevronDown, ChevronRight, FolderInput } from 'lucide-react';
 import { AudioRecorder } from '../components/drafts/AudioRecorder';
 import { BasesSelector } from '../components/drafts/BasesSelector';
 import { useToast } from '@/components/ui/use-toast';
@@ -43,6 +43,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Drafts: React.FC = () => {
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -342,6 +348,32 @@ const Drafts: React.FC = () => {
       });
     }
   };
+
+  const handleMoveDraftToFolder = async (draftId: string, folderId: string | null) => {
+    try {
+      const updatedDraft = await draftService.updateDraft(draftId, {
+        folderId: folderId
+      });
+      
+      setDrafts(drafts.map(d => d.id === draftId ? updatedDraft : d));
+      
+      const folderName = folderId 
+        ? folders.find(f => f.id === folderId)?.name || 'pasta'
+        : 'Sem pasta';
+      
+      toast({
+        title: 'Rascunho movido',
+        description: `O rascunho foi movido para "${folderName}".`,
+      });
+    } catch (error) {
+      console.error('Error moving draft:', error);
+      toast({
+        title: 'Erro ao mover',
+        description: 'Ocorreu um erro ao mover o rascunho. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  };
   
   if (isLoading) {
     return (
@@ -506,6 +538,8 @@ const Drafts: React.FC = () => {
                       draft={draft} 
                       onEdit={startEditingDraft}
                       onDelete={handleDeleteDraft}
+                      folders={folders}
+                      onMoveToFolder={handleMoveDraftToFolder}
                     />
                   ))}
                 </div>
@@ -545,6 +579,8 @@ const Drafts: React.FC = () => {
                         draft={draft} 
                         onEdit={startEditingDraft}
                         onDelete={handleDeleteDraft}
+                        folders={folders}
+                        onMoveToFolder={handleMoveDraftToFolder}
                       />
                     ))}
                   </div>
@@ -602,15 +638,56 @@ interface DraftCardProps {
   draft: Draft;
   onEdit: (draft: Draft) => void;
   onDelete: (id: string) => void;
+  folders?: FolderType[];
+  onMoveToFolder?: (draftId: string, folderId: string | null) => void;
 }
 
-const DraftCard: React.FC<DraftCardProps> = ({ draft, onEdit, onDelete }) => {
+const DraftCard: React.FC<DraftCardProps> = ({ draft, onEdit, onDelete, folders = [], onMoveToFolder }) => {
   return (
     <Card>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg">{draft.title}</CardTitle>
           <div className="flex space-x-1">
+            {onMoveToFolder && folders.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8"
+                    title="Mover para pasta"
+                  >
+                    <FolderInput className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {!draft.folder_id && (
+                    <DropdownMenuItem disabled className="text-muted-foreground">
+                      <Folder className="h-4 w-4 mr-2" />
+                      Sem pasta (atual)
+                    </DropdownMenuItem>
+                  )}
+                  {draft.folder_id && (
+                    <DropdownMenuItem onClick={() => onMoveToFolder(draft.id, null)}>
+                      <FolderOpen className="h-4 w-4 mr-2" />
+                      Remover da pasta
+                    </DropdownMenuItem>
+                  )}
+                  {folders
+                    .filter(f => f.id !== draft.folder_id)
+                    .map(folder => (
+                      <DropdownMenuItem 
+                        key={folder.id} 
+                        onClick={() => onMoveToFolder(draft.id, folder.id)}
+                      >
+                        <Folder className="h-4 w-4 mr-2" />
+                        {folder.name}
+                      </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <Button 
               variant="ghost" 
               size="icon" 
