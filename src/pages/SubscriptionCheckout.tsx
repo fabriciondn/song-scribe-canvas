@@ -86,16 +86,18 @@ export default function SubscriptionCheckout() {
 
   const freeFeatures = [
     'Dashboard pessoal',
-    'Registro autoral básico',
-    'Lixeira',
+    'Registro autoral (usa créditos)',
+    'Ranking de compositores',
+    'Minhas Compras',
     'Configurações de conta'
   ];
 
   const proFeatures = [
     'Tudo do plano Gratuito',
+    '2 créditos garantidos por mês',
+    '+1 crédito de bônus mensal',
     'Compositor avançado',
     'Cifrador musical',
-    'Cifrador Neo',
     'Bases musicais completas',
     'Sistema de pastas',
     'Rascunhos ilimitados',
@@ -190,12 +192,12 @@ export default function SubscriptionCheckout() {
                   Todos os recursos para profissionais
                 </CardDescription>
                 <div className="text-2xl font-bold">
-                  R$ 14,99
+                  R$ 29,99
                   <span className="text-sm font-normal text-muted-foreground">/mês</span>
                 </div>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-3 mb-6">
+                <ul className="space-y-3 mb-4">
                   {proFeatures.map((feature, index) => (
                     <li key={index} className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
@@ -203,6 +205,11 @@ export default function SubscriptionCheckout() {
                     </li>
                   ))}
                 </ul>
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-xs text-amber-700">
+                    Bônus só disponíveis com assinatura em dia. Congelam se inativo e expiram após 2 meses.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -225,7 +232,7 @@ export default function SubscriptionCheckout() {
                 <Separator />
                 <div className="flex justify-between font-medium">
                   <span>Total mensal:</span>
-                  <span>R$ 14,99</span>
+                  <span>R$ 29,99</span>
                 </div>
               </div>
             </CardContent>
@@ -273,11 +280,11 @@ export default function SubscriptionCheckout() {
                   </div>
                 </div>
                 <div className="text-center space-y-2">
-                  <p className="text-sm font-medium">Valor: R$ 14,99</p>
+                  <p className="text-sm font-medium">Valor: R$ 29,99</p>
                   <p className="text-xs text-muted-foreground">
                     {isChecking 
                       ? "Aguardando confirmação do pagamento..." 
-                      : "Após o pagamento, sua conta será ativada automaticamente"}
+                      : "Após o pagamento, sua conta será ativada automaticamente com 2 créditos + 1 bônus"}
                   </p>
                 </div>
               </CardContent>

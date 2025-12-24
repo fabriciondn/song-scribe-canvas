@@ -1687,6 +1687,54 @@ export type Database = {
           },
         ]
       }
+      subscription_credits_bonus: {
+        Row: {
+          created_at: string | null
+          credits: number
+          expires_at: string | null
+          frozen_at: string | null
+          id: string
+          is_frozen: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          credits?: number
+          expires_at?: string | null
+          frozen_at?: string | null
+          id?: string
+          is_frozen?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          credits?: number
+          expires_at?: string | null
+          frozen_at?: string | null
+          id?: string
+          is_frozen?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_credits_bonus_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_credits_bonus_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           amount: number | null
@@ -1695,6 +1743,7 @@ export type Database = {
           currency: string | null
           expires_at: string | null
           id: string
+          last_credit_grant_at: string | null
           payment_provider: string | null
           payment_provider_subscription_id: string | null
           plan_type: string
@@ -1710,6 +1759,7 @@ export type Database = {
           currency?: string | null
           expires_at?: string | null
           id?: string
+          last_credit_grant_at?: string | null
           payment_provider?: string | null
           payment_provider_subscription_id?: string | null
           plan_type?: string
@@ -1725,6 +1775,7 @@ export type Database = {
           currency?: string | null
           expires_at?: string | null
           id?: string
+          last_credit_grant_at?: string | null
           payment_provider?: string | null
           payment_provider_subscription_id?: string | null
           plan_type?: string
@@ -2002,6 +2053,8 @@ export type Database = {
       }
       decrement_user_credit: { Args: { user_id: string }; Returns: undefined }
       delete_draft: { Args: { draft_id: string }; Returns: undefined }
+      expire_frozen_bonus_credits: { Args: never; Returns: number }
+      freeze_bonus_credits: { Args: { p_user_id: string }; Returns: undefined }
       generate_affiliate_code: {
         Args: { user_id: string; user_name: string }
         Returns: string
@@ -2079,6 +2132,10 @@ export type Database = {
       }
       get_online_users_count: { Args: never; Returns: number }
       get_user_role: { Args: { user_id: string }; Returns: string }
+      grant_monthly_subscription_credits: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       is_admin_user: { Args: never; Returns: boolean }
       is_user_admin: { Args: { check_user_id: string }; Returns: boolean }
       is_user_moderator: { Args: { check_user_id: string }; Returns: boolean }
@@ -2201,6 +2258,10 @@ export type Database = {
           transaction_description?: string
         }
         Returns: boolean
+      }
+      use_credits_for_registration: {
+        Args: { p_credits_needed?: number; p_user_id: string }
+        Returns: Json
       }
       validate_affiliate_commissions: { Args: never; Returns: Json }
     }
