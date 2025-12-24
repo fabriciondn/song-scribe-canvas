@@ -18,10 +18,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Upload, FileAudio } from 'lucide-react';
+import { Upload, FileAudio, Key, CheckCircle2, Loader2, X } from 'lucide-react';
 import { AuthorRegistrationData } from '@/pages/AuthorRegistration';
 import { useProfile } from '@/hooks/useProfile';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { validateComposerToken, ValidatedComposer } from '@/services/composerTokenService';
+import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3'];
@@ -74,6 +77,12 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
   const [audioError, setAudioError] = useState<string>('');
   const [isCurrentUser, setIsCurrentUser] = useState<boolean>(false);
   const { profile } = useProfile();
+  const { toast } = useToast();
+  
+  // Token validation state
+  const [tokenInput, setTokenInput] = useState('');
+  const [isValidatingToken, setIsValidatingToken] = useState(false);
+  const [validatedCoauthors, setValidatedCoauthors] = useState<Array<ValidatedComposer & { addedByToken: boolean }>>([]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -168,6 +177,91 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
     const currentAuthors = form.getValues('otherAuthors') || [];
     const newAuthors = currentAuthors.filter((_, i) => i !== index);
     form.setValue('otherAuthors', newAuthors);
+    
+    // Also remove from validated coauthors if it was added by token
+    setValidatedCoauthors(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Validate token and add coauthor
+  const handleValidateToken = async () => {
+    if (!tokenInput.trim()) {
+      toast({
+        title: 'Token obrigatório',
+        description: 'Por favor, insira o token do coautor.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsValidatingToken(true);
+    try {
+      const result = await validateComposerToken(tokenInput);
+      
+      if (result.valid && result.composer) {
+        // Check if already added
+        const currentAuthors = form.getValues('otherAuthors') || [];
+        const alreadyAdded = currentAuthors.some(a => a.cpf === result.composer!.cpf) ||
+          validatedCoauthors.some(c => c.cpf === result.composer!.cpf);
+        
+        if (alreadyAdded) {
+          toast({
+            title: 'Coautor já adicionado',
+            description: 'Este compositor já foi adicionado como coautor.',
+            variant: 'destructive',
+          });
+          return;
+        }
+        
+        // Add to form
+        const newAuthor = { 
+          name: result.composer.artisticName || result.composer.name, 
+          cpf: result.composer.cpf 
+        };
+        form.setValue('otherAuthors', [...currentAuthors, newAuthor]);
+        
+        // Track validated coauthors
+        setValidatedCoauthors(prev => [...prev, { ...result.composer!, addedByToken: true }]);
+        
+        // Enable hasOtherAuthors if not already
+        if (!form.getValues('hasOtherAuthors')) {
+          form.setValue('hasOtherAuthors', true);
+        }
+        
+        setTokenInput('');
+        
+        toast({
+          title: 'Coautor adicionado!',
+          description: `${result.composer.name} foi adicionado como coautor.`,
+        });
+      } else {
+        toast({
+          title: 'Token inválido',
+          description: result.error || 'Não foi possível validar o token.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao validar token:', error);
+      toast({
+        title: 'Erro ao validar token',
+        description: 'Ocorreu um erro. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsValidatingToken(false);
+    }
+  };
+
+  const removeValidatedCoauthor = (cpf: string) => {
+    const currentAuthors = form.getValues('otherAuthors') || [];
+    const newAuthors = currentAuthors.filter(a => a.cpf !== cpf);
+    form.setValue('otherAuthors', newAuthors);
+    setValidatedCoauthors(prev => prev.filter(c => c.cpf !== cpf));
+    
+    // If no more authors, disable hasOtherAuthors
+    if (newAuthors.length === 0) {
+      form.setValue('hasOtherAuthors', false);
+    }
   };
 
   const formatCpf = (value: string) => {
@@ -349,84 +443,160 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
             {/* Lista de outros autores */}
             {hasOtherAuthors && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Outros Autores</Label>
+                {/* Token Input Section */}
+                <div className="p-4 border rounded-lg bg-muted/30 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Key className="h-4 w-4 text-primary" />
+                    <Label className="font-medium">Adicionar coautor por Token</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Insira o token do compositor parceiro para adicionar automaticamente seus dados.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Input
+                      placeholder="Ex: CPT-XXXXXXXXXXXX"
+                      value={tokenInput}
+                      onChange={(e) => setTokenInput(e.target.value.toUpperCase())}
+                      className="font-mono flex-1"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleValidateToken}
+                      disabled={isValidatingToken || !tokenInput.trim()}
+                      className="shrink-0"
+                    >
+                      {isValidatingToken ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Validando...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                          Validar Token
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Coauthors added by token */}
+                {validatedCoauthors.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Coautores adicionados por token:</Label>
+                    {validatedCoauthors.map((coauthor) => (
+                      <div 
+                        key={coauthor.id} 
+                        className="flex items-center justify-between p-3 border rounded-lg bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                      >
+                        <div className="flex items-center gap-3">
+                          <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <div>
+                            <p className="font-medium text-sm">{coauthor.artisticName || coauthor.name}</p>
+                            <p className="text-xs text-muted-foreground">CPF: {coauthor.cpf}</p>
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            Verificado
+                          </Badge>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeValidatedCoauthor(coauthor.cpf)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Manual author section */}
+                <div className="flex items-center justify-between pt-2">
+                  <Label className="text-sm text-muted-foreground">Ou adicione manualmente:</Label>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={addOtherAuthor}
                   >
-                    Adicionar Autor
+                    Adicionar Manual
                   </Button>
                 </div>
                 
-                {otherAuthors.map((author, index) => (
-                  <div key={index} className="space-y-2 p-4 border rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium">Autor {index + 1}</h4>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeOtherAuthor(index)}
-                      >
-                        Remover
-                      </Button>
-                    </div>
-                    
-                    <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                      <FormField
-                        control={form.control}
-                        name={`otherAuthors.${index}.name`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nome Completo *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Digite o nome completo" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                {otherAuthors.filter((_, index) => !validatedCoauthors.some(c => c.cpf === otherAuthors[index]?.cpf)).map((author, index) => {
+                  const isValidated = validatedCoauthors.some(c => c.cpf === author.cpf);
+                  if (isValidated) return null;
+                  
+                  return (
+                    <div key={index} className="space-y-2 p-4 border rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium">Autor {index + 1}</h4>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeOtherAuthor(index)}
+                        >
+                          Remover
+                        </Button>
+                      </div>
                       
-                      <FormField
-                        control={form.control}
-                        name={`otherAuthors.${index}.cpf`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>CPF *</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="000.000.000-00" 
-                                {...field}
-                                onChange={(e) => {
-                                  const formatted = formatCpf(e.target.value);
-                                  field.onChange(formatted);
-                                  
-                                  // Validação em tempo real
-                                  if (e.target.value && !validateCpf(formatted)) {
-                                    form.setError(`otherAuthors.${index}.cpf`, { 
-                                      type: 'custom', 
-                                      message: 'CPF inválido' 
-                                    });
-                                  } else {
-                                    form.clearErrors(`otherAuthors.${index}.cpf`);
-                                   }
-                                 }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                        <FormField
+                          control={form.control}
+                          name={`otherAuthors.${index}.name`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nome Completo *</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Digite o nome completo" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name={`otherAuthors.${index}.cpf`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>CPF *</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="000.000.000-00" 
+                                  {...field}
+                                  onChange={(e) => {
+                                    const formatted = formatCpf(e.target.value);
+                                    field.onChange(formatted);
+                                    
+                                    // Validação em tempo real
+                                    if (e.target.value && !validateCpf(formatted)) {
+                                      form.setError(`otherAuthors.${index}.cpf`, { 
+                                        type: 'custom', 
+                                        message: 'CPF inválido' 
+                                      });
+                                    } else {
+                                      form.clearErrors(`otherAuthors.${index}.cpf`);
+                                    }
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 
-                {otherAuthors.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    Clique em "Adicionar Autor" para incluir outros autores
+                {otherAuthors.length === 0 && validatedCoauthors.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-2">
+                    Use um token ou adicione manualmente para incluir coautores.
                   </p>
                 )}
               </div>
