@@ -1,6 +1,5 @@
-
 import { ImpersonationContext } from '@/context/ImpersonationContext';
-import { useState, useEffect, useMemo, useContext } from 'react';
+import { useState, useEffect, useMemo, useContext, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAffiliateRole } from '@/hooks/useAffiliateRole';
@@ -15,24 +14,52 @@ interface UserRole {
   role: 'admin' | 'moderator' | 'affiliate' | 'user';
 }
 
+const ADMIN_ROLE_CACHE_KEY = 'admin_role_cache';
+
+const getCachedAdminRole = (userId: string): string | null => {
+  try {
+    const cached = sessionStorage.getItem(ADMIN_ROLE_CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed.userId === userId) {
+        return parsed.role;
+      }
+    }
+  } catch {
+    // Ignore cache errors
+  }
+  return null;
+};
+
+const setCachedAdminRole = (userId: string, role: string | null) => {
+  try {
+    sessionStorage.setItem(ADMIN_ROLE_CACHE_KEY, JSON.stringify({ userId, role }));
+  } catch {
+    // Ignore cache errors
+  }
+};
+
 export const useUserRole = (): UserRole => {
   const { user } = useAuth();
   
-  // Usar contexto de forma segura (pode não existir em algumas rotas)
   const impersonationContext = useContext(ImpersonationContext);
   const isImpersonating = impersonationContext?.isImpersonating || false;
   const impersonatedUser = impersonationContext?.impersonatedUser;
   
   const { isPro: subscriptionIsPro, isLoading: subscriptionLoading } = useSubscription();
   const { isAffiliate, isLoading: affiliateLoading } = useAffiliateRole();
-  const [adminRole, setAdminRole] = useState<string | null>(null);
-  const [adminLoading, setAdminLoading] = useState(true);
 
   const currentUserId = useMemo(() => {
     return isImpersonating && impersonatedUser?.id ? impersonatedUser.id : user?.id;
   }, [user?.id, isImpersonating, impersonatedUser?.id]);
 
-  // Buscar role administrativo apenas uma vez por usuário
+  // Inicializar com cache para evitar flash
+  const cachedAdminRole = currentUserId ? getCachedAdminRole(currentUserId) : null;
+  const [adminRole, setAdminRole] = useState<string | null>(cachedAdminRole);
+  const [adminLoading, setAdminLoading] = useState(cachedAdminRole === null && !!currentUserId);
+  
+  const lastFetchedUserId = useRef<string | null>(null);
+
   useEffect(() => {
     if (!currentUserId) {
       setAdminRole(null);
@@ -40,10 +67,20 @@ export const useUserRole = (): UserRole => {
       return;
     }
 
+    // Se já buscamos para este usuário, não buscar novamente
+    if (lastFetchedUserId.current === currentUserId) {
+      return;
+    }
+
+    // Se temos cache, usar imediatamente sem loading
+    const cached = getCachedAdminRole(currentUserId);
+    if (cached !== null) {
+      setAdminRole(cached === 'null' ? null : cached);
+      setAdminLoading(false);
+    }
+
     const fetchAdminRole = async () => {
       try {
-        console.log('🔍 useUserRole: Verificando role administrativo para:', currentUserId);
-        
         const { data: adminData, error } = await supabase
           .from('admin_users')
           .select('role')
@@ -52,12 +89,13 @@ export const useUserRole = (): UserRole => {
 
         if (adminData && !error) {
           const normalizedRole = adminData.role === 'super_admin' ? 'admin' : adminData.role;
-          console.log('✅ useUserRole: Role administrativo encontrado:', normalizedRole);
           setAdminRole(normalizedRole);
+          setCachedAdminRole(currentUserId, normalizedRole);
         } else {
-          console.log('📋 useUserRole: Usuário comum, sem role administrativo');
           setAdminRole(null);
+          setCachedAdminRole(currentUserId, 'null');
         }
+        lastFetchedUserId.current = currentUserId;
       } catch (error) {
         console.error('❌ useUserRole: Erro ao buscar role administrativo:', error);
         setAdminRole(null);
@@ -69,9 +107,7 @@ export const useUserRole = (): UserRole => {
     fetchAdminRole();
   }, [currentUserId]);
 
-  // Calcular o role final baseado nos dados carregados
   const finalRole = useMemo((): UserRole => {
-    // Se ainda está carregando dados essenciais
     if (!currentUserId) {
       return {
         isPro: false,
@@ -83,7 +119,9 @@ export const useUserRole = (): UserRole => {
       };
     }
 
-    if (adminLoading || subscriptionLoading || affiliateLoading) {
+    // Só mostrar loading se não temos cache disponível
+    const hasCache = getCachedAdminRole(currentUserId) !== null;
+    if (!hasCache && (adminLoading || subscriptionLoading || affiliateLoading)) {
       return {
         isPro: false,
         isAdmin: false,
@@ -96,24 +134,12 @@ export const useUserRole = (): UserRole => {
 
     const isAdmin = adminRole === 'admin';
     const isModerator = adminRole === 'moderator';
-    
-    // Admins sempre têm acesso Pro, outros dependem da subscription
     const isPro = isAdmin || subscriptionIsPro;
 
-    console.log('🎯 useUserRole: Estado final:', {
-      adminRole,
-      subscriptionIsPro,
-      isPro,
-      isAdmin,
-      isModerator,
-      isAffiliate
-    });
-
-    // Determinar role final baseado na hierarquia
-    let finalRole: 'admin' | 'moderator' | 'affiliate' | 'user' = 'user';
-    if (isAdmin) finalRole = 'admin';
-    else if (isModerator) finalRole = 'moderator'; 
-    else if (isAffiliate) finalRole = 'affiliate';
+    let role: 'admin' | 'moderator' | 'affiliate' | 'user' = 'user';
+    if (isAdmin) role = 'admin';
+    else if (isModerator) role = 'moderator'; 
+    else if (isAffiliate) role = 'affiliate';
 
     return {
       isPro,
@@ -121,7 +147,7 @@ export const useUserRole = (): UserRole => {
       isModerator,
       isAffiliate,
       isLoading: false,
-      role: finalRole
+      role
     };
   }, [currentUserId, adminRole, adminLoading, subscriptionIsPro, subscriptionLoading, isAffiliate, affiliateLoading]);
 
