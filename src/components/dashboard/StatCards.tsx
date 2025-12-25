@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Shield, Music, Users, Eye, Edit, Plus, ChevronRight } from 'lucide-react';
 import { DashboardStats } from '@/services/dashboardService';
 
@@ -12,19 +12,24 @@ interface StatCardsProps {
 }
 
 export const StatCards: React.FC<StatCardsProps> = ({ stats, isPro }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Obras Registradas */}
-      <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 via-card to-card border-emerald-500/20 hover:border-emerald-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+      <Card 
+        className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 via-card to-card border-emerald-500/20 hover:border-emerald-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer group"
+        onClick={() => navigate('/dashboard/registered-works')}
+      >
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-300" />
         <CardContent className="p-6">
           <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-emerald-500/20 rounded-xl">
+            <div className="p-3 bg-emerald-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
               <Shield className="h-6 w-6 text-emerald-500" />
             </div>
             {stats.registeredWorks.total > 0 && (
-              <Badge className="bg-emerald-500/20 text-emerald-500 border-0 animate-pulse">
-                +{stats.registeredWorks.total} {stats.registeredWorks.total === 1 ? 'nova' : 'novas'}
+              <Badge className="bg-emerald-500/20 text-emerald-500 border-0">
+                {stats.registeredWorks.total} {stats.registeredWorks.total === 1 ? 'obra' : 'obras'}
               </Badge>
             )}
           </div>
@@ -38,27 +43,31 @@ export const StatCards: React.FC<StatCardsProps> = ({ stats, isPro }) => {
             variant="outline" 
             size="sm" 
             className="w-full border-emerald-500/30 hover:bg-emerald-500/10 hover:border-emerald-500/50 text-foreground"
-            asChild
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate('/dashboard/registered-works');
+            }}
           >
-            <Link to="/dashboard/registered-works">
-              <Eye className="h-4 w-4 mr-2" />
-              Ver Certificados
-            </Link>
+            <Eye className="h-4 w-4 mr-2" />
+            Ver Certificados
           </Button>
         </CardContent>
       </Card>
 
       {/* Composições */}
-      <Card className="relative overflow-hidden bg-gradient-to-br from-blue-500/10 via-card to-card border-blue-500/20 hover:border-blue-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+      <Card 
+        className="relative overflow-hidden bg-gradient-to-br from-blue-500/10 via-card to-card border-blue-500/20 hover:border-blue-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 cursor-pointer group"
+        onClick={() => navigate('/drafts')}
+      >
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-300" />
         <CardContent className="p-6">
           <div className="flex items-start justify-between mb-4">
-            <div className="p-3 bg-blue-500/20 rounded-xl">
+            <div className="p-3 bg-blue-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
               <Music className="h-6 w-6 text-blue-500" />
             </div>
             {stats.compositions.drafts > 0 && (
               <Badge className="bg-blue-500/20 text-blue-500 border-0">
-                +{stats.compositions.drafts} rascunhos
+                {stats.compositions.drafts} rascunhos
               </Badge>
             )}
           </div>
@@ -73,22 +82,24 @@ export const StatCards: React.FC<StatCardsProps> = ({ stats, isPro }) => {
               variant="outline" 
               size="sm" 
               className="flex-1 border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50 text-foreground"
-              asChild
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/drafts');
+              }}
             >
-              <Link to="/drafts">
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </Link>
+              <Edit className="h-4 w-4 mr-2" />
+              Editar
             </Button>
             <Button 
               size="sm" 
               className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
-              asChild
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/composer');
+              }}
             >
-              <Link to="/composer">
-                <Plus className="h-4 w-4 mr-2" />
-                Nova
-              </Link>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova
             </Button>
           </div>
         </CardContent>
@@ -96,11 +107,14 @@ export const StatCards: React.FC<StatCardsProps> = ({ stats, isPro }) => {
 
       {/* Parcerias Ativas */}
       {isPro && (
-        <Card className="relative overflow-hidden bg-gradient-to-br from-purple-500/10 via-card to-card border-purple-500/20 hover:border-purple-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+        <Card 
+          className="relative overflow-hidden bg-gradient-to-br from-purple-500/10 via-card to-card border-purple-500/20 hover:border-purple-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 cursor-pointer group"
+          onClick={() => navigate('/partnerships')}
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-300" />
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-4">
-              <div className="p-3 bg-purple-500/20 rounded-xl">
+              <div className="p-3 bg-purple-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
                 <Users className="h-6 w-6 text-purple-500" />
               </div>
               {/* Avatars sobrepostos */}
@@ -130,12 +144,13 @@ export const StatCards: React.FC<StatCardsProps> = ({ stats, isPro }) => {
               variant="outline" 
               size="sm" 
               className="w-full border-purple-500/30 hover:bg-purple-500/10 hover:border-purple-500/50 text-foreground"
-              asChild
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/partnerships');
+              }}
             >
-              <Link to="/partnerships">
-                Gerenciar Parcerias
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Link>
+              Gerenciar Parcerias
+              <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
           </CardContent>
         </Card>

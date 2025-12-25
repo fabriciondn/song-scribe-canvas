@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { StatCards } from '@/components/dashboard/StatCards';
 import { QuickAccess } from '@/components/dashboard/QuickAccess';
-import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useProfile } from '@/hooks/useProfile';
@@ -44,9 +43,6 @@ const DashboardHome: React.FC = () => {
 
       {/* Acesso Rápido */}
       <QuickAccess isPro={isPro} />
-
-      {/* Atividade Recente */}
-      <RecentActivity />
     </div>
   );
 };
