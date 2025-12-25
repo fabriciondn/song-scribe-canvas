@@ -224,7 +224,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {!isCollapsed ? (
             <div 
               onClick={() => {
-                navigate('/settings');
+                navigate('/dashboard/settings');
                 if (window.innerWidth < 768) {
                   toggleSidebar();
                 }
@@ -248,7 +248,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ) : (
             <div 
               onClick={() => {
-                navigate('/settings');
+                navigate('/dashboard/settings');
                 if (window.innerWidth < 768) {
                   toggleSidebar();
                 }
