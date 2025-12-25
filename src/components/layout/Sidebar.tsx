@@ -11,6 +11,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { FunctionStatusTag } from '@/components/layout/FunctionStatusTag';
 import { useMenuItems } from '@/hooks/useMenuItems';
 import { useAffiliateRole } from '@/hooks/useAffiliateRole';
+import { useProfile } from '@/hooks/useProfile';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -31,6 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { isAffiliate } = useAffiliateRole();
   const { theme } = useTheme();
   const { menuItems, isLoading: menuLoading } = useMenuItems();
+  const { profile } = useProfile();
 
   // Evita “flash” de estado (grátis/trial → pro) quando o Sidebar monta/remonta.
   // Mantém o último estado estável do role enquanto estiver carregando.
@@ -212,7 +215,56 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </nav>
 
-        <div className="pt-4 mt-auto border-t border-sidebar-border space-y-2">
+        {/* Seção do Perfil do Usuário */}
+        <div className={cn(
+          "pt-4 mt-auto border-t border-sidebar-border",
+          isCollapsed ? "space-y-2" : "space-y-3"
+        )}>
+          {/* Card do Usuário */}
+          {!isCollapsed ? (
+            <div 
+              onClick={() => {
+                navigate('/settings');
+                if (window.innerWidth < 768) {
+                  toggleSidebar();
+                }
+              }}
+              className="flex items-center gap-3 p-3 bg-card/50 border border-border/50 rounded-xl cursor-pointer hover:bg-card/80 transition-colors"
+            >
+              <Avatar className="h-10 w-10 border-2 border-primary/30">
+                <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Usuário'} />
+                <AvatarFallback className="bg-primary/20 text-primary text-sm font-semibold">
+                  {profile?.name?.charAt(0)?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {profile?.artistic_name || profile?.name?.split(' ')[0] || 'Usuário'}
+                </p>
+                <p className="text-xs text-muted-foreground">Compositor</p>
+              </div>
+              <Settings className="h-4 w-4 text-muted-foreground" />
+            </div>
+          ) : (
+            <div 
+              onClick={() => {
+                navigate('/settings');
+                if (window.innerWidth < 768) {
+                  toggleSidebar();
+                }
+              }}
+              className="flex justify-center cursor-pointer"
+              title="Configurações"
+            >
+              <Avatar className="h-8 w-8 border-2 border-primary/30">
+                <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Usuário'} />
+                <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">
+                  {profile?.name?.charAt(0)?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          )}
+
           {/* Botão Suporte WhatsApp */}
           <button
             onClick={() => {
