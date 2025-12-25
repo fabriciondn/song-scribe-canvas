@@ -34,13 +34,13 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
       <MobileHeader toggleSidebar={toggleSidebar} />
       
       {/* Conteúdo principal com scroll otimizado */}
-      <main className="flex-1 overflow-y-auto pb-16 overscroll-contain">
-        <div className="safe-area-inset px-4 py-2">
+      <main className="flex-1 overflow-y-auto pb-20 overscroll-contain">
+        <div className="px-3 py-3">
           {children}
         </div>
       </main>
       
-      {/* Navegação inferior */}
+      {/* Navegação inferior com backdrop blur */}
       <MobileNavigation onToolsClick={handleToolsClick} />
       
     </div>

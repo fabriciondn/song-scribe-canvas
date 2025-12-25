@@ -503,20 +503,39 @@ const Drafts: React.FC = () => {
   return (
     <ProOnlyWrapper featureName="Compor">
       <div className="max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Seus Rascunhos</h2>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => handleOpenCollaborativeModal()}>
-            <Users className="mr-2 h-4 w-4" />
-            Compor em Parceria
+      {/* Mobile-optimized header */}
+      <div className="flex flex-col gap-3 mb-4 md:mb-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl md:text-2xl font-bold whitespace-nowrap">Seus Rascunhos</h2>
+        </div>
+        
+        {/* Action buttons - horizontal scroll on mobile */}
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide md:overflow-visible md:mx-0 md:px-0">
+          <Button 
+            variant="outline" 
+            onClick={() => handleOpenCollaborativeModal()}
+            className="flex-shrink-0 text-sm h-10"
+            size="sm"
+          >
+            <Users className="mr-1.5 h-4 w-4" />
+            <span className="whitespace-nowrap">Compor em Parceria</span>
           </Button>
-          <Button variant="outline" onClick={() => setIsNewFolderModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Pasta
+          <Button 
+            variant="outline" 
+            onClick={() => setIsNewFolderModalOpen(true)}
+            className="flex-shrink-0 text-sm h-10"
+            size="sm"
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            <span className="whitespace-nowrap">Nova Pasta</span>
           </Button>
-          <Button onClick={startNewDraft}>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Rascunho
+          <Button 
+            onClick={startNewDraft}
+            className="flex-shrink-0 text-sm h-10"
+            size="sm"
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            <span className="whitespace-nowrap">Novo Rascunho</span>
           </Button>
         </div>
       </div>

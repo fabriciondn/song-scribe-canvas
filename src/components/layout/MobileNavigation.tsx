@@ -41,8 +41,8 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 safe-area-bottom">
-      <div className="flex justify-around items-center px-2 py-1">
+    <nav className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t border-border/50 z-50 safe-area-bottom">
+      <div className="flex justify-around items-center px-1 py-2">
         {navigationItems.map((item) => {
           const isActive = location.pathname === item.href;
 
@@ -51,14 +51,20 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = () => {
               key={item.href}
               to={item.href}
               className={cn(
-                'flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-0 flex-1',
+                'flex flex-col items-center justify-center py-2 px-4 rounded-2xl transition-all duration-200 min-w-0',
                 isActive 
-                  ? 'text-primary bg-primary/10' 
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-primary bg-primary/15 scale-105' 
+                  : 'text-muted-foreground hover:text-foreground active:scale-95'
               )}
             >
-              <item.icon className="h-5 w-5 mb-1" />
-              <span className="text-xs font-medium truncate">
+              <item.icon className={cn(
+                "mb-1 transition-all",
+                isActive ? "h-6 w-6" : "h-5 w-5"
+              )} />
+              <span className={cn(
+                "font-medium truncate transition-all",
+                isActive ? "text-xs" : "text-[11px]"
+              )}>
                 {item.title}
               </span>
             </Link>

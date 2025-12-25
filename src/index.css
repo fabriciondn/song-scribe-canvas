@@ -11,6 +11,16 @@
   .glass-card-dark {
     @apply backdrop-blur-xl bg-black/20 border border-white/5;
   }
+
+  /* Hide scrollbar utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @layer base {
@@ -269,7 +279,7 @@
     @apply cursor-grab active:cursor-grabbing;
   }
   
-  /* Mobile optimizations */
+  /* Mobile optimizations - Native app feel */
   @media (max-width: 768px) {
     .container-editor {
       @apply flex flex-col gap-4;
@@ -277,12 +287,12 @@
     }
     
     .container-editor-centered {
-      @apply p-4;
+      @apply p-3;
       max-width: 100%;
     }
     
     .section-box {
-      @apply p-4;
+      @apply p-3;
       max-height: 70vh;
     }
     
@@ -307,6 +317,46 @@
     
     .scroll-smooth {
       scroll-behavior: smooth;
+    }
+
+    /* Mobile page title styling */
+    .mobile-page-title {
+      @apply text-lg font-semibold leading-tight whitespace-nowrap;
+    }
+
+    /* Mobile action buttons container */
+    .mobile-action-buttons {
+      @apply flex gap-2 overflow-x-auto pb-2 -mx-1 px-1;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .mobile-action-buttons::-webkit-scrollbar {
+      display: none;
+    }
+
+    .mobile-action-buttons > * {
+      @apply flex-shrink-0;
+    }
+
+    /* Mobile card improvements */
+    .mobile-card {
+      @apply rounded-xl border border-border/50 bg-card;
+    }
+
+    /* Mobile section header */
+    .mobile-section-header {
+      @apply flex items-center justify-between py-3;
+    }
+
+    /* Mobile bottom nav improvements */
+    .mobile-bottom-nav {
+      @apply bg-background/95 backdrop-blur-lg border-t border-border/50;
+    }
+
+    /* Mobile nav item active state */
+    .mobile-nav-active {
+      @apply bg-primary/15 text-primary;
     }
   }
   
