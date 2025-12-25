@@ -74,7 +74,7 @@ serve(async (req) => {
     
     // Criar pagamento no Mercado Pago
     const paymentPayload = {
-      transaction_amount: 14.99,
+      transaction_amount: 29.99,
       description: 'Assinatura Plano Pro - 30 dias',
       payment_method_id: 'pix',
       payer: {
@@ -121,7 +121,7 @@ serve(async (req) => {
         .update({
           status: 'pending',
           plan_type: 'pro',
-          amount: 14.99,
+          amount: 29.99,
           currency: 'BRL',
           payment_provider: 'mercadopago',
           payment_provider_subscription_id: paymentData.id.toString(),
@@ -150,7 +150,7 @@ serve(async (req) => {
           user_id: user_id,
           status: 'pending',
           plan_type: 'pro',
-          amount: 14.99,
+          amount: 29.99,
           currency: 'BRL',
           payment_provider: 'mercadopago',
           payment_provider_subscription_id: paymentData.id.toString(),
@@ -177,7 +177,7 @@ serve(async (req) => {
         qr_code: paymentData.point_of_interaction?.transaction_data?.qr_code,
         qr_code_base64: paymentData.point_of_interaction?.transaction_data?.qr_code_base64,
         subscription_id: subscriptionData.id,
-        amount: 14.99,
+        amount: 29.99,
         currency: 'BRL'
       }),
       {
