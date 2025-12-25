@@ -37,7 +37,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userName }) =>
         </Button>
         
         <Button asChild size="sm" className="gap-1.5 sm:gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/25 h-9 sm:h-10 px-3 sm:px-4">
-          <Link to="/checkout">
+          <Link to="/credits-checkout">
             <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="text-xs sm:text-sm">Adicionar</span>
           </Link>
