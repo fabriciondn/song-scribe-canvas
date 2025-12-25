@@ -52,23 +52,23 @@ export const QuickAccess: React.FC<QuickAccessProps> = ({ isPro }) => {
   const filteredItems = quickAccessItems.filter(item => !item.proOnly || isPro);
 
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-base sm:text-lg font-semibold text-foreground">Acesso Rápido</h2>
+        <h2 className="text-sm sm:text-base font-semibold text-foreground">Acesso Rápido</h2>
       </div>
       
-      <div className="grid grid-cols-4 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         {filteredItems.map((item) => {
           const IconComponent = item.icon;
           return (
             <Link key={item.title} to={item.link}>
               <Card className={`${item.borderColor} ${item.bgColor} hover:shadow-md transition-all duration-300 cursor-pointer group`}>
-                <CardContent className="p-2 sm:p-3 lg:p-4 flex flex-col items-center text-center">
-                  <div className={`p-2 sm:p-2.5 lg:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br ${item.color} mb-1.5 sm:mb-2 lg:mb-3 group-hover:scale-110 transition-transform duration-300`}>
-                    <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                <CardContent className="p-3 flex flex-col items-center text-center">
+                  <div className={`p-2 rounded-lg bg-gradient-to-br ${item.color} mb-2 group-hover:scale-110 transition-transform duration-300`}>
+                    <IconComponent className="h-4 w-4 text-white" />
                   </div>
-                  <h3 className="font-medium text-foreground text-[10px] sm:text-xs lg:text-sm leading-tight">{item.title}</h3>
-                  <p className="text-[9px] sm:text-[10px] lg:text-xs text-muted-foreground hidden sm:block">{item.subtitle}</p>
+                  <h3 className="font-medium text-foreground text-xs leading-tight">{item.title}</h3>
+                  <p className="text-[10px] text-muted-foreground">{item.subtitle}</p>
                 </CardContent>
               </Card>
             </Link>
