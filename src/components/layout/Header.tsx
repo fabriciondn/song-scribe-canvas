@@ -141,14 +141,7 @@ export const Header = ({
       
       {/* Right section */}
       <div className="flex items-center flex-1 justify-end">
-        {user ? (
-          <div className="flex items-center gap-3">
-            {/* Theme toggle */}
-            <Button variant="ghost" size="icon" onClick={toggleTheme}>
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
-          </div>
-        ) : (
+        {!user && (
           <Link to="/">
             <Button size="sm">Entrar</Button>
           </Link>

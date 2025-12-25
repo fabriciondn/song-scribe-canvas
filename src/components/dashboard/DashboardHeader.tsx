@@ -1,10 +1,11 @@
 import React from 'react';
-import { CreditCard, Plus } from 'lucide-react';
+import { CreditCard, Plus, Moon, Sun } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { NotificationCenter } from './NotificationCenter';
 import { useUserCredits } from '@/hooks/useUserCredits';
+import { useTheme } from '@/hooks/useTheme';
 
 interface DashboardHeaderProps {
   userName?: string;
@@ -12,6 +13,7 @@ interface DashboardHeaderProps {
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userName }) => {
   const { credits } = useUserCredits();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
@@ -31,6 +33,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userName }) =>
         </Badge>
         
         <NotificationCenter />
+        
+        <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
         
         <Button asChild size="sm" className="gap-1.5 sm:gap-2 bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/25 h-9 sm:h-10 px-3 sm:px-4">
           <Link to="/credits-checkout">
