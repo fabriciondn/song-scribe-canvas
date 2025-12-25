@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, Plus, Moon, Sun } from 'lucide-react';
+import { CreditCard, Wallet, Moon, Sun } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -32,17 +32,17 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userName }) =>
           {credits || 0} créditos
         </Badge>
         
+        <Button asChild size="sm" className="gap-1.5 sm:gap-2 bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/25 h-9 sm:h-10 px-3 sm:px-4">
+          <Link to="/credits-checkout">
+            <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="text-xs sm:text-sm">Adicionar</span>
+          </Link>
+        </Button>
+        
         <NotificationCenter />
         
         <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </Button>
-        
-        <Button asChild size="sm" className="gap-1.5 sm:gap-2 bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/25 h-9 sm:h-10 px-3 sm:px-4">
-          <Link to="/credits-checkout">
-            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="text-xs sm:text-sm">Adicionar</span>
-          </Link>
         </Button>
       </div>
     </div>
