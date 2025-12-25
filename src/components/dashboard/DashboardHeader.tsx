@@ -1,6 +1,8 @@
 import React from 'react';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { NotificationCenter } from './NotificationCenter';
 import { useUserCredits } from '@/hooks/useUserCredits';
 
@@ -29,6 +31,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userName }) =>
         </Badge>
         
         <NotificationCenter />
+        
+        <Button asChild size="sm" className="gap-1.5 sm:gap-2 bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/25 h-9 sm:h-10 px-3 sm:px-4">
+          <Link to="/credits-checkout">
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="text-xs sm:text-sm">Adicionar</span>
+          </Link>
+        </Button>
       </div>
     </div>
   );
