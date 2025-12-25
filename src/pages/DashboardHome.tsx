@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { StatCards } from '@/components/dashboard/StatCards';
@@ -11,6 +11,20 @@ const DashboardHome: React.FC = () => {
   const { stats, isLoading, error, refetch } = useDashboardStats();
   const { isPro } = useUserRole();
   const { profile } = useProfile();
+
+  // Dashboard home deve ser uma página fixa (sem rolagem do navegador).
+  useEffect(() => {
+    const prevHtml = document.documentElement.style.overflow;
+    const prevBody = document.body.style.overflow;
+
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.documentElement.style.overflow = prevHtml;
+      document.body.style.overflow = prevBody;
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -34,17 +48,17 @@ const DashboardHome: React.FC = () => {
   const userName = profile?.artistic_name || profile?.name?.split(' ')[0];
 
   return (
-    <div className="h-full overflow-hidden flex flex-col px-4 sm:px-6 py-3 max-w-7xl mx-auto">
+    <div className="h-full overflow-hidden flex flex-col max-w-7xl mx-auto">
       {/* Header com busca e ações */}
       <DashboardHeader userName={userName} />
 
       {/* Cards de Estatísticas */}
-      <div className="mt-3">
+      <div className="mt-2">
         <StatCards stats={stats} isPro={isPro} />
       </div>
 
       {/* Acesso Rápido */}
-      <div className="mt-4">
+      <div className="mt-3">
         <QuickAccess isPro={isPro} />
       </div>
     </div>
