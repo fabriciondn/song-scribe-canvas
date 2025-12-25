@@ -1,8 +1,9 @@
 import React from 'react';
-import { Search, Bell, Plus } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
+import { NotificationCenter } from './NotificationCenter';
 
 interface DashboardHeaderProps {
   userName?: string;
@@ -29,12 +30,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userName }) =>
           />
         </div>
         
-        <Button variant="ghost" size="icon" className="relative h-9 w-9 sm:h-10 sm:w-10">
-          <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-          <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 sm:h-4 sm:w-4 bg-primary rounded-full text-[9px] sm:text-[10px] font-bold flex items-center justify-center text-primary-foreground">
-            2
-          </span>
-        </Button>
+        <NotificationCenter />
         
         <Button asChild size="sm" className="gap-1.5 sm:gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/25 h-9 sm:h-10 px-3 sm:px-4">
           <Link to="/credits-checkout">
