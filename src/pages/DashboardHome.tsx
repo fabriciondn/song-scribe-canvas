@@ -34,15 +34,19 @@ const DashboardHome: React.FC = () => {
   const userName = profile?.artistic_name || profile?.name?.split(' ')[0];
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 py-4 max-w-7xl mx-auto">
+    <div className="h-full overflow-hidden flex flex-col px-4 sm:px-6 py-3 max-w-7xl mx-auto">
       {/* Header com busca e ações */}
       <DashboardHeader userName={userName} />
 
       {/* Cards de Estatísticas */}
-      <StatCards stats={stats} isPro={isPro} />
+      <div className="mt-3">
+        <StatCards stats={stats} isPro={isPro} />
+      </div>
 
       {/* Acesso Rápido */}
-      <QuickAccess isPro={isPro} />
+      <div className="mt-4">
+        <QuickAccess isPro={isPro} />
+      </div>
     </div>
   );
 };

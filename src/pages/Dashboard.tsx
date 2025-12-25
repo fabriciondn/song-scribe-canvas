@@ -96,7 +96,7 @@ const Dashboard: React.FC = () => {
         />
         
         <main className={cn(
-          "flex-1 p-6 transition-all duration-200 overflow-y-auto",
+          "flex-1 p-4 transition-all duration-200 overflow-hidden",
           isSidebarOpen && !isSidebarCollapsed && "lg:pl-64",
           isSidebarOpen && isSidebarCollapsed && "lg:pl-16"
         )}>
