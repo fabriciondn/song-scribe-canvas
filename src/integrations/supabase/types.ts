@@ -14,6 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
+      acorde_actions: {
+        Row: {
+          acordes_reward: number
+          action_key: string
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          max_per_user: number | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          acordes_reward?: number
+          action_key: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          max_per_user?: number | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          acordes_reward?: number
+          action_key?: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          max_per_user?: number | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      acorde_history: {
+        Row: {
+          acordes_earned: number
+          action_id: string
+          created_at: string
+          description: string | null
+          id: string
+          reference_id: string | null
+          user_id: string
+        }
+        Insert: {
+          acordes_earned: number
+          action_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          user_id: string
+        }
+        Update: {
+          acordes_earned?: number
+          action_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acorde_history_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "acorde_actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      acorde_redemptions: {
+        Row: {
+          acordes_redeemed: number
+          created_at: string
+          credits_received: number
+          id: string
+          user_id: string
+        }
+        Insert: {
+          acordes_redeemed: number
+          created_at?: string
+          credits_received: number
+          id?: string
+          user_id: string
+        }
+        Update: {
+          acordes_redeemed?: number
+          created_at?: string
+          credits_received?: number
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string
@@ -1918,6 +2019,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_acordes: {
+        Row: {
+          created_at: string
+          id: string
+          redeemed_acordes: number
+          total_acordes: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          redeemed_acordes?: number
+          total_acordes?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          redeemed_acordes?: number
+          total_acordes?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_activity_logs: {
         Row: {
           action: string
@@ -2190,7 +2318,17 @@ export type Database = {
         }[]
       }
       get_online_users_count: { Args: never; Returns: number }
+      get_user_acordes_progress: { Args: { p_user_id: string }; Returns: Json }
       get_user_role: { Args: { user_id: string }; Returns: string }
+      grant_acordes: {
+        Args: {
+          p_action_key: string
+          p_description?: string
+          p_reference_id?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       grant_monthly_subscription_credits: {
         Args: { p_user_id: string }
         Returns: Json
@@ -2242,6 +2380,7 @@ export type Database = {
         Returns: boolean
       }
       process_pending_registrations: { Args: never; Returns: undefined }
+      redeem_acordes: { Args: { p_user_id: string }; Returns: Json }
       register_moderator_with_token: {
         Args: {
           p_email: string
