@@ -52,7 +52,7 @@ serve(async (req) => {
         name: 'Assinatura Plano Pro - 30 dias',
         description: 'Acesso completo aos recursos Pro por 30 dias',
         quantity: 1,
-        price: 1499 // Valor em centavos (14,99 reais)
+        price: 2999 // Valor em centavos (29,99 reais)
       }],
       returnUrl: `${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/subscription-checkout`,
       completionUrl: `${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/dashboard`
@@ -83,7 +83,7 @@ serve(async (req) => {
       user_id,
       status: 'pending',
       plan_type: 'pro',
-      amount: 14.99,
+      amount: 29.99,
       currency: 'BRL',
       payment_provider: 'abacate',
       payment_provider_subscription_id: abacateData.id,
@@ -113,7 +113,7 @@ serve(async (req) => {
       success: true,
       payment_url: abacateData.url, // URL do checkout com QR code
       subscription_id: abacateData.id,
-      amount: 14.99,
+      amount: 29.99,
       currency: 'BRL'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
