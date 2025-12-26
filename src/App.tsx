@@ -45,6 +45,7 @@ import PublicRegistrationForm from "./pages/PublicRegistrationForm";
 import Ranking from "./pages/Ranking";
 import ResetPassword from "./pages/ResetPassword";
 import Pendrive from "./pages/Pendrive";
+import Acordes from "./pages/Acordes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,6 +90,7 @@ const AppContent = () => {
                 <Route path="registered-works" element={<RegisteredWorks />} />
                 <Route path="tutorials" element={<Tutorials />} />
                 <Route path="ranking" element={<Ranking />} />
+                <Route path="acordes" element={<Acordes />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="trash" element={<Trash />} />
               </Route>
