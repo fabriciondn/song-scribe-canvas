@@ -60,17 +60,10 @@ export const ProUpgradeModal = ({
         <div className="space-y-4 py-4">
           {/* Price */}
           <div className="text-center space-y-1 p-4 rounded-lg bg-primary/5 border border-primary/10">
-            <p className="text-sm text-muted-foreground">
-              <span className="line-through">R$ 49,99</span>
-            </p>
             <div className="text-3xl font-bold text-primary">
-              R$ 14,99
+              R$ 30,00
               <span className="text-sm font-normal text-muted-foreground">/mês</span>
             </div>
-            <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30">
-              <Zap className="h-3 w-3 mr-1" />
-              Oferta de Lançamento
-            </Badge>
           </div>
 
           {/* Features */}
