@@ -13,6 +13,7 @@ import { useMenuItems } from '@/hooks/useMenuItems';
 import { useAffiliateRole } from '@/hooks/useAffiliateRole';
 import { useProfile } from '@/hooks/useProfile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ProUpgradeModal } from '@/components/ui/pro-upgrade-modal';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { theme } = useTheme();
   const { menuItems, isLoading: menuLoading } = useMenuItems();
   const { profile } = useProfile();
+  const [showProModal, setShowProModal] = useState(false);
 
   // Evita “flash” de estado (grátis/trial → pro) quando o Sidebar monta/remonta.
   // Mantém o último estado estável do role enquanto estiver carregando.
@@ -63,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
 
     // Funções Pro: usuários grátis veem cinza mas item continua visível
-    const proFunctions = ['composer', 'cifrador', 'cifrador-neo', 'bases', 'folders', 'drafts', 'partnerships', 'tutorials', 'trash'];
+    const proFunctions = ['composer', 'cifrador', 'cifrador-neo', 'bases', 'folders', 'drafts', 'partnerships', 'tutorials', 'trash', 'pendrive'];
     if (proFunctions.includes(functionKey)) {
       if (effectiveIsPro) {
         return { canAccess: true, showDisabled: false };
@@ -159,7 +161,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               
               // Tratamento especial para navegação de afiliados
               const handleClick = () => {
-                if (!hasAccess) return; // Não permite clique se não tiver acesso
+                if (!hasAccess) {
+                  setShowProModal(true);
+                  return;
+                }
                 
                 if (item.functionKey === 'affiliate') {
                   if (isAffiliate) {
@@ -311,6 +316,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <p className="text-xs text-gray-400 text-center">Compuse v1.0</p>
         </div>
       </aside>
+
+      <ProUpgradeModal open={showProModal} onOpenChange={setShowProModal} />
     </>
   );
 };
