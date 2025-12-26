@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { StatCards } from '@/components/dashboard/StatCards';
 import { QuickAccess } from '@/components/dashboard/QuickAccess';
-import { AcordesProgress } from '@/components/dashboard/AcordesProgress';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useProfile } from '@/hooks/useProfile';
@@ -12,17 +11,6 @@ const DashboardHome: React.FC = () => {
   const { stats, isLoading, error, refetch } = useDashboardStats();
   const { isPro } = useUserRole();
   const { profile } = useProfile();
-
-  // Dashboard home agora permite scroll por conta do card de acordes
-  useEffect(() => {
-    document.documentElement.style.overflow = 'auto';
-    document.body.style.overflow = 'auto';
-
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-    };
-  }, []);
 
   if (isLoading) {
     return (
@@ -46,7 +34,7 @@ const DashboardHome: React.FC = () => {
   const userName = profile?.artistic_name || profile?.name?.split(' ')[0];
 
   return (
-    <div className="h-full overflow-auto flex flex-col max-w-7xl mx-auto pb-4">
+    <div className="h-full flex flex-col max-w-7xl mx-auto">
       {/* Header com busca e ações */}
       <DashboardHeader userName={userName} />
 
@@ -55,17 +43,9 @@ const DashboardHome: React.FC = () => {
         <StatCards stats={stats} isPro={isPro} />
       </div>
 
-      {/* Gamificação - Acordes + Acesso Rápido */}
-      <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Card de Acordes - 1 coluna */}
-        <div className="lg:col-span-1">
-          <AcordesProgress />
-        </div>
-        
-        {/* Acesso Rápido - 2 colunas */}
-        <div className="lg:col-span-2">
-          <QuickAccess isPro={isPro} />
-        </div>
+      {/* Acesso Rápido */}
+      <div className="mt-3">
+        <QuickAccess isPro={isPro} />
       </div>
     </div>
   );
