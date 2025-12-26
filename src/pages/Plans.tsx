@@ -41,9 +41,9 @@ const Plans = () => {
     },
     {
       id: 'pro',
-      name: 'Pro',
-      price: 29.99,
-      description: 'Acesso total + créditos mensais garantidos',
+      name: 'Plano Pro',
+      price: 30,
+      description: 'Todos os recursos para profissionais',
       icon: Crown,
       features: [
         'Tudo do plano Gratuito',
