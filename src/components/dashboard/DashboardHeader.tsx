@@ -1,5 +1,5 @@
-import React from 'react';
-import { CreditCard, Wallet, Moon, Sun, Music, ChevronRight } from 'lucide-react';
+import React, { useContext } from 'react';
+import { CreditCard, Wallet, Moon, Sun, Music, ChevronRight, LogOut } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
@@ -7,6 +7,8 @@ import { NotificationCenter } from './NotificationCenter';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useTheme } from '@/hooks/useTheme';
 import { useAcordes } from '@/hooks/useAcordes';
+import { AuthContext } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 interface DashboardHeaderProps {
   userName?: string;
@@ -16,7 +18,18 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userName }) =>
   const { credits } = useUserCredits();
   const { theme, toggleTheme } = useTheme();
   const { progress } = useAcordes();
+  const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Você saiu da plataforma');
+      navigate('/');
+    } catch (error) {
+      toast.error('Erro ao sair');
+    }
+  };
 
   const nextObjective = progress?.available_actions?.find(a => a.can_complete);
 
@@ -60,6 +73,16 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userName }) =>
         
         <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={handleLogout} 
+          className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          title="Sair da plataforma"
+        >
+          <LogOut className="h-4 w-4" />
         </Button>
       </div>
     </div>
