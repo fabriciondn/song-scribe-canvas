@@ -97,11 +97,11 @@ export default function SubscriptionCheckout() {
     '2 créditos garantidos por mês',
     '+1 crédito de bônus mensal',
     'Compositor avançado',
-    'Cifrador musical',
     'Bases musicais completas',
     'Sistema de pastas',
     'Rascunhos ilimitados',
     'Parcerias colaborativas',
+    'Pendrive inteligente',
     'Tutoriais exclusivos',
     'Suporte prioritário'
   ];
