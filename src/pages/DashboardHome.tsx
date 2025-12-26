@@ -34,7 +34,7 @@ const DashboardHome: React.FC = () => {
   const userName = profile?.artistic_name || profile?.name?.split(' ')[0];
 
   return (
-    <div className="h-full flex flex-col max-w-7xl mx-auto">
+    <div className="h-full flex flex-col max-w-7xl mx-auto overflow-hidden">
       {/* Header com busca e ações */}
       <DashboardHeader userName={userName} />
 
