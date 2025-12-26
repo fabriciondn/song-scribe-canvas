@@ -68,15 +68,30 @@ export const StatCards: React.FC<StatCardsProps> = ({ stats, isPro }) => {
         {/* Composições */}
         <Card 
           className="relative overflow-hidden bg-gradient-to-br from-blue-500/10 via-card to-card border-blue-500/20 hover:border-blue-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 cursor-pointer group"
-          onClick={() => navigate('/drafts')}
+          onClick={() => {
+            if (isPro) {
+              navigate('/drafts');
+            } else {
+              setShowProModal(true);
+            }
+          }}
         >
           <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-300" />
+          
+          {/* Badge PRO no canto superior direito */}
+          {!isPro && (
+            <Badge className="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[10px] z-10 flex items-center gap-1">
+              <Sparkles className="h-3 w-3" />
+              PRO
+            </Badge>
+          )}
+          
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div className="p-2 bg-blue-500/20 rounded-lg group-hover:scale-110 transition-transform duration-300">
                 <Music className="h-5 w-5 text-blue-500" />
               </div>
-              {stats.compositions.drafts > 0 && (
+              {isPro && stats.compositions.drafts > 0 && (
                 <Badge className="bg-blue-500/20 text-blue-500 border-0 text-[10px]">
                   {stats.compositions.drafts} rascunhos
                 </Badge>
@@ -95,7 +110,11 @@ export const StatCards: React.FC<StatCardsProps> = ({ stats, isPro }) => {
                 className="flex-1 border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50 text-foreground text-xs h-8"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate('/drafts');
+                  if (isPro) {
+                    navigate('/drafts');
+                  } else {
+                    setShowProModal(true);
+                  }
                 }}
               >
                 <Edit className="h-3.5 w-3.5 mr-1" />
@@ -106,7 +125,11 @@ export const StatCards: React.FC<StatCardsProps> = ({ stats, isPro }) => {
                 className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs h-8"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate('/composer');
+                  if (isPro) {
+                    navigate('/composer');
+                  } else {
+                    setShowProModal(true);
+                  }
                 }}
               >
                 <Plus className="h-3.5 w-3.5 mr-1" />
