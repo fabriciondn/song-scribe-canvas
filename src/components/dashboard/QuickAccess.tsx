@@ -2,13 +2,16 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { HardDrive, Calendar, Folder, GraduationCap } from 'lucide-react';
+import { HardDrive, ShieldCheck, Folder, GraduationCap } from 'lucide-react';
+import { useState } from 'react';
+import { FunctionStatusModal } from '@/components/ui/function-status-modal';
 
 interface QuickAccessProps {
   isPro: boolean;
 }
 
 export const QuickAccess: React.FC<QuickAccessProps> = ({ isPro }) => {
+  const [showComingSoonModal, setShowComingSoonModal] = useState(false);
   const quickAccessItems = [
     {
       icon: HardDrive,
@@ -20,9 +23,9 @@ export const QuickAccess: React.FC<QuickAccessProps> = ({ isPro }) => {
       borderColor: 'border-orange-500/20 hover:border-orange-500/40',
     },
     {
-      icon: Calendar,
-      title: 'Registro Diário',
-      subtitle: 'Nova obra',
+      icon: ShieldCheck,
+      title: 'Novo registro',
+      subtitle: 'Proteger obra',
       link: '/author-registration',
       color: 'from-green-500 to-emerald-500',
       bgColor: 'bg-green-500/10',
@@ -46,6 +49,7 @@ export const QuickAccess: React.FC<QuickAccessProps> = ({ isPro }) => {
       color: 'from-cyan-500 to-blue-500',
       bgColor: 'bg-cyan-500/10',
       borderColor: 'border-cyan-500/20 hover:border-cyan-500/40',
+      comingSoon: true,
     },
   ];
 
@@ -60,6 +64,27 @@ export const QuickAccess: React.FC<QuickAccessProps> = ({ isPro }) => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         {filteredItems.map((item) => {
           const IconComponent = item.icon;
+          
+          if (item.comingSoon) {
+            return (
+              <div 
+                key={item.title} 
+                onClick={() => setShowComingSoonModal(true)}
+                className="cursor-pointer"
+              >
+                <Card className={`${item.borderColor} ${item.bgColor} hover:shadow-md transition-all duration-300 cursor-pointer group`}>
+                  <CardContent className="p-3 flex flex-col items-center text-center">
+                    <div className={`p-2 rounded-lg bg-gradient-to-br ${item.color} mb-2 group-hover:scale-110 transition-transform duration-300`}>
+                      <IconComponent className="h-4 w-4 text-white" />
+                    </div>
+                    <h3 className="font-medium text-foreground text-xs leading-tight">{item.title}</h3>
+                    <p className="text-[10px] text-muted-foreground">{item.subtitle}</p>
+                  </CardContent>
+                </Card>
+              </div>
+            );
+          }
+          
           return (
             <Link key={item.title} to={item.link}>
               <Card className={`${item.borderColor} ${item.bgColor} hover:shadow-md transition-all duration-300 cursor-pointer group`}>
@@ -75,6 +100,14 @@ export const QuickAccess: React.FC<QuickAccessProps> = ({ isPro }) => {
           );
         })}
       </div>
+      
+      <FunctionStatusModal
+        isOpen={showComingSoonModal}
+        onClose={() => setShowComingSoonModal(false)}
+        status="coming_soon"
+        functionName="Tutoriais"
+        functionDescription="Em breve você terá acesso a tutoriais completos para aproveitar melhor a plataforma."
+      />
     </div>
   );
 };
