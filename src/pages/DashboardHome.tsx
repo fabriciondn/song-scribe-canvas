@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { StatCards } from '@/components/dashboard/StatCards';
 import { QuickAccess } from '@/components/dashboard/QuickAccess';
+import { NextAcordeObjective } from '@/components/dashboard/NextAcordeObjective';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useProfile } from '@/hooks/useProfile';
@@ -60,6 +61,11 @@ const DashboardHome: React.FC = () => {
       {/* Acesso Rápido */}
       <div className="mt-3">
         <QuickAccess isPro={isPro} />
+      </div>
+
+      {/* Próximo Objetivo de Acordes */}
+      <div className="mt-3">
+        <NextAcordeObjective />
       </div>
     </div>
   );
