@@ -126,7 +126,7 @@ export const StatCards: React.FC<StatCardsProps> = ({ stats, isPro }) => {
                 onClick={(e) => {
                   e.stopPropagation();
                   if (isPro) {
-                    navigate('/composer');
+                    navigate('/drafts');
                   } else {
                     setShowProModal(true);
                   }
