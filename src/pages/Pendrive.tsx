@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,11 +14,11 @@ import { UsbIcon, Search, Download, Music, Filter, FolderOpen, Calendar, Play, P
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
-import PendriveUpgradeModal from '@/components/pendrive/PendriveUpgradeModal';
+import { ProUpgradeModal } from '@/components/ui/pro-upgrade-modal';
 
 const Pendrive = () => {
   const user = useCurrentUser();
-  const { hasPendriveAccess, isPro, isPendrive, isLoading: subscriptionLoading } = useSubscription();
+  const { isPro, isLoading: roleLoading } = useUserRole();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string>('all');
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -80,8 +80,8 @@ const Pendrive = () => {
   }, [filteredRegistrations]);
 
   const handleDownload = async (registration: any) => {
-    // Verificar se tem acesso ao Pendrive
-    if (!hasPendriveAccess) {
+    // Verificar se tem acesso Pro
+    if (!isPro) {
       setShowUpgradeModal(true);
       return;
     }
@@ -202,10 +202,10 @@ const Pendrive = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          {hasPendriveAccess ? (
+          {isPro ? (
             <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs gap-1">
               <Crown className="h-3 w-3" />
-              {isPro ? 'Pro' : 'Pendrive'}
+              Pro
             </Badge>
           ) : (
             <Badge 
@@ -214,7 +214,7 @@ const Pendrive = () => {
               onClick={() => setShowUpgradeModal(true)}
             >
               <Lock className="h-3 w-3" />
-              Assinar
+              Assinar Pro
             </Badge>
           )}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -339,9 +339,10 @@ const Pendrive = () => {
       </ScrollArea>
 
       {/* Modal de Upgrade */}
-      <PendriveUpgradeModal 
+      <ProUpgradeModal 
         open={showUpgradeModal} 
-        onOpenChange={setShowUpgradeModal} 
+        onOpenChange={setShowUpgradeModal}
+        featureName="Pendrive Inteligente"
       />
     </div>
   );

@@ -1,9 +1,6 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Crown, Lock } from 'lucide-react';
+import { ProUpgradeModal } from '@/components/ui/pro-upgrade-modal';
 
 interface ProOnlyWrapperProps {
   children: React.ReactNode;
@@ -15,7 +12,14 @@ export const ProOnlyWrapper: React.FC<ProOnlyWrapperProps> = ({
   featureName 
 }) => {
   const { isPro, isAdmin, isLoading } = useUserRole();
-  const navigate = useNavigate();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Mostrar modal automaticamente para usuários não-Pro
+  useEffect(() => {
+    if (!isLoading && !isPro && !isAdmin) {
+      setShowUpgradeModal(true);
+    }
+  }, [isLoading, isPro, isAdmin]);
 
   if (isLoading) {
     return (
@@ -25,42 +29,22 @@ export const ProOnlyWrapper: React.FC<ProOnlyWrapperProps> = ({
     );
   }
 
-  // Admins têm acesso total
+  // Admins e Pro têm acesso total
   if (isAdmin || isPro) {
     return <>{children}</>;
   }
 
-  // Usuários não-Pro veem a mensagem de upgrade
+  // Usuários não-Pro veem o conteúdo parcialmente + modal
   return (
-    <div className="min-h-[400px] flex items-center justify-center p-4">
-      <Card className="max-w-md mx-auto text-center">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-center gap-2">
-            <Crown className="h-6 w-6 text-yellow-500" />
-            Recurso Pro
-          </CardTitle>
-          <CardDescription>
-            {featureName} está disponível apenas para usuários Pro
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-muted p-4 rounded-lg">
-            <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">
-              Upgrade para Pro e tenha acesso a todas as funcionalidades avançadas da plataforma.
-            </p>
-          </div>
-          
-          <Button size="lg" className="w-full" onClick={() => navigate('/subscription-checkout')}>
-            <Crown className="mr-2 h-4 w-4" />
-            Fazer Upgrade para Pro
-          </Button>
-          
-          <p className="text-xs text-muted-foreground">
-            Oferta de lançamento: de R$ 49,99 por apenas R$ 14,99/mês
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+    <>
+      <div className="opacity-50 pointer-events-none blur-sm">
+        {children}
+      </div>
+      <ProUpgradeModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        featureName={featureName}
+      />
+    </>
   );
 };
