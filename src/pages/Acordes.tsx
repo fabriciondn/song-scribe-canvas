@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Music, Gift, Camera, UserPlus, FileText, Star, Loader2, ArrowLeft, Check } from 'lucide-react';
+import { Music, Gift, Camera, UserPlus, FileText, Star, Loader2, ArrowLeft, Check, Copy } from 'lucide-react';
 import { useAcordes } from '@/hooks/useAcordes';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 const iconMap: Record<string, React.ComponentType<any>> = {
   Camera,
@@ -20,7 +22,15 @@ const iconMap: Record<string, React.ComponentType<any>> = {
 
 export default function Acordes() {
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const { progress, isLoading, isRedeeming, redeemAcordes } = useAcordes();
+
+  const copyReferralLink = () => {
+    if (!user?.id) return;
+    const referralLink = `${window.location.origin}/ref/compuse-${user.id}`;
+    navigator.clipboard.writeText(referralLink);
+    toast.success('Link de indicação copiado!');
+  };
 
   if (isLoading) {
     return (
@@ -129,6 +139,7 @@ export default function Acordes() {
           <CardContent className="space-y-3">
             {availableActions.map((action) => {
               const IconComponent = iconMap[action.icon || 'Star'] || Star;
+              const isReferralAction = action.action_key === 'refer_friend_purchase';
               return (
                 <div
                   key={action.id}
@@ -143,9 +154,22 @@ export default function Acordes() {
                       <p className="text-sm text-muted-foreground">{action.description}</p>
                     </div>
                   </div>
-                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-base px-3">
-                    +{action.acordes_reward}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {isReferralAction && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={copyReferralLink}
+                        className="h-8 w-8 text-muted-foreground hover:text-primary"
+                        title="Copiar link de indicação"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-base px-3">
+                      +{action.acordes_reward}
+                    </Badge>
+                  </div>
                 </div>
               );
             })}
