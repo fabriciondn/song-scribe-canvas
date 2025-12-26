@@ -52,8 +52,26 @@ export interface AcordeStats {
   total_redemptions: number;
 }
 
+// Retroativamente conceder acordes para ações já realizadas
+export const backfillUserAcordes = async (userId: string): Promise<{ success: boolean; total_awarded: number }> => {
+  const { data, error } = await supabase.rpc('backfill_user_acordes', {
+    p_user_id: userId
+  });
+
+  if (error) {
+    console.error('Error backfilling acordes:', error);
+    return { success: false, total_awarded: 0 };
+  }
+
+  const result = data as unknown as { success: boolean; total_awarded: number };
+  return result;
+};
+
 // Buscar progresso do usuário
 export const getUserAcordesProgress = async (userId: string): Promise<UserAcordesProgress | null> => {
+  // Primeiro, fazer backfill para garantir que ações já realizadas sejam pontuadas
+  await backfillUserAcordes(userId);
+  
   const { data, error } = await supabase.rpc('get_user_acordes_progress', {
     p_user_id: userId
   });

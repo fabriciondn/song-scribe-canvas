@@ -2191,6 +2191,8 @@ export type Database = {
         Args: { new_credits: number; target_user_id: string }
         Returns: undefined
       }
+      backfill_all_users_acordes: { Args: never; Returns: Json }
+      backfill_user_acordes: { Args: { p_user_id: string }; Returns: Json }
       call_generate_temp_certificate: {
         Args: { work_id: string }
         Returns: undefined
