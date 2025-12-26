@@ -72,7 +72,7 @@ export const useMenuItems = () => {
         icon: Usb,
         path: '/pendrive',
         functionKey: 'pendrive',
-        isPro: false
+        isPro: true
       },
       {
         label: 'Ranking',
