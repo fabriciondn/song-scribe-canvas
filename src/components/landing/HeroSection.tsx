@@ -75,7 +75,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none z-10" />
               <iframe
                 className="w-full h-full"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?controls=1&modestbranding=1&rel=0"
+                src="https://www.youtube.com/embed/tKQ7kZjvjqI?controls=1&modestbranding=1&rel=0"
                 title="Apresentação Compuse"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
