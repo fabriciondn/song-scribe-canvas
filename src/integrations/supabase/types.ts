@@ -1154,6 +1154,33 @@ export type Database = {
         }
         Relationships: []
       }
+      moderator_payment_settings: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          mercadopago_access_token: string
+          moderator_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          mercadopago_access_token: string
+          moderator_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          mercadopago_access_token?: string
+          moderator_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       moderator_registration_tokens: {
         Row: {
           created_at: string
