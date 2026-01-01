@@ -19,23 +19,6 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Buscar token do Mercado Pago
-  let mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
-  if (!mercadoPagoAccessToken) {
-    mercadoPagoAccessToken = Deno.env.get("Access Token mercado pago");
-  }
-  
-  if (!mercadoPagoAccessToken) {
-    console.error('❌ Token do Mercado Pago não configurado');
-    return new Response(
-      JSON.stringify({ error: 'Token do Mercado Pago não configurado' }),
-      { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 503
-      }
-    );
-  }
-
   const supabaseService = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -46,6 +29,72 @@ serve(async (req) => {
     const { user_id, user_email, user_name }: RequestBody = await req.json();
     
     console.log('📝 Dados recebidos:', { user_id, user_email, user_name });
+
+    // Verificar se usuário foi criado por um moderador
+    const { data: moderatorUser } = await supabaseService
+      .from('moderator_users')
+      .select('moderator_id')
+      .eq('user_id', user_id)
+      .maybeSingle();
+
+    let mercadoPagoAccessToken: string | undefined;
+    let isModeratorPayment = false;
+    let moderatorId: string | null = null;
+
+    if (moderatorUser) {
+      console.log('👥 Usuário foi criado pelo moderador:', moderatorUser.moderator_id);
+      moderatorId = moderatorUser.moderator_id;
+      
+      // Buscar configurações de pagamento do moderador
+      const { data: paymentSettings } = await supabaseService
+        .from('moderator_payment_settings')
+        .select('mercadopago_access_token, is_active')
+        .eq('moderator_id', moderatorUser.moderator_id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (paymentSettings && paymentSettings.mercadopago_access_token) {
+        console.log('💰 Usando token do Mercado Pago do moderador');
+        mercadoPagoAccessToken = paymentSettings.mercadopago_access_token;
+        isModeratorPayment = true;
+      } else {
+        // Verificar se é o moderador específico que tem token no secrets
+        const { data: moderatorProfile } = await supabaseService
+          .from('profiles')
+          .select('email')
+          .eq('id', moderatorUser.moderator_id)
+          .maybeSingle();
+
+        if (moderatorProfile?.email === 'acordeondeourobrasil@gmail.com') {
+          const moderatorToken = Deno.env.get("MODERATOR_ACORDEON_MP_TOKEN");
+          if (moderatorToken) {
+            console.log('💰 Usando token do Mercado Pago do moderador (via secret)');
+            mercadoPagoAccessToken = moderatorToken;
+            isModeratorPayment = true;
+          }
+        }
+      }
+    }
+
+    // Se não é pagamento de moderador, usar token da plataforma
+    if (!mercadoPagoAccessToken) {
+      mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
+      if (!mercadoPagoAccessToken) {
+        mercadoPagoAccessToken = Deno.env.get("Access Token mercado pago");
+      }
+      console.log('💰 Usando token do Mercado Pago da plataforma');
+    }
+    
+    if (!mercadoPagoAccessToken) {
+      console.error('❌ Token do Mercado Pago não configurado');
+      return new Response(
+        JSON.stringify({ error: 'Token do Mercado Pago não configurado' }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 503
+        }
+      );
+    }
 
     // Verificar se usuário já tem alguma assinatura (ativa ou não)
     const { data: existingSubscription } = await supabaseService
@@ -66,8 +115,10 @@ serve(async (req) => {
       );
     }
 
-    // Criar external_reference único
-    const externalReference = `subscription_${user_id}_${Date.now()}`;
+    // Criar external_reference único (incluindo info do moderador se aplicável)
+    const externalReference = isModeratorPayment 
+      ? `subscription_${user_id}_mod_${moderatorId}_${Date.now()}`
+      : `subscription_${user_id}_${Date.now()}`;
     
     // Gerar idempotency key único
     const idempotencyKey = crypto.randomUUID();
@@ -85,7 +136,11 @@ serve(async (req) => {
       notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`
     };
 
-    console.log('💳 Criando pagamento PIX no Mercado Pago:', paymentPayload);
+    console.log('💳 Criando pagamento PIX no Mercado Pago:', {
+      ...paymentPayload,
+      isModeratorPayment,
+      moderatorId
+    });
 
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
@@ -107,7 +162,8 @@ serve(async (req) => {
     console.log('✅ Pagamento criado no Mercado Pago:', {
       id: paymentData.id,
       status: paymentData.status,
-      qr_code: paymentData.point_of_interaction?.transaction_data?.qr_code ? 'present' : 'missing'
+      qr_code: paymentData.point_of_interaction?.transaction_data?.qr_code ? 'present' : 'missing',
+      isModeratorPayment
     });
 
     let subscriptionData;
@@ -170,6 +226,21 @@ serve(async (req) => {
       console.log('✅ Subscription criada como pending:', subscriptionData.id);
     }
 
+    // Log de atividade para rastreamento
+    if (isModeratorPayment) {
+      await supabaseService
+        .from('user_activity_logs')
+        .insert({
+          user_id: user_id,
+          action: 'subscription_payment_to_moderator',
+          metadata: {
+            moderator_id: moderatorId,
+            payment_id: paymentData.id,
+            amount: 29.99
+          }
+        });
+    }
+
     // Retornar dados do PIX
     return new Response(
       JSON.stringify({
@@ -178,7 +249,8 @@ serve(async (req) => {
         qr_code_base64: paymentData.point_of_interaction?.transaction_data?.qr_code_base64,
         subscription_id: subscriptionData.id,
         amount: 29.99,
-        currency: 'BRL'
+        currency: 'BRL',
+        is_moderator_payment: isModeratorPayment
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
