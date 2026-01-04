@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,7 +18,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { Music, Upload, ChevronDown, ChevronUp, Play, Pause, Trash2, Check, Gauge } from 'lucide-react';
+import { Music, Upload, ChevronDown, ChevronUp, Play, Pause, Trash2, Check, Gauge, Plus, Repeat } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -29,12 +29,40 @@ import {
   removeBaseMusical,
   ensureMusicBasesBucketExists,
 } from '@/services/basesMusicais/basesService';
+import { AudioMarkerSlider, Marker } from '@/components/composer/AudioMarkerSlider';
+import { nanoid } from 'nanoid';
 
 interface BasesSelectorProps {
   selectedBase: BaseMusical | null;
   onSelectBase: (base: BaseMusical | null) => void;
 }
 
+// localStorage key for markers persistence
+const MARKERS_STORAGE_KEY = 'audio_markers';
+
+const getStoredMarkers = (baseId: string): Marker[] => {
+  try {
+    const stored = localStorage.getItem(MARKERS_STORAGE_KEY);
+    if (stored) {
+      const allMarkers = JSON.parse(stored);
+      return allMarkers[baseId] || [];
+    }
+  } catch (e) {
+    console.error('Error reading markers from localStorage:', e);
+  }
+  return [];
+};
+
+const saveMarkers = (baseId: string, markers: Marker[]) => {
+  try {
+    const stored = localStorage.getItem(MARKERS_STORAGE_KEY);
+    const allMarkers = stored ? JSON.parse(stored) : {};
+    allMarkers[baseId] = markers;
+    localStorage.setItem(MARKERS_STORAGE_KEY, JSON.stringify(allMarkers));
+  } catch (e) {
+    console.error('Error saving markers to localStorage:', e);
+  }
+};
 export const BasesSelector: React.FC<BasesSelectorProps> = ({
   selectedBase,
   onSelectBase,
@@ -48,6 +76,16 @@ export const BasesSelector: React.FC<BasesSelectorProps> = ({
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isPlayingSelected, setIsPlayingSelected] = useState(false);
   const selectedAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [selectedAudioEl, setSelectedAudioEl] = useState<HTMLAudioElement | null>(null);
+
+  // Selected base markers + loop
+  const [selectedCurrentTime, setSelectedCurrentTime] = useState(0);
+  const [selectedDuration, setSelectedDuration] = useState(0);
+  const [selectedMarkers, setSelectedMarkers] = useState<Marker[]>([]);
+  const [selectedLoopStart, setSelectedLoopStart] = useState<number | null>(null);
+  const [selectedLoopEnd, setSelectedLoopEnd] = useState<number | null>(null);
+  const [isSelectedLoopActive, setIsSelectedLoopActive] = useState(false);
+
   const [newBase, setNewBase] = useState({
     name: '',
     genre: '',
@@ -62,6 +100,52 @@ export const BasesSelector: React.FC<BasesSelectorProps> = ({
       loadBases();
     }
   }, [user]);
+
+  // Load markers when selected base changes
+  useEffect(() => {
+    if (selectedBase?.id) {
+      setSelectedMarkers(getStoredMarkers(selectedBase.id));
+    } else {
+      setSelectedMarkers([]);
+    }
+    setSelectedLoopStart(null);
+    setSelectedLoopEnd(null);
+    setIsSelectedLoopActive(false);
+    setSelectedCurrentTime(0);
+    setSelectedDuration(0);
+  }, [selectedBase?.id]);
+
+  // Track time/duration for selected base audio
+  useEffect(() => {
+    if (!selectedAudioEl) return;
+
+    const update = () => {
+      setSelectedCurrentTime(selectedAudioEl.currentTime || 0);
+      setSelectedDuration(selectedAudioEl.duration || 0);
+    };
+
+    selectedAudioEl.addEventListener('loadedmetadata', update);
+    selectedAudioEl.addEventListener('timeupdate', update);
+
+    return () => {
+      selectedAudioEl.removeEventListener('loadedmetadata', update);
+      selectedAudioEl.removeEventListener('timeupdate', update);
+    };
+  }, [selectedAudioEl]);
+
+  // Loop logic for selected base
+  useEffect(() => {
+    if (!selectedAudioEl || !isSelectedLoopActive || selectedLoopStart === null || selectedLoopEnd === null) return;
+
+    const handle = () => {
+      if (selectedAudioEl.currentTime >= selectedLoopEnd) {
+        selectedAudioEl.currentTime = selectedLoopStart;
+      }
+    };
+
+    selectedAudioEl.addEventListener('timeupdate', handle);
+    return () => selectedAudioEl.removeEventListener('timeupdate', handle);
+  }, [selectedAudioEl, isSelectedLoopActive, selectedLoopStart, selectedLoopEnd]);
 
   const loadBases = async () => {
     try {
@@ -325,7 +409,7 @@ export const BasesSelector: React.FC<BasesSelectorProps> = ({
           </div>
         )}
 
-        {/* Player da base selecionada - compacto */}
+        {/* Player da base selecionada - compacto (com marcadores e loop A-B) */}
         {selectedBase && (
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">
             <div className="flex items-center justify-between">
@@ -355,20 +439,196 @@ export const BasesSelector: React.FC<BasesSelectorProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* Hidden audio element (we provide custom controls) */}
             <audio
               ref={(el) => {
                 selectedAudioRef.current = el;
+                setSelectedAudioEl(el);
                 if (el) {
                   el.playbackRate = playbackRate;
-                  el.onended = () => setIsPlayingSelected(false);
+                  el.onended = () => {
+                    if (isSelectedLoopActive && selectedLoopStart !== null) {
+                      el.currentTime = selectedLoopStart;
+                      el.play();
+                    } else {
+                      setIsPlayingSelected(false);
+                    }
+                  };
                   el.onplay = () => setIsPlayingSelected(true);
                   el.onpause = () => setIsPlayingSelected(false);
                 }
               }}
               src={selectedBase.file_url}
-              className="w-full h-8"
-              controls
+              preload="metadata"
             />
+
+            {/* Timeline with markers */}
+            <div className="space-y-1">
+              <AudioMarkerSlider
+                value={selectedCurrentTime}
+                duration={selectedDuration}
+                markers={selectedMarkers}
+                loopStart={selectedLoopStart}
+                loopEnd={selectedLoopEnd}
+                isLoopActive={isSelectedLoopActive}
+                onSeek={(time) => {
+                  if (selectedAudioRef.current) {
+                    selectedAudioRef.current.currentTime = time;
+                  }
+                }}
+                onAddMarker={(time) => {
+                  if (!selectedBase?.id) return;
+                  const newMarker: Marker = {
+                    id: nanoid(8),
+                    time,
+                    color: 'hsl(var(--accent))',
+                    label: `Marcador ${selectedMarkers.length + 1}`,
+                  };
+                  const updated = [...selectedMarkers, newMarker].sort((a, b) => a.time - b.time);
+                  setSelectedMarkers(updated);
+                  saveMarkers(selectedBase.id, updated);
+                  toast({
+                    title: 'Marcador adicionado',
+                    description: `Marcador em ${Math.floor(time / 60)}:${Math.floor(time % 60).toString().padStart(2, '0')}`,
+                  });
+                }}
+                onMarkerClick={(marker) => {
+                  if (selectedAudioRef.current) {
+                    selectedAudioRef.current.currentTime = marker.time;
+                  }
+                }}
+                onMarkerRemove={(markerId) => {
+                  if (!selectedBase?.id) return;
+                  const updated = selectedMarkers.filter(m => m.id !== markerId);
+                  setSelectedMarkers(updated);
+                  saveMarkers(selectedBase.id, updated);
+                }}
+                showHints={false}
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>
+                  {Math.floor(selectedCurrentTime / 60)}:{Math.floor(selectedCurrentTime % 60).toString().padStart(2, '0')}
+                </span>
+                <span>
+                  {Math.floor(selectedDuration / 60)}:{Math.floor(selectedDuration % 60).toString().padStart(2, '0')}
+                </span>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => {
+                  const el = selectedAudioRef.current;
+                  if (!el) return;
+                  if (el.paused) {
+                    el.play();
+                  } else {
+                    el.pause();
+                  }
+                }}
+                title={isPlayingSelected ? 'Pausar' : 'Reproduzir'}
+              >
+                {isPlayingSelected ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              </Button>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1 px-2"
+                  onClick={() => {
+                    if (!selectedBase?.id) return;
+                    const time = selectedCurrentTime;
+                    const newMarker: Marker = {
+                      id: nanoid(8),
+                      time,
+                      color: 'hsl(var(--accent))',
+                      label: `Marcador ${selectedMarkers.length + 1}`,
+                    };
+                    const updated = [...selectedMarkers, newMarker].sort((a, b) => a.time - b.time);
+                    setSelectedMarkers(updated);
+                    saveMarkers(selectedBase.id, updated);
+                  }}
+                  title="Adicionar marcador no tempo atual"
+                >
+                  <Plus size={12} /> Marcador
+                </Button>
+
+                <Button
+                  variant={selectedLoopStart !== null ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 text-xs px-2 bg-primary/10 hover:bg-primary/20 border-primary/30"
+                  onClick={() => {
+                    setSelectedLoopStart(selectedCurrentTime);
+                  }}
+                  title="Definir ponto A (início do loop)"
+                >
+                  A
+                </Button>
+
+                <Button
+                  variant={selectedLoopEnd !== null ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 text-xs px-2 bg-destructive/10 hover:bg-destructive/20 border-destructive/30"
+                  onClick={() => {
+                    if (selectedLoopStart !== null && selectedCurrentTime > selectedLoopStart) {
+                      setSelectedLoopEnd(selectedCurrentTime);
+                    } else {
+                      toast({
+                        title: 'Erro',
+                        description: 'Defina o ponto A primeiro e certifique-se que B vem depois',
+                        variant: 'destructive',
+                      });
+                    }
+                  }}
+                  title="Definir ponto B (fim do loop)"
+                >
+                  B
+                </Button>
+
+                <Button
+                  variant={isSelectedLoopActive ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 text-xs gap-1 px-2"
+                  onClick={() => {
+                    if (selectedLoopStart === null || selectedLoopEnd === null) {
+                      toast({
+                        title: 'Configure o loop',
+                        description: 'Defina os pontos A e B primeiro',
+                        variant: 'destructive',
+                      });
+                      return;
+                    }
+                    setIsSelectedLoopActive(!isSelectedLoopActive);
+                  }}
+                  title="Ativar/desativar loop A-B"
+                >
+                  <Repeat size={12} /> Loop
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-destructive hover:text-destructive"
+                  onClick={() => {
+                    if (!selectedBase?.id) return;
+                    setSelectedMarkers([]);
+                    saveMarkers(selectedBase.id, []);
+                    setSelectedLoopStart(null);
+                    setSelectedLoopEnd(null);
+                    setIsSelectedLoopActive(false);
+                  }}
+                  title="Limpar marcadores e loop"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </CollapsibleContent>

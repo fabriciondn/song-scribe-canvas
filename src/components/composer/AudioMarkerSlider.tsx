@@ -5,6 +5,7 @@ export interface Marker {
   id: string;
   time: number;
   label?: string;
+  /** CSS color string (prefer theme tokens, e.g. "hsl(var(--accent))") */
   color: string;
 }
 
@@ -20,6 +21,7 @@ interface AudioMarkerSliderProps {
   onMarkerClick: (marker: Marker) => void;
   onMarkerRemove: (markerId: string) => void;
   className?: string;
+  showHints?: boolean;
 }
 
 export const AudioMarkerSlider: React.FC<AudioMarkerSliderProps> = ({
@@ -33,7 +35,8 @@ export const AudioMarkerSlider: React.FC<AudioMarkerSliderProps> = ({
   onAddMarker,
   onMarkerClick,
   onMarkerRemove,
-  className
+  className,
+  showHints = true,
 }) => {
   const trackRef = React.useRef<HTMLDivElement>(null);
 
@@ -44,7 +47,7 @@ export const AudioMarkerSlider: React.FC<AudioMarkerSliderProps> = ({
 
   const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!trackRef.current || duration <= 0) return;
-    
+
     const rect = trackRef.current.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const percent = clickX / rect.width;
@@ -54,7 +57,7 @@ export const AudioMarkerSlider: React.FC<AudioMarkerSliderProps> = ({
 
   const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!trackRef.current || duration <= 0) return;
-    
+
     const rect = trackRef.current.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const percent = clickX / rect.width;
@@ -78,8 +81,7 @@ export const AudioMarkerSlider: React.FC<AudioMarkerSliderProps> = ({
   const loopEndPercent = loopEnd !== null ? getPositionPercent(loopEnd) : null;
 
   return (
-    <div className={cn("relative w-full", className)}>
-      {/* Main track container */}
+    <div className={cn('relative w-full', className)}>
       <div
         ref={trackRef}
         className="relative h-3 w-full cursor-pointer rounded-full bg-secondary"
@@ -89,10 +91,10 @@ export const AudioMarkerSlider: React.FC<AudioMarkerSliderProps> = ({
         {/* Loop region highlight */}
         {isLoopActive && loopStartPercent !== null && loopEndPercent !== null && (
           <div
-            className="absolute top-0 h-full rounded-full bg-green-500/20 pointer-events-none"
+            className="absolute top-0 h-full rounded-full bg-accent/25 pointer-events-none"
             style={{
               left: `${loopStartPercent}%`,
-              width: `${loopEndPercent - loopStartPercent}%`
+              width: `${loopEndPercent - loopStartPercent}%`,
             }}
           />
         )}
@@ -106,7 +108,7 @@ export const AudioMarkerSlider: React.FC<AudioMarkerSliderProps> = ({
         {/* Loop Start marker (A) */}
         {loopStart !== null && (
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow-md z-20 cursor-pointer hover:scale-125 transition-transform"
+            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-primary border-2 border-background shadow-md z-20 cursor-pointer hover:scale-125 transition-transform"
             style={{ left: `calc(${loopStartPercent}% - 6px)` }}
             title="Ponto A (início do loop)"
           />
@@ -115,7 +117,7 @@ export const AudioMarkerSlider: React.FC<AudioMarkerSliderProps> = ({
         {/* Loop End marker (B) */}
         {loopEnd !== null && (
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-red-500 border-2 border-white shadow-md z-20 cursor-pointer hover:scale-125 transition-transform"
+            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-destructive border-2 border-background shadow-md z-20 cursor-pointer hover:scale-125 transition-transform"
             style={{ left: `calc(${loopEndPercent}% - 6px)` }}
             title="Ponto B (fim do loop)"
           />
@@ -128,7 +130,7 @@ export const AudioMarkerSlider: React.FC<AudioMarkerSliderProps> = ({
             className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-background shadow-md z-10 cursor-pointer hover:scale-150 transition-transform"
             style={{
               left: `calc(${getPositionPercent(marker.time)}% - 5px)`,
-              backgroundColor: marker.color
+              backgroundColor: marker.color,
             }}
             onClick={(e) => handleMarkerClick(e, marker)}
             onContextMenu={(e) => handleMarkerContextMenu(e, marker.id)}
@@ -143,10 +145,11 @@ export const AudioMarkerSlider: React.FC<AudioMarkerSliderProps> = ({
         />
       </div>
 
-      {/* Marker hints */}
-      <div className="mt-1 text-[10px] text-muted-foreground text-center">
-        Duplo clique para adicionar marcador • Clique direito no marcador para remover
-      </div>
+      {showHints && (
+        <div className="mt-1 text-[10px] text-muted-foreground text-center">
+          Duplo clique para adicionar marcador • Clique direito no marcador para remover
+        </div>
+      )}
     </div>
   );
 };
