@@ -266,7 +266,7 @@ export const MusicBases: React.FC<MusicBasesProps> = ({
     const newMarker: Marker = {
       id: nanoid(8),
       time,
-      color: '#FCD34D', // Amber/yellow
+      color: 'hsl(var(--accent))',
       label: `Marcador ${markers.length + 1}`
     };
     
@@ -492,7 +492,7 @@ export const MusicBases: React.FC<MusicBasesProps> = ({
                                   variant={loopStart !== null ? "default" : "outline"}
                                   size="sm"
                                   onClick={handleSetLoopStart}
-                                  className="h-7 text-xs px-2 bg-green-500/20 hover:bg-green-500/30 border-green-500/50"
+                                  className="h-7 text-xs px-2 bg-primary/10 hover:bg-primary/20 border-primary/30"
                                   title="Definir ponto A (início do loop)"
                                 >
                                   A
@@ -501,7 +501,7 @@ export const MusicBases: React.FC<MusicBasesProps> = ({
                                   variant={loopEnd !== null ? "default" : "outline"}
                                   size="sm"
                                   onClick={handleSetLoopEnd}
-                                  className="h-7 text-xs px-2 bg-red-500/20 hover:bg-red-500/30 border-red-500/50"
+                                  className="h-7 text-xs px-2 bg-destructive/10 hover:bg-destructive/20 border-destructive/30"
                                   title="Definir ponto B (fim do loop)"
                                 >
                                   B
@@ -533,7 +533,7 @@ export const MusicBases: React.FC<MusicBasesProps> = ({
                                     <button
                                       key={marker.id}
                                       onClick={() => handleMarkerClick(marker)}
-                                      className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/40 text-foreground transition-colors"
+                                      className="text-[10px] px-1.5 py-0.5 rounded bg-accent/20 hover:bg-accent/35 text-foreground transition-colors"
                                       title={`Ir para ${formatTime(marker.time)}`}
                                     >
                                       {index + 1}: {formatTime(marker.time)}
