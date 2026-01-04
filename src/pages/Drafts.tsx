@@ -30,7 +30,8 @@ import {
   CollaborativeSession, 
   getActiveSessionForDraft,
   endSession as endCollaborativeSession,
-  leaveSession as leaveCollaborativeSession
+  leaveSession as leaveCollaborativeSession,
+  getUserActiveSessions
 } from '@/services/collaborativeSessionService';
 import { 
   Select,
@@ -128,8 +129,33 @@ const Drafts: React.FC = () => {
       });
     } else if (isAuthenticated && !authLoading) {
       loadData();
+      checkAndReconnectActiveSessions();
     }
   }, [isAuthenticated, authLoading, navigate, toast]);
+
+  // Verificar e reconectar a sessões colaborativas ativas automaticamente
+  const checkAndReconnectActiveSessions = async () => {
+    try {
+      const activeSessions = await getUserActiveSessions();
+      if (activeSessions.length > 0) {
+        const activeSession = activeSessions[0];
+        setCollaborativeSession(activeSession);
+        setCollaborativeDraftId(activeSession.draft_id);
+        
+        // Carregar o draft da sessão ativa
+        const draft = await draftService.getDraftById(activeSession.draft_id);
+        if (draft) {
+          startEditingDraft(draft);
+          toast({
+            title: 'Sessão colaborativa reconectada',
+            description: 'Você foi reconectado à sua sessão ativa.',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao verificar sessões ativas:', error);
+    }
+  };
   
   const loadData = async () => {
     setIsLoading(true);

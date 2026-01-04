@@ -143,14 +143,9 @@ export const useCollaborativeSession = ({
     };
   }, [session, loadParticipants]);
 
-  // Limpar ao desmontar
-  useEffect(() => {
-    return () => {
-      if (session) {
-        leaveSession(session.id).catch(console.error);
-      }
-    };
-  }, [session]);
+  // REMOVIDO: Não chamar leaveSession automaticamente ao desmontar
+  // A sessão só deve ser encerrada quando o usuário clicar explicitamente em "Sair" ou "Encerrar"
+  // O status online/offline é gerenciado pelo canal de presença real-time
 
   const onlineParticipants = participants.filter(p => p.is_online);
   const isHost = session?.host_user_id === user?.id;
