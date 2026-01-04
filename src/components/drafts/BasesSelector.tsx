@@ -35,6 +35,8 @@ import { nanoid } from 'nanoid';
 interface BasesSelectorProps {
   selectedBase: BaseMusical | null;
   onSelectBase: (base: BaseMusical | null) => void;
+  onPlayStateChange?: (isPlaying: boolean) => void;
+  playTrigger?: number; // Incrementar para disparar play
 }
 
 // localStorage key for markers persistence
@@ -66,6 +68,8 @@ const saveMarkers = (baseId: string, markers: Marker[]) => {
 export const BasesSelector: React.FC<BasesSelectorProps> = ({
   selectedBase,
   onSelectBase,
+  onPlayStateChange,
+  playTrigger,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [bases, setBases] = useState<BaseMusical[]>([]);
@@ -146,6 +150,18 @@ export const BasesSelector: React.FC<BasesSelectorProps> = ({
     selectedAudioEl.addEventListener('timeupdate', handle);
     return () => selectedAudioEl.removeEventListener('timeupdate', handle);
   }, [selectedAudioEl, isSelectedLoopActive, selectedLoopStart, selectedLoopEnd]);
+
+  // Notify parent when play state changes
+  useEffect(() => {
+    onPlayStateChange?.(isPlayingSelected);
+  }, [isPlayingSelected, onPlayStateChange]);
+
+  // Play trigger from parent (for auto-play when recording with base)
+  useEffect(() => {
+    if (playTrigger && playTrigger > 0 && selectedAudioRef.current && selectedBase) {
+      selectedAudioRef.current.play().catch(console.error);
+    }
+  }, [playTrigger, selectedBase]);
 
   const loadBases = async () => {
     try {

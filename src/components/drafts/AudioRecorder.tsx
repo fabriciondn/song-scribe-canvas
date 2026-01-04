@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Trash2, Edit, Save, Play, Pause, Music } from 'lucide-react';
+import { Mic, MicOff, Trash2, Edit, Save, Play, Pause, Music, Zap, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { ensureAudioBucketExists } from '@/services/storage/storageBuckets';
 import { AudioFile } from '@/services/drafts/types';
@@ -12,12 +12,14 @@ interface AudioRecorderProps {
   onSaveRecordings: (audioFiles: AudioFile[]) => void;
   initialAudioFiles?: AudioFile[];
   isBasePlayingOrSelected?: boolean;
+  onPlayBase?: () => void;
 }
 
 export const AudioRecorder: React.FC<AudioRecorderProps> = ({ 
   onSaveRecordings,
   initialAudioFiles = [],
-  isBasePlayingOrSelected = false
+  isBasePlayingOrSelected = false,
+  onPlayBase
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isRecordingWithBase, setIsRecordingWithBase] = useState(false);
@@ -27,11 +29,18 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const [editName, setEditName] = useState('');
   const [newAudioName, setNewAudioName] = useState('Áudio');
   
+  // Estado para autorização persistente
+  const [isBaseStreamAuthorized, setIsBaseStreamAuthorized] = useState(false);
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioElementsRef = useRef<Record<string, HTMLAudioElement>>({});
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamsRef = useRef<MediaStream[]>([]);
+  
+  // Refs para streams persistentes (autorização única)
+  const persistentMicStreamRef = useRef<MediaStream | null>(null);
+  const persistentDisplayStreamRef = useRef<MediaStream | null>(null);
   
   const { toast } = useToast();
   
@@ -52,12 +61,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      streamsRef.current.forEach(stream => {
-        stream.getTracks().forEach(track => track.stop());
-      });
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
+      cleanupAllStreams();
     };
   }, []);
 
@@ -79,6 +83,103 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       audioContextRef.current.close();
       audioContextRef.current = null;
     }
+  };
+
+  const cleanupAllStreams = () => {
+    cleanupStreams();
+    // Limpar streams persistentes
+    if (persistentMicStreamRef.current) {
+      persistentMicStreamRef.current.getTracks().forEach(track => track.stop());
+      persistentMicStreamRef.current = null;
+    }
+    if (persistentDisplayStreamRef.current) {
+      persistentDisplayStreamRef.current.getTracks().forEach(track => track.stop());
+      persistentDisplayStreamRef.current = null;
+    }
+    setIsBaseStreamAuthorized(false);
+  };
+
+  // Habilitar gravação com base (autorização única)
+  const enableBaseRecording = async () => {
+    try {
+      // Request microphone access
+      const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Request tab/screen audio
+      toast({
+        title: 'Selecione a aba',
+        description: 'Escolha esta aba e marque "Compartilhar áudio da aba" para habilitar.',
+      });
+      
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        audio: true,
+        video: true
+      });
+      
+      // Check if we got audio track from display
+      const displayAudioTracks = displayStream.getAudioTracks();
+      if (displayAudioTracks.length === 0) {
+        displayStream.getTracks().forEach(track => track.stop());
+        micStream.getTracks().forEach(track => track.stop());
+        
+        toast({
+          title: 'Áudio da aba não compartilhado',
+          description: 'Você não marcou "Compartilhar áudio da aba". Tente novamente.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      // Stop the video track as we don't need it
+      displayStream.getVideoTracks().forEach(track => track.stop());
+      
+      // Guardar streams para reutilização
+      persistentMicStreamRef.current = micStream;
+      persistentDisplayStreamRef.current = displayStream;
+      setIsBaseStreamAuthorized(true);
+      
+      toast({
+        title: 'Gravação com base habilitada',
+        description: 'Agora você pode gravar várias vezes sem reautorizar.',
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error enabling base recording:', error);
+      
+      if ((error as Error).name === 'NotAllowedError') {
+        toast({
+          title: 'Permissão negada',
+          description: 'Você precisa permitir o compartilhamento de tela.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Erro ao habilitar',
+          description: 'Não foi possível habilitar a gravação com base.',
+          variant: 'destructive',
+        });
+      }
+      return false;
+    }
+  };
+
+  // Desabilitar gravação com base
+  const disableBaseRecording = () => {
+    if (persistentMicStreamRef.current) {
+      persistentMicStreamRef.current.getTracks().forEach(track => track.stop());
+      persistentMicStreamRef.current = null;
+    }
+    if (persistentDisplayStreamRef.current) {
+      persistentDisplayStreamRef.current.getTracks().forEach(track => track.stop());
+      persistentDisplayStreamRef.current = null;
+    }
+    setIsBaseStreamAuthorized(false);
+    
+    toast({
+      title: 'Gravação com base desabilitada',
+      description: 'Os streams foram liberados.',
+    });
   };
   
   const startRecording = async () => {
@@ -102,12 +203,10 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(audioBlob);
         
-        // Determine the name for the new recording
         const audioCount = audioFiles.length + 1;
         const defaultName = `Áudio ${audioCount}`;
         const audioName = newAudioName || defaultName;
         
-        // Create a new audio file entry
         const newAudioFile: AudioFile = {
           id: generateAudioId(),
           name: audioName,
@@ -115,14 +214,9 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
           created_at: new Date().toISOString()
         };
         
-        // Add the new audio file to the list
         const updatedAudioFiles = [...audioFiles, newAudioFile];
         setAudioFiles(updatedAudioFiles);
-        
-        // Reset the audio name input field
         setNewAudioName('');
-        
-        // Notify the parent component
         onSaveRecordings(updatedAudioFiles);
         
         cleanupStreams();
@@ -149,49 +243,45 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     try {
       stopAllPlaying();
       
-      // Request microphone access
-      const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
-      // Request tab/screen audio - user needs to select the tab and enable "Share tab audio"
-      toast({
-        title: 'Selecione a aba',
-        description: 'Escolha esta aba e marque "Compartilhar áudio da aba" para gravar com a base.',
-      });
-      
-      const displayStream = await navigator.mediaDevices.getDisplayMedia({
-        audio: true,
-        video: true // Required by some browsers even if we don't use video
-      });
-      
-      // Check if we got audio track from display
-      const displayAudioTracks = displayStream.getAudioTracks();
-      if (displayAudioTracks.length === 0) {
-        // User didn't share audio, fall back to mic only
-        displayStream.getTracks().forEach(track => track.stop());
-        micStream.getTracks().forEach(track => track.stop());
-        
-        toast({
-          title: 'Áudio da aba não compartilhado',
-          description: 'Você não marcou "Compartilhar áudio da aba". Tente novamente.',
-          variant: 'destructive',
-        });
-        return;
+      // Se não está autorizado, solicitar autorização primeiro
+      if (!isBaseStreamAuthorized) {
+        const success = await enableBaseRecording();
+        if (!success) return;
       }
-
-      // Stop the video track as we don't need it
-      displayStream.getVideoTracks().forEach(track => track.stop());
       
-      streamsRef.current = [micStream, displayStream];
+      // Verificar se os streams ainda estão ativos
+      const micStream = persistentMicStreamRef.current;
+      const displayStream = persistentDisplayStreamRef.current;
+      
+      if (!micStream || !displayStream || 
+          micStream.getTracks().some(t => t.readyState === 'ended') ||
+          displayStream.getAudioTracks().some(t => t.readyState === 'ended')) {
+        // Streams expirados, reautorizar
+        setIsBaseStreamAuthorized(false);
+        const success = await enableBaseRecording();
+        if (!success) return;
+      }
+      
+      // Usar streams já autorizados
+      const activeMicStream = persistentMicStreamRef.current!;
+      const activeDisplayStream = persistentDisplayStreamRef.current!;
+      const displayAudioTracks = activeDisplayStream.getAudioTracks();
+      
+      // Dar play na base automaticamente
+      onPlayBase?.();
+      
+      // Pequeno delay para garantir que a base começou
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Create AudioContext to mix both streams
       const audioContext = new AudioContext();
       audioContextRef.current = audioContext;
       
       // Create sources for each stream
-      const micSource = audioContext.createMediaStreamSource(micStream);
+      const micSource = audioContext.createMediaStreamSource(activeMicStream);
       const displaySource = audioContext.createMediaStreamSource(new MediaStream(displayAudioTracks));
       
-      // Create a gain node for each source to control volume if needed
+      // Create a gain node for each source to control volume
       const micGain = audioContext.createGain();
       const displayGain = audioContext.createGain();
       micGain.gain.value = 1.0;
@@ -223,12 +313,10 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(audioBlob);
         
-        // Determine the name for the new recording
         const audioCount = audioFiles.length + 1;
         const defaultName = `Prévia ${audioCount}`;
         const audioName = newAudioName ? `${newAudioName} (com base)` : defaultName;
         
-        // Create a new audio file entry
         const newAudioFile: AudioFile = {
           id: generateAudioId(),
           name: audioName,
@@ -236,17 +324,16 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
           created_at: new Date().toISOString()
         };
         
-        // Add the new audio file to the list
         const updatedAudioFiles = [...audioFiles, newAudioFile];
         setAudioFiles(updatedAudioFiles);
-        
-        // Reset the audio name input field
         setNewAudioName('');
-        
-        // Notify the parent component
         onSaveRecordings(updatedAudioFiles);
         
-        cleanupStreams();
+        // Não limpar streams persistentes, apenas o audioContext
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+          audioContextRef.current = null;
+        }
       };
       
       mediaRecorder.start();
@@ -258,21 +345,15 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       });
     } catch (error) {
       console.error('Error starting recording with base:', error);
-      cleanupStreams();
       
-      if ((error as Error).name === 'NotAllowedError') {
-        toast({
-          title: 'Permissão negada',
-          description: 'Você precisa permitir o compartilhamento de tela para gravar com a base.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Erro ao iniciar gravação',
-          description: 'Não foi possível iniciar a gravação com a base. Tente usar a gravação normal.',
-          variant: 'destructive',
-        });
-      }
+      // Se deu erro, pode ser que os streams expiraram
+      setIsBaseStreamAuthorized(false);
+      
+      toast({
+        title: 'Erro ao iniciar gravação',
+        description: 'Tente habilitar a gravação com base novamente.',
+        variant: 'destructive',
+      });
     }
   };
   
@@ -331,7 +412,6 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   
   const togglePlayAudio = (id: string, url: string) => {
     if (currentlyPlaying === id) {
-      // Already playing this audio, stop it
       const audio = audioElementsRef.current[id];
       if (audio) {
         audio.pause();
@@ -339,10 +419,8 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       }
       setCurrentlyPlaying(null);
     } else {
-      // Stop any currently playing audio
       stopAllPlaying();
       
-      // Start playing this audio
       let audio = audioElementsRef.current[id];
       
       if (!audio) {
@@ -406,22 +484,55 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
               </Button>
               
               {isBasePlayingOrSelected && (
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  onClick={startRecordingWithBase}
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                  title="Grava sua voz junto com o áudio da base musical"
-                >
-                  <Mic className="h-4 w-4 mr-1" />
-                  <Music className="h-4 w-4 mr-2" />
-                  Com Base
-                </Button>
+                <>
+                  {isBaseStreamAuthorized ? (
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      onClick={startRecordingWithBase}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      title="Grava sua voz junto com o áudio da base musical"
+                    >
+                      <Mic className="h-4 w-4 mr-1" />
+                      <Music className="h-4 w-4 mr-2" />
+                      Com Base
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={enableBaseRecording}
+                      className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+                      title="Habilitar captura de áudio da aba (autoriza uma vez)"
+                    >
+                      <Zap className="h-4 w-4 mr-2" />
+                      Habilitar Com Base
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           )}
         </div>
       </div>
+
+      {/* Indicador de autorização ativa */}
+      {isBaseStreamAuthorized && !isAnyRecording && (
+        <div className="mb-4 p-2 bg-green-100 dark:bg-green-900/30 rounded-md flex items-center justify-between">
+          <p className="text-xs text-green-700 dark:text-green-300 flex items-center">
+            <Zap className="h-3 w-3 mr-1" />
+            Gravação com base habilitada (clique "Com Base" para gravar)
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={disableBaseRecording}
+            className="h-6 px-2 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800"
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
 
       {isRecordingWithBase && (
         <div className="mb-4 p-2 bg-green-100 dark:bg-green-900/30 rounded-md">

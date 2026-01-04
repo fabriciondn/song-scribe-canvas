@@ -84,6 +84,9 @@ const Drafts: React.FC = () => {
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
   const [audioBlobs, setAudioBlobs] = useState<Map<string, Blob>>(new Map());
 
+  // Estado para trigger de play da base (auto-play ao gravar)
+  const [basePlayTrigger, setBasePlayTrigger] = useState(0);
+
   // Estados para sessão colaborativa
   const [isCollaborativeModalOpen, setIsCollaborativeModalOpen] = useState(false);
   const [collaborativeSession, setCollaborativeSession] = useState<CollaborativeSession | null>(null);
@@ -607,6 +610,7 @@ const Drafts: React.FC = () => {
             <BasesSelector
               selectedBase={selectedBase}
               onSelectBase={setSelectedBase}
+              playTrigger={basePlayTrigger}
             />
             
             {/* Seletor de Pasta */}
@@ -664,6 +668,7 @@ const Drafts: React.FC = () => {
               onSaveRecordings={handleSaveRecordings} 
               initialAudioFiles={audioFiles}
               isBasePlayingOrSelected={!!selectedBase}
+              onPlayBase={() => setBasePlayTrigger(prev => prev + 1)}
             />
             
             <div className="flex justify-end space-x-2 pt-4">
