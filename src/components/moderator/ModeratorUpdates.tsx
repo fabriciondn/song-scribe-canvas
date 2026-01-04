@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Bell, CheckCircle2, Sparkles, TrendingUp, Filter, DollarSign, BarChart3 } from 'lucide-react';
+import { Bell, CheckCircle2, Sparkles, TrendingUp, Filter, DollarSign, BarChart3, Mic } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -18,6 +18,14 @@ const STORAGE_KEY = 'moderator-updates-seen';
 
 // Lista de atualizações recentes
 const updates: Update[] = [
+  {
+    id: 'update-7',
+    title: 'Gravação com Base Musical',
+    description: 'Nova funcionalidade que permite gravar áudio junto com a base musical selecionada. Autorização persistente (uma vez por sessão) e auto-play da base ao iniciar gravação.',
+    type: 'feature',
+    date: '2026-01-04',
+    icon: <Mic className="h-5 w-5" />,
+  },
   {
     id: 'update-6',
     title: 'Seção de Atualizações',
