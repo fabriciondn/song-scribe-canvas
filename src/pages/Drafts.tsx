@@ -663,6 +663,7 @@ const Drafts: React.FC = () => {
             <AudioRecorder
               onSaveRecordings={handleSaveRecordings} 
               initialAudioFiles={audioFiles}
+              isBasePlayingOrSelected={!!selectedBase}
             />
             
             <div className="flex justify-end space-x-2 pt-4">

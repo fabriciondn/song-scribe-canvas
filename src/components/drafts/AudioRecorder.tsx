@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Trash2, Edit, Save, Play, Pause } from 'lucide-react';
+import { Mic, MicOff, Trash2, Edit, Save, Play, Pause, Music } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { ensureAudioBucketExists } from '@/services/storage/storageBuckets';
 import { AudioFile } from '@/services/drafts/types';
@@ -11,13 +11,16 @@ import { generateAudioId } from '@/services/drafts/audioService';
 interface AudioRecorderProps {
   onSaveRecordings: (audioFiles: AudioFile[]) => void;
   initialAudioFiles?: AudioFile[];
+  isBasePlayingOrSelected?: boolean;
 }
 
 export const AudioRecorder: React.FC<AudioRecorderProps> = ({ 
   onSaveRecordings,
-  initialAudioFiles = [] 
+  initialAudioFiles = [],
+  isBasePlayingOrSelected = false
 }) => {
   const [isRecording, setIsRecording] = useState(false);
+  const [isRecordingWithBase, setIsRecordingWithBase] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>(initialAudioFiles);
@@ -27,6 +30,8 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioElementsRef = useRef<Record<string, HTMLAudioElement>>({});
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const streamsRef = useRef<MediaStream[]>([]);
   
   const { toast } = useToast();
   
@@ -44,6 +49,18 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     });
   }, []);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      streamsRef.current.forEach(stream => {
+        stream.getTracks().forEach(track => track.stop());
+      });
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
+  }, []);
+
   // Stop all playing audio when another one starts
   const stopAllPlaying = () => {
     Object.values(audioElementsRef.current).forEach(audio => {
@@ -52,12 +69,24 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     });
     setCurrentlyPlaying(null);
   };
+
+  const cleanupStreams = () => {
+    streamsRef.current.forEach(stream => {
+      stream.getTracks().forEach(track => track.stop());
+    });
+    streamsRef.current = [];
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+  };
   
   const startRecording = async () => {
     try {
       stopAllPlaying();
       
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamsRef.current = [stream];
       
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
@@ -95,6 +124,8 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         
         // Notify the parent component
         onSaveRecordings(updatedAudioFiles);
+        
+        cleanupStreams();
       };
       
       mediaRecorder.start();
@@ -113,14 +144,143 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       });
     }
   };
+
+  const startRecordingWithBase = async () => {
+    try {
+      stopAllPlaying();
+      
+      // Request microphone access
+      const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Request tab/screen audio - user needs to select the tab and enable "Share tab audio"
+      toast({
+        title: 'Selecione a aba',
+        description: 'Escolha esta aba e marque "Compartilhar áudio da aba" para gravar com a base.',
+      });
+      
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        audio: true,
+        video: true // Required by some browsers even if we don't use video
+      });
+      
+      // Check if we got audio track from display
+      const displayAudioTracks = displayStream.getAudioTracks();
+      if (displayAudioTracks.length === 0) {
+        // User didn't share audio, fall back to mic only
+        displayStream.getTracks().forEach(track => track.stop());
+        micStream.getTracks().forEach(track => track.stop());
+        
+        toast({
+          title: 'Áudio da aba não compartilhado',
+          description: 'Você não marcou "Compartilhar áudio da aba". Tente novamente.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Stop the video track as we don't need it
+      displayStream.getVideoTracks().forEach(track => track.stop());
+      
+      streamsRef.current = [micStream, displayStream];
+      
+      // Create AudioContext to mix both streams
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+      
+      // Create sources for each stream
+      const micSource = audioContext.createMediaStreamSource(micStream);
+      const displaySource = audioContext.createMediaStreamSource(new MediaStream(displayAudioTracks));
+      
+      // Create a gain node for each source to control volume if needed
+      const micGain = audioContext.createGain();
+      const displayGain = audioContext.createGain();
+      micGain.gain.value = 1.0;
+      displayGain.gain.value = 1.0;
+      
+      // Create destination for mixing
+      const destination = audioContext.createMediaStreamDestination();
+      
+      // Connect: mic -> gain -> destination
+      micSource.connect(micGain);
+      micGain.connect(destination);
+      
+      // Connect: display audio -> gain -> destination
+      displaySource.connect(displayGain);
+      displayGain.connect(destination);
+      
+      // Create MediaRecorder with the mixed stream
+      const mediaRecorder = new MediaRecorder(destination.stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(audioBlob);
+        
+        // Determine the name for the new recording
+        const audioCount = audioFiles.length + 1;
+        const defaultName = `Prévia ${audioCount}`;
+        const audioName = newAudioName ? `${newAudioName} (com base)` : defaultName;
+        
+        // Create a new audio file entry
+        const newAudioFile: AudioFile = {
+          id: generateAudioId(),
+          name: audioName,
+          url,
+          created_at: new Date().toISOString()
+        };
+        
+        // Add the new audio file to the list
+        const updatedAudioFiles = [...audioFiles, newAudioFile];
+        setAudioFiles(updatedAudioFiles);
+        
+        // Reset the audio name input field
+        setNewAudioName('');
+        
+        // Notify the parent component
+        onSaveRecordings(updatedAudioFiles);
+        
+        cleanupStreams();
+      };
+      
+      mediaRecorder.start();
+      setIsRecordingWithBase(true);
+      
+      toast({
+        title: 'Gravando com base',
+        description: 'Microfone + base musical estão sendo gravados juntos.',
+      });
+    } catch (error) {
+      console.error('Error starting recording with base:', error);
+      cleanupStreams();
+      
+      if ((error as Error).name === 'NotAllowedError') {
+        toast({
+          title: 'Permissão negada',
+          description: 'Você precisa permitir o compartilhamento de tela para gravar com a base.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Erro ao iniciar gravação',
+          description: 'Não foi possível iniciar a gravação com a base. Tente usar a gravação normal.',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
   
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && (isRecording || isRecordingWithBase)) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
-      // Stop all audio tracks
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      setIsRecordingWithBase(false);
       
       toast({
         title: 'Gravação finalizada',
@@ -206,13 +366,15 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     }
   };
 
+  const isAnyRecording = isRecording || isRecordingWithBase;
+
   return (
     <div className="rounded-md border p-4 bg-card">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium">Gravação de Áudio</h3>
         
         <div className="flex items-center space-x-2">
-          {!isRecording && (
+          {!isAnyRecording && (
             <div className="flex items-center space-x-2">
               <Input 
                 value={newAudioName} 
@@ -223,7 +385,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
             </div>
           )}
           
-          {isRecording ? (
+          {isAnyRecording ? (
             <Button 
               variant="destructive" 
               size="sm" 
@@ -233,17 +395,43 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
               Parar
             </Button>
           ) : (
-            <Button 
-              variant="default" 
-              size="sm" 
-              onClick={startRecording}
-            >
-              <Mic className="h-4 w-4 mr-2" />
-              Gravar
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={startRecording}
+              >
+                <Mic className="h-4 w-4 mr-2" />
+                Gravar
+              </Button>
+              
+              {isBasePlayingOrSelected && (
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={startRecordingWithBase}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  title="Grava sua voz junto com o áudio da base musical"
+                >
+                  <Mic className="h-4 w-4 mr-1" />
+                  <Music className="h-4 w-4 mr-2" />
+                  Com Base
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </div>
+
+      {isRecordingWithBase && (
+        <div className="mb-4 p-2 bg-green-100 dark:bg-green-900/30 rounded-md">
+          <p className="text-xs text-green-700 dark:text-green-300 flex items-center">
+            <Mic className="h-3 w-3 mr-1 animate-pulse" />
+            <Music className="h-3 w-3 mr-1" />
+            Gravando voz + base musical juntos...
+          </p>
+        </div>
+      )}
       
       {audioFiles.length > 0 && (
         <div className="space-y-3 mt-4">
