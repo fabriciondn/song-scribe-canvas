@@ -23,8 +23,8 @@ import { useProfile } from '@/hooks/useProfile';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { FormDescription } from '@/components/ui/form';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ACCEPTED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3'];
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const ACCEPTED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/ogg', 'audio/flac', 'audio/x-m4a'];
 
 // Schema para a primeira etapa (dados dos autores)
 const step1Schema = z.object({
@@ -153,7 +153,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setAudioError('O arquivo deve ter no máximo 10MB');
+      setAudioError('O arquivo deve ter no máximo 50MB');
       setAudioFile(null);
       return;
     }
@@ -723,7 +723,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                   <p className="text-sm text-red-500">{audioError}</p>
                 )}
                 <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
-                  Máximo 10MB, apenas arquivos MP3
+                  Máximo 50MB - Formatos: MP3, WAV, M4A, OGG, FLAC
                 </p>
               </div>
               )}
