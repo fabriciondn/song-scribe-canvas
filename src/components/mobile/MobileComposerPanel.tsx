@@ -55,7 +55,12 @@ export const MobileComposerPanel: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme, setTheme } = useTheme();
+
+  // Force light mode on mount
+  useEffect(() => {
+    setTheme('light');
+  }, [setTheme]);
 
   // Load draft if ID is provided
   useEffect(() => {
@@ -235,7 +240,7 @@ export const MobileComposerPanel: React.FC = () => {
       </div>
 
       {/* Header */}
-      <header className="pt-12 pb-4 px-6 flex items-center justify-between bg-white/80 dark:bg-[#1E293B]/80 backdrop-blur-md z-20 border-b border-gray-200 dark:border-gray-800">
+      <header className="pt-12 pb-4 px-6 flex items-center justify-between bg-[#FFFFFF]/80 dark:bg-[#1E293B]/80 backdrop-blur-md z-20 border-b border-gray-200 dark:border-gray-800">
         <button 
           onClick={handleBack}
           className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
@@ -300,13 +305,13 @@ export const MobileComposerPanel: React.FC = () => {
 
       {/* Tags Bar */}
       <div className="px-4 py-3 flex items-center justify-center gap-3 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-800 bg-[#F3F4F6] dark:bg-[#0F172A]">
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-gray-700 whitespace-nowrap">
+        <button className="flex items-center gap-2 px-3 py-1.5 bg-[#FFFFFF] dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-gray-700 whitespace-nowrap">
           <span className="material-icons-round text-[#00C853] text-sm">folder_open</span>
           <span className="text-xs font-medium text-[#6B7280] dark:text-[#94A3B8]">
             {folderName || 'Pop / Rock'}
           </span>
         </button>
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-gray-700 whitespace-nowrap">
+        <button className="flex items-center gap-2 px-3 py-1.5 bg-[#FFFFFF] dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-gray-700 whitespace-nowrap">
           <span className="material-icons-round text-[#00C853] text-sm">group_add</span>
           <span className="text-xs font-medium text-[#6B7280] dark:text-[#94A3B8]">
             Compor em parceria
@@ -315,7 +320,7 @@ export const MobileComposerPanel: React.FC = () => {
       </div>
 
       {/* Main Content - Textarea */}
-      <main className="flex-1 overflow-y-auto relative no-scrollbar bg-white dark:bg-[#1E293B]">
+      <main className="flex-1 overflow-y-auto relative no-scrollbar bg-[#FFFFFF] dark:bg-[#1E293B]">
         <div className="p-6 min-h-full">
           <textarea
             ref={textareaRef}
@@ -332,7 +337,7 @@ export const MobileComposerPanel: React.FC = () => {
               className={`w-10 h-10 rounded-full shadow-lg border flex items-center justify-center transition hover:scale-110 ${
                 isRecording 
                   ? 'bg-red-500 border-red-400 animate-pulse' 
-                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                  : 'bg-[#FFFFFF] dark:bg-gray-800 border-gray-200 dark:border-gray-700'
               }`}
             >
               <span className={`material-icons-round text-xl ${isRecording ? 'text-white' : 'text-red-500'}`}>
