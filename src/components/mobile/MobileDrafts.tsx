@@ -260,6 +260,7 @@ export const MobileDrafts: React.FC = () => {
         onSave={handleSaveDraft}
         onBack={() => setViewMode('list')}
         onRecordingChange={handleSaveRecordings}
+        onBaseChange={setSelectedBase}
       />
     );
   }
