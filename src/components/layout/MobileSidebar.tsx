@@ -1,96 +1,65 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Home, 
-  Music, 
-  FolderOpen, 
-  ShieldCheck, 
-  CreditCard, 
-  Plus, 
-  LogOut, 
-  Settings,
-  Shield,
-  FileText,
-  Mic,
-  Trash2,
-  BookOpen,
-  Users,
-  MessageCircle
-} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
-import { useUserCredits } from '@/hooks/useUserCredits';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
-// import { logUserActivity } from '@/services/userActivityService'; // Removido para melhorar performance
 import { cn } from '@/lib/utils';
 
 interface MobileSidebarProps {
   onClose: () => void;
 }
 
+// Componente para Material Symbols
+const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: string }> = ({ 
+  name, 
+  filled = false, 
+  className = '' 
+}) => (
+  <span 
+    className={`material-symbols-rounded ${filled ? 'filled-icon' : ''} ${className}`}
+    style={{ 
+      fontVariationSettings: filled ? "'FILL' 1" : "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24"
+    }}
+  >
+    {name}
+  </span>
+);
+
 const mainNavigationItems = [
-  {
-    title: 'Dashboard',
-    href: '/dashboard',
-    icon: Home,
-  },
-  {
-    title: 'Compositor',
-    href: '/dashboard/composer',
-    icon: Music,
-  },
-  {
-    title: 'Bases Musicais',
-    href: '/dashboard/bases',
-    icon: Mic,
-  },
-  {
-    title: 'Pastas',
-    href: '/dashboard/folders',
-    icon: FolderOpen,
-  },
-  {
-  title: 'Rascunho',
-    href: '/dashboard/drafts',
-    icon: FileText,
-  },
-  {
-    title: 'Registro de Obras',
-    href: '/dashboard/registered-works',
-    icon: ShieldCheck,
-  },
-  {
-    title: 'Tutoriais',
-    href: '/dashboard/tutorials',
-    icon: BookOpen,
-  },
-  {
-    title: 'Parcerias',
-    href: '/dashboard/partnerships',
-    icon: Users,
-  },
-  {
-    title: 'Lixeira',
-    href: '/dashboard/trash',
-    icon: Trash2,
-  },
+  { title: 'Dashboard', href: '/dashboard', icon: 'grid_view' },
+  { title: 'Compositor', href: '/dashboard/composer', icon: 'view_column' },
+  { title: 'Bases Musicais', href: '/dashboard/bases', icon: 'equalizer' },
+  { title: 'Pastas', href: '/dashboard/folders', icon: 'folder' },
+  { title: 'Rascunhos', href: '/dashboard/drafts', icon: 'sort', showBadge: true },
+  { title: 'Registro de Obras', href: '/dashboard/registered-works', icon: 'copyright' },
+];
+
+const secondaryNavigationItems = [
+  { title: 'Tutoriais', href: '/dashboard/tutorials', icon: 'school' },
+  { title: 'Parcerias', href: '/dashboard/partnerships', icon: 'handshake' },
+  { title: 'Lixeira', href: '/dashboard/trash', icon: 'delete' },
 ];
 
 export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const { profile } = useProfile();
-  const { credits } = useUserCredits();
+  const { subscription } = useSubscription();
   const { userRole, getDefaultDashboard } = useRoleBasedNavigation();
+
+  const userName = profile?.artistic_name || profile?.name || 'Usuário';
+  const userAvatar = profile?.avatar_url;
+  const userInitials = userName.substring(0, 2).toUpperCase();
+  const planLabel = subscription?.status === 'active' ? 'Plano Pro' : subscription?.status === 'trial' ? 'Trial' : 'Gratuito';
 
   const handleLogout = async () => {
     try {
-      // Removido logUserActivity para melhorar performance
       await logout();
       onClose();
     } catch (error) {
@@ -109,134 +78,161 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
     onClose();
   };
 
+  const handleSupport = () => {
+    window.open('https://wa.me/5519995081355?text=oi%20vim%20pelo%20site%20da%20compuse%2C%20poderia%20me%20ajudar%3F', '_blank');
+    onClose();
+  };
+
   return (
-    <div className="flex flex-col h-full max-h-screen bg-background overflow-hidden">
+    <div className="flex flex-col h-full max-h-screen bg-[#0A0A0A] overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
       {/* User Profile Section */}
-      <div className="p-4 border-b border-border flex-shrink-0">
-        <div className="flex items-center space-x-3">
-          <Avatar className="h-10 w-10 flex-shrink-0">
-            <AvatarImage 
-              src={profile?.avatar_url || ""} 
-              alt={profile?.name || user?.email || "User"} 
-            />
-            <AvatarFallback>
-              {profile?.name 
-                ? profile.name.charAt(0).toUpperCase() 
-                : user?.email 
-                ? user.email.charAt(0).toUpperCase() 
-                : "U"
-              }
-            </AvatarFallback>
-          </Avatar>
+      <div className="p-6 flex-shrink-0">
+        <div className="flex items-center gap-4 mb-5">
+          <div className="relative">
+            <Avatar className="h-16 w-16 border-2 border-[#00C853]">
+              <AvatarImage src={userAvatar || ""} alt={userName} />
+              <AvatarFallback className="bg-[#1E1E1E] text-white text-lg font-semibold">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+          </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-sm truncate">
-              {profile?.name || profile?.artistic_name || user?.email}
-            </h3>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge variant="secondary" className="text-xs">
-                <CreditCard className="h-3 w-3 mr-1" />
-                {credits || 0}
-              </Badge>
-            </div>
+            <h3 className="font-bold text-lg text-white truncate">{userName}</h3>
+            <p className="text-sm text-[#9CA3AF]">{planLabel}</p>
           </div>
         </div>
 
-        {/* Add Credits Button */}
-        <Button 
-          size="sm" 
-          variant="outline" 
-          className="w-full mt-3 h-8 text-xs"
-          onClick={() => {
-            navigate('/credits-checkout');
-            onClose();
-          }}
-        >
-          <Plus className="h-3 w-3 mr-1" />
-          Adicionar Créditos
-        </Button>
+        {/* Upgrade Button */}
+        <div className="flex gap-3">
+          <Button 
+            className="flex-1 h-12 bg-[#1A3D2E] hover:bg-[#1A3D2E]/80 text-[#00C853] font-semibold rounded-xl border-0"
+            onClick={() => {
+              navigate('/plans');
+              onClose();
+            }}
+          >
+            Upgrade
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-12 w-12 bg-[#1E293B] hover:bg-[#1E293B]/80 rounded-xl"
+            onClick={() => handleNavigation('/dashboard/settings')}
+          >
+            <MaterialIcon name="settings" className="text-[#9CA3AF]" />
+          </Button>
+        </div>
       </div>
 
+      <Separator className="bg-gray-800 mx-4" />
+
       {/* Navigation Menu */}
-      <div className="flex-1 overflow-y-auto py-2">
-        <nav className="space-y-0.5 px-2">
+      <div className="flex-1 overflow-y-auto py-4 px-4">
+        <nav className="space-y-1">
           {mainNavigationItems.map((item) => {
             const isActive = location.pathname === item.href;
             
             return (
-              <Button
+              <button
                 key={item.href}
-                variant={isActive ? "secondary" : "ghost"}
                 className={cn(
-                  'w-full justify-start gap-2 h-9 text-sm',
-                  isActive && 'bg-primary/10 text-primary font-medium'
+                  'w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-colors',
+                  isActive 
+                    ? 'bg-[#1A3D2E] text-[#00C853]' 
+                    : 'text-[#9CA3AF] hover:bg-white/5'
                 )}
                 onClick={() => handleNavigation(item.href)}
               >
-                <item.icon className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">{item.title}</span>
-              </Button>
+                <MaterialIcon name={item.icon} filled={isActive} className="text-xl" />
+                <span className="font-medium flex-1">{item.title}</span>
+                {item.showBadge && (
+                  <Badge className="bg-[#00C853] text-black text-xs font-bold px-2">
+                    3
+                  </Badge>
+                )}
+              </button>
             );
           })}
         </nav>
 
-        <Separator className="my-2 mx-2" />
+        <Separator className="my-4 bg-gray-800" />
+
+        <nav className="space-y-1">
+          {secondaryNavigationItems.map((item) => {
+            const isActive = location.pathname === item.href;
+            
+            return (
+              <button
+                key={item.href}
+                className={cn(
+                  'w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-colors',
+                  isActive 
+                    ? 'bg-[#1A3D2E] text-[#00C853]' 
+                    : 'text-[#9CA3AF] hover:bg-white/5'
+                )}
+                onClick={() => handleNavigation(item.href)}
+              >
+                <MaterialIcon name={item.icon} filled={isActive} className="text-xl" />
+                <span className="font-medium">{item.title}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <Separator className="my-4 bg-gray-800" />
+
+        {/* Configurações e Suporte */}
+        <nav className="space-y-1">
+          <button
+            className={cn(
+              'w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-colors',
+              location.pathname === '/dashboard/settings'
+                ? 'bg-[#1A3D2E] text-[#00C853]'
+                : 'text-[#9CA3AF] hover:bg-white/5'
+            )}
+            onClick={() => handleNavigation('/dashboard/settings')}
+          >
+            <MaterialIcon name="settings" className="text-xl" />
+            <span className="font-medium">Configurações</span>
+          </button>
+          
+          <button
+            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left text-[#9CA3AF] hover:bg-white/5 transition-colors"
+            onClick={handleSupport}
+          >
+            <MaterialIcon name="support_agent" className="text-xl" />
+            <span className="font-medium">Suporte</span>
+          </button>
+        </nav>
 
         {/* Admin/Moderator Section */}
         {(userRole?.role === 'admin' || userRole?.role === 'moderator') && (
-          <div className="px-2 space-y-0.5">
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-2 h-9 text-sm"
+          <>
+            <Separator className="my-4 bg-gray-800" />
+            <button
+              className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left text-[#9CA3AF] hover:bg-white/5 transition-colors"
               onClick={handleDashboardClick}
             >
-              {userRole?.role === 'admin' ? (
-                <>
-                  <Settings className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">Painel Admin</span>
-                </>
-              ) : (
-                <>
-                  <Shield className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">Painel Moderador</span>
-                </>
-              )}
-            </Button>
-            <Separator className="my-2" />
-          </div>
+              <MaterialIcon name={userRole?.role === 'admin' ? 'admin_panel_settings' : 'shield_person'} className="text-xl" />
+              <span className="font-medium">
+                {userRole?.role === 'admin' ? 'Painel Admin' : 'Painel Moderador'}
+              </span>
+            </button>
+          </>
         )}
       </div>
 
-      {/* Footer Actions */}
-      <div className="p-2 border-t border-border space-y-0.5 flex-shrink-0">
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2 h-9 text-sm"
-          onClick={() => handleNavigation('/dashboard/settings')}
-        >
-          <Settings className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">Configurações</span>
-        </Button>
-        
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2 h-9 text-sm"
-          onClick={() => {
-            window.open('https://wa.me/5519995081355?text=oi%20vim%20pelo%20site%20da%20compuse%2C%20poderia%20me%20ajudar%3F', '_blank');
-            onClose();
-          }}
-        >
-          <MessageCircle className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">Suporte</span>
-        </Button>
-        
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2 h-9 text-sm text-destructive hover:text-destructive"
+      {/* Footer */}
+      <div className="p-4 flex-shrink-0">
+        <button
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors"
           onClick={handleLogout}
         >
-          <LogOut className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">Sair</span>
-        </Button>
+          <MaterialIcon name="logout" className="text-xl" />
+          <span className="font-medium">Sair da conta</span>
+        </button>
+        
+        <p className="text-center text-xs text-[#6B7280] mt-4">Versão 2.4.0</p>
       </div>
     </div>
   );
