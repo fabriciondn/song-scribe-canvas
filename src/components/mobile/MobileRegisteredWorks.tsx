@@ -1,12 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useTheme } from '@/hooks/useTheme';
-import { useProfile } from '@/hooks/useProfile';
 import { MobileNotificationCenter } from '@/components/mobile/MobileNotificationCenter';
-import { generateCertificatePDF } from '@/services/certificateService';
+import { MobileCertificateDetails } from '@/components/mobile/MobileCertificateDetails';
 import { toast } from 'sonner';
 
 // Componente para Material Symbols
@@ -52,11 +51,16 @@ const iconGradients = [
 
 export const MobileRegisteredWorks: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const workId = searchParams.get('id');
   const currentUser = useCurrentUser();
   const { toggleTheme } = useTheme();
-  const { profile } = useProfile();
   const [filter, setFilter] = useState<FilterType>('all');
-  const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
+
+  // Se há um ID na URL, mostra os detalhes do certificado
+  if (workId) {
+    return <MobileCertificateDetails />;
+  }
 
   const { data: works, isLoading } = useQuery({
     queryKey: ['registered-works-mobile', currentUser?.id],
@@ -127,35 +131,9 @@ export const MobileRegisteredWorks: React.FC = () => {
     toast.success('ID copiado!');
   };
 
-  const handleViewCertificate = async (work: RegisteredWork) => {
-    if (work.status !== 'registered') {
-      toast.error('Certificado disponível apenas para obras registradas');
-      return;
-    }
-    
-    setGeneratingPdf(work.id);
-    try {
-      // Montar endereço completo do perfil
-      let fullAddress = '';
-      if (profile?.street) {
-        fullAddress = `${profile.street}${profile.number ? ', ' + profile.number : ''}`;
-        if (profile.neighborhood) fullAddress += ` - ${profile.neighborhood}`;
-        if (profile.city && profile.state) fullAddress += ` - ${profile.city}/${profile.state}`;
-        if (profile.cep) fullAddress += ` - CEP: ${profile.cep}`;
-      }
-
-      await generateCertificatePDF({
-        ...work,
-        author_cpf: profile?.cpf || undefined,
-        author_address: fullAddress || undefined,
-      });
-      toast.success('Certificado gerado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao gerar certificado:', error);
-      toast.error('Erro ao gerar certificado');
-    } finally {
-      setGeneratingPdf(null);
-    }
+  const handleViewCertificate = (work: RegisteredWork) => {
+    // Navegar para a página de detalhes
+    navigate(`/dashboard/registered-works?id=${work.id}`);
   };
 
   return (
@@ -288,24 +266,10 @@ export const MobileRegisteredWorks: React.FC = () => {
                 </div>
                 <button 
                   onClick={() => handleViewCertificate(work)}
-                  disabled={generatingPdf === work.id || (work.status !== 'registered')}
-                  className={`flex items-center gap-1.5 text-xs font-bold transition-colors uppercase tracking-wide ${
-                    work.status === 'registered' 
-                      ? 'text-[#00C853] hover:text-green-400' 
-                      : 'text-slate-500 cursor-not-allowed'
-                  }`}
+                  className="flex items-center gap-1.5 text-xs font-bold text-[#00C853] hover:text-green-400 transition-colors uppercase tracking-wide"
                 >
-                  {generatingPdf === work.id ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-[#00C853] border-t-transparent rounded-full animate-spin" />
-                      Gerando...
-                    </>
-                  ) : (
-                    <>
-                      Ver certificado
-                      <MaterialIcon name="open_in_new" className="text-base" />
-                    </>
-                  )}
+                  Ver certificado
+                  <MaterialIcon name="open_in_new" className="text-base" />
                 </button>
               </div>
             </div>
