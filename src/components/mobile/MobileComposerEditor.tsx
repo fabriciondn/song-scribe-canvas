@@ -116,16 +116,25 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
     };
   }, [isLooping, markerA, markerB]);
 
-  const togglePlayPause = () => {
+  const togglePlayPause = async () => {
     const audio = audioRef.current;
     if (!audio || !selectedBase) return;
 
     if (isPlaying) {
       audio.pause();
-    } else {
-      audio.play();
+      setIsPlaying(false);
+      return;
     }
-    setIsPlaying(!isPlaying);
+
+    try {
+      // iOS/Safari can reject play() if the element isn't fully loaded yet.
+      await audio.play();
+      setIsPlaying(true);
+    } catch (err) {
+      console.error('Erro ao tocar a base:', err);
+      setIsPlaying(false);
+      sonnerToast.error('Não foi possível tocar a base. Toque novamente no Play.');
+    }
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,9 +179,38 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
 
   const getBaseAudioUrl = () => {
     if (!selectedBase) return '';
-    // Use file_url directly if available (already validated), otherwise it's empty
+    // Use file_url directly if available (already validated)
     return selectedBase.file_url || '';
   };
+
+  const baseAudioUrl = getBaseAudioUrl();
+
+  // iOS/Safari: ensure the audio element reloads the source when base changes.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Always keep playback rate in sync
+    audio.playbackRate = playbackSpeed;
+
+    // If no base or URL, stop/reset
+    if (!selectedBase || !baseAudioUrl) {
+      audio.pause();
+      setIsPlaying(false);
+      setCurrentTime(0);
+      setDuration(0);
+      return;
+    }
+
+    // New base selected: reset and force reload
+    audio.pause();
+    setIsPlaying(false);
+    audio.currentTime = 0;
+    setCurrentTime(0);
+
+    // Important on mobile: reload metadata for the new src
+    audio.load();
+  }, [selectedBase?.id, baseAudioUrl, playbackSpeed]);
 
   const handleSelectBase = (base: BaseMusical | null) => {
     // Stop any preview
@@ -325,10 +363,11 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
       {/* Audio Player Panel */}
       <div className="bg-black border-t border-gray-800 pb-12 pt-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)] z-20">
         {selectedBase && (
-          <audio 
-            ref={audioRef} 
-            src={getBaseAudioUrl()}
+          <audio
+            ref={audioRef}
+            src={baseAudioUrl}
             preload="metadata"
+            playsInline
           />
         )}
         
