@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getFolders, createFolder, Folder } from '@/services/folderService';
 import { getBases, BaseMusical } from '@/services/basesMusicais/basesService';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Componente para Material Symbols
@@ -37,6 +38,8 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
   const [selectedBase, setSelectedBase] = useState<BaseMusical | null>(null);
   const [showNewFolderInput, setShowNewFolderInput] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [playingBaseId, setPlayingBaseId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Fetch folders
   const { data: folders = [], refetch: refetchFolders } = useQuery({
@@ -49,6 +52,65 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
     queryKey: ['music-bases-list'],
     queryFn: getBases,
   });
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const handlePlayPreview = async (base: BaseMusical, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Se já está tocando essa base, para
+    if (playingBaseId === base.id) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setPlayingBaseId(null);
+      return;
+    }
+
+    // Para qualquer áudio anterior
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    try {
+      // Obtém URL pública do arquivo
+      const { data } = supabase.storage
+        .from('music-bases')
+        .getPublicUrl(base.file_path);
+
+      if (data?.publicUrl) {
+        const audio = new Audio(data.publicUrl);
+        audioRef.current = audio;
+        
+        audio.addEventListener('ended', () => {
+          setPlayingBaseId(null);
+          audioRef.current = null;
+        });
+
+        audio.addEventListener('error', () => {
+          toast.error('Erro ao reproduzir a base');
+          setPlayingBaseId(null);
+          audioRef.current = null;
+        });
+
+        await audio.play();
+        setPlayingBaseId(base.id);
+      }
+    } catch (error) {
+      console.error('Erro ao reproduzir:', error);
+      toast.error('Erro ao reproduzir a base');
+    }
+  };
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) {
@@ -245,28 +307,31 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
 
               {/* Bases disponíveis */}
               {bases.map((base, index) => (
-                <label 
+                <div 
                   key={base.id}
                   className={`relative flex items-center gap-4 p-4 bg-[#2C2C2E] rounded-2xl cursor-pointer border-2 transition-all ${
                     selectedBase?.id === base.id 
                       ? 'border-[#00C853] shadow-lg shadow-[#00C853]/10' 
                       : 'border-transparent opacity-80 hover:opacity-100 hover:border-slate-700'
                   }`}
+                  onClick={() => setSelectedBase(base)}
                 >
-                  <input 
-                    type="radio" 
-                    name="base" 
-                    checked={selectedBase?.id === base.id}
-                    onChange={() => setSelectedBase(base)}
-                    className="sr-only"
-                  />
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-md ${
-                    index % 3 === 0 ? 'bg-gradient-to-br from-indigo-500 to-purple-600' :
-                    index % 3 === 1 ? 'bg-gradient-to-br from-orange-400 to-amber-500' :
-                    'bg-gradient-to-br from-cyan-500 to-blue-600'
-                  }`}>
-                    <MaterialIcon name="graphic_eq" />
-                  </div>
+                  {/* Botão de Play/Pause */}
+                  <button
+                    onClick={(e) => handlePlayPreview(base, e)}
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-md transition-all ${
+                      playingBaseId === base.id 
+                        ? 'bg-[#00C853] animate-pulse' 
+                        : index % 3 === 0 ? 'bg-gradient-to-br from-indigo-500 to-purple-600' :
+                          index % 3 === 1 ? 'bg-gradient-to-br from-orange-400 to-amber-500' :
+                          'bg-gradient-to-br from-cyan-500 to-blue-600'
+                    }`}
+                  >
+                    <MaterialIcon 
+                      name={playingBaseId === base.id ? "pause" : "play_arrow"} 
+                      filled 
+                    />
+                  </button>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-white truncate">{base.name}</h3>
                     <p className="text-xs text-slate-400 mt-0.5">{base.genre}</p>
@@ -278,7 +343,7 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
                   }`}>
                     {selectedBase?.id === base.id && <MaterialIcon name="check" className="text-sm" />}
                   </div>
-                </label>
+                </div>
               ))}
             </div>
           </div>
@@ -286,13 +351,13 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
       </main>
 
       {/* Fixed Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black to-transparent z-50 pb-8">
         <button
           onClick={handleContinue}
-          className="w-full bg-[#00C853] hover:bg-[#00B848] text-white font-bold text-lg py-4 rounded-2xl shadow-lg shadow-[#00C853]/40 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+          className="w-full bg-[#00C853] hover:bg-[#00B848] text-white font-bold text-lg py-5 rounded-2xl shadow-xl shadow-[#00C853]/50 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
         >
           Continuar
-          <MaterialIcon name="arrow_forward" className="text-xl" />
+          <MaterialIcon name="arrow_forward" className="text-2xl" />
         </button>
       </div>
     </div>
