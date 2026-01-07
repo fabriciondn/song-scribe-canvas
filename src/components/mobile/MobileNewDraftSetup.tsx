@@ -349,8 +349,8 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
         </div>
       </main>
 
-      {/* Fixed Bottom Button - only shows when all selections are made */}
-      {title && selectedFolderId && selectedBase && (
+      {/* Fixed Bottom Button - shows when title and folder are set (base is optional) */}
+      {title && selectedFolderId && (
         <div className="fixed bottom-28 left-0 right-0 px-6 py-4 z-[60] flex justify-center">
           <button
             onClick={handleContinue}
