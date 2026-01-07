@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getFolders, createFolder, Folder } from '@/services/folderService';
 import { getBases, BaseMusical } from '@/services/basesMusicais/basesService';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Componente para Material Symbols
@@ -82,19 +81,14 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
       audioRef.current = null;
     }
 
+    // Usa a file_url que já vem do serviço
+    if (!base.file_url) {
+      toast.error('Arquivo de áudio não disponível');
+      return;
+    }
+
     try {
-      // Obtém URL assinada do arquivo (funciona mesmo se bucket não for público)
-      const { data, error } = await supabase.storage
-        .from('music-bases')
-        .createSignedUrl(base.file_path, 3600); // 1 hora de validade
-
-      if (error || !data?.signedUrl) {
-        console.error('Erro ao obter URL:', error);
-        toast.error('Erro ao carregar a base');
-        return;
-      }
-
-      const audio = new Audio(data.signedUrl);
+      const audio = new Audio(base.file_url);
       audioRef.current = audio;
       
       audio.addEventListener('ended', () => {
