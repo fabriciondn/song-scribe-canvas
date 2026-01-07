@@ -13,6 +13,7 @@ import { RoleRedirect } from "@/components/layout/RoleRedirect";
 import { GlobalNotifications } from "@/components/GlobalNotifications";
 import { PageFunctionStatusWrapper } from "@/components/layout/FunctionStatusWrapper";
 import { MobileSplashScreen } from "@/components/mobile/MobileSplashScreen";
+import { useMobileDetection } from "@/hooks/use-mobile";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import DashboardHome from "./pages/DashboardHome";
@@ -61,22 +62,24 @@ const queryClient = new QueryClient({
 const AppContent = () => {
   useImpersonationSync();
   const [showSplash, setShowSplash] = useState(true);
+  const { isMobile } = useMobileDetection();
 
   const DashboardOutlet = () => <Outlet />;
   
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className={`flex flex-col min-h-screen ${isMobile ? 'bg-[#000000]' : ''}`}>
       {/* Mobile Splash Screen */}
       {showSplash && (
         <MobileSplashScreen onComplete={() => setShowSplash(false)} />
       )}
       
-      <ImpersonationBanner />
-      <GlobalNotifications />
+      {/* Esconder banners e notificações no mobile - já está dentro do MobileDashboardHome */}
+      {!isMobile && <ImpersonationBanner />}
+      {!isMobile && <GlobalNotifications />}
       
       <div style={{
-        paddingTop: 'var(--impersonation-banner-height, 0px)'
-      }} className="flex-1 py-[4px]">
+        paddingTop: isMobile ? '0px' : 'var(--impersonation-banner-height, 0px)'
+      }} className={isMobile ? 'flex-1' : 'flex-1 py-[4px]'}>
         <RoleRedirect />
         <PageFunctionStatusWrapper>
           <Routes>
