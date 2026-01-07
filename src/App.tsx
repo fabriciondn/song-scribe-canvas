@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +12,7 @@ import { ImpersonationBanner } from "@/components/ui/impersonation-banner";
 import { RoleRedirect } from "@/components/layout/RoleRedirect";
 import { GlobalNotifications } from "@/components/GlobalNotifications";
 import { PageFunctionStatusWrapper } from "@/components/layout/FunctionStatusWrapper";
+import { MobileSplashScreen } from "@/components/mobile/MobileSplashScreen";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import DashboardHome from "./pages/DashboardHome";
@@ -58,11 +60,17 @@ const queryClient = new QueryClient({
 
 const AppContent = () => {
   useImpersonationSync();
+  const [showSplash, setShowSplash] = useState(true);
 
   const DashboardOutlet = () => <Outlet />;
   
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Mobile Splash Screen */}
+      {showSplash && (
+        <MobileSplashScreen onComplete={() => setShowSplash(false)} />
+      )}
+      
       <ImpersonationBanner />
       <GlobalNotifications />
       
