@@ -12,6 +12,7 @@ import { getFolders, Folder } from '@/services/folderService';
 import { AudioRecorder } from '@/components/drafts/AudioRecorder';
 import { BasesSelector } from '@/components/drafts/BasesSelector';
 import { MobileNewDraftSetup } from './MobileNewDraftSetup';
+import { MobileComposerEditor } from './MobileComposerEditor';
 import { toast as sonnerToast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
@@ -244,72 +245,22 @@ export const MobileDrafts: React.FC = () => {
     );
   }
 
-  // Render Editor Screen
+  // Render Editor Screen - using new MobileComposerEditor
   if (viewMode === 'editor') {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col font-['Outfit',sans-serif]">
-        {/* Header */}
-        <header className="px-6 pt-6 pb-4 flex items-center gap-4">
-          <button 
-            onClick={() => setViewMode('list')}
-            className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center hover:bg-[#3C3C3E] transition-colors"
-          >
-            <MaterialIcon name="arrow_back" className="text-xl text-slate-300" />
-          </button>
-          <h1 className="text-xl font-bold text-white flex-1 truncate">{title || 'Novo Rascunho'}</h1>
-          <button 
-            onClick={handleSaveDraft}
-            disabled={isSaving}
-            className="px-4 py-2 rounded-xl bg-[#00C853] text-white font-bold flex items-center gap-2 disabled:opacity-50"
-          >
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <MaterialIcon name="save" className="text-lg" />
-            )}
-            Salvar
-          </button>
-        </header>
-
-        <main className="flex-1 px-6 pb-32 overflow-y-auto space-y-5">
-          {/* Base Selector */}
-          <BasesSelector
-            selectedBase={selectedBase}
-            onSelectBase={setSelectedBase}
-            playTrigger={basePlayTrigger}
-          />
-
-          {/* Title Input */}
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-slate-300">Título</label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Nome do rascunho"
-              className="bg-[#2C2C2E] border-transparent focus:border-[#00C853] text-white rounded-xl"
-            />
-          </div>
-
-          {/* Content Textarea */}
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-slate-300">Conteúdo</label>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Escreva suas ideias, versos, melodias..."
-              className="min-h-[200px] bg-[#2C2C2E] border-transparent focus:border-[#00C853] text-white rounded-xl"
-            />
-          </div>
-
-          {/* Audio Recorder */}
-          <AudioRecorder
-            onSaveRecordings={handleSaveRecordings}
-            initialAudioFiles={audioFiles}
-            isBasePlayingOrSelected={!!selectedBase}
-            onPlayBase={() => setBasePlayTrigger(prev => prev + 1)}
-          />
-        </main>
-      </div>
+      <MobileComposerEditor
+        title={title}
+        content={content}
+        selectedBase={selectedBase}
+        folderName={getFolderName(selectedFolderId)}
+        audioFiles={audioFiles}
+        isSaving={isSaving}
+        onTitleChange={setTitle}
+        onContentChange={setContent}
+        onSave={handleSaveDraft}
+        onBack={() => setViewMode('list')}
+        onRecordingChange={handleSaveRecordings}
+      />
     );
   }
 
