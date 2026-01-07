@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/hooks/useTheme';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,16 +15,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   Folder as FolderType,
   getFolders,
   createFolder,
-  deleteFolder,
   getSongsInFolder
 } from '@/services/folderService';
 import { getDrafts } from '@/services/drafts/draftService';
@@ -33,14 +27,17 @@ import { ptBR } from 'date-fns/locale';
 import { 
   Music, 
   Search, 
-  MoreVertical, 
+  Sun,
+  Moon,
   Folder, 
   FolderPlus, 
   Mic, 
   FileEdit, 
   AudioLines,
   Play,
-  ArrowDownWideNarrow
+  ArrowDownWideNarrow,
+  X,
+  MoreVertical
 } from 'lucide-react';
 
 // Get folder color based on index
@@ -64,14 +61,18 @@ export const MobileFoldersPage: React.FC = () => {
   const [folders, setFolders] = useState<FolderType[]>([]);
   const [folderCounts, setFolderCounts] = useState<Record<string, number>>({});
   const [recentDrafts, setRecentDrafts] = useState<Draft[]>([]);
+  const [allDrafts, setAllDrafts] = useState<Draft[]>([]);
   const [newFolderName, setNewFolderName] = useState('');
   const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'compositions' | 'collaborations'>('compositions');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { toast } = useToast();
   const navigate = useNavigate();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { theme, toggleTheme, isDark } = useTheme();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -105,6 +106,7 @@ export const MobileFoldersPage: React.FC = () => {
 
       // Load recent drafts
       const drafts = await getDrafts();
+      setAllDrafts(drafts);
       setRecentDrafts(drafts.slice(0, 10)); // Get latest 10
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -149,34 +151,6 @@ export const MobileFoldersPage: React.FC = () => {
     }
   };
 
-  const handleDeleteFolder = async (folderId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await deleteFolder(folderId);
-      setFolders(prev => prev.filter(folder => folder.id !== folderId));
-
-      toast({
-        title: 'Pasta excluída',
-        description: 'A pasta foi excluída com sucesso.',
-      });
-    } catch (error) {
-      console.error('Erro ao excluir pasta:', error);
-      if ((error as Error).message === 'Cannot delete system folders') {
-        toast({
-          title: 'Operação não permitida',
-          description: 'Pastas do sistema não podem ser excluídas.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Erro ao excluir pasta',
-          description: 'Não foi possível excluir a pasta.',
-          variant: 'destructive',
-        });
-      }
-    }
-  };
-
   const handleFolderClick = (folderId: string) => {
     navigate(`/dashboard/folders/${folderId}`);
   };
@@ -188,6 +162,14 @@ export const MobileFoldersPage: React.FC = () => {
   const formatTimeAgo = (date: string) => {
     return formatDistanceToNow(new Date(date), { addSuffix: false, locale: ptBR });
   };
+
+  // Filter drafts based on search query
+  const filteredDrafts = searchQuery.trim()
+    ? allDrafts.filter(draft => 
+        draft.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        draft.content?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : recentDrafts;
 
   if (isLoading) {
     return (
@@ -231,128 +213,169 @@ export const MobileFoldersPage: React.FC = () => {
     <div className="min-h-screen bg-black text-white pb-24">
       {/* Header */}
       <header className="px-6 pt-14 pb-6 sticky top-0 z-40 bg-black/95 backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#00C853]/10 rounded-xl flex items-center justify-center text-[#00C853]">
-              <Music size={24} />
+        {/* Search Bar (when open) */}
+        {isSearchOpen ? (
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex-1 relative">
+              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar composições..."
+                autoFocus
+                className="pl-10 bg-[#2C2C2E] border-gray-700 text-white placeholder:text-gray-500 rounded-full"
+              />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">Compuse</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center text-gray-400 hover:text-[#00C853] transition-colors shadow-sm">
-              <Search size={20} />
+            <button
+              onClick={() => {
+                setIsSearchOpen(false);
+                setSearchQuery('');
+              }}
+              className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+            >
+              <X size={20} />
             </button>
-            <button className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center text-gray-400 hover:text-[#00C853] transition-colors shadow-sm">
-              <MoreVertical size={20} />
-            </button>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#00C853]/10 rounded-xl flex items-center justify-center text-[#00C853]">
+                <Music size={24} />
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight text-white">Compuse</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setIsSearchOpen(true)}
+                className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center text-gray-400 hover:text-[#00C853] transition-colors shadow-sm"
+              >
+                <Search size={20} />
+              </button>
+              <button 
+                onClick={toggleTheme}
+                className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center text-gray-400 hover:text-[#00C853] transition-colors shadow-sm"
+              >
+                {isDark ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Tab Switcher */}
-        <div className="flex p-1 bg-[#2C2C2E] rounded-xl shadow-sm">
-          <button
-            onClick={() => setActiveTab('compositions')}
-            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-              activeTab === 'compositions'
-                ? 'bg-[#00C853] text-white shadow-md'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Composições
-          </button>
-          <button
-            onClick={() => setActiveTab('collaborations')}
-            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-              activeTab === 'collaborations'
-                ? 'bg-[#00C853] text-white shadow-md'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Colaborações
-          </button>
-        </div>
+        {!isSearchOpen && (
+          <div className="flex p-1 bg-[#2C2C2E] rounded-xl shadow-sm">
+            <button
+              onClick={() => setActiveTab('compositions')}
+              className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+                activeTab === 'compositions'
+                  ? 'bg-[#00C853] text-white shadow-md'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Composições
+            </button>
+            <button
+              onClick={() => setActiveTab('collaborations')}
+              className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+                activeTab === 'collaborations'
+                  ? 'bg-[#00C853] text-white shadow-md'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Colaborações
+            </button>
+          </div>
+        )}
       </header>
 
       <main className="px-6 space-y-8">
-        {/* Folders Section */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-200">Pastas</h2>
-            <button
-              onClick={() => navigate('/dashboard/folders')}
-              className="text-[#00C853] text-sm font-semibold hover:opacity-80"
-            >
-              Ver tudo
-            </button>
-          </div>
-
-          {/* Horizontal Folders Scroll */}
-          <div className="flex gap-4 overflow-x-auto no-scrollbar py-2 -mx-6 px-6">
-            {folders.slice(0, 5).map((folder, index) => (
-              <div
-                key={folder.id}
-                onClick={() => handleFolderClick(folder.id)}
-                className="flex-shrink-0 w-36 h-32 bg-[#1C1C1E] rounded-2xl p-4 flex flex-col justify-between border border-gray-800 cursor-pointer hover:border-[#00C853]/30 transition-all group shadow-sm"
-              >
-                <div className="flex justify-between items-start">
-                  <Folder 
-                    size={28} 
-                    className={`${getFolderColor(index)} group-hover:scale-110 transition-transform`}
-                    fill="currentColor"
-                  />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-gray-600 hover:text-gray-400"
-                      >
-                        <MoreVertical size={16} />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={(e) => handleDeleteFolder(folder.id, e as unknown as React.MouseEvent)}>
-                        Excluir pasta
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <div>
-                  <p className="font-semibold text-white leading-tight line-clamp-2">{folder.name}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {folderCounts[folder.id] || 0} arquivos
-                  </p>
-                </div>
-              </div>
-            ))}
-
-            {/* New Folder Card */}
-            <div
-              onClick={() => setIsNewFolderModalOpen(true)}
-              className="flex-shrink-0 w-36 h-32 bg-transparent rounded-2xl p-4 flex flex-col justify-center items-center border-2 border-dashed border-gray-700 cursor-pointer hover:border-[#00C853] hover:bg-[#00C853]/5 transition-all"
-            >
-              <FolderPlus size={28} className="text-gray-500 mb-2" />
-              <p className="text-xs font-semibold text-gray-400">Nova Pasta</p>
+        {/* Search Results */}
+        {isSearchOpen && searchQuery.trim() && (
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-200">
+                Resultados ({filteredDrafts.length})
+              </h2>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
+
+        {/* Folders Section */}
+        {!isSearchOpen && (
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-200">Pastas</h2>
+              <button
+                onClick={() => navigate('/dashboard/folders')}
+                className="text-[#00C853] text-sm font-semibold hover:opacity-80"
+              >
+                Ver tudo
+              </button>
+            </div>
+
+            {/* Horizontal Folders Scroll */}
+            <div className="flex gap-4 overflow-x-auto no-scrollbar py-2 -mx-6 px-6">
+              {folders.map((folder, index) => (
+                <div
+                  key={folder.id}
+                  onClick={() => handleFolderClick(folder.id)}
+                  className="flex-shrink-0 w-36 h-32 bg-[#1C1C1E] rounded-2xl p-4 flex flex-col justify-between border border-gray-800 cursor-pointer hover:border-[#00C853]/30 transition-all group shadow-sm"
+                >
+                  <div className="flex justify-between items-start">
+                    <Folder 
+                      size={28} 
+                      className={`${getFolderColor(index)} group-hover:scale-110 transition-transform`}
+                      fill="currentColor"
+                    />
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-gray-600 hover:text-gray-400"
+                    >
+                      <MoreVertical size={16} />
+                    </button>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white leading-tight line-clamp-2">{folder.name}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {folderCounts[folder.id] || 0} arquivos
+                    </p>
+                  </div>
+                </div>
+              ))}
+
+              {/* New Folder Card - Always at the end */}
+              <div
+                onClick={() => setIsNewFolderModalOpen(true)}
+                className="flex-shrink-0 w-36 h-32 bg-transparent rounded-2xl p-4 flex flex-col justify-center items-center border-2 border-dashed border-gray-700 cursor-pointer hover:border-[#00C853] hover:bg-[#00C853]/5 transition-all"
+              >
+                <FolderPlus size={28} className="text-gray-500 mb-2" />
+                <p className="text-xs font-semibold text-gray-400">Nova Pasta</p>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Recent Drafts Section */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-200">Recentes</h2>
-            <button className="p-1 rounded-full hover:bg-gray-800 transition-colors">
-              <ArrowDownWideNarrow size={20} className="text-gray-500" />
-            </button>
+            <h2 className="text-lg font-bold text-gray-200">
+              {isSearchOpen && searchQuery.trim() ? 'Resultados' : 'Recentes'}
+            </h2>
+            {!isSearchOpen && (
+              <button className="p-1 rounded-full hover:bg-gray-800 transition-colors">
+                <ArrowDownWideNarrow size={20} className="text-gray-500" />
+              </button>
+            )}
           </div>
 
           <div className="space-y-4">
-            {recentDrafts.length === 0 ? (
+            {filteredDrafts.length === 0 ? (
               <div className="text-center py-8 text-gray-400">
                 <FileEdit size={40} className="mx-auto mb-2 opacity-50" />
-                <p>Nenhuma composição recente</p>
+                <p>{isSearchOpen ? 'Nenhum resultado encontrado' : 'Nenhuma composição recente'}</p>
               </div>
             ) : (
-              recentDrafts.map((draft) => {
+              filteredDrafts.map((draft) => {
                 const { Icon, gradient } = getDraftIcon(draft);
                 const isRegistered = false; // This would come from author_registrations table
 
