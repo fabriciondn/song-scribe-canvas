@@ -6,6 +6,7 @@ import { useAcordes } from '@/hooks/useAcordes';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useTheme } from '@/hooks/useTheme';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { MobileNotificationCenter } from './MobileNotificationCenter';
 
 // Componente para Material Symbols
 const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: string }> = ({ 
@@ -72,13 +73,8 @@ export const MobileDashboardHome: React.FC = () => {
           >
             <MaterialIcon name="dark_mode" className="text-2xl" />
           </button>
-          <button 
-            onClick={() => navigate('/dashboard/settings')}
-            className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
-          >
-            <MaterialIcon name="notifications" className="text-2xl" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-[#000000]" />
-          </button>
+          {/* Notificações da plataforma */}
+          <MobileNotificationCenter />
         </div>
       </header>
 
