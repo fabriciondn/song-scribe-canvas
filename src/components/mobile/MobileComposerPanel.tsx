@@ -232,14 +232,14 @@ export const MobileComposerPanel: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F3F4F6] dark:bg-[#0F172A] relative overflow-hidden">
+    <div className="mx-auto max-w-md h-screen flex flex-col relative bg-[#F3F4F6] dark:bg-[#0F172A] overflow-hidden shadow-2xl">
       {/* Background Decorations */}
-      <div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none">
+      <div className="fixed top-0 left-0 w-full h-full -z-10 bg-[#F3F4F6] dark:bg-[#0F172A] overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#00C853]/5 rounded-full blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px]" />
       </div>
 
-      {/* Header */}
+      {/* Header - Exact match to HTML */}
       <header className="pt-12 pb-4 px-6 flex items-center justify-between bg-[#FFFFFF]/80 dark:bg-[#1E293B]/80 backdrop-blur-md z-20 border-b border-gray-200 dark:border-gray-800">
         <button 
           onClick={handleBack}
@@ -249,9 +249,7 @@ export const MobileComposerPanel: React.FC = () => {
         </button>
         
         <div className="flex flex-col items-center">
-          <span className="text-xs font-medium tracking-wider text-[#00C853] uppercase">
-            Rascunho
-          </span>
+          <span className="text-xs font-medium tracking-wider text-[#00C853] uppercase">Rascunho</span>
           {isEditingTitle ? (
             <Input
               ref={titleInputRef}
@@ -263,15 +261,13 @@ export const MobileComposerPanel: React.FC = () => {
               autoFocus
             />
           ) : (
-            <button 
+            <div 
               onClick={() => setIsEditingTitle(true)}
               className="flex items-center gap-1 group cursor-pointer"
             >
-              <h1 className="text-lg font-bold text-[#111827] dark:text-[#F9FAFB] truncate max-w-[180px]">
-                {title}
-              </h1>
+              <h1 className="text-lg font-bold text-[#111827] dark:text-[#F9FAFB] truncate max-w-[180px]">{title}</h1>
               <span className="material-icons-round text-sm text-[#6B7280] dark:text-[#94A3B8] group-hover:text-[#00C853] transition">edit</span>
-            </button>
+            </div>
           )}
         </div>
         
@@ -303,23 +299,19 @@ export const MobileComposerPanel: React.FC = () => {
         </div>
       </header>
 
-      {/* Tags Bar */}
+      {/* Tags Bar - Exact match to HTML */}
       <div className="px-4 py-3 flex items-center justify-center gap-3 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-800 bg-[#F3F4F6] dark:bg-[#0F172A]">
         <button className="flex items-center gap-2 px-3 py-1.5 bg-[#FFFFFF] dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-gray-700 whitespace-nowrap">
           <span className="material-icons-round text-[#00C853] text-sm">folder_open</span>
-          <span className="text-xs font-medium text-[#6B7280] dark:text-[#94A3B8]">
-            {folderName || 'Pop / Rock'}
-          </span>
+          <span className="text-xs font-medium text-[#6B7280] dark:text-[#94A3B8]">{folderName || 'Pop / Rock'}</span>
         </button>
         <button className="flex items-center gap-2 px-3 py-1.5 bg-[#FFFFFF] dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-gray-700 whitespace-nowrap">
           <span className="material-icons-round text-[#00C853] text-sm">group_add</span>
-          <span className="text-xs font-medium text-[#6B7280] dark:text-[#94A3B8]">
-            Compor em parceria
-          </span>
+          <span className="text-xs font-medium text-[#6B7280] dark:text-[#94A3B8]">Compor em parceria</span>
         </button>
       </div>
 
-      {/* Main Content - Textarea */}
+      {/* Main Content - Textarea - Exact match to HTML */}
       <main className="flex-1 overflow-y-auto relative no-scrollbar bg-[#FFFFFF] dark:bg-[#1E293B]">
         <div className="p-6 min-h-full">
           <textarea
@@ -330,8 +322,8 @@ export const MobileComposerPanel: React.FC = () => {
             placeholder="Comece a escrever sua letra aqui..."
           />
           
-          {/* Floating Mic Button */}
-          <div className="fixed top-1/2 right-4 transform -translate-y-1/2 flex flex-col gap-3 z-10">
+          {/* Floating Mic Button - Exact match: w-10 h-10, text-xl */}
+          <div className="fixed top-1/2 right-4 transform -translate-y-1/2 flex flex-col gap-3">
             <button 
               onClick={() => setIsRecording(!isRecording)}
               className={`w-10 h-10 rounded-full shadow-lg border flex items-center justify-center transition hover:scale-110 ${
@@ -348,7 +340,7 @@ export const MobileComposerPanel: React.FC = () => {
         </div>
       </main>
 
-      {/* Audio Player Panel */}
+      {/* Audio Player Panel - Exact match to HTML */}
       <div className="bg-black border-t border-gray-800 pb-12 pt-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)] z-20">
         {selectedBase && selectedBase.file_path && (
           <audio 
@@ -359,13 +351,11 @@ export const MobileComposerPanel: React.FC = () => {
         )}
         
         <div className="flex flex-col gap-3">
-          {/* Base name and speed controls */}
+          {/* Base name and speed controls - Exact match */}
           <div className="flex justify-between items-center text-white/90">
             <div className="flex items-center gap-2">
               <span className="material-icons-round text-[#00C853] text-sm">music_note</span>
-              <span className="text-xs font-semibold">
-                {selectedBase?.name || 'Base 1 - Natanzinho'}
-              </span>
+              <span className="text-xs font-semibold">{selectedBase?.name || 'Base 1 - Natanzinho'}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-gray-400">Vel:</span>
@@ -387,7 +377,7 @@ export const MobileComposerPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Progress Slider */}
+          {/* Progress Slider - Exact match */}
           <div className="relative w-full group">
             <input
               type="range"
@@ -403,8 +393,9 @@ export const MobileComposerPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Control Buttons */}
+          {/* Control Buttons - Exact match to HTML */}
           <div className="flex items-center justify-between mt-4 w-full px-1">
+            {/* Marcar button - h-10 min-w-[80px], icon text-[16px] */}
             <button 
               onClick={() => setMarker(currentTime === markerA ? 'B' : 'A')}
               className="flex items-center gap-1 px-3 py-2 bg-[#1A2130] border border-gray-700/50 rounded-lg text-xs text-white hover:bg-gray-800 transition shadow-sm h-10 min-w-[80px] justify-center"
@@ -413,6 +404,7 @@ export const MobileComposerPanel: React.FC = () => {
               <span className="font-medium tracking-wide">Marcar</span>
             </button>
             
+            {/* A button - w-10 h-10, text-xs font-bold */}
             <button 
               onClick={() => goToMarker('A')}
               onDoubleClick={() => setMarker('A')}
@@ -425,6 +417,7 @@ export const MobileComposerPanel: React.FC = () => {
               A
             </button>
             
+            {/* B button - w-10 h-10, text-xs font-bold */}
             <button 
               onClick={() => goToMarker('B')}
               onDoubleClick={() => setMarker('B')}
@@ -437,6 +430,7 @@ export const MobileComposerPanel: React.FC = () => {
               B
             </button>
             
+            {/* Loop button - h-10 min-w-[70px], icon text-[16px] */}
             <button 
               onClick={() => setIsLooping(!isLooping)}
               className={`flex items-center gap-1 px-3 py-2 border rounded-lg text-xs transition shadow-sm h-10 min-w-[70px] justify-center ${
@@ -449,6 +443,7 @@ export const MobileComposerPanel: React.FC = () => {
               <span className="font-medium tracking-wide">Loop</span>
             </button>
             
+            {/* Play button - w-12 h-12, icon text-3xl ml-1 */}
             <button 
               onClick={togglePlayPause}
               className="w-12 h-12 rounded-full bg-[#00C853] flex items-center justify-center shadow-lg hover:bg-[#009624] active:scale-95 transition"
@@ -458,6 +453,7 @@ export const MobileComposerPanel: React.FC = () => {
               </span>
             </button>
             
+            {/* Library button - w-10 h-10, icon text-2xl */}
             <button 
               onClick={() => navigate('/dashboard/bases')}
               className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-gray-800/50"
