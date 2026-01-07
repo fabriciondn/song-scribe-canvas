@@ -76,6 +76,44 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
     setTheme('light');
   }, [setTheme]);
 
+  // Prevent iOS Safari overscroll bounce (white bar issue)
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalPosition = document.body.style.position;
+    const originalTop = document.body.style.top;
+    const originalLeft = document.body.style.left;
+    const originalRight = document.body.style.right;
+    const originalWidth = document.body.style.width;
+    const originalHeight = document.body.style.height;
+    const originalHtmlBg = document.documentElement.style.backgroundColor;
+    const originalBodyBg = document.body.style.backgroundColor;
+
+    // Lock body to prevent overscroll
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = '0';
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    
+    // Match background color to prevent white flash
+    document.documentElement.style.backgroundColor = '#F3F4F6';
+    document.body.style.backgroundColor = '#F3F4F6';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.position = originalPosition;
+      document.body.style.top = originalTop;
+      document.body.style.left = originalLeft;
+      document.body.style.right = originalRight;
+      document.body.style.width = originalWidth;
+      document.body.style.height = originalHeight;
+      document.documentElement.style.backgroundColor = originalHtmlBg;
+      document.body.style.backgroundColor = originalBodyBg;
+    };
+  }, []);
+
   // Audio controls
   useEffect(() => {
     const audio = audioRef.current;
@@ -248,7 +286,14 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-[#F3F4F6] dark:bg-[#0F172A] overflow-hidden">
+    <div 
+      className="fixed inset-0 flex flex-col bg-[#F3F4F6] dark:bg-[#0F172A] overflow-hidden"
+      style={{ 
+        overscrollBehavior: 'none',
+        touchAction: 'pan-y pinch-zoom',
+        WebkitOverflowScrolling: 'auto'
+      }}
+    >
       {/* Header - fixed at top */}
       <header className="flex-shrink-0 pt-12 pb-4 px-6 flex items-center justify-between bg-white/80 dark:bg-[#1E293B]/80 backdrop-blur-md z-20 border-b border-gray-200 dark:border-gray-800">
         <button 
@@ -330,7 +375,10 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
       </div>
 
       {/* Main Content - ONLY this scrolls */}
-      <main className="flex-1 overflow-y-auto relative bg-white dark:bg-[#1E293B]">
+      <main 
+        className="flex-1 overflow-y-auto relative bg-white dark:bg-[#1E293B]"
+        style={{ overscrollBehavior: 'contain' }}
+      >
         <div className="p-6 pb-4">
           <textarea
             ref={textareaRef}
