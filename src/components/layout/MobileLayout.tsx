@@ -31,9 +31,9 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col overflow-hidden touch-manipulation">
+    <div className="min-h-screen bg-[#000000] flex flex-col overflow-hidden touch-manipulation" style={{ backgroundColor: '#000000' }}>
       {/* Conteúdo principal com scroll otimizado - sem header no novo design */}
-      <main className="flex-1 overflow-y-auto pb-24 overscroll-contain">
+      <main className="flex-1 overflow-y-auto pb-24 overscroll-contain bg-[#000000]">
         {children}
       </main>
       

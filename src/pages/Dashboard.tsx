@@ -67,13 +67,11 @@ const Dashboard: React.FC = () => {
     return null;
   }
 
-  // Layout mobile otimizado
+  // Layout mobile otimizado - fundo preto completo
   if (isMobile) {
     return (
       <MobileLayout toggleSidebar={toggleSidebar}>
-        <div className="p-4">
-          <Outlet />
-        </div>
+        <Outlet />
       </MobileLayout>
     );
   }
