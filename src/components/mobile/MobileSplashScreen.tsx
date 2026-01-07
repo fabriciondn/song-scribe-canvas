@@ -48,13 +48,18 @@ export const MobileSplashScreen: React.FC<MobileSplashScreenProps> = ({
       />
       <div className="absolute bottom-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
       
-      {/* Logo centralizada */}
+      {/* Logo centralizada com animação */}
       <div className="flex-1 flex flex-col items-center justify-center w-full px-8 relative z-10">
         <div className="flex flex-col items-center mb-6">
-          <div className="relative w-64 h-auto">
+          <div 
+            className="relative w-64 h-auto"
+            style={{
+              animation: 'logo-entrance 1s ease-out forwards, logo-float 3s ease-in-out 1s infinite'
+            }}
+          >
             <img 
               alt="Compuse Logo" 
-              className="w-full h-auto object-contain"
+              className="w-full h-auto object-contain drop-shadow-[0_0_30px_rgba(0,200,83,0.3)]"
               src={logoSplash}
             />
           </div>
@@ -97,6 +102,14 @@ export const MobileSplashScreen: React.FC<MobileSplashScreenProps> = ({
         @keyframes slide-up {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes logo-entrance {
+          0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes logo-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
         }
       `}</style>
     </div>
