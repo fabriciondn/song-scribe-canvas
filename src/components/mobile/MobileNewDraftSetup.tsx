@@ -83,29 +83,34 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
     }
 
     try {
-      // Obtém URL pública do arquivo
-      const { data } = supabase.storage
+      // Obtém URL assinada do arquivo (funciona mesmo se bucket não for público)
+      const { data, error } = await supabase.storage
         .from('music-bases')
-        .getPublicUrl(base.file_path);
+        .createSignedUrl(base.file_path, 3600); // 1 hora de validade
 
-      if (data?.publicUrl) {
-        const audio = new Audio(data.publicUrl);
-        audioRef.current = audio;
-        
-        audio.addEventListener('ended', () => {
-          setPlayingBaseId(null);
-          audioRef.current = null;
-        });
-
-        audio.addEventListener('error', () => {
-          toast.error('Erro ao reproduzir a base');
-          setPlayingBaseId(null);
-          audioRef.current = null;
-        });
-
-        await audio.play();
-        setPlayingBaseId(base.id);
+      if (error || !data?.signedUrl) {
+        console.error('Erro ao obter URL:', error);
+        toast.error('Erro ao carregar a base');
+        return;
       }
+
+      const audio = new Audio(data.signedUrl);
+      audioRef.current = audio;
+      
+      audio.addEventListener('ended', () => {
+        setPlayingBaseId(null);
+        audioRef.current = null;
+      });
+
+      audio.addEventListener('error', (e) => {
+        console.error('Erro de áudio:', e);
+        toast.error('Erro ao reproduzir a base');
+        setPlayingBaseId(null);
+        audioRef.current = null;
+      });
+
+      await audio.play();
+      setPlayingBaseId(base.id);
     } catch (error) {
       console.error('Erro ao reproduzir:', error);
       toast.error('Erro ao reproduzir a base');
