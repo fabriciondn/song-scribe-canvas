@@ -15,6 +15,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Folder as FolderType,
   getFolders,
   createFolder,
@@ -68,6 +74,7 @@ export const MobileFoldersPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'compositions' | 'collaborations'>('compositions');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'recent' | 'oldest' | 'alphabetical'>('recent');
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -163,13 +170,39 @@ export const MobileFoldersPage: React.FC = () => {
     return formatDistanceToNow(new Date(date), { addSuffix: false, locale: ptBR });
   };
 
+  // Sort and filter drafts
+  const getSortedDrafts = (drafts: Draft[]) => {
+    const sorted = [...drafts];
+    switch (sortOrder) {
+      case 'oldest':
+        return sorted.sort((a, b) => 
+          new Date(a.updated_at || a.created_at).getTime() - new Date(b.updated_at || b.created_at).getTime()
+        );
+      case 'alphabetical':
+        return sorted.sort((a, b) => a.title.localeCompare(b.title));
+      case 'recent':
+      default:
+        return sorted.sort((a, b) => 
+          new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()
+        );
+    }
+  };
+
   // Filter drafts based on search query
   const filteredDrafts = searchQuery.trim()
-    ? allDrafts.filter(draft => 
+    ? getSortedDrafts(allDrafts.filter(draft => 
         draft.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         draft.content?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : recentDrafts;
+      ))
+    : getSortedDrafts(recentDrafts);
+
+  const getSortLabel = () => {
+    switch (sortOrder) {
+      case 'oldest': return 'Mais antigo';
+      case 'alphabetical': return 'A-Z';
+      default: return 'Recente';
+    }
+  };
 
   if (isLoading) {
     return (
@@ -362,9 +395,34 @@ export const MobileFoldersPage: React.FC = () => {
               {isSearchOpen && searchQuery.trim() ? 'Resultados' : 'Recentes'}
             </h2>
             {!isSearchOpen && (
-              <button className="p-1 rounded-full hover:bg-gray-800 transition-colors">
-                <ArrowDownWideNarrow size={20} className="text-gray-500" />
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-800 transition-colors text-gray-400 text-sm">
+                    <ArrowDownWideNarrow size={18} />
+                    <span className="text-xs">{getSortLabel()}</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-[#1C1C1E] border-gray-800">
+                  <DropdownMenuItem 
+                    onClick={() => setSortOrder('recent')}
+                    className={`text-gray-300 hover:text-white ${sortOrder === 'recent' ? 'bg-[#00C853]/20 text-[#00C853]' : ''}`}
+                  >
+                    Mais recente
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setSortOrder('oldest')}
+                    className={`text-gray-300 hover:text-white ${sortOrder === 'oldest' ? 'bg-[#00C853]/20 text-[#00C853]' : ''}`}
+                  >
+                    Mais antigo
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setSortOrder('alphabetical')}
+                    className={`text-gray-300 hover:text-white ${sortOrder === 'alphabetical' ? 'bg-[#00C853]/20 text-[#00C853]' : ''}`}
+                  >
+                    Alfabética (A-Z)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
 
