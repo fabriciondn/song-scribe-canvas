@@ -34,6 +34,19 @@ const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: strin
 
 type ViewMode = 'list' | 'setup' | 'editor';
 
+// Keys for localStorage auto-save
+const AUTOSAVE_KEY = 'mobile_composer_autosave';
+
+interface AutoSaveData {
+  activeId: string | null;
+  title: string;
+  content: string;
+  selectedFolderId: string | null;
+  selectedBaseId: string | null;
+  audioFiles: AudioFile[];
+  timestamp: number;
+}
+
 export const MobileDrafts: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -54,6 +67,120 @@ export const MobileDrafts: React.FC = () => {
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
   const [audioBlobs, setAudioBlobs] = useState<Map<string, Blob>>(new Map());
   const [basePlayTrigger, setBasePlayTrigger] = useState(0);
+
+  // Auto-save to localStorage when in editor mode
+  useEffect(() => {
+    if (viewMode === 'editor' && (title.trim() || content.trim())) {
+      const autoSaveData: AutoSaveData = {
+        activeId,
+        title,
+        content,
+        selectedFolderId,
+        selectedBaseId: selectedBase?.id || null,
+        audioFiles: audioFiles.filter(f => !f.url.startsWith('blob:')), // Only save uploaded files
+        timestamp: Date.now()
+      };
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(autoSaveData));
+    }
+  }, [viewMode, title, content, activeId, selectedFolderId, selectedBase, audioFiles]);
+
+  // Restore from auto-save on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem(AUTOSAVE_KEY);
+    if (savedData) {
+      try {
+        const data: AutoSaveData = JSON.parse(savedData);
+        // Only restore if less than 24 hours old
+        const isRecent = Date.now() - data.timestamp < 24 * 60 * 60 * 1000;
+        if (isRecent && (data.title.trim() || data.content.trim())) {
+          setActiveId(data.activeId);
+          setTitle(data.title);
+          setContent(data.content);
+          setSelectedFolderId(data.selectedFolderId);
+          setAudioFiles(data.audioFiles || []);
+          
+          // Load the selected base if there was one
+          if (data.selectedBaseId) {
+            import('@/services/basesMusicais/basesService').then(({ getBaseById }) => {
+              getBaseById(data.selectedBaseId!).then(base => {
+                if (base) setSelectedBase(base);
+              }).catch(() => {});
+            });
+          }
+          
+          setViewMode('editor');
+          sonnerToast.info('Rascunho restaurado automaticamente');
+        }
+      } catch (e) {
+        console.error('Error restoring auto-save:', e);
+        localStorage.removeItem(AUTOSAVE_KEY);
+      }
+    }
+  }, []);
+
+  // Auto-save when page is hidden (minimized, tab switch, etc.)
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'hidden' && viewMode === 'editor') {
+        // Trigger auto-save when app is minimized/hidden
+        if (title.trim() || content.trim()) {
+          await performAutoSave();
+        }
+      }
+    };
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (viewMode === 'editor' && (title.trim() || content.trim())) {
+        // Trigger sync save before unload
+        performAutoSave();
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [viewMode, title, content, activeId, selectedFolderId, selectedBase, audioFiles]);
+
+  // Perform auto-save to database
+  const performAutoSave = async () => {
+    if (!title.trim() && !content.trim()) return;
+    
+    try {
+      // Only save files that are already uploaded (not blob URLs)
+      const uploadedFiles = audioFiles.filter(f => !f.url.startsWith('blob:'));
+      
+      if (activeId) {
+        await draftService.updateDraft(activeId, {
+          title: title || 'Rascunho sem título',
+          content,
+          audioFiles: uploadedFiles,
+          selectedBaseId: selectedBase?.id || null,
+          folderId: selectedFolderId
+        });
+      } else if (title.trim() || content.trim()) {
+        // Create new draft if there's content
+        const newDraft = await draftService.createDraft({
+          title: title || 'Rascunho sem título',
+          content,
+          audioFiles: uploadedFiles,
+          selectedBaseId: selectedBase?.id || null,
+          folderId: selectedFolderId
+        });
+        setActiveId(newDraft.id);
+        setDrafts(prev => [newDraft, ...prev]);
+      }
+      
+      console.log('Auto-save completed');
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -85,6 +212,8 @@ export const MobileDrafts: React.FC = () => {
   };
 
   const handleNewDraft = () => {
+    // Clear auto-save when starting fresh
+    localStorage.removeItem(AUTOSAVE_KEY);
     setViewMode('setup');
   };
 
@@ -201,9 +330,12 @@ export const MobileDrafts: React.FC = () => {
         });
         
         setDrafts([newDraft, ...drafts]);
+        setActiveId(newDraft.id);
         sonnerToast.success('Rascunho criado!');
       }
       
+      // Clear auto-save after successful save
+      localStorage.removeItem(AUTOSAVE_KEY);
       setViewMode('list');
     } catch (error) {
       console.error('Error saving draft:', error);
@@ -246,6 +378,18 @@ export const MobileDrafts: React.FC = () => {
   }
 
   // Render Editor Screen - using new MobileComposerEditor
+  // Handle back from editor - auto-save before leaving
+  const handleEditorBack = async () => {
+    // Save before going back
+    if (title.trim() || content.trim()) {
+      await performAutoSave();
+      sonnerToast.success('Rascunho salvo automaticamente');
+    }
+    // Clear auto-save data since we're leaving intentionally
+    localStorage.removeItem(AUTOSAVE_KEY);
+    setViewMode('list');
+  };
+
   if (viewMode === 'editor') {
     return (
       <MobileComposerEditor
@@ -258,7 +402,7 @@ export const MobileDrafts: React.FC = () => {
         onTitleChange={setTitle}
         onContentChange={setContent}
         onSave={handleSaveDraft}
-        onBack={() => setViewMode('list')}
+        onBack={handleEditorBack}
         onRecordingChange={handleSaveRecordings}
         onBaseChange={setSelectedBase}
       />
