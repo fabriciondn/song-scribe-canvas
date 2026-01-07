@@ -5,15 +5,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import { Input } from '@/components/ui/input';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -22,25 +13,6 @@ import {
 import { getDraftById, updateDraft, createDraft } from '@/services/drafts/draftService';
 import { Draft } from '@/services/drafts/types';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  ArrowLeft,
-  Edit3,
-  Moon,
-  Sun,
-  MoreVertical,
-  Folder,
-  Users,
-  Mic,
-  Music,
-  Plus,
-  Repeat,
-  Play,
-  Pause,
-  Library,
-  Square,
-  Save,
-  Trash2
-} from 'lucide-react';
 
 interface MusicBase {
   id: string;
@@ -55,18 +27,23 @@ export const MobileComposerPanel: React.FC = () => {
   
   const [title, setTitle] = useState('Nova Ideia #4');
   const [content, setContent] = useState('');
-  const [folderName, setFolderName] = useState('');
+  const [folderName, setFolderName] = useState('Pop / Rock');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [currentDraft, setCurrentDraft] = useState<Draft | null>(null);
   
   // Audio player state
-  const [selectedBase, setSelectedBase] = useState<MusicBase | null>(null);
+  const [selectedBase, setSelectedBase] = useState<MusicBase | null>({
+    id: '1',
+    name: 'Base 1 - Natanzinho',
+    file_path: '',
+    genre: 'Pop'
+  });
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState(174); // 2:54 in seconds
   const [markerA, setMarkerA] = useState<number | null>(null);
   const [markerB, setMarkerB] = useState<number | null>(null);
   const [isLooping, setIsLooping] = useState(false);
@@ -243,21 +220,27 @@ export const MobileComposerPanel: React.FC = () => {
   };
 
   const getBaseAudioUrl = () => {
-    if (!selectedBase) return '';
+    if (!selectedBase || !selectedBase.file_path) return '';
     return supabase.storage
       .from('music-bases')
       .getPublicUrl(selectedBase.file_path).data.publicUrl;
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-[#0F172A]">
+    <div className="flex flex-col min-h-screen bg-[#F3F4F6] dark:bg-[#0F172A] relative overflow-hidden">
+      {/* Background Decorations */}
+      <div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#00C853]/5 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px]" />
+      </div>
+
       {/* Header */}
       <header className="pt-12 pb-4 px-6 flex items-center justify-between bg-white/80 dark:bg-[#1E293B]/80 backdrop-blur-md z-20 border-b border-gray-200 dark:border-gray-800">
         <button 
           onClick={handleBack}
           className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
         >
-          <ArrowLeft size={24} className="text-gray-500 dark:text-gray-400" />
+          <span className="material-icons-round text-2xl text-[#6B7280] dark:text-[#94A3B8]">arrow_back</span>
         </button>
         
         <div className="flex flex-col items-center">
@@ -279,10 +262,10 @@ export const MobileComposerPanel: React.FC = () => {
               onClick={() => setIsEditingTitle(true)}
               className="flex items-center gap-1 group cursor-pointer"
             >
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white truncate max-w-[180px]">
+              <h1 className="text-lg font-bold text-[#111827] dark:text-[#F9FAFB] truncate max-w-[180px]">
                 {title}
               </h1>
-              <Edit3 size={14} className="text-gray-500 dark:text-gray-400 group-hover:text-[#00C853] transition" />
+              <span className="material-icons-round text-sm text-[#6B7280] dark:text-[#94A3B8] group-hover:text-[#00C853] transition">edit</span>
             </button>
           )}
         </div>
@@ -292,25 +275,22 @@ export const MobileComposerPanel: React.FC = () => {
             onClick={toggleTheme}
             className="p-2 mr-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
-            {isDark ? (
-              <Sun size={24} className="text-gray-500 dark:text-gray-400" />
-            ) : (
-              <Moon size={24} className="text-gray-500 dark:text-gray-400" />
-            )}
+            <span className="material-icons-round text-2xl text-[#6B7280] dark:text-[#94A3B8] dark:hidden">dark_mode</span>
+            <span className="material-icons-round text-2xl text-[#6B7280] dark:text-[#94A3B8] hidden dark:block">light_mode</span>
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                <MoreVertical size={24} className="text-gray-500 dark:text-gray-400" />
+                <span className="material-icons-round text-2xl text-[#6B7280] dark:text-[#94A3B8]">more_vert</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-white dark:bg-[#1E293B] border-gray-200 dark:border-gray-700">
               <DropdownMenuItem onClick={handleSave}>
-                <Save size={16} className="mr-2" />
+                <span className="material-icons-round text-base mr-2">save</span>
                 Salvar
               </DropdownMenuItem>
               <DropdownMenuItem className="text-red-500">
-                <Trash2 size={16} className="mr-2" />
+                <span className="material-icons-round text-base mr-2">delete</span>
                 Excluir
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -319,16 +299,16 @@ export const MobileComposerPanel: React.FC = () => {
       </header>
 
       {/* Tags Bar */}
-      <div className="px-4 py-3 flex items-center justify-center gap-3 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-[#0F172A]">
+      <div className="px-4 py-3 flex items-center justify-center gap-3 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-800 bg-[#F3F4F6] dark:bg-[#0F172A]">
         <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-gray-700 whitespace-nowrap">
-          <Folder size={14} className="text-[#00C853]" />
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-            {folderName || 'Sem pasta'}
+          <span className="material-icons-round text-[#00C853] text-sm">folder_open</span>
+          <span className="text-xs font-medium text-[#6B7280] dark:text-[#94A3B8]">
+            {folderName || 'Pop / Rock'}
           </span>
         </button>
         <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-gray-700 whitespace-nowrap">
-          <Users size={14} className="text-[#00C853]" />
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          <span className="material-icons-round text-[#00C853] text-sm">group_add</span>
+          <span className="text-xs font-medium text-[#6B7280] dark:text-[#94A3B8]">
             Compor em parceria
           </span>
         </button>
@@ -341,7 +321,7 @@ export const MobileComposerPanel: React.FC = () => {
             ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="w-full h-[55vh] bg-transparent border-none resize-none focus:ring-0 focus:outline-none text-lg leading-relaxed text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+            className="w-full h-[60vh] bg-transparent border-none resize-none focus:ring-0 focus:outline-none text-lg leading-relaxed text-[#111827] dark:text-[#F9FAFB] placeholder-gray-400 dark:placeholder-gray-600 font-sans"
             placeholder="Comece a escrever sua letra aqui..."
           />
           
@@ -349,25 +329,23 @@ export const MobileComposerPanel: React.FC = () => {
           <div className="fixed top-1/2 right-4 transform -translate-y-1/2 flex flex-col gap-3 z-10">
             <button 
               onClick={() => setIsRecording(!isRecording)}
-              className={`w-12 h-12 rounded-full shadow-lg border flex items-center justify-center transition hover:scale-110 ${
+              className={`w-10 h-10 rounded-full shadow-lg border flex items-center justify-center transition hover:scale-110 ${
                 isRecording 
                   ? 'bg-red-500 border-red-400 animate-pulse' 
                   : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
               }`}
             >
-              {isRecording ? (
-                <Square size={20} className="text-white" />
-              ) : (
-                <Mic size={20} className="text-red-500" />
-              )}
+              <span className={`material-icons-round text-xl ${isRecording ? 'text-white' : 'text-red-500'}`}>
+                {isRecording ? 'stop' : 'mic'}
+              </span>
             </button>
           </div>
         </div>
       </main>
 
       {/* Audio Player Panel */}
-      <div className="bg-black border-t border-gray-800 pb-8 pt-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)] z-20">
-        {selectedBase && (
+      <div className="bg-black border-t border-gray-800 pb-12 pt-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)] z-20">
+        {selectedBase && selectedBase.file_path && (
           <audio 
             ref={audioRef} 
             src={getBaseAudioUrl()}
@@ -379,9 +357,9 @@ export const MobileComposerPanel: React.FC = () => {
           {/* Base name and speed controls */}
           <div className="flex justify-between items-center text-white/90">
             <div className="flex items-center gap-2">
-              <Music size={14} className="text-[#00C853]" />
+              <span className="material-icons-round text-[#00C853] text-sm">music_note</span>
               <span className="text-xs font-semibold">
-                {selectedBase?.name || 'Nenhuma base selecionada'}
+                {selectedBase?.name || 'Base 1 - Natanzinho'}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -412,10 +390,7 @@ export const MobileComposerPanel: React.FC = () => {
               max={duration || 100}
               value={currentTime}
               onChange={handleSeek}
-              className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer focus:outline-none accent-[#00C853]"
-              style={{
-                background: `linear-gradient(to right, #00C853 ${(currentTime / (duration || 1)) * 100}%, #374151 ${(currentTime / (duration || 1)) * 100}%)`
-              }}
+              className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-0 accent-[#00C853] z-10 relative"
             />
             <div className="flex justify-between text-[10px] text-gray-500 mt-1 font-mono">
               <span>{formatTime(currentTime)}</span>
@@ -424,12 +399,12 @@ export const MobileComposerPanel: React.FC = () => {
           </div>
 
           {/* Control Buttons */}
-          <div className="flex items-center justify-between mt-2 w-full px-1">
+          <div className="flex items-center justify-between mt-4 w-full px-1">
             <button 
               onClick={() => setMarker(currentTime === markerA ? 'B' : 'A')}
               className="flex items-center gap-1 px-3 py-2 bg-[#1A2130] border border-gray-700/50 rounded-lg text-xs text-white hover:bg-gray-800 transition shadow-sm h-10 min-w-[80px] justify-center"
             >
-              <Plus size={16} />
+              <span className="material-icons-round text-[16px]">add</span>
               <span className="font-medium tracking-wide">Marcar</span>
             </button>
             
@@ -465,39 +440,30 @@ export const MobileComposerPanel: React.FC = () => {
                   : 'bg-[#1A2130] border-gray-700/50 text-white hover:bg-gray-800'
               }`}
             >
-              <Repeat size={16} />
+              <span className="material-icons-round text-[16px]">loop</span>
               <span className="font-medium tracking-wide">Loop</span>
             </button>
             
             <button 
               onClick={togglePlayPause}
-              disabled={!selectedBase}
-              className="w-12 h-12 rounded-full bg-[#00C853] flex items-center justify-center shadow-lg hover:bg-[#009624] active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-12 h-12 rounded-full bg-[#00C853] flex items-center justify-center shadow-lg hover:bg-[#009624] active:scale-95 transition"
             >
-              {isPlaying ? (
-                <Pause size={28} className="text-black" />
-              ) : (
-                <Play size={28} className="text-black ml-1" />
-              )}
+              <span className="material-icons-round text-black text-3xl ml-1">
+                {isPlaying ? 'pause' : 'play_arrow'}
+              </span>
             </button>
             
             <button 
               onClick={() => navigate('/dashboard/bases')}
               className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-gray-800/50"
             >
-              <Library size={24} />
+              <span className="material-icons-round text-2xl">library_music</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Background Effects */}
-      <div className="fixed top-0 left-0 w-full h-full -z-10 bg-gray-100 dark:bg-[#0F172A] overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#00C853]/5 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px]" />
-      </div>
-
-      {/* Custom Slider Styles */}
+      {/* Custom CSS for range slider and no-scrollbar */}
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -506,20 +472,26 @@ export const MobileComposerPanel: React.FC = () => {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
+        input[type=range] {
+          -webkit-appearance: none;
+          width: 100%;
+          background: transparent;
+        }
         input[type=range]::-webkit-slider-thumb {
           -webkit-appearance: none;
-          height: 14px;
-          width: 14px;
+          height: 12px;
+          width: 12px;
           border-radius: 50%;
           background: #00C853;
           cursor: pointer;
-          margin-top: -5px;
+          margin-top: -4px;
           border: 2px solid #1E293B;
         }
         input[type=range]::-webkit-slider-runnable-track {
           width: 100%;
           height: 4px;
           cursor: pointer;
+          background: #334155;
           border-radius: 2px;
         }
       `}</style>
