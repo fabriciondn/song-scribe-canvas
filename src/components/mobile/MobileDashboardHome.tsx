@@ -2,12 +2,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserCredits } from '@/hooks/useUserCredits';
+import { useSubscriptionCredits } from '@/hooks/useSubscriptionCredits';
 import { useAcordes } from '@/hooks/useAcordes';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useTheme } from '@/hooks/useTheme';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { MobileNotificationCenter } from './MobileNotificationCenter';
-
 // Componente para Material Symbols
 const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: string }> = ({ 
   name, 
@@ -28,6 +28,7 @@ export const MobileDashboardHome: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useProfile();
   const { credits } = useUserCredits();
+  const { bonusCredits, isFrozen } = useSubscriptionCredits();
   const { progress } = useAcordes();
   const { stats } = useDashboardStats();
   const { toggleTheme } = useTheme();
@@ -114,10 +115,10 @@ export const MobileDashboardHome: React.FC = () => {
                 </div>
                 <div className="flex-1 bg-white/5 rounded-xl p-3 border border-white/5">
                   <div className="flex items-center gap-2 mb-1">
-                    <MaterialIcon name="stars" className="text-yellow-400 text-sm" />
-                    <span className="text-xs text-gray-300">Ganhos</span>
+                    <MaterialIcon name={isFrozen ? "ac_unit" : "stars"} className={isFrozen ? "text-blue-400 text-sm" : "text-yellow-400 text-sm"} />
+                    <span className="text-xs text-gray-300">{isFrozen ? 'Congelados' : 'Bônus'}</span>
                   </div>
-                  <span className="text-sm font-semibold">Bônus, +2</span>
+                  <span className="text-sm font-semibold">{bonusCredits} Bônus</span>
                 </div>
               </div>
             </div>
