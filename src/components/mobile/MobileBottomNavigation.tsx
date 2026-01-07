@@ -29,6 +29,12 @@ export const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({ 
 
   const isActive = (path: string) => location.pathname === path;
 
+  // Hide navigation on composer page for better UX
+  const isComposerPage = location.pathname === '/dashboard/composer';
+  if (isComposerPage) {
+    return null;
+  }
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 w-full bg-[#1E1E1E] border-t border-gray-800 pb-6 pt-2 px-6 flex justify-between items-center z-50 font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Início */}
