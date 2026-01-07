@@ -196,13 +196,50 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
   };
 
   const setMarker = (type: 'A' | 'B') => {
+    if (!selectedBase) {
+      sonnerToast.error('Selecione uma base primeiro');
+      return;
+    }
+    
     if (type === 'A') {
       setMarkerA(currentTime);
       sonnerToast.success(`Marcador A definido em ${formatTime(currentTime)}`);
     } else {
+      if (markerA !== null && currentTime <= markerA) {
+        sonnerToast.error('Marcador B deve ser após o marcador A');
+        return;
+      }
       setMarkerB(currentTime);
       sonnerToast.success(`Marcador B definido em ${formatTime(currentTime)}`);
     }
+  };
+
+  const handleMarkButtonClick = () => {
+    if (!selectedBase) {
+      sonnerToast.error('Selecione uma base primeiro');
+      return;
+    }
+    
+    if (markerA === null) {
+      // Define marcador A
+      setMarker('A');
+    } else if (markerB === null) {
+      // Define marcador B
+      setMarker('B');
+    } else {
+      // Ambos definidos, reseta e define A novamente
+      setMarkerA(currentTime);
+      setMarkerB(null);
+      setIsLooping(false);
+      sonnerToast.success(`Marcador A redefinido em ${formatTime(currentTime)}`);
+    }
+  };
+
+  const clearMarkers = () => {
+    setMarkerA(null);
+    setMarkerB(null);
+    setIsLooping(false);
+    sonnerToast.info('Marcadores limpos');
   };
 
   const goToMarker = (type: 'A' | 'B') => {
@@ -210,6 +247,17 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
     if (marker !== null && audioRef.current) {
       audioRef.current.currentTime = marker;
       setCurrentTime(marker);
+    }
+  };
+
+  const handleToggleLoop = () => {
+    if (markerA === null || markerB === null) {
+      sonnerToast.error('Defina os marcadores A e B primeiro');
+      return;
+    }
+    setIsLooping(!isLooping);
+    if (!isLooping) {
+      sonnerToast.success('Loop ativado entre A e B');
     }
   };
 
@@ -463,40 +511,52 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
           {/* Control Buttons */}
           <div className="flex items-center justify-between mt-4 w-full px-1">
             <button 
-              onClick={() => setMarker(markerA === null ? 'A' : 'B')}
-              className="flex items-center gap-1 px-3 py-2 bg-[#1A2130] border border-gray-700/50 rounded-lg text-xs text-white hover:bg-gray-800 transition shadow-sm h-10 min-w-[80px] justify-center"
+              onClick={handleMarkButtonClick}
+              disabled={!selectedBase}
+              className={`flex items-center gap-1 px-3 py-2 border rounded-lg text-xs transition shadow-sm h-10 min-w-[80px] justify-center disabled:opacity-50 disabled:cursor-not-allowed ${
+                markerA !== null && markerB !== null
+                  ? 'bg-amber-500/20 border-amber-500/50 text-amber-500 hover:bg-amber-500/30'
+                  : 'bg-[#1A2130] border-gray-700/50 text-white hover:bg-gray-800'
+              }`}
             >
-              <span className="material-icons-round text-[16px]">add</span>
-              <span className="font-medium tracking-wide">Marcar</span>
+              <span className="material-icons-round text-[16px]">
+                {markerA !== null && markerB !== null ? 'refresh' : 'add'}
+              </span>
+              <span className="font-medium tracking-wide">
+                {markerA === null ? 'A' : markerB === null ? 'B' : 'Reset'}
+              </span>
             </button>
             
             <button 
-              onClick={() => goToMarker('A')}
+              onClick={() => markerA !== null ? goToMarker('A') : null}
               onDoubleClick={() => setMarker('A')}
-              className={`w-10 h-10 flex items-center justify-center border text-xs font-bold rounded-full transition shadow-sm ${
+              disabled={!selectedBase}
+              className={`w-10 h-10 flex items-center justify-center border text-xs font-bold rounded-full transition shadow-sm disabled:opacity-50 ${
                 markerA !== null 
-                  ? 'bg-[#00C853]/20 border-[#00C853]/50 text-[#00C853]' 
-                  : 'bg-[#1A2130] border-[#00C853]/20 text-[#00C853]'
-              } hover:bg-[#00C853] hover:text-black`}
+                  ? 'bg-[#00C853]/20 border-[#00C853]/50 text-[#00C853] hover:bg-[#00C853] hover:text-black' 
+                  : 'bg-[#1A2130] border-[#00C853]/20 text-[#00C853]/50'
+              }`}
             >
               A
             </button>
             
             <button 
-              onClick={() => goToMarker('B')}
+              onClick={() => markerB !== null ? goToMarker('B') : null}
               onDoubleClick={() => setMarker('B')}
-              className={`w-10 h-10 flex items-center justify-center border text-xs font-bold rounded-full transition shadow-sm ${
+              disabled={!selectedBase}
+              className={`w-10 h-10 flex items-center justify-center border text-xs font-bold rounded-full transition shadow-sm disabled:opacity-50 ${
                 markerB !== null 
-                  ? 'bg-red-500/20 border-red-500/50 text-red-500' 
-                  : 'bg-[#1A2130] border-red-500/20 text-red-500'
-              } hover:bg-red-500 hover:text-white`}
+                  ? 'bg-red-500/20 border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white' 
+                  : 'bg-[#1A2130] border-red-500/20 text-red-500/50'
+              }`}
             >
               B
             </button>
             
             <button 
-              onClick={() => setIsLooping(!isLooping)}
-              className={`flex items-center gap-1 px-3 py-2 border rounded-lg text-xs transition shadow-sm h-10 min-w-[70px] justify-center ${
+              onClick={handleToggleLoop}
+              disabled={!selectedBase || markerA === null || markerB === null}
+              className={`flex items-center gap-1 px-3 py-2 border rounded-lg text-xs transition shadow-sm h-10 min-w-[70px] justify-center disabled:opacity-50 disabled:cursor-not-allowed ${
                 isLooping 
                   ? 'bg-[#00C853]/20 border-[#00C853]/50 text-[#00C853]' 
                   : 'bg-[#1A2130] border-gray-700/50 text-white hover:bg-gray-800'
