@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MobileHeader } from './MobileHeader';
-import { MobileNavigation } from './MobileNavigation';
-
+import { MobileBottomNavigation } from '@/components/mobile/MobileBottomNavigation';
+import { MobileSidebar } from './MobileSidebar';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useMobileDetection } from '@/hooks/use-mobile';
 
 interface MobileLayoutProps {
@@ -14,6 +15,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   toggleSidebar 
 }) => {
   const { isMobile } = useMobileDetection();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   if (!isMobile) {
     return null;
@@ -29,20 +31,21 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-hidden touch-manipulation">
-      {/* Header móvel otimizado */}
-      <MobileHeader toggleSidebar={toggleSidebar} />
-      
-      {/* Conteúdo principal com scroll otimizado */}
-      <main className="flex-1 overflow-y-auto pb-20 overscroll-contain">
-        <div className="px-3 py-3">
-          {children}
-        </div>
+    <div className="min-h-screen bg-black flex flex-col overflow-hidden touch-manipulation">
+      {/* Conteúdo principal com scroll otimizado - sem header no novo design */}
+      <main className="flex-1 overflow-y-auto pb-24 overscroll-contain">
+        {children}
       </main>
       
-      {/* Navegação inferior com backdrop blur */}
-      <MobileNavigation onToolsClick={handleToolsClick} />
-      
+      {/* Nova navegação inferior com botão central flutuante */}
+      <MobileBottomNavigation onMenuClick={() => setIsMenuOpen(true)} />
+
+      {/* Menu lateral */}
+      <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+        <SheetContent side="left" className="p-0 w-[85vw] max-w-sm bg-[#0A0A0A] border-gray-800">
+          <MobileSidebar onClose={() => setIsMenuOpen(false)} />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
