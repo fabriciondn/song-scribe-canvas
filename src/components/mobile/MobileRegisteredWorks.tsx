@@ -74,12 +74,6 @@ export const MobileRegisteredWorks: React.FC = () => {
     enabled: !!currentUser?.id && !workId,
   });
 
-  // Se há um ID na URL, mostra os detalhes do certificado
-  // (Depois de todos os hooks serem chamados)
-  if (workId) {
-    return <MobileCertificateDetails />;
-  }
-
   const filteredWorks = useMemo(() => {
     if (!works) return [];
     
@@ -92,6 +86,12 @@ export const MobileRegisteredWorks: React.FC = () => {
         return works;
     }
   }, [works, filter]);
+
+  // Se há um ID na URL, mostra os detalhes do certificado
+  // (Depois de todos os hooks serem chamados)
+  if (workId) {
+    return <MobileCertificateDetails />;
+  }
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
