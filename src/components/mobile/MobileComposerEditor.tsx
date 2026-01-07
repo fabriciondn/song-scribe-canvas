@@ -420,14 +420,15 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
         className="flex-1 overflow-y-auto relative bg-white dark:bg-[#1E293B]"
         style={{ overscrollBehavior: 'contain' }}
       >
-        <div className="p-6 pb-4">
+        <div className="p-6 pb-24">
           <textarea
             ref={textareaRef}
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
-            className="w-full min-h-[200px] bg-transparent border-none resize-none focus:ring-0 focus:outline-none text-lg leading-relaxed text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 font-sans"
+            className="w-full bg-transparent border-none resize-none focus:ring-0 focus:outline-none text-lg leading-relaxed text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 font-sans overflow-visible"
             placeholder="Comece a escrever sua letra aqui..."
-            style={{ height: 'auto' }}
+            style={{ minHeight: '50vh', height: 'auto' }}
+            rows={15}
           />
         </div>
         
