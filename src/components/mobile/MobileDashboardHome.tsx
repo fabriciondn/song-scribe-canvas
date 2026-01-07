@@ -5,6 +5,7 @@ import { useUserCredits } from '@/hooks/useUserCredits';
 import { useSubscriptionCredits } from '@/hooks/useSubscriptionCredits';
 import { useAcordes } from '@/hooks/useAcordes';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { useWeeklyRegistrations } from '@/hooks/useWeeklyRegistrations';
 import { useTheme } from '@/hooks/useTheme';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { MobileNotificationCenter } from './MobileNotificationCenter';
@@ -31,6 +32,7 @@ export const MobileDashboardHome: React.FC = () => {
   const { bonusCredits, isFrozen } = useSubscriptionCredits();
   const { progress } = useAcordes();
   const { stats } = useDashboardStats();
+  const { weeklyData } = useWeeklyRegistrations();
   const { toggleTheme } = useTheme();
 
   const userName = profile?.artistic_name || profile?.name?.split(' ')[0] || 'Usuário';
@@ -40,13 +42,7 @@ export const MobileDashboardHome: React.FC = () => {
   const totalRegistrations = stats?.registeredWorks?.total || 0;
   const totalDrafts = stats?.compositions?.drafts || 0;
 
-  // Dados para o gráfico de barras (simulado por semana)
-  const weeklyData = [
-    { week: 'Sem 1', value: 4, height: '40%' },
-    { week: 'Sem 2', value: 6, height: '60%' },
-    { week: 'Sem 3', value: 3, height: '30%' },
-    { week: 'Sem 4', value: 8, height: '85%', active: true },
-  ];
+  // Dados reais do gráfico de barras por semana do mês
 
   return (
     <div className="min-h-screen bg-[#000000] text-white pb-24 font-['Plus_Jakarta_Sans',sans-serif]">
