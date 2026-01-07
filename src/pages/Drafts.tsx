@@ -59,8 +59,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileFoldersPage } from '@/components/mobile/MobileFoldersPage';
 
 const Drafts: React.FC = () => {
+  const isMobile = useIsMobile();
+  
+  // No mobile, usar o MobileFoldersPage que tem o design correto com pastas + rascunhos
+  if (isMobile) {
+    return <MobileFoldersPage />;
+  }
+
+  return <DesktopDrafts />;
+};
+
+const DesktopDrafts: React.FC = () => {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [folders, setFolders] = useState<FolderType[]>([]);
   const [isEditing, setIsEditing] = useState(false);
