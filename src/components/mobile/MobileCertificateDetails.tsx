@@ -240,7 +240,7 @@ export const MobileCertificateDetails: React.FC = () => {
       </header>
 
       {/* Content */}
-      <main className="flex-1 px-6 pb-32 overflow-y-auto space-y-5">
+      <main className="flex-1 px-6 pb-56 overflow-y-auto space-y-5">
         {/* Work Header Card */}
         <div className="bg-gradient-to-br from-[#8B5CF6] to-[#6366f1] rounded-2xl p-6 shadow-lg">
           <div className="flex items-start gap-4">
@@ -366,7 +366,7 @@ export const MobileCertificateDetails: React.FC = () => {
       </main>
 
       {/* Fixed Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black to-transparent z-50">
+      <div className="fixed bottom-24 left-0 right-0 p-6 bg-gradient-to-t from-black via-black to-transparent z-[60]">
         <button
           onClick={handleDownloadCertificate}
           disabled={downloadingPdf || work.status !== 'registered'}
