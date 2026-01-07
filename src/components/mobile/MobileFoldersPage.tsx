@@ -30,13 +30,20 @@ import { getDrafts } from '@/services/drafts/draftService';
 import { Draft } from '@/services/drafts/types';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { 
+  Music, 
+  Search, 
+  MoreVertical, 
+  Folder, 
+  FolderPlus, 
+  Mic, 
+  FileEdit, 
+  AudioLines,
+  Play,
+  ArrowDownWideNarrow
+} from 'lucide-react';
 
-// Material Icons helper component
-const MaterialIcon = ({ name, className = '' }: { name: string; className?: string }) => (
-  <span className={`material-icons-round ${className}`}>{name}</span>
-);
-
-// Get folder color based on index or name
+// Get folder color based on index
 const getFolderColor = (index: number) => {
   const colors = ['text-yellow-500', 'text-blue-500', 'text-green-500', 'text-purple-500', 'text-pink-500', 'text-orange-500'];
   return colors[index % colors.length];
@@ -45,12 +52,12 @@ const getFolderColor = (index: number) => {
 // Get icon for draft based on type
 const getDraftIcon = (draft: Draft) => {
   if (draft.audio_url || (draft.audio_files && draft.audio_files.length > 0)) {
-    return { icon: 'mic', gradient: 'from-indigo-500 to-purple-600' };
+    return { Icon: Mic, gradient: 'from-indigo-500 to-purple-600' };
   }
   if (draft.selected_base_id) {
-    return { icon: 'graphic_eq', gradient: '' };
+    return { Icon: AudioLines, gradient: '' };
   }
-  return { icon: 'edit_note', gradient: '' };
+  return { Icon: FileEdit, gradient: '' };
 };
 
 export const MobileFoldersPage: React.FC = () => {
@@ -184,34 +191,34 @@ export const MobileFoldersPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className="min-h-screen bg-black pb-24">
         {/* Header Skeleton */}
-        <div className="px-6 pt-14 pb-6 sticky top-0 z-40 bg-background/95 backdrop-blur-sm">
+        <div className="px-6 pt-14 pb-6 sticky top-0 z-40 bg-black/95 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-6">
-            <Skeleton className="h-10 w-40" />
+            <Skeleton className="h-10 w-40 bg-[#1C1C1E]" />
             <div className="flex gap-2">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <Skeleton className="h-10 w-10 rounded-full" />
+              <Skeleton className="h-10 w-10 rounded-full bg-[#1C1C1E]" />
+              <Skeleton className="h-10 w-10 rounded-full bg-[#1C1C1E]" />
             </div>
           </div>
-          <Skeleton className="h-12 w-full rounded-xl" />
+          <Skeleton className="h-12 w-full rounded-xl bg-[#1C1C1E]" />
         </div>
 
         {/* Content Skeleton */}
         <main className="px-6 space-y-8">
           <section>
-            <Skeleton className="h-6 w-20 mb-4" />
+            <Skeleton className="h-6 w-20 mb-4 bg-[#1C1C1E]" />
             <div className="flex gap-4 overflow-x-auto">
               {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="flex-shrink-0 w-36 h-32 rounded-2xl" />
+                <Skeleton key={i} className="flex-shrink-0 w-36 h-32 rounded-2xl bg-[#1C1C1E]" />
               ))}
             </div>
           </section>
           <section>
-            <Skeleton className="h-6 w-24 mb-4" />
+            <Skeleton className="h-6 w-24 mb-4 bg-[#1C1C1E]" />
             <div className="space-y-4">
               {[1, 2, 3, 4].map(i => (
-                <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+                <Skeleton key={i} className="h-20 w-full rounded-2xl bg-[#1C1C1E]" />
               ))}
             </div>
           </section>
@@ -221,28 +228,28 @@ export const MobileFoldersPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-black text-white pb-24">
       {/* Header */}
-      <header className="px-6 pt-14 pb-6 sticky top-0 z-40 bg-background/95 backdrop-blur-sm">
+      <header className="px-6 pt-14 pb-6 sticky top-0 z-40 bg-black/95 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#00C853]/10 rounded-xl flex items-center justify-center text-[#00C853]">
-              <MaterialIcon name="music_note" className="text-2xl" />
+              <Music size={24} />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">Compuse</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-white">Compuse</h1>
           </div>
           <div className="flex items-center gap-2">
-            <button className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center text-gray-400 hover:text-[#00C853] transition-colors">
-              <MaterialIcon name="search" />
+            <button className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center text-gray-400 hover:text-[#00C853] transition-colors shadow-sm">
+              <Search size={20} />
             </button>
-            <button className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center text-gray-400 hover:text-[#00C853] transition-colors">
-              <MaterialIcon name="more_vert" />
+            <button className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center text-gray-400 hover:text-[#00C853] transition-colors shadow-sm">
+              <MoreVertical size={20} />
             </button>
           </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex p-1 bg-[#2C2C2E] rounded-xl">
+        <div className="flex p-1 bg-[#2C2C2E] rounded-xl shadow-sm">
           <button
             onClick={() => setActiveTab('compositions')}
             className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
@@ -270,7 +277,7 @@ export const MobileFoldersPage: React.FC = () => {
         {/* Folders Section */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold">Pastas</h2>
+            <h2 className="text-lg font-bold text-gray-200">Pastas</h2>
             <button
               onClick={() => navigate('/dashboard/folders')}
               className="text-[#00C853] text-sm font-semibold hover:opacity-80"
@@ -285,12 +292,13 @@ export const MobileFoldersPage: React.FC = () => {
               <div
                 key={folder.id}
                 onClick={() => handleFolderClick(folder.id)}
-                className="flex-shrink-0 w-36 h-32 bg-[#1C1C1E] rounded-2xl p-4 flex flex-col justify-between border border-gray-800 cursor-pointer hover:border-[#00C853]/30 transition-all group"
+                className="flex-shrink-0 w-36 h-32 bg-[#1C1C1E] rounded-2xl p-4 flex flex-col justify-between border border-gray-800 cursor-pointer hover:border-[#00C853]/30 transition-all group shadow-sm"
               >
                 <div className="flex justify-between items-start">
-                  <MaterialIcon
-                    name="folder"
-                    className={`text-3xl ${getFolderColor(index)} group-hover:scale-110 transition-transform`}
+                  <Folder 
+                    size={28} 
+                    className={`${getFolderColor(index)} group-hover:scale-110 transition-transform`}
+                    fill="currentColor"
                   />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -298,7 +306,7 @@ export const MobileFoldersPage: React.FC = () => {
                         onClick={(e) => e.stopPropagation()}
                         className="text-gray-600 hover:text-gray-400"
                       >
-                        <MaterialIcon name="more_vert" className="text-lg" />
+                        <MoreVertical size={16} />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -322,7 +330,7 @@ export const MobileFoldersPage: React.FC = () => {
               onClick={() => setIsNewFolderModalOpen(true)}
               className="flex-shrink-0 w-36 h-32 bg-transparent rounded-2xl p-4 flex flex-col justify-center items-center border-2 border-dashed border-gray-700 cursor-pointer hover:border-[#00C853] hover:bg-[#00C853]/5 transition-all"
             >
-              <MaterialIcon name="create_new_folder" className="text-gray-500 text-3xl mb-2" />
+              <FolderPlus size={28} className="text-gray-500 mb-2" />
               <p className="text-xs font-semibold text-gray-400">Nova Pasta</p>
             </div>
           </div>
@@ -331,30 +339,28 @@ export const MobileFoldersPage: React.FC = () => {
         {/* Recent Drafts Section */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold">Recentes</h2>
+            <h2 className="text-lg font-bold text-gray-200">Recentes</h2>
             <button className="p-1 rounded-full hover:bg-gray-800 transition-colors">
-              <MaterialIcon name="sort" className="text-gray-500" />
+              <ArrowDownWideNarrow size={20} className="text-gray-500" />
             </button>
           </div>
 
           <div className="space-y-4">
             {recentDrafts.length === 0 ? (
               <div className="text-center py-8 text-gray-400">
-                <MaterialIcon name="edit_note" className="text-4xl mb-2" />
+                <FileEdit size={40} className="mx-auto mb-2 opacity-50" />
                 <p>Nenhuma composição recente</p>
               </div>
             ) : (
               recentDrafts.map((draft) => {
-                const { icon, gradient } = getDraftIcon(draft);
+                const { Icon, gradient } = getDraftIcon(draft);
                 const isRegistered = false; // This would come from author_registrations table
 
                 return (
                   <div
                     key={draft.id}
                     onClick={() => handleDraftClick(draft.id)}
-                    className={`bg-[#1C1C1E] p-4 rounded-2xl flex items-center gap-4 border border-transparent hover:border-[#00C853]/20 transition-all cursor-pointer relative overflow-hidden group ${
-                      isRegistered ? 'pl-5' : ''
-                    }`}
+                    className={`bg-[#1C1C1E] p-4 rounded-2xl flex items-center gap-4 border border-transparent hover:border-[#00C853]/20 transition-all cursor-pointer relative overflow-hidden group shadow-sm`}
                   >
                     {/* Green bar for registered */}
                     {isRegistered && (
@@ -363,13 +369,13 @@ export const MobileFoldersPage: React.FC = () => {
 
                     {/* Icon */}
                     <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md ${
                         gradient
-                          ? `bg-gradient-to-br ${gradient} text-white shadow-md`
+                          ? `bg-gradient-to-br ${gradient} text-white`
                           : 'bg-gray-700 text-gray-300'
                       }`}
                     >
-                      <MaterialIcon name={icon} />
+                      <Icon size={22} />
                     </div>
 
                     {/* Content */}
@@ -386,7 +392,7 @@ export const MobileFoldersPage: React.FC = () => {
                     {/* Actions */}
                     {(draft.audio_url || (draft.audio_files && draft.audio_files.length > 0)) && (
                       <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-700 text-gray-500 transition-colors">
-                        <MaterialIcon name="play_arrow" />
+                        <Play size={18} />
                       </button>
                     )}
 
@@ -407,8 +413,8 @@ export const MobileFoldersPage: React.FC = () => {
       <Dialog open={isNewFolderModalOpen} onOpenChange={setIsNewFolderModalOpen}>
         <DialogContent className="bg-[#1C1C1E] border-gray-800">
           <DialogHeader>
-            <DialogTitle>Nova Pasta</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white">Nova Pasta</DialogTitle>
+            <DialogDescription className="text-gray-400">
               Crie uma nova pasta para organizar suas composições.
             </DialogDescription>
           </DialogHeader>
@@ -419,15 +425,15 @@ export const MobileFoldersPage: React.FC = () => {
               onChange={(e) => setNewFolderName(e.target.value)}
               placeholder="Nome da pasta"
               autoFocus
-              className="bg-[#2C2C2E] border-gray-700"
+              className="bg-[#2C2C2E] border-gray-700 text-white placeholder:text-gray-500"
             />
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsNewFolderModalOpen(false)}>
+            <Button variant="outline" onClick={() => setIsNewFolderModalOpen(false)} className="border-gray-700 text-gray-300 hover:bg-gray-800">
               Cancelar
             </Button>
-            <Button onClick={handleAddFolder} className="bg-[#00C853] hover:bg-[#00C853]/90">
+            <Button onClick={handleAddFolder} className="bg-[#00C853] hover:bg-[#00C853]/90 text-white">
               Criar Pasta
             </Button>
           </DialogFooter>
