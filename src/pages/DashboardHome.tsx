@@ -7,14 +7,19 @@ import { NextAcordeObjective } from '@/components/dashboard/NextAcordeObjective'
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useProfile } from '@/hooks/useProfile';
+import { useMobileDetection } from '@/hooks/use-mobile';
+import { MobileDashboardHome } from '@/components/mobile/MobileDashboardHome';
 
 const DashboardHome: React.FC = () => {
   const { stats, isLoading, error, refetch } = useDashboardStats();
   const { isPro } = useUserRole();
   const { profile } = useProfile();
+  const { isMobile } = useMobileDetection();
 
-  // Manter o dashboard sem rolagem (cards fixos)
+  // Manter o dashboard sem rolagem (cards fixos) - apenas desktop
   useEffect(() => {
+    if (isMobile) return; // Não aplicar no mobile
+    
     const prevHtmlOverflow = document.documentElement.style.overflow;
     const prevBodyOverflow = document.body.style.overflow;
 
@@ -25,7 +30,12 @@ const DashboardHome: React.FC = () => {
       document.documentElement.style.overflow = prevHtmlOverflow;
       document.body.style.overflow = prevBodyOverflow;
     };
-  }, []);
+  }, [isMobile]);
+
+  // Renderizar versão mobile
+  if (isMobile) {
+    return <MobileDashboardHome />;
+  }
 
   if (isLoading) {
     return (
