@@ -8,6 +8,7 @@ import { WorkCard } from '@/components/registered-works/WorkCard';
 import { WorkDetailsModal } from '@/components/registered-works/WorkDetailsModal';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { MobileRegisteredWorks } from '@/components/mobile/MobileRegisteredWorks';
 
 interface RegisteredWork {
   id: string;
@@ -55,6 +56,11 @@ const RegisteredWorks: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  // Renderizar versão mobile
+  if (isMobile) {
+    return <MobileRegisteredWorks />;
+  }
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-6 space-y-6">
@@ -93,7 +99,7 @@ const RegisteredWorks: React.FC = () => {
       </div>
 
       {works && works.length > 0 ? (
-        <div className={`grid gap-3 sm:gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
+        <div className="grid gap-3 sm:gap-6 grid-cols-1 lg:grid-cols-2">
           {works.map((work) => (
             <WorkCard 
               key={work.id}
