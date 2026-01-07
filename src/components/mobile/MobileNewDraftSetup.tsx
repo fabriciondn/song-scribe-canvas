@@ -350,13 +350,13 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
       </main>
 
       {/* Fixed Bottom Button (above bottom navigation) */}
-      <div className="fixed bottom-24 left-0 right-0 p-6 bg-gradient-to-t from-black via-black to-transparent z-[60]">
+      <div className="fixed bottom-24 left-0 right-0 px-6 py-4 z-[60]">
         <button
           onClick={handleContinue}
-          className="w-full bg-[#00C853] hover:bg-[#00B848] text-white font-bold text-lg py-5 rounded-2xl shadow-xl shadow-[#00C853]/50 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+          className="w-full bg-[#00C853] text-white font-semibold py-4 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2"
         >
           Continuar
-          <MaterialIcon name="arrow_forward" className="text-2xl" />
+          <MaterialIcon name="arrow_forward" className="text-xl" />
         </button>
       </div>
     </div>
