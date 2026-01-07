@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useRoleBasedNavigation } from '@/hooks/useRoleBasedNavigation';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
 interface MobileSidebarProps {
@@ -48,10 +49,30 @@ const secondaryNavigationItems = [
 export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { profile } = useProfile();
   const { subscription } = useSubscription();
   const { userRole, getDefaultDashboard } = useRoleBasedNavigation();
+  const [draftsCount, setDraftsCount] = useState<number>(0);
+
+  // Buscar contagem real de rascunhos
+  useEffect(() => {
+    const fetchDraftsCount = async () => {
+      if (!user?.id) return;
+      
+      const { count, error } = await supabase
+        .from('drafts')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .is('deleted_at', null);
+      
+      if (!error && count !== null) {
+        setDraftsCount(count);
+      }
+    };
+    
+    fetchDraftsCount();
+  }, [user?.id]);
 
   const userName = profile?.artistic_name || profile?.name || 'Usuário';
   const userAvatar = profile?.avatar_url;
@@ -145,9 +166,9 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
               >
                 <MaterialIcon name={item.icon} filled={isActive} className="text-xl" />
                 <span className="font-medium flex-1">{item.title}</span>
-                {item.showBadge && (
+                {item.showBadge && draftsCount > 0 && (
                   <Badge className="bg-[#00C853] text-black text-xs font-bold px-2">
-                    3
+                    {draftsCount}
                   </Badge>
                 )}
               </button>
