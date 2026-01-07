@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useMobileDetection } from '@/hooks/use-mobile';
+import logoSplash from '@/assets/logo-splash.png';
 
 interface MobileSplashScreenProps {
   onComplete: () => void;
@@ -54,7 +55,7 @@ export const MobileSplashScreen: React.FC<MobileSplashScreenProps> = ({
             <img 
               alt="Compuse Logo" 
               className="w-full h-auto object-contain"
-              src="/lovable-uploads/b2e99156-0e7f-46c8-8b49-eafea58416f9.png"
+              src={logoSplash}
             />
           </div>
         </div>
