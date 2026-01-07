@@ -2,6 +2,8 @@
 import React from 'react';
 import { Editor } from '../components/composer/Editor';
 import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
+import { useMobileDetection } from '@/hooks/use-mobile';
+import Drafts from './Drafts';
 import '../App.css';
 
 // Mobile-first responsive styles
@@ -24,9 +26,16 @@ const styles = `
 `;
 
 const Composer: React.FC = () => {
+  const { isMobile } = useMobileDetection();
+  
   const handleToolsRequest = () => {
     console.log('Tools request received');
   };
+
+  // No mobile, renderiza o Drafts (Rascunhos) ao invés do Editor
+  if (isMobile) {
+    return <Drafts />;
+  }
 
   return (
     <ProOnlyWrapper featureName="Rascunho">
