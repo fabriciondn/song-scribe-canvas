@@ -8,8 +8,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { supabase } from '@/integrations/supabase/client';
-import { BaseMusical } from '@/services/basesMusicais/basesService';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useQuery } from '@tanstack/react-query';
+import { BaseMusical, getBases } from '@/services/basesMusicais/basesService';
 import { AudioFile } from '@/services/drafts/types';
 import { toast as sonnerToast } from 'sonner';
 
@@ -25,6 +26,7 @@ interface MobileComposerEditorProps {
   onSave: () => void;
   onBack: () => void;
   onRecordingChange?: (files: AudioFile[]) => void;
+  onBaseChange?: (base: BaseMusical | null) => void;
 }
 
 export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
@@ -38,10 +40,13 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
   onContentChange,
   onSave,
   onBack,
-  onRecordingChange
+  onRecordingChange,
+  onBaseChange
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [showBaseSelector, setShowBaseSelector] = useState(false);
+  const [previewingBaseId, setPreviewingBaseId] = useState<string | null>(null);
   
   // Audio player state
   const [isPlaying, setIsPlaying] = useState(false);
@@ -53,11 +58,18 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
   const [isLooping, setIsLooping] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement>(null);
+  const previewAudioRef = useRef<HTMLAudioElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
   const { isDark, toggleTheme, setTheme } = useTheme();
+
+  // Fetch available bases for selector
+  const { data: availableBases = [] } = useQuery({
+    queryKey: ['music-bases-list'],
+    queryFn: getBases,
+  });
 
   // Force light mode on mount
   useEffect(() => {
@@ -158,9 +170,43 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
 
   const getBaseAudioUrl = () => {
     if (!selectedBase) return '';
-    return supabase.storage
-      .from('music-bases')
-      .getPublicUrl(selectedBase.file_path).data.publicUrl;
+    // Use file_url directly if available (already validated), otherwise it's empty
+    return selectedBase.file_url || '';
+  };
+
+  const handleSelectBase = (base: BaseMusical | null) => {
+    // Stop any preview
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+    }
+    setPreviewingBaseId(null);
+    
+    // Update selected base
+    if (onBaseChange) {
+      onBaseChange(base);
+    }
+    setShowBaseSelector(false);
+    
+    if (base) {
+      sonnerToast.success(`Base "${base.name}" selecionada`);
+    } else {
+      sonnerToast.info('Composição sem base');
+    }
+  };
+
+  const handlePreviewBase = (base: BaseMusical) => {
+    if (!previewAudioRef.current) return;
+    
+    if (previewingBaseId === base.id) {
+      // Stop preview
+      previewAudioRef.current.pause();
+      setPreviewingBaseId(null);
+    } else {
+      // Play this base
+      previewAudioRef.current.src = base.file_url || '';
+      previewAudioRef.current.play();
+      setPreviewingBaseId(base.id);
+    }
   };
 
   return (
@@ -390,7 +436,7 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
             </button>
             
             <button 
-              onClick={() => navigate('/dashboard/bases')}
+              onClick={() => setShowBaseSelector(true)}
               className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-gray-800/50"
             >
               <span className="material-icons-round text-2xl">library_music</span>
@@ -398,6 +444,91 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Base Selector Sheet */}
+      <Sheet open={showBaseSelector} onOpenChange={setShowBaseSelector}>
+        <SheetContent side="bottom" className="h-[70vh] bg-[#0F172A] border-t border-gray-800 rounded-t-3xl">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="text-white text-lg font-bold">Selecionar Base Musical</SheetTitle>
+          </SheetHeader>
+          
+          <audio ref={previewAudioRef} preload="metadata" onEnded={() => setPreviewingBaseId(null)} />
+          
+          <div className="overflow-y-auto max-h-[calc(70vh-100px)] space-y-2 pb-6">
+            {/* Option: No base */}
+            <button
+              onClick={() => handleSelectBase(null)}
+              className={`w-full flex items-center gap-3 p-4 rounded-xl transition ${
+                !selectedBase 
+                  ? 'bg-[#00C853]/20 border border-[#00C853]/50' 
+                  : 'bg-[#1E293B] hover:bg-[#334155]'
+              }`}
+            >
+              <div className="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center">
+                <span className="material-icons-round text-gray-400">music_off</span>
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-white font-medium">Sem base</p>
+                <p className="text-gray-400 text-sm">Compor em branco</p>
+              </div>
+              {!selectedBase && (
+                <span className="material-icons-round text-[#00C853]">check_circle</span>
+              )}
+            </button>
+
+            {/* Available bases */}
+            {availableBases.map((base) => (
+              <div
+                key={base.id}
+                className={`w-full flex items-center gap-3 p-4 rounded-xl transition ${
+                  selectedBase?.id === base.id 
+                    ? 'bg-[#00C853]/20 border border-[#00C853]/50' 
+                    : 'bg-[#1E293B] hover:bg-[#334155]'
+                }`}
+              >
+                {/* Preview button */}
+                <button
+                  onClick={() => handlePreviewBase(base)}
+                  className="w-12 h-12 rounded-lg bg-[#00C853]/20 flex items-center justify-center shrink-0"
+                >
+                  <span className="material-icons-round text-[#00C853]">
+                    {previewingBaseId === base.id ? 'stop' : 'play_arrow'}
+                  </span>
+                </button>
+                
+                {/* Base info - click to select */}
+                <button
+                  onClick={() => handleSelectBase(base)}
+                  className="flex-1 text-left"
+                >
+                  <p className="text-white font-medium">{base.name}</p>
+                  <p className="text-gray-400 text-sm">{base.genre}</p>
+                </button>
+                
+                {selectedBase?.id === base.id && (
+                  <span className="material-icons-round text-[#00C853]">check_circle</span>
+                )}
+              </div>
+            ))}
+
+            {availableBases.length === 0 && (
+              <div className="text-center py-8">
+                <span className="material-icons-round text-4xl text-gray-600 mb-2">library_music</span>
+                <p className="text-gray-400">Nenhuma base disponível</p>
+                <button
+                  onClick={() => {
+                    setShowBaseSelector(false);
+                    navigate('/dashboard/bases');
+                  }}
+                  className="mt-4 px-4 py-2 bg-[#00C853] rounded-lg text-black font-medium"
+                >
+                  Adicionar Bases
+                </button>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Background Effects */}
       <div className="fixed top-0 left-0 w-full h-full -z-10 bg-[#F3F4F6] dark:bg-[#0F172A] overflow-hidden pointer-events-none">
