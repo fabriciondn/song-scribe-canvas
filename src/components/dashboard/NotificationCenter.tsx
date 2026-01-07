@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, X, Sparkles, Wrench, Megaphone, CheckCheck } from 'lucide-react';
+import { Bell, X, Sparkles, Wrench, Megaphone, CheckCheck, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -20,6 +20,8 @@ const getTypeIcon = (type: string) => {
       return <Wrench className="h-4 w-4 text-orange-400" />;
     case 'announcement':
       return <Megaphone className="h-4 w-4 text-purple-400" />;
+    case 'update':
+      return <RefreshCw className="h-4 w-4 text-emerald-400" />;
     default:
       return <Bell className="h-4 w-4 text-green-400" />;
   }
@@ -33,13 +35,15 @@ const getTypeLabel = (type: string) => {
       return 'Correção';
     case 'announcement':
       return 'Anúncio';
-    default:
+    case 'update':
       return 'Atualização';
+    default:
+      return 'Notificação';
   }
 };
 
 export const NotificationCenter: React.FC = () => {
-  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useSystemNotifications();
+  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead, refreshApp } = useSystemNotifications();
 
   return (
     <Popover>
@@ -110,6 +114,18 @@ export const NotificationCenter: React.FC = () => {
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                           {notification.description}
                         </p>
+                      )}
+                      {/* Botão de atualizar para notificações do tipo 'update' */}
+                      {notification.type === 'update' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2 h-7 text-xs gap-1.5 bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300"
+                          onClick={refreshApp}
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                          Atualizar agora
+                        </Button>
                       )}
                     </div>
                     <Button
