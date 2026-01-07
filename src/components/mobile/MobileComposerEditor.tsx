@@ -46,7 +46,11 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [showBaseSelector, setShowBaseSelector] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [previewingBaseId, setPreviewingBaseId] = useState<string | null>(null);
+  
+  // Settings state
+  const [showMicButton, setShowMicButton] = useState(true);
   
   // Audio player state
   const [isPlaying, setIsPlaying] = useState(false);
@@ -338,23 +342,12 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
             <span className="material-icons-round text-2xl text-gray-500 dark:text-gray-400 dark:hidden">dark_mode</span>
             <span className="material-icons-round text-2xl text-gray-500 dark:text-gray-400 hidden dark:block">light_mode</span>
           </button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                <span className="material-icons-round text-2xl text-gray-500 dark:text-gray-400">more_vert</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-white dark:bg-[#1E293B] border-gray-200 dark:border-gray-700">
-              <DropdownMenuItem onClick={onSave} disabled={isSaving}>
-                <span className="material-icons-round text-sm mr-2">save</span>
-                {isSaving ? 'Salvando...' : 'Salvar'}
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-500">
-                <span className="material-icons-round text-sm mr-2">delete</span>
-                Excluir
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <button 
+            onClick={() => setShowSettings(true)}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+          >
+            <span className="material-icons-round text-2xl text-gray-500 dark:text-gray-400">more_vert</span>
+          </button>
         </div>
       </header>
 
@@ -390,23 +383,25 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
           />
         </div>
         
-        {/* Floating Mic Button */}
-        <div className="fixed right-4 z-30 flex flex-col gap-3" style={{ top: '50%', transform: 'translateY(-50%)' }}>
-          <button 
-            onClick={() => setIsRecording(!isRecording)}
-            className={`w-10 h-10 rounded-full shadow-lg border flex items-center justify-center transition hover:scale-110 ${
-              isRecording 
-                ? 'bg-red-500 border-red-400 animate-pulse' 
-                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-            }`}
-          >
-            {isRecording ? (
-              <span className="material-icons-round text-xl text-white">stop</span>
-            ) : (
-              <span className="material-icons-round text-xl text-red-500">mic</span>
-            )}
-          </button>
-        </div>
+        {/* Floating Mic Button - conditionally shown */}
+        {showMicButton && (
+          <div className="fixed right-4 z-30 flex flex-col gap-3" style={{ top: '50%', transform: 'translateY(-50%)' }}>
+            <button 
+              onClick={() => setIsRecording(!isRecording)}
+              className={`w-10 h-10 rounded-full shadow-lg border flex items-center justify-center transition hover:scale-110 ${
+                isRecording 
+                  ? 'bg-red-500 border-red-400 animate-pulse' 
+                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+              }`}
+            >
+              {isRecording ? (
+                <span className="material-icons-round text-xl text-white">stop</span>
+              ) : (
+                <span className="material-icons-round text-xl text-red-500">mic</span>
+              )}
+            </button>
+          </div>
+        )}
       </main>
 
       {/* Audio Player Panel - fixed at bottom */}
@@ -614,6 +609,61 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
                 </button>
               </div>
             )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Settings Sheet */}
+      <Sheet open={showSettings} onOpenChange={setShowSettings}>
+        <SheetContent side="bottom" className="h-auto bg-[#0F172A] border-t border-gray-800 rounded-t-3xl">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="text-white text-lg font-bold">Configurações do Painel</SheetTitle>
+          </SheetHeader>
+          
+          <div className="space-y-4 pb-8">
+            {/* Mic Button Toggle */}
+            <div className="flex items-center justify-between p-4 bg-[#1E293B] rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+                  <span className="material-icons-round text-red-500">mic</span>
+                </div>
+                <div>
+                  <p className="text-white font-medium">Botão de Gravação</p>
+                  <p className="text-gray-400 text-sm">Exibir ícone de microfone</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowMicButton(!showMicButton)}
+                className={`w-12 h-7 rounded-full transition-colors relative ${
+                  showMicButton ? 'bg-[#00C853]' : 'bg-gray-600'
+                }`}
+              >
+                <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
+                  showMicButton ? 'left-6' : 'left-1'
+                }`} />
+              </button>
+            </div>
+
+            {/* Save Button */}
+            <button
+              onClick={() => {
+                onSave();
+                setShowSettings(false);
+              }}
+              disabled={isSaving}
+              className="w-full flex items-center justify-center gap-2 p-4 bg-[#1E293B] rounded-xl text-white hover:bg-[#334155] transition disabled:opacity-50"
+            >
+              <span className="material-icons-round">save</span>
+              <span className="font-medium">{isSaving ? 'Salvando...' : 'Salvar Rascunho'}</span>
+            </button>
+
+            {/* Delete Button */}
+            <button
+              className="w-full flex items-center justify-center gap-2 p-4 bg-red-500/10 rounded-xl text-red-500 hover:bg-red-500/20 transition"
+            >
+              <span className="material-icons-round">delete</span>
+              <span className="font-medium">Excluir Rascunho</span>
+            </button>
           </div>
         </SheetContent>
       </Sheet>
