@@ -57,11 +57,6 @@ export const MobileRegisteredWorks: React.FC = () => {
   const { toggleTheme } = useTheme();
   const [filter, setFilter] = useState<FilterType>('all');
 
-  // Se há um ID na URL, mostra os detalhes do certificado
-  if (workId) {
-    return <MobileCertificateDetails />;
-  }
-
   const { data: works, isLoading } = useQuery({
     queryKey: ['registered-works-mobile', currentUser?.id],
     queryFn: async (): Promise<RegisteredWork[]> => {
@@ -76,8 +71,14 @@ export const MobileRegisteredWorks: React.FC = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!currentUser?.id,
+    enabled: !!currentUser?.id && !workId,
   });
+
+  // Se há um ID na URL, mostra os detalhes do certificado
+  // (Depois de todos os hooks serem chamados)
+  if (workId) {
+    return <MobileCertificateDetails />;
+  }
 
   const filteredWorks = useMemo(() => {
     if (!works) return [];
