@@ -3,7 +3,7 @@ import React from 'react';
 import { Editor } from '../components/composer/Editor';
 import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
 import { useMobileDetection } from '@/hooks/use-mobile';
-import Drafts from './Drafts';
+import { MobileDrafts } from '@/components/mobile/MobileDrafts';
 import '../App.css';
 
 // Mobile-first responsive styles
@@ -32,9 +32,13 @@ const Composer: React.FC = () => {
     console.log('Tools request received');
   };
 
-  // No mobile, renderiza o Drafts (Rascunhos) ao invés do Editor
+  // No mobile, renderiza o MobileDrafts com tela de setup
   if (isMobile) {
-    return <Drafts />;
+    return (
+      <ProOnlyWrapper featureName="Compor">
+        <MobileDrafts />
+      </ProOnlyWrapper>
+    );
   }
 
   return (
