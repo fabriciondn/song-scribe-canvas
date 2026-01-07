@@ -349,12 +349,12 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
         </div>
       </main>
 
-      {/* Fixed Bottom Button - shows when title and folder are set (base is optional) */}
-      {title && selectedFolderId && (
-        <div className="fixed bottom-28 left-0 right-0 px-6 py-4 z-[60] flex justify-center">
+      {/* Floating Continue Button - shows when title is filled */}
+      {title.trim() && (
+        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[60] animate-fade-in">
           <button
             onClick={handleContinue}
-            className="text-[#00C853] font-semibold text-lg flex items-center gap-2 transition-all active:scale-[0.98] hover:text-green-400"
+            className="flex items-center gap-2 px-6 py-3 bg-[#00C853] text-white font-bold text-base rounded-full shadow-lg shadow-[#00C853]/40 transition-all active:scale-95 hover:bg-[#00B848]"
           >
             Continuar
             <MaterialIcon name="arrow_forward" className="text-xl" />
