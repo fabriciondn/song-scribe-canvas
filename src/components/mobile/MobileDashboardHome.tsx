@@ -16,9 +16,9 @@ const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: strin
   className = '' 
 }) => (
   <span 
-    className={`material-symbols-rounded ${filled ? 'filled-icon' : ''} ${className}`}
+    className={`material-symbols-rounded ${className}`}
     style={{ 
-      fontVariationSettings: filled ? "'FILL' 1" : "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24"
+      fontVariationSettings: filled ? "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24" : "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24"
     }}
   >
     {name}
