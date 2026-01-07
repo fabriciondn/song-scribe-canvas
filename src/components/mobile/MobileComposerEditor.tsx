@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
 import { useTheme } from '@/hooks/useTheme';
 import { Input } from '@/components/ui/input';
 import {
@@ -13,25 +12,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { BaseMusical } from '@/services/basesMusicais/basesService';
 import { AudioFile } from '@/services/drafts/types';
 import { toast as sonnerToast } from 'sonner';
-import {
-  ArrowLeft,
-  Edit3,
-  Moon,
-  Sun,
-  MoreVertical,
-  Folder,
-  Users,
-  Mic,
-  Music,
-  Plus,
-  Repeat,
-  Play,
-  Pause,
-  Library,
-  Square,
-  Save,
-  Trash2
-} from 'lucide-react';
 
 interface MobileComposerEditorProps {
   title: string;
@@ -77,7 +57,12 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme, setTheme } = useTheme();
+
+  // Force light mode on mount
+  useEffect(() => {
+    setTheme('light');
+  }, [setTheme]);
 
   // Audio controls
   useEffect(() => {
@@ -179,14 +164,14 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-[#0F172A]">
+    <div className="mx-auto max-w-md h-screen flex flex-col relative bg-[#F3F4F6] dark:bg-[#0F172A] overflow-hidden shadow-2xl">
       {/* Header */}
       <header className="pt-12 pb-4 px-6 flex items-center justify-between bg-white/80 dark:bg-[#1E293B]/80 backdrop-blur-md z-20 border-b border-gray-200 dark:border-gray-800">
         <button 
           onClick={onBack}
           className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
         >
-          <ArrowLeft size={24} className="text-gray-500 dark:text-gray-400" />
+          <span className="material-icons-round text-2xl text-gray-500 dark:text-gray-400">arrow_back</span>
         </button>
         
         <div className="flex flex-col items-center">
@@ -211,7 +196,7 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
               <h1 className="text-lg font-bold text-gray-900 dark:text-white truncate max-w-[180px]">
                 {title || 'Sem título'}
               </h1>
-              <Edit3 size={14} className="text-gray-500 dark:text-gray-400 group-hover:text-[#00C853] transition" />
+              <span className="material-icons-round text-sm text-gray-500 dark:text-gray-400 group-hover:text-[#00C853] transition">edit</span>
             </button>
           )}
         </div>
@@ -221,25 +206,22 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
             onClick={toggleTheme}
             className="p-2 mr-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
-            {isDark ? (
-              <Sun size={24} className="text-gray-500 dark:text-gray-400" />
-            ) : (
-              <Moon size={24} className="text-gray-500 dark:text-gray-400" />
-            )}
+            <span className="material-icons-round text-2xl text-gray-500 dark:text-gray-400 dark:hidden">dark_mode</span>
+            <span className="material-icons-round text-2xl text-gray-500 dark:text-gray-400 hidden dark:block">light_mode</span>
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                <MoreVertical size={24} className="text-gray-500 dark:text-gray-400" />
+                <span className="material-icons-round text-2xl text-gray-500 dark:text-gray-400">more_vert</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-white dark:bg-[#1E293B] border-gray-200 dark:border-gray-700">
               <DropdownMenuItem onClick={onSave} disabled={isSaving}>
-                <Save size={16} className="mr-2" />
+                <span className="material-icons-round text-sm mr-2">save</span>
                 {isSaving ? 'Salvando...' : 'Salvar'}
               </DropdownMenuItem>
               <DropdownMenuItem className="text-red-500">
-                <Trash2 size={16} className="mr-2" />
+                <span className="material-icons-round text-sm mr-2">delete</span>
                 Excluir
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -248,15 +230,15 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
       </header>
 
       {/* Tags Bar */}
-      <div className="px-4 py-3 flex items-center justify-center gap-3 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-[#0F172A]">
+      <div className="px-4 py-3 flex items-center justify-center gap-3 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-800 bg-[#F3F4F6] dark:bg-[#0F172A]">
         <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-gray-700 whitespace-nowrap">
-          <Folder size={14} className="text-[#00C853]" />
+          <span className="material-icons-round text-[#00C853] text-sm">folder_open</span>
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
             {folderName || 'Sem pasta'}
           </span>
         </button>
         <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-gray-700 whitespace-nowrap">
-          <Users size={14} className="text-[#00C853]" />
+          <span className="material-icons-round text-[#00C853] text-sm">group_add</span>
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
             Compor em parceria
           </span>
@@ -270,24 +252,24 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
             ref={textareaRef}
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
-            className="w-full h-[55vh] bg-transparent border-none resize-none focus:ring-0 focus:outline-none text-lg leading-relaxed text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+            className="w-full h-[60vh] bg-transparent border-none resize-none focus:ring-0 focus:outline-none text-lg leading-relaxed text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 font-sans"
             placeholder="Comece a escrever sua letra aqui..."
           />
           
           {/* Floating Mic Button */}
-          <div className="fixed top-1/2 right-4 transform -translate-y-1/2 flex flex-col gap-3 z-10">
+          <div className="fixed top-1/2 right-4 transform -translate-y-1/2 flex flex-col gap-3">
             <button 
               onClick={() => setIsRecording(!isRecording)}
-              className={`w-12 h-12 rounded-full shadow-lg border flex items-center justify-center transition hover:scale-110 ${
+              className={`w-10 h-10 rounded-full shadow-lg border flex items-center justify-center transition hover:scale-110 ${
                 isRecording 
                   ? 'bg-red-500 border-red-400 animate-pulse' 
                   : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
               }`}
             >
               {isRecording ? (
-                <Square size={20} className="text-white" />
+                <span className="material-icons-round text-xl text-white">stop</span>
               ) : (
-                <Mic size={20} className="text-red-500" />
+                <span className="material-icons-round text-xl text-red-500">mic</span>
               )}
             </button>
           </div>
@@ -295,7 +277,7 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
       </main>
 
       {/* Audio Player Panel */}
-      <div className="bg-black border-t border-gray-800 pb-8 pt-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)] z-20">
+      <div className="bg-black border-t border-gray-800 pb-12 pt-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)] z-20">
         {selectedBase && (
           <audio 
             ref={audioRef} 
@@ -308,7 +290,7 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
           {/* Base name and speed controls */}
           <div className="flex justify-between items-center text-white/90">
             <div className="flex items-center gap-2">
-              <Music size={14} className="text-[#00C853]" />
+              <span className="material-icons-round text-[#00C853] text-sm">music_note</span>
               <span className="text-xs font-semibold">
                 {selectedBase?.name || 'Nenhuma base selecionada'}
               </span>
@@ -341,10 +323,7 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
               max={duration || 100}
               value={currentTime}
               onChange={handleSeek}
-              className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer focus:outline-none"
-              style={{
-                background: `linear-gradient(to right, #00C853 ${(currentTime / (duration || 1)) * 100}%, #374151 ${(currentTime / (duration || 1)) * 100}%)`
-              }}
+              className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-0 accent-[#00C853] z-10 relative"
             />
             <div className="flex justify-between text-[10px] text-gray-500 mt-1 font-mono">
               <span>{formatTime(currentTime)}</span>
@@ -353,12 +332,12 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
           </div>
 
           {/* Control Buttons */}
-          <div className="flex items-center justify-between mt-2 w-full px-1">
+          <div className="flex items-center justify-between mt-4 w-full px-1">
             <button 
               onClick={() => setMarker(markerA === null ? 'A' : 'B')}
               className="flex items-center gap-1 px-3 py-2 bg-[#1A2130] border border-gray-700/50 rounded-lg text-xs text-white hover:bg-gray-800 transition shadow-sm h-10 min-w-[80px] justify-center"
             >
-              <Plus size={16} />
+              <span className="material-icons-round text-[16px]">add</span>
               <span className="font-medium tracking-wide">Marcar</span>
             </button>
             
@@ -394,7 +373,7 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
                   : 'bg-[#1A2130] border-gray-700/50 text-white hover:bg-gray-800'
               }`}
             >
-              <Repeat size={16} />
+              <span className="material-icons-round text-[16px]">loop</span>
               <span className="font-medium tracking-wide">Loop</span>
             </button>
             
@@ -404,9 +383,9 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
               className="w-12 h-12 rounded-full bg-[#00C853] flex items-center justify-center shadow-lg hover:bg-[#009624] active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPlaying ? (
-                <Pause size={28} className="text-black" />
+                <span className="material-icons-round text-black text-3xl">pause</span>
               ) : (
-                <Play size={28} className="text-black ml-1" />
+                <span className="material-icons-round text-black text-3xl ml-1">play_arrow</span>
               )}
             </button>
             
@@ -414,14 +393,14 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
               onClick={() => navigate('/dashboard/bases')}
               className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-gray-800/50"
             >
-              <Library size={24} />
+              <span className="material-icons-round text-2xl">library_music</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Background Effects */}
-      <div className="fixed top-0 left-0 w-full h-full -z-10 bg-gray-100 dark:bg-[#0F172A] overflow-hidden pointer-events-none">
+      <div className="fixed top-0 left-0 w-full h-full -z-10 bg-[#F3F4F6] dark:bg-[#0F172A] overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#00C853]/5 rounded-full blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px]" />
       </div>
@@ -435,20 +414,26 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
+        input[type=range] {
+          -webkit-appearance: none;
+          width: 100%;
+          background: transparent;
+        }
         input[type=range]::-webkit-slider-thumb {
           -webkit-appearance: none;
-          height: 14px;
-          width: 14px;
+          height: 12px;
+          width: 12px;
           border-radius: 50%;
           background: #00C853;
           cursor: pointer;
-          margin-top: -5px;
+          margin-top: -4px;
           border: 2px solid #1E293B;
         }
         input[type=range]::-webkit-slider-runnable-track {
           width: 100%;
           height: 4px;
           cursor: pointer;
+          background: #334155;
           border-radius: 2px;
         }
       `}</style>
