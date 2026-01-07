@@ -366,7 +366,7 @@ export const MobileCertificateDetails: React.FC = () => {
       </main>
 
       {/* Fixed Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black to-transparent z-50">
         <button
           onClick={handleDownloadCertificate}
           disabled={downloadingPdf || work.status !== 'registered'}
