@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface SystemNotification {
   id: string;
@@ -17,7 +18,7 @@ export const useSystemNotifications = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!user) {
       setNotifications([]);
       setUnreadCount(0);
@@ -61,7 +62,7 @@ export const useSystemNotifications = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   const markAsRead = async (notificationId: string) => {
     if (!user) return;
@@ -106,9 +107,60 @@ export const useSystemNotifications = () => {
     }
   };
 
+  // Função para forçar atualização da aplicação
+  const refreshApp = useCallback(() => {
+    window.location.reload();
+  }, []);
+
   useEffect(() => {
     fetchNotifications();
-  }, [user]);
+  }, [fetchNotifications]);
+
+  // Escutar novas notificações em tempo real
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('system-notifications-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'system_notifications'
+        },
+        (payload) => {
+          const newNotification = payload.new as SystemNotification;
+          
+          // Adicionar nova notificação à lista
+          setNotifications(prev => [{ ...newNotification, is_read: false }, ...prev]);
+          setUnreadCount(prev => prev + 1);
+
+          // Mostrar toast para notificações do tipo 'update' que requerem refresh
+          if (newNotification.type === 'update') {
+            toast.info(newNotification.title, {
+              description: newNotification.description || 'Uma atualização está disponível',
+              duration: 10000,
+              action: {
+                label: 'Atualizar agora',
+                onClick: () => refreshApp()
+              }
+            });
+          } else {
+            // Toast simples para outras notificações
+            toast.info(newNotification.title, {
+              description: newNotification.description || undefined,
+              duration: 5000
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, refreshApp]);
 
   return {
     notifications,
@@ -116,6 +168,7 @@ export const useSystemNotifications = () => {
     isLoading,
     markAsRead,
     markAllAsRead,
-    refetch: fetchNotifications
+    refetch: fetchNotifications,
+    refreshApp
   };
 };
