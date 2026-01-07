@@ -248,9 +248,9 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
   };
 
   return (
-    <div className="mx-auto max-w-md h-screen flex flex-col relative bg-[#F3F4F6] dark:bg-[#0F172A] overflow-hidden shadow-2xl">
-      {/* Header */}
-      <header className="pt-12 pb-4 px-6 flex items-center justify-between bg-white/80 dark:bg-[#1E293B]/80 backdrop-blur-md z-20 border-b border-gray-200 dark:border-gray-800">
+    <div className="fixed inset-0 flex flex-col bg-[#F3F4F6] dark:bg-[#0F172A] overflow-hidden">
+      {/* Header - fixed at top */}
+      <header className="flex-shrink-0 pt-12 pb-4 px-6 flex items-center justify-between bg-white/80 dark:bg-[#1E293B]/80 backdrop-blur-md z-20 border-b border-gray-200 dark:border-gray-800">
         <button 
           onClick={onBack}
           className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
@@ -313,8 +313,8 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
         </div>
       </header>
 
-      {/* Tags Bar */}
-      <div className="px-4 py-3 flex items-center justify-center gap-3 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-800 bg-[#F3F4F6] dark:bg-[#0F172A]">
+      {/* Tags Bar - fixed below header */}
+      <div className="flex-shrink-0 px-4 py-3 flex items-center justify-center gap-3 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-800 bg-[#F3F4F6] dark:bg-[#0F172A]">
         <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-gray-700 whitespace-nowrap">
           <span className="material-icons-round text-[#00C853] text-sm">folder_open</span>
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
@@ -329,39 +329,40 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
         </button>
       </div>
 
-      {/* Main Content - Textarea */}
-      <main className="flex-1 overflow-y-auto relative no-scrollbar bg-white dark:bg-[#1E293B]">
-        <div className="p-6 min-h-full">
+      {/* Main Content - ONLY this scrolls */}
+      <main className="flex-1 overflow-y-auto relative bg-white dark:bg-[#1E293B]">
+        <div className="p-6 pb-4">
           <textarea
             ref={textareaRef}
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
-            className="w-full h-[60vh] bg-transparent border-none resize-none focus:ring-0 focus:outline-none text-lg leading-relaxed text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 font-sans"
+            className="w-full min-h-[200px] bg-transparent border-none resize-none focus:ring-0 focus:outline-none text-lg leading-relaxed text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 font-sans"
             placeholder="Comece a escrever sua letra aqui..."
+            style={{ height: 'auto' }}
           />
-          
-          {/* Floating Mic Button */}
-          <div className="fixed top-1/2 right-4 transform -translate-y-1/2 flex flex-col gap-3">
-            <button 
-              onClick={() => setIsRecording(!isRecording)}
-              className={`w-10 h-10 rounded-full shadow-lg border flex items-center justify-center transition hover:scale-110 ${
-                isRecording 
-                  ? 'bg-red-500 border-red-400 animate-pulse' 
-                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-              }`}
-            >
-              {isRecording ? (
-                <span className="material-icons-round text-xl text-white">stop</span>
-              ) : (
-                <span className="material-icons-round text-xl text-red-500">mic</span>
-              )}
-            </button>
-          </div>
+        </div>
+        
+        {/* Floating Mic Button */}
+        <div className="fixed right-4 z-30 flex flex-col gap-3" style={{ top: '50%', transform: 'translateY(-50%)' }}>
+          <button 
+            onClick={() => setIsRecording(!isRecording)}
+            className={`w-10 h-10 rounded-full shadow-lg border flex items-center justify-center transition hover:scale-110 ${
+              isRecording 
+                ? 'bg-red-500 border-red-400 animate-pulse' 
+                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+            }`}
+          >
+            {isRecording ? (
+              <span className="material-icons-round text-xl text-white">stop</span>
+            ) : (
+              <span className="material-icons-round text-xl text-red-500">mic</span>
+            )}
+          </button>
         </div>
       </main>
 
-      {/* Audio Player Panel */}
-      <div className="bg-black border-t border-gray-800 pb-12 pt-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)] z-20">
+      {/* Audio Player Panel - fixed at bottom */}
+      <div className="flex-shrink-0 bg-black border-t border-gray-800 pt-4 pb-8 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)] z-20">
         {selectedBase && (
           <audio
             ref={audioRef}
