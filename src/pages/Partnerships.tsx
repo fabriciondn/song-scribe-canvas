@@ -11,9 +11,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Key, Copy, RefreshCw, Clock, FileText, Users, CheckCircle2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { 
+  Key, 
+  Copy, 
+  RefreshCw, 
+  Clock, 
+  FileText, 
+  Users, 
+  CheckCircle2,
+  Search,
+  UserPlus,
+  ChevronRight,
+  Settings,
+  Bell,
+  Sun,
+  Moon,
+  Music
+} from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useTheme } from '@/hooks/useTheme';
 import { 
   getMyActiveToken, 
   generateComposerToken, 
@@ -22,8 +41,56 @@ import {
   ComposerToken
 } from '@/services/composerTokenService';
 import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
+import { MobileBottomNavigation } from '@/components/mobile/MobileBottomNavigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+// Mock data for active partners
+const MOCK_PARTNERS = [
+  {
+    id: '1',
+    name: 'Ana Silva',
+    role: 'Letrista',
+    projects: 3,
+    splitAverage: 25,
+    status: 'active',
+    avatar: null,
+    projectBadges: [
+      { id: 'p1', color: 'bg-blue-500' },
+      { id: 'p2', color: 'bg-purple-500' },
+      { id: 'p3', color: 'bg-orange-500' },
+    ]
+  },
+  {
+    id: '2',
+    name: 'Lucas Mendes',
+    role: 'Produtor',
+    projects: 1,
+    splitAverage: 50,
+    status: 'active',
+    avatar: null,
+    projectBadges: [
+      { id: 'm1', color: 'bg-indigo-500' },
+    ]
+  },
+  {
+    id: '3',
+    name: 'João Marco',
+    initials: 'JM',
+    role: 'Arranjador',
+    status: 'pending',
+    avatar: null,
+    gradientFrom: 'from-pink-400',
+    gradientTo: 'to-red-500'
+  }
+];
+
+// Mock suggestions
+const MOCK_SUGGESTIONS = [
+  { id: '1', name: 'Beatriz', role: 'Vocalista', avatar: null },
+  { id: '2', name: 'Carlos D.', role: 'Guitarrista', avatar: null },
+  { id: '3', name: 'Studio X', role: 'Mix & Master', avatar: null, isStudio: true },
+];
 
 const Partnerships: React.FC = () => {
   const [myToken, setMyToken] = useState<ComposerToken | null>(null);
@@ -31,9 +98,12 @@ const Partnerships: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [partnershipRegistrations, setPartnershipRegistrations] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const { toast } = useToast();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
+  const { theme, toggleTheme } = useTheme();
   
   useEffect(() => {
     loadData();
@@ -58,7 +128,7 @@ const Partnerships: React.FC = () => {
   const handleGenerateToken = async () => {
     setIsGenerating(true);
     try {
-      const token = await generateComposerToken(30); // 30 dias de validade
+      const token = await generateComposerToken(30);
       setMyToken(token);
       toast({
         title: 'Token gerado!',
@@ -118,6 +188,215 @@ const Partnerships: React.FC = () => {
     return diffDays <= 7;
   };
 
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  };
+
+  if (isLoading && isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <div className="px-5 pt-14 pb-4">
+          <Skeleton className="h-8 w-32 mb-2" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <div className="px-5 space-y-4">
+          <Skeleton className="h-12 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-2xl" />
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} className="h-32 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        {/* Status bar spacer */}
+        <div className="h-12 w-full fixed top-0 left-0 bg-background/90 backdrop-blur-md z-50" />
+        
+        <div className="pt-14 pb-10 px-5 max-w-md mx-auto relative min-h-screen flex flex-col">
+          {/* Header */}
+          <header className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">Parcerias</h1>
+              <p className="text-sm text-muted-foreground mt-1">Gerencie seus colaboradores</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={toggleTheme}
+                className="p-2 rounded-full bg-muted border border-border hover:bg-muted/80 transition-colors"
+              >
+                {theme === 'dark' ? (
+                  <Sun className="h-5 w-5 text-primary" />
+                ) : (
+                  <Moon className="h-5 w-5 text-primary" />
+                )}
+              </button>
+              <button className="p-2 rounded-full bg-muted border border-border hover:bg-muted/80 transition-colors">
+                <Bell className="h-5 w-5 text-primary" />
+              </button>
+            </div>
+          </header>
+
+          {/* Search */}
+          <div className="relative mb-8">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar parceiro..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full py-3 pl-10 pr-4 h-12 bg-muted border-border rounded-xl text-base placeholder-muted-foreground"
+            />
+          </div>
+
+          {/* Invite Button */}
+          <div className="mb-8">
+            <button className="w-full group relative overflow-hidden rounded-2xl bg-primary p-5 shadow-lg shadow-primary/30 transition-all active:scale-[0.98]">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center justify-between relative z-10">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm">
+                    <UserPlus className="h-6 w-6 text-primary-foreground" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-primary-foreground font-semibold text-lg">Convidar Novo</h3>
+                    <p className="text-primary-foreground/80 text-xs">Adicione compositores ou músicos</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-6 w-6 text-primary-foreground" />
+              </div>
+            </button>
+          </div>
+
+          {/* Active Partners Section */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-foreground">Ativos</h2>
+            <button className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">Ver todos</button>
+          </div>
+
+          <div className="space-y-4 mb-8">
+            {MOCK_PARTNERS.map((partner) => (
+              <div 
+                key={partner.id}
+                className={`group bg-muted p-4 rounded-xl border border-border shadow-sm hover:shadow-md transition-all ${partner.status === 'pending' ? 'opacity-80' : ''}`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="relative">
+                      {partner.initials ? (
+                        <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${partner.gradientFrom} ${partner.gradientTo} flex items-center justify-center text-white font-bold ring-2 ring-border`}>
+                          {partner.initials}
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-primary font-bold ring-2 ring-border">
+                          {getInitials(partner.name)}
+                        </div>
+                      )}
+                      {partner.status === 'active' && (
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-primary rounded-full border-2 border-muted" />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{partner.name}</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {partner.role} • {partner.status === 'pending' ? 'Pendente' : `${partner.projects} Projeto${partner.projects !== 1 ? 's' : ''}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {partner.status === 'pending' ? (
+                      <span className="px-2 py-1 rounded-md bg-yellow-500/20 text-yellow-500 text-[10px] font-bold">
+                        AGUARDANDO
+                      </span>
+                    ) : (
+                      <>
+                        <span className="block font-bold text-primary">{partner.splitAverage}%</span>
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Split Médio</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-border flex justify-between items-center">
+                  {partner.status === 'pending' ? (
+                    <div className="flex-1" />
+                  ) : (
+                    <div className="flex -space-x-2">
+                      {partner.projectBadges?.map((badge, idx) => (
+                        <div 
+                          key={badge.id}
+                          className={`w-6 h-6 rounded-full ${badge.color} flex items-center justify-center text-[8px] text-white border border-muted`}
+                        >
+                          {badge.id.toUpperCase()}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {partner.status === 'pending' ? (
+                    <div className="flex items-center space-x-3">
+                      <button className="text-xs font-medium text-destructive hover:text-destructive/80">Cancelar</button>
+                      <button className="text-xs font-medium text-primary hover:text-primary/80">Reenviar</button>
+                    </div>
+                  ) : (
+                    <button className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors flex items-center">
+                      Gerenciar
+                      <Settings className="h-4 w-4 ml-1" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Suggestions Section */}
+          <h2 className="text-lg font-bold mb-4 text-foreground">Sugestões para você</h2>
+          <div className="flex space-x-4 overflow-x-auto pb-4 hide-scrollbar">
+            {MOCK_SUGGESTIONS.map((suggestion) => (
+              <div 
+                key={suggestion.id}
+                className="min-w-[140px] bg-muted p-3 rounded-xl border border-border shadow-sm flex flex-col items-center text-center"
+              >
+                {suggestion.isStudio ? (
+                  <div className="w-14 h-14 rounded-full mb-2 bg-muted-foreground/10 flex items-center justify-center">
+                    <Music className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                ) : (
+                  <div className="w-14 h-14 rounded-full mb-2 bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-primary font-bold">
+                    {getInitials(suggestion.name)}
+                  </div>
+                )}
+                <h4 className="font-medium text-sm truncate w-full text-foreground">{suggestion.name}</h4>
+                <p className="text-[10px] text-muted-foreground mb-2">{suggestion.role}</p>
+                <button className="text-xs bg-muted-foreground/10 hover:bg-primary hover:text-primary-foreground text-foreground py-1 px-3 rounded-full transition-colors w-full">
+                  Conectar
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom Navigation */}
+        <MobileBottomNavigation />
+
+        {/* Hide scrollbar styles */}
+        <style>{`
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Desktop version (keep existing)
   return (
     <ProOnlyWrapper featureName="Parcerias">
       <div className="max-w-4xl mx-auto px-2 sm:px-4 pb-20 sm:pb-6 space-y-6">
