@@ -100,6 +100,24 @@ export const createFolder = async (name: string): Promise<Folder> => {
     throw error;
   }
 };
+// Rename a folder
+export const renameFolder = async (folderId: string, newName: string): Promise<Folder> => {
+  try {
+    const { data, error } = await supabase
+      .from('folders')
+      .update({ name: newName, updated_at: new Date().toISOString() })
+      .eq('id', folderId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return data as Folder;
+  } catch (error) {
+    console.error('Error renaming folder:', error);
+    throw error;
+  }
+};
 
 // Delete a folder
 export const deleteFolder = async (folderId: string): Promise<void> => {
