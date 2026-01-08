@@ -382,7 +382,6 @@ export const MobileDrafts: React.FC = () => {
     // Save before going back
     if (title.trim() || content.trim()) {
       await performAutoSave();
-      sonnerToast.success('Rascunho salvo automaticamente');
     }
     // Clear auto-save data since we're leaving intentionally
     localStorage.removeItem(AUTOSAVE_KEY);
