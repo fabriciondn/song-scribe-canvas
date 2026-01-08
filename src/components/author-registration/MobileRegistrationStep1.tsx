@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useProfile } from '@/hooks/useProfile';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 // Componente para Material Icons
 const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: string }> = ({ 
@@ -27,6 +29,9 @@ interface Author {
   initials: string;
   percentage: number | null;
   isTitular: boolean;
+  cpf?: string;
+  avatarUrl?: string;
+  isFromPlatform?: boolean;
 }
 
 interface MobileRegistrationStep1Props {
@@ -60,8 +65,14 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
       isTitular: true,
     }
   ]);
-  const [showAddAuthor, setShowAddAuthor] = useState(false);
+  
+  // Modal states
+  const [showAddAuthorModal, setShowAddAuthorModal] = useState(false);
+  const [addMode, setAddMode] = useState<'manual' | 'token'>('manual');
   const [newAuthorName, setNewAuthorName] = useState('');
+  const [newAuthorCpf, setNewAuthorCpf] = useState('');
+  const [partnerToken, setPartnerToken] = useState('');
+  const [isSearchingToken, setIsSearchingToken] = useState(false);
 
   function getInitials(name: string): string {
     const parts = name.trim().split(' ').filter(Boolean);
@@ -71,19 +82,108 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
     return name.substring(0, 2).toUpperCase();
   }
 
-  const handleAddAuthor = () => {
-    if (newAuthorName.trim()) {
+  // Formatar CPF
+  const formatCpf = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    return numbers
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+      .substring(0, 14);
+  };
+
+  const handleAddAuthorManual = () => {
+    if (newAuthorName.trim() && newAuthorCpf.trim()) {
       const newAuthor: Author = {
         id: Date.now().toString(),
         name: newAuthorName.trim(),
         initials: getInitials(newAuthorName.trim()),
         percentage: null,
         isTitular: false,
+        cpf: newAuthorCpf.trim(),
+        isFromPlatform: false,
       };
       setAuthors([...authors, newAuthor]);
-      setNewAuthorName('');
-      setShowAddAuthor(false);
+      resetModal();
+      toast.success('Co-autor adicionado com sucesso!');
     }
+  };
+
+  const handleSearchByToken = async () => {
+    if (!partnerToken.trim()) return;
+    
+    setIsSearchingToken(true);
+    try {
+      // Buscar o token de parceiro na tabela composer_tokens
+      const { data: tokenData, error: tokenError } = await supabase
+        .from('composer_tokens')
+        .select('user_id, is_active, expires_at')
+        .eq('token', partnerToken.trim())
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (tokenError) throw tokenError;
+
+      if (!tokenData) {
+        toast.error('Token inválido ou expirado');
+        return;
+      }
+
+      // Verificar se o token não expirou
+      if (new Date(tokenData.expires_at) < new Date()) {
+        toast.error('Este token já expirou');
+        return;
+      }
+
+      // Buscar os dados do perfil do usuário
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, name, cpf, avatar_url')
+        .eq('id', tokenData.user_id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      if (!profileData) {
+        toast.error('Usuário não encontrado');
+        return;
+      }
+
+      // Verificar se o co-autor já foi adicionado
+      if (authors.some(a => a.id === profileData.id)) {
+        toast.error('Este co-autor já foi adicionado');
+        return;
+      }
+
+      // Adicionar o co-autor
+      const newAuthor: Author = {
+        id: profileData.id,
+        name: profileData.name || 'Usuário',
+        initials: getInitials(profileData.name || 'US'),
+        percentage: null,
+        isTitular: false,
+        cpf: profileData.cpf || '',
+        avatarUrl: profileData.avatar_url || undefined,
+        isFromPlatform: true,
+      };
+      
+      setAuthors([...authors, newAuthor]);
+      resetModal();
+      toast.success(`${profileData.name} foi adicionado como co-autor!`);
+    } catch (error) {
+      console.error('Erro ao buscar token:', error);
+      toast.error('Erro ao buscar co-autor. Tente novamente.');
+    } finally {
+      setIsSearchingToken(false);
+    }
+  };
+
+  const resetModal = () => {
+    setShowAddAuthorModal(false);
+    setAddMode('manual');
+    setNewAuthorName('');
+    setNewAuthorCpf('');
+    setPartnerToken('');
   };
 
   const handleRemoveAuthor = (id: string) => {
@@ -101,6 +201,7 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
   };
 
   const canContinue = title.trim().length > 0;
+  const canAddManual = newAuthorName.trim().length > 0 && newAuthorCpf.replace(/\D/g, '').length === 11;
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-['Inter',sans-serif]">
@@ -191,43 +292,12 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
               <button
                 type="button"
                 className="text-[#00C853] text-sm font-semibold flex items-center"
-                onClick={() => setShowAddAuthor(true)}
+                onClick={() => setShowAddAuthorModal(true)}
               >
                 <MaterialIcon name="add_circle_outline" className="text-lg mr-1" />
                 Adicionar
               </button>
             </div>
-
-            {/* Add Author Input */}
-            {showAddAuthor && (
-              <div className="flex gap-2 mb-3">
-                <Input
-                  type="text"
-                  placeholder="Nome do autor"
-                  value={newAuthorName}
-                  onChange={(e) => setNewAuthorName(e.target.value)}
-                  className="flex-1 px-4 py-3 rounded-xl bg-[#1C1C1E] border border-[#2C2C2E] focus:border-[#00C853] text-white"
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={handleAddAuthor}
-                  className="px-4 py-2 bg-[#00C853] text-white rounded-xl font-medium"
-                >
-                  OK
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddAuthor(false);
-                    setNewAuthorName('');
-                  }}
-                  className="px-3 py-2 text-gray-400"
-                >
-                  ✕
-                </button>
-              </div>
-            )}
 
             {/* Titular Author Card */}
             {authors.filter(a => a.isTitular).map((author) => (
@@ -274,11 +344,24 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
                 className="bg-[#1C1C1E] border border-[#2C2C2E] rounded-2xl p-4 flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-[#2C2C2E] flex items-center justify-center text-gray-300 font-bold text-sm">
-                    {author.initials}
-                  </div>
+                  {author.avatarUrl ? (
+                    <img 
+                      src={author.avatarUrl} 
+                      alt="Avatar" 
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-[#2C2C2E] flex items-center justify-center text-gray-300 font-bold text-sm">
+                      {author.initials}
+                    </div>
+                  )}
                   <div>
-                    <p className="font-semibold text-[15px] text-white">{author.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-[15px] text-white">{author.name}</p>
+                      {author.isFromPlatform && (
+                        <MaterialIcon name="verified" filled className="text-sm text-blue-400" />
+                      )}
+                    </div>
                     <span className="text-[13px] text-[#F97316] font-medium">Definir %</span>
                   </div>
                 </div>
@@ -333,6 +416,156 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
           <MaterialIcon name="arrow_forward" className="text-xl" />
         </button>
       </div>
+
+      {/* Add Co-Author Modal */}
+      {showAddAuthorModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={resetModal}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative w-full bg-[#1C1C1E] rounded-t-3xl p-6 pb-10 animate-in slide-in-from-bottom duration-300">
+            {/* Handle */}
+            <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-6" />
+            
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Adicionar Co-autor</h2>
+              <button onClick={resetModal} className="p-2 text-gray-400">
+                <MaterialIcon name="close" className="text-2xl" />
+              </button>
+            </div>
+
+            {/* Mode Selector */}
+            <div className="flex gap-2 mb-6">
+              <button
+                type="button"
+                onClick={() => setAddMode('manual')}
+                className={cn(
+                  "flex-1 py-3 rounded-xl font-medium text-sm transition-all",
+                  addMode === 'manual'
+                    ? "bg-[#00C853] text-white"
+                    : "bg-[#2C2C2E] text-gray-400"
+                )}
+              >
+                <MaterialIcon name="edit" className="text-base mr-1 align-middle" />
+                Informar Dados
+              </button>
+              <button
+                type="button"
+                onClick={() => setAddMode('token')}
+                className={cn(
+                  "flex-1 py-3 rounded-xl font-medium text-sm transition-all",
+                  addMode === 'token'
+                    ? "bg-[#00C853] text-white"
+                    : "bg-[#2C2C2E] text-gray-400"
+                )}
+              >
+                <MaterialIcon name="key" className="text-base mr-1 align-middle" />
+                Token de Parceiro
+              </button>
+            </div>
+
+            {/* Manual Mode */}
+            {addMode === 'manual' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Nome Completo do Co-autor <span className="text-[#00C853]">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Ex: João da Silva"
+                    value={newAuthorName}
+                    onChange={(e) => setNewAuthorName(e.target.value)}
+                    className="w-full px-4 py-3.5 rounded-xl bg-[#2C2C2E] border border-[#3C3C3E] focus:border-[#00C853] text-white placeholder-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    CPF do Co-autor <span className="text-[#00C853]">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="000.000.000-00"
+                    value={newAuthorCpf}
+                    onChange={(e) => setNewAuthorCpf(formatCpf(e.target.value))}
+                    maxLength={14}
+                    className="w-full px-4 py-3.5 rounded-xl bg-[#2C2C2E] border border-[#3C3C3E] focus:border-[#00C853] text-white placeholder-gray-500"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddAuthorManual}
+                  disabled={!canAddManual}
+                  className={cn(
+                    "w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2",
+                    canAddManual
+                      ? "bg-[#00C853] text-white"
+                      : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                  )}
+                >
+                  <MaterialIcon name="person_add" className="text-xl" />
+                  Adicionar Co-autor
+                </button>
+              </div>
+            )}
+
+            {/* Token Mode */}
+            {addMode === 'token' && (
+              <div className="space-y-4">
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-4">
+                  <div className="flex items-start gap-3">
+                    <MaterialIcon name="info" className="text-blue-400 text-xl mt-0.5" />
+                    <p className="text-sm text-blue-200 leading-relaxed">
+                      Se o co-autor é cadastrado na plataforma, peça o <strong>Token de Parceiro</strong> dele. 
+                      Os dados serão preenchidos automaticamente.
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Token de Parceiro <span className="text-[#00C853]">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Cole o token aqui"
+                    value={partnerToken}
+                    onChange={(e) => setPartnerToken(e.target.value)}
+                    className="w-full px-4 py-3.5 rounded-xl bg-[#2C2C2E] border border-[#3C3C3E] focus:border-[#00C853] text-white placeholder-gray-500 font-mono"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSearchByToken}
+                  disabled={!partnerToken.trim() || isSearchingToken}
+                  className={cn(
+                    "w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2",
+                    partnerToken.trim() && !isSearchingToken
+                      ? "bg-[#00C853] text-white"
+                      : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                  )}
+                >
+                  {isSearchingToken ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <MaterialIcon name="search" className="text-xl" />
+                      Buscar Co-autor
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
