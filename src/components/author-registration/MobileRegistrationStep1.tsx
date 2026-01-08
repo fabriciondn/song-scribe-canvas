@@ -294,7 +294,7 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 px-4 pb-32">
+      <main className="flex-1 px-4 pb-28">
         {/* Steps Indicator */}
         <div className="flex items-center justify-between mb-8 mt-2 px-2">
           {/* Step 1 */}
@@ -432,7 +432,10 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
                     <div className="flex items-center gap-2">
                       <p className="font-semibold text-[15px] text-white">{author.name}</p>
                       {author.isFromPlatform && (
-                        <MaterialIcon name="verified" filled className="text-sm text-blue-400" />
+                        <div className="flex items-center bg-[#00C853]/15 px-2 py-0.5 rounded-md">
+                          <MaterialIcon name="verified" filled className="text-sm text-[#00C853] mr-0.5" />
+                          <span className="text-[10px] font-semibold text-[#00C853]">Titular</span>
+                        </div>
                       )}
                     </div>
                     <button
@@ -455,46 +458,25 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
             ))}
           </div>
 
-          {/* Samples Checkbox */}
-          <div className="pt-4">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <div className="relative flex items-center mt-0.5">
-                <Checkbox
-                  checked={hasSamples}
-                  onCheckedChange={(checked) => setHasSamples(checked === true)}
-                  className={cn(
-                    "h-5 w-5 rounded border-2",
-                    hasSamples 
-                      ? "border-[#00C853] bg-[#00C853] data-[state=checked]:bg-[#00C853]" 
-                      : "border-gray-600 bg-transparent"
-                  )}
-                />
-              </div>
-              <span className="text-[15px] text-gray-400 leading-snug">
-                Esta obra contém trechos de terceiros?
-              </span>
-            </label>
+          {/* Continue Button */}
+          <div className="pt-6">
+            <button
+              type="button"
+              onClick={handleContinue}
+              disabled={!canContinue}
+              className={cn(
+                "w-full font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2",
+                canContinue 
+                  ? "bg-[#00C853] text-white active:scale-[0.98]" 
+                  : "bg-gray-700 text-gray-400 cursor-not-allowed"
+              )}
+            >
+              Continuar
+              <MaterialIcon name="arrow_forward" className="text-xl" />
+            </button>
           </div>
         </form>
       </main>
-
-      {/* Bottom Fixed Button */}
-      <div className="fixed bottom-24 left-0 right-0 w-full bg-[#1C1C1E] border-t border-[#2C2C2E] p-4 pb-8 z-50">
-        <button
-          type="button"
-          onClick={handleContinue}
-          disabled={!canContinue}
-          className={cn(
-            "w-full font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2",
-            canContinue 
-              ? "bg-[#00C853] text-white active:scale-[0.98]" 
-              : "bg-gray-700 text-gray-400 cursor-not-allowed"
-          )}
-        >
-          Continuar
-          <MaterialIcon name="arrow_forward" className="text-xl" />
-        </button>
-      </div>
 
       {/* Add Co-Author Modal */}
       {showAddAuthorModal && (
