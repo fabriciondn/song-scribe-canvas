@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Play, MessageCircle, Heart, Share2, Clock, Eye } from 'lucide-react';
+import { Play, MessageCircle, Heart, Share2, Clock, Eye, Search, Video, Copyright, Handshake, DollarSign, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,10 +35,13 @@ interface Comment {
   type: 'suggestion' | 'doubt';
 }
 
-// Material Icon component
-const MaterialIcon: React.FC<{ name: string; className?: string; filled?: boolean }> = ({ name, className = '', filled = false }) => (
-  <span className={`material-symbols-outlined ${className}`} style={filled ? { fontVariationSettings: "'FILL' 1" } : undefined}>{name}</span>
-);
+// Guide icon mapping using Lucide icons
+const GuideIconMap: Record<string, React.ReactNode> = {
+  'copyright': <Copyright className="w-5 h-5" />,
+  'handshake': <Handshake className="w-5 h-5" />,
+  'monetization_on': <DollarSign className="w-5 h-5" />,
+  'verified_user': <ShieldCheck className="w-5 h-5" />,
+};
 
 // Static guides data
 const STATIC_GUIDES = [
@@ -225,7 +228,7 @@ export const Tutorials: React.FC = () => {
           <div className="flex items-center justify-between p-4 pb-2">
             <h1 className="text-2xl font-bold leading-tight tracking-tight">Tutoriais</h1>
             <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition-colors">
-              <MaterialIcon name="search" className="text-2xl" />
+              <Search className="w-6 h-6" />
             </button>
           </div>
           
@@ -279,8 +282,8 @@ export const Tutorials: React.FC = () => {
                   style={{ backgroundImage: `url("${featuredTutorial.thumbnail}")` }}
                 />
                 <div className="absolute inset-0 z-20 flex items-center justify-center opacity-90 group-hover:opacity-100 transition-opacity">
-                  <div className="w-14 h-14 rounded-full bg-[#1ed760]/90 backdrop-blur-sm flex items-center justify-center pl-1 shadow-[0_0_20px_rgba(30,215,96,0.5)]">
-                    <MaterialIcon name="play_arrow" className="text-black text-3xl" />
+                  <div className="w-14 h-14 rounded-full bg-[#1ed760]/90 backdrop-blur-sm flex items-center justify-center shadow-[0_0_20px_rgba(30,215,96,0.5)]">
+                    <Play className="w-8 h-8 text-black fill-current" />
                   </div>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 z-20 p-5 flex flex-col gap-1">
@@ -290,7 +293,7 @@ export const Tutorials: React.FC = () => {
                   <h2 className="text-white text-xl font-bold leading-tight">{featuredTutorial.title}</h2>
                   <div className="flex items-center gap-2 text-slate-300 text-sm font-medium mt-1">
                     <span className="flex items-center gap-1">
-                      <MaterialIcon name="videocam" className="text-base text-[#1ed760]" />
+                      <Video className="w-4 h-4 text-[#1ed760]" />
                       Vídeo
                     </span>
                     <span>•</span>
@@ -324,7 +327,7 @@ export const Tutorials: React.FC = () => {
                       {tutorial.duration}
                     </div>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <MaterialIcon name="play_arrow" className="text-white" />
+                      <Play className="w-5 h-5 text-white fill-current" />
                     </div>
                   </div>
                   <div className="px-1 pb-1">
@@ -354,8 +357,8 @@ export const Tutorials: React.FC = () => {
                   key={guide.id}
                   className="bg-[#121212] p-4 rounded-[1.5rem] flex flex-col justify-between h-40 shadow-sm border border-white/5 hover:border-[#1ed760]/50 transition-colors cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-full bg-[#1ed760]/10 flex items-center justify-center mb-3 group-hover:bg-[#1ed760] group-hover:scale-110 transition-all duration-300">
-                    <MaterialIcon name={guide.icon} className="text-[#1ed760] group-hover:text-black transition-colors" />
+                  <div className="w-10 h-10 rounded-full bg-[#1ed760]/10 flex items-center justify-center mb-3 group-hover:bg-[#1ed760] group-hover:scale-110 transition-all duration-300 text-[#1ed760] group-hover:text-black">
+                    {GuideIconMap[guide.icon]}
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-white leading-tight mb-1">{guide.title}</h4>
