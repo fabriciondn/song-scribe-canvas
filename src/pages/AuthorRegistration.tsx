@@ -12,6 +12,7 @@ import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { useProfileValidation } from '@/hooks/useProfileValidation';
 import { trackAffiliateClick } from '@/services/affiliateService';
+import { MobileRegistrationStep1 } from '@/components/author-registration/MobileRegistrationStep1';
 
 export interface AuthorRegistrationData {
   title: string;
@@ -29,6 +30,13 @@ export interface AuthorRegistrationData {
   registrationType: 'lyrics_only' | 'complete';
 }
 
+// Interface para dados do Step 1 mobile
+interface MobileStep1Data {
+  title: string;
+  authors: Array<{ id: string; name: string; initials: string; percentage: number | null; isTitular: boolean; }>;
+  hasSamples: boolean;
+}
+
 const AuthorRegistration: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -37,6 +45,8 @@ const AuthorRegistration: React.FC = () => {
   const { isMobile } = useMobileDetection();
   const { isComplete: isProfileComplete } = useProfileValidation();
   const [step, setStep] = useState<'form' | 'review'>('form');
+  const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(1);
+  const [mobileStep1Data, setMobileStep1Data] = useState<MobileStep1Data | null>(null);
   const [formData, setFormData] = useState<AuthorRegistrationData>({
     title: '',
     author: '',
@@ -157,12 +167,44 @@ const AuthorRegistration: React.FC = () => {
       registrationType: 'complete',
     });
     setStep('form');
+    setMobileStep(1);
+    setMobileStep1Data(null);
   };
 
   const handleBackToForm = () => {
     setStep('form');
   };
 
+  // Handler para o Step 1 mobile
+  const handleMobileStep1Continue = (data: MobileStep1Data) => {
+    setMobileStep1Data(data);
+    // Atualizar formData com os dados do step 1
+    const otherAuthors = data.authors
+      .filter(a => !a.isTitular)
+      .map(a => ({ name: a.name, cpf: '' }));
+    
+    setFormData(prev => ({
+      ...prev,
+      title: data.title,
+      hasOtherAuthors: otherAuthors.length > 0,
+      otherAuthors,
+    }));
+    setMobileStep(2);
+    // TODO: Avançar para step 2 quando implementado
+    console.log('Step 1 completed:', data);
+  };
+
+  // Renderização Mobile com novo design
+  if (isMobile && isProfileComplete) {
+    return (
+      <MobileRegistrationStep1
+        onContinue={handleMobileStep1Continue}
+        initialData={mobileStep1Data || undefined}
+      />
+    );
+  }
+
+  // Renderização Desktop (mantém o comportamento original)
   return (
     <ResponsiveContainer
       mobileClassName="px-2 py-2"
