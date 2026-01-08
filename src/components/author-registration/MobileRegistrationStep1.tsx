@@ -239,9 +239,17 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
                 <div className="absolute inset-y-0 left-0 w-1 bg-[#00C853]"></div>
                 
                 <div className="flex items-center gap-3 pl-3">
-                  <div className="w-12 h-12 rounded-full bg-[#00C853] flex items-center justify-center text-white font-bold text-sm">
-                    {author.initials}
-                  </div>
+                  {profile?.avatar_url ? (
+                    <img 
+                      src={profile.avatar_url} 
+                      alt="Avatar" 
+                      className="w-12 h-12 rounded-full object-cover border-2 border-[#00C853]"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-[#00C853] flex items-center justify-center text-white font-bold text-sm">
+                      {author.initials}
+                    </div>
+                  )}
                   <div>
                     <p className="font-semibold text-[15px] text-white">Você (Titular)</p>
                     <div className="flex items-center gap-1">
