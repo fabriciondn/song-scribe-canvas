@@ -752,6 +752,26 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
             {/* Divider */}
             <div className="border-t border-gray-700 my-2" />
 
+            {/* Theme Toggle */}
+            <div className="flex items-center justify-between p-4 bg-[#1E293B] rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                  <span className="material-icons-round text-purple-400">
+                    {isDark ? 'dark_mode' : 'light_mode'}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-white font-medium">Modo Escuro</p>
+                  <p className="text-gray-400 text-sm">Alternar tema da interface</p>
+                </div>
+              </div>
+              <Switch
+                checked={isDark}
+                onCheckedChange={toggleTheme}
+                className="data-[state=checked]:bg-[#00C853]"
+              />
+            </div>
+
             {/* Mic Button Toggle */}
             <div className="flex items-center justify-between p-4 bg-[#1E293B] rounded-xl">
               <div className="flex items-center gap-3">
