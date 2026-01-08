@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import { BaseMusical, getBases } from '@/services/basesMusicais/basesService';
 import { AudioFile } from '@/services/drafts/types';
 import { toast as sonnerToast } from 'sonner';
+import { CollaborativeSessionModal } from '@/components/collaborative/CollaborativeSessionModal';
 
 interface MobileComposerEditorProps {
   title: string;
@@ -48,6 +49,7 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [showBaseSelector, setShowBaseSelector] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCollaborativeModal, setShowCollaborativeModal] = useState(false);
   const [previewingBaseId, setPreviewingBaseId] = useState<string | null>(null);
   
   // Settings state with localStorage persistence
@@ -726,6 +728,10 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
 
             {/* Partnership Button */}
             <button
+              onClick={() => {
+                setShowSettings(false);
+                setShowCollaborativeModal(true);
+              }}
               className="w-full flex items-center justify-between p-4 bg-[#1E293B] rounded-xl hover:bg-[#334155] transition"
             >
               <div className="flex items-center gap-3">
@@ -734,7 +740,7 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
                 </div>
                 <div className="text-left">
                   <p className="text-white font-medium">Compor em Parceria</p>
-                  <p className="text-gray-400 text-sm">Convidar colaboradores</p>
+                  <p className="text-gray-400 text-sm">Criar ou entrar em sessão</p>
                 </div>
               </div>
               <span className="material-icons-round text-gray-500">chevron_right</span>
@@ -861,6 +867,17 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
           border-radius: 2px;
         }
       `}</style>
+
+      {/* Collaborative Session Modal */}
+      <CollaborativeSessionModal
+        isOpen={showCollaborativeModal}
+        onClose={() => setShowCollaborativeModal(false)}
+        onSessionJoined={(session, draftId) => {
+          setShowCollaborativeModal(false);
+          // Navigate to the draft from the session
+          navigate(`/dashboard/composer?draft=${draftId}`);
+        }}
+      />
     </div>
   );
 };
