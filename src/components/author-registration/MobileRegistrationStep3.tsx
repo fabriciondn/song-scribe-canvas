@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -86,6 +87,7 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
   const navigate = useNavigate();
   const { credits, refreshCredits } = useUserCredits();
   const { profile } = useProfile();
+  const { theme, toggleTheme } = useTheme();
   const currentUser = useCurrentUser();
   
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -299,9 +301,20 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
           <MaterialIcon name="arrow_back" className="text-2xl text-white" />
         </button>
         <div className="h-8 w-8" />
-        <button className="p-2 -mr-2">
-          <MaterialIcon name="help_outline" className="text-2xl text-gray-400" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button 
+            className="p-2"
+            onClick={toggleTheme}
+          >
+            <MaterialIcon 
+              name={theme === 'dark' ? 'light_mode' : 'dark_mode'} 
+              className="text-2xl text-gray-400" 
+            />
+          </button>
+          <button className="p-2 -mr-2">
+            <MaterialIcon name="help_outline" className="text-2xl text-gray-400" />
+          </button>
+        </div>
       </header>
 
       {/* Main Content */}

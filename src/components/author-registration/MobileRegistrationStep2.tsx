@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -72,6 +73,7 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
   initialData,
 }) => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [registrationType, setRegistrationType] = useState<'lyrics_only' | 'complete'>(
@@ -163,12 +165,23 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
           <MaterialIcon name="arrow_back" className="text-2xl text-white" />
         </button>
         <div className="font-semibold text-lg">Detalhes da Obra</div>
-        <button 
-          className="text-gray-400 text-sm font-semibold"
-          onClick={() => navigate('/dashboard')}
-        >
-          Cancelar
-        </button>
+        <div className="flex items-center gap-1">
+          <button 
+            className="p-2"
+            onClick={toggleTheme}
+          >
+            <MaterialIcon 
+              name={theme === 'dark' ? 'light_mode' : 'dark_mode'} 
+              className="text-2xl text-gray-400" 
+            />
+          </button>
+          <button 
+            className="text-gray-400 text-sm font-semibold"
+            onClick={() => navigate('/dashboard')}
+          >
+            Cancelar
+          </button>
+        </div>
       </header>
 
       {/* Main Content */}
