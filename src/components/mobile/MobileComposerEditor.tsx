@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Switch } from '@/components/ui/switch';
 import { useQuery } from '@tanstack/react-query';
 import { BaseMusical, getBases } from '@/services/basesMusicais/basesService';
 import { AudioFile } from '@/services/drafts/types';
@@ -732,16 +733,11 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
                   <p className="text-gray-400 text-sm">Exibir ícone de microfone</p>
                 </div>
               </div>
-              <button
-                onClick={() => setShowMicButton(!showMicButton)}
-                className={`w-11 h-6 rounded-full transition-all duration-200 relative flex items-center ${
-                  showMicButton ? 'bg-[#00C853]' : 'bg-gray-600'
-                }`}
-              >
-                <span className={`inline-block w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${
-                  showMicButton ? 'translate-x-6' : 'translate-x-1'
-                }`} />
-              </button>
+              <Switch
+                checked={showMicButton}
+                onCheckedChange={setShowMicButton}
+                className="data-[state=checked]:bg-[#00C853]"
+              />
             </div>
 
             {/* Player Toggle Button Setting */}
@@ -755,16 +751,11 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
                   <p className="text-gray-400 text-sm">Botão para esconder área inferior</p>
                 </div>
               </div>
-              <button
-                onClick={() => setShowPlayerToggle(!showPlayerToggle)}
-                className={`w-11 h-6 rounded-full transition-all duration-200 relative flex items-center ${
-                  showPlayerToggle ? 'bg-[#00C853]' : 'bg-gray-600'
-                }`}
-              >
-                <span className={`inline-block w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${
-                  showPlayerToggle ? 'translate-x-6' : 'translate-x-1'
-                }`} />
-              </button>
+              <Switch
+                checked={showPlayerToggle}
+                onCheckedChange={setShowPlayerToggle}
+                className="data-[state=checked]:bg-[#00C853]"
+              />
             </div>
 
             {/* Save Button */}
