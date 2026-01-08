@@ -479,7 +479,7 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
       </main>
 
       {/* Bottom Fixed Button */}
-      <div className="fixed bottom-0 left-0 w-full bg-[#1C1C1E] border-t border-[#2C2C2E] p-4 pb-8">
+      <div className="fixed bottom-0 left-0 right-0 w-full bg-[#1C1C1E] border-t border-[#2C2C2E] p-4 pb-8 z-50">
         <button
           type="button"
           onClick={handleContinue}
