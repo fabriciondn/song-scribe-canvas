@@ -128,7 +128,33 @@
     --sidebar-border: 0 0% 12%;
     --sidebar-ring: 142 100% 37%;
   }
-}
+  }
+
+  /* Prevent gray overscroll areas on iOS */
+  html, body {
+    background-color: #000000;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html {
+    height: 100%;
+  }
+
+  body {
+    min-height: 100%;
+    min-height: -webkit-fill-available;
+  }
+
+  /* Ensure dark background is applied consistently */
+  .dark html,
+  .dark body,
+  html.dark,
+  body.dark,
+  .dark #root,
+  html.dark #root {
+    background-color: #000000;
+  }
 
 /* PWA Specific Styles */
 @media (display-mode: standalone) {
