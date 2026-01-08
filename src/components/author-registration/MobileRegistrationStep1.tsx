@@ -450,9 +450,23 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-white">Adicionar Co-autor</h2>
-              <button onClick={resetModal} className="p-2 text-gray-400">
-                <MaterialIcon name="close" className="text-2xl" />
-              </button>
+              <div className="flex items-center gap-1">
+                {addMode === 'manual' && (
+                  <button 
+                    onClick={handleAddAuthorManual} 
+                    disabled={!canAddManual}
+                    className={cn(
+                      "p-2 transition-colors",
+                      canAddManual ? "text-[#00C853]" : "text-gray-600"
+                    )}
+                  >
+                    <MaterialIcon name="check" className="text-2xl" />
+                  </button>
+                )}
+                <button onClick={resetModal} className="p-2 text-gray-400">
+                  <MaterialIcon name="close" className="text-2xl" />
+                </button>
+              </div>
             </div>
 
             {/* Mode Selector */}
