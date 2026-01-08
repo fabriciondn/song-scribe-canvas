@@ -13,6 +13,7 @@ import { useMobileDetection } from '@/hooks/use-mobile';
 import { useProfileValidation } from '@/hooks/useProfileValidation';
 import { trackAffiliateClick } from '@/services/affiliateService';
 import { MobileRegistrationStep1 } from '@/components/author-registration/MobileRegistrationStep1';
+import { MobileRegistrationStep2 } from '@/components/author-registration/MobileRegistrationStep2';
 import { useProfile } from '@/hooks/useProfile';
 
 export interface AuthorRegistrationData {
@@ -38,6 +39,16 @@ interface MobileStep1Data {
   hasSamples: boolean;
 }
 
+// Interface para dados do Step 2 mobile
+interface MobileStep2Data {
+  registrationType: 'lyrics_only' | 'complete';
+  genre: string;
+  version: string;
+  lyrics: string;
+  audioFile: File | null;
+  additionalInfo: string;
+}
+
 const AuthorRegistration: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -49,6 +60,7 @@ const AuthorRegistration: React.FC = () => {
   const [step, setStep] = useState<'form' | 'review'>('form');
   const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(1);
   const [mobileStep1Data, setMobileStep1Data] = useState<MobileStep1Data | null>(null);
+  const [mobileStep2Data, setMobileStep2Data] = useState<MobileStep2Data | null>(null);
   const [formData, setFormData] = useState<AuthorRegistrationData>({
     title: '',
     author: '',
@@ -170,6 +182,7 @@ const AuthorRegistration: React.FC = () => {
     setStep('form');
     setMobileStep(1);
     setMobileStep1Data(null);
+    setMobileStep2Data(null);
   };
 
   const handleBackToForm = () => {
@@ -202,12 +215,50 @@ const AuthorRegistration: React.FC = () => {
     console.log('Step 1 completed:', data);
   };
 
-  // Renderização Mobile com novo design (apenas Step 1)
+  // Handler para o Step 2 mobile
+  const handleMobileStep2Continue = (data: MobileStep2Data) => {
+    setMobileStep2Data(data);
+
+    // Atualizar formData com os dados do step 2
+    setFormData((prev) => ({
+      ...prev,
+      genre: data.genre,
+      styleVariation: data.version,
+      songVersion: data.version,
+      lyrics: data.lyrics,
+      audioFile: data.audioFile,
+      additionalInfo: data.additionalInfo,
+      registrationType: data.registrationType,
+      termsAccepted: true, // Será confirmado na etapa 3
+    }));
+
+    setMobileStep(3);
+    setStep('review');
+    console.log('Step 2 completed:', data);
+  };
+
+  // Handler para voltar ao Step 1 mobile
+  const handleMobileStep2Back = () => {
+    setMobileStep(1);
+  };
+
+  // Renderização Mobile - Step 1
   if (isMobile && isProfileComplete && mobileStep === 1) {
     return (
       <MobileRegistrationStep1
         onContinue={handleMobileStep1Continue}
         initialData={mobileStep1Data || undefined}
+      />
+    );
+  }
+
+  // Renderização Mobile - Step 2
+  if (isMobile && isProfileComplete && mobileStep === 2) {
+    return (
+      <MobileRegistrationStep2
+        onContinue={handleMobileStep2Continue}
+        onBack={handleMobileStep2Back}
+        initialData={mobileStep2Data || undefined}
       />
     );
   }
@@ -236,7 +287,6 @@ const AuthorRegistration: React.FC = () => {
             initialData={formData}
             onSubmit={handleFormSubmit}
             userCredits={credits}
-            initialStep={isMobile && mobileStep === 2 ? 2 : 1}
           />
         )}
 
@@ -244,7 +294,14 @@ const AuthorRegistration: React.FC = () => {
           <div className="space-y-4 md:space-y-6">
             <Button
               variant="outline"
-              onClick={handleBackToForm}
+              onClick={() => {
+                if (isMobile && mobileStep === 3) {
+                  setMobileStep(2);
+                  setStep('form');
+                } else {
+                  handleBackToForm();
+                }
+              }}
               className="mb-4"
               size={isMobile ? "sm" : "default"}
             >
