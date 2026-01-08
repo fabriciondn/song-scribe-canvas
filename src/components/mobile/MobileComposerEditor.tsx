@@ -422,7 +422,7 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
         className="flex-1 overflow-y-auto relative bg-white dark:bg-[#1E293B]"
         style={{ overscrollBehavior: 'contain' }}
       >
-        <div className="p-6 pb-24">
+        <div className={`p-6 ${isPlayerHidden ? 'pb-8' : 'pb-24'}`}>
           <textarea
             ref={textareaRef}
             value={content}
