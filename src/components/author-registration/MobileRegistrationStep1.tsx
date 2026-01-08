@@ -74,6 +74,11 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
   const [partnerToken, setPartnerToken] = useState('');
   const [isSearchingToken, setIsSearchingToken] = useState(false);
   const [foundCoAuthor, setFoundCoAuthor] = useState<Author | null>(null);
+  
+  // Percentage modal states
+  const [showPercentageModal, setShowPercentageModal] = useState(false);
+  const [editingAuthorId, setEditingAuthorId] = useState<string | null>(null);
+  const [tempPercentage, setTempPercentage] = useState('');
 
   function getInitials(name: string): string {
     const parts = name.trim().split(' ').filter(Boolean);
@@ -204,6 +209,59 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
 
   const handleRemoveAuthor = (id: string) => {
     setAuthors(authors.filter(a => a.id !== id));
+  };
+
+  const handleOpenPercentageModal = (authorId: string) => {
+    const author = authors.find(a => a.id === authorId);
+    if (author) {
+      setEditingAuthorId(authorId);
+      setTempPercentage(author.percentage?.toString() || '');
+      setShowPercentageModal(true);
+    }
+  };
+
+  const handleSavePercentage = () => {
+    if (editingAuthorId && tempPercentage) {
+      const percentage = parseInt(tempPercentage, 10);
+      if (percentage >= 1 && percentage <= 100) {
+        // Calculate total percentage excluding the current author and titular
+        const otherAuthorsPercentage = authors
+          .filter(a => a.id !== editingAuthorId && !a.isTitular)
+          .reduce((sum, a) => sum + (a.percentage || 0), 0);
+        
+        const totalWithNew = otherAuthorsPercentage + percentage;
+        
+        if (totalWithNew > 100) {
+          toast.error('A soma das porcentagens não pode ultrapassar 100%');
+          return;
+        }
+        
+        // Update the author's percentage
+        setAuthors(authors.map(a => {
+          if (a.id === editingAuthorId) {
+            return { ...a, percentage };
+          }
+          // Update titular percentage to remaining
+          if (a.isTitular) {
+            return { ...a, percentage: 100 - totalWithNew };
+          }
+          return a;
+        }));
+        
+        setShowPercentageModal(false);
+        setEditingAuthorId(null);
+        setTempPercentage('');
+        toast.success('Porcentagem atualizada!');
+      } else {
+        toast.error('Informe um valor entre 1 e 100');
+      }
+    }
+  };
+
+  const closePercentageModal = () => {
+    setShowPercentageModal(false);
+    setEditingAuthorId(null);
+    setTempPercentage('');
   };
 
   const handleContinue = () => {
@@ -339,8 +397,7 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
                   <div>
                     <p className="font-semibold text-[15px] text-white">Você (Titular)</p>
                     <div className="flex items-center gap-1">
-                      <span className="text-[13px] text-gray-400">100% Participação</span>
-                      <MaterialIcon name="edit" className="text-sm text-[#00C853] cursor-pointer" />
+                      <span className="text-[13px] text-gray-400">{author.percentage}% Participação</span>
                     </div>
                   </div>
                 </div>
@@ -378,7 +435,13 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
                         <MaterialIcon name="verified" filled className="text-sm text-blue-400" />
                       )}
                     </div>
-                    <span className="text-[13px] text-[#F97316] font-medium">Definir %</span>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenPercentageModal(author.id)}
+                      className="text-[13px] text-[#F97316] font-medium hover:underline"
+                    >
+                      {author.percentage ? `${author.percentage}%` : 'Definir %'}
+                    </button>
                   </div>
                 </div>
                 <button
@@ -672,6 +735,99 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Percentage Modal */}
+      {showPercentageModal && editingAuthorId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={closePercentageModal}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative w-[90%] max-w-sm bg-[#1C1C1E] rounded-3xl p-6 animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-white">Definir Porcentagem</h2>
+              <button onClick={closePercentageModal} className="p-2 text-gray-400">
+                <MaterialIcon name="close" className="text-2xl" />
+              </button>
+            </div>
+
+            {/* Author Info */}
+            <div className="flex items-center gap-3 mb-6 p-3 bg-[#2C2C2E] rounded-xl">
+              {(() => {
+                const author = authors.find(a => a.id === editingAuthorId);
+                if (!author) return null;
+                return (
+                  <>
+                    {author.avatarUrl ? (
+                      <img 
+                        src={author.avatarUrl} 
+                        alt="Avatar" 
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-[#3C3C3E] flex items-center justify-center text-gray-300 font-bold text-sm">
+                        {author.initials}
+                      </div>
+                    )}
+                    <span className="font-medium text-white">{author.name}</span>
+                  </>
+                );
+              })()}
+            </div>
+            
+            {/* Percentage Input */}
+            <div className="mb-6">
+              <label className="block text-sm text-gray-400 mb-2">
+                Porcentagem de participação
+              </label>
+              <div className="relative">
+                <Input
+                  type="number"
+                  min="1"
+                  max="100"
+                  placeholder="Ex: 25"
+                  value={tempPercentage}
+                  onChange={(e) => setTempPercentage(e.target.value)}
+                  className="w-full px-4 py-4 rounded-xl bg-[#2C2C2E] border border-[#3C3C3E] focus:border-[#00C853] focus:ring-0 outline-none transition-all placeholder-gray-600 text-white text-lg h-auto text-center font-bold"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl text-gray-500 font-bold">%</span>
+              </div>
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                A porcentagem do titular será ajustada automaticamente.
+              </p>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={closePercentageModal}
+                className="flex-1 py-3 rounded-xl font-semibold bg-[#2C2C2E] text-gray-300 border border-[#3C3C3E]"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSavePercentage}
+                disabled={!tempPercentage || parseInt(tempPercentage) < 1 || parseInt(tempPercentage) > 100}
+                className={cn(
+                  "flex-1 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors",
+                  tempPercentage && parseInt(tempPercentage) >= 1 && parseInt(tempPercentage) <= 100
+                    ? "bg-[#00C853] text-white"
+                    : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                )}
+              >
+                <MaterialIcon name="check" className="text-xl" />
+                Salvar
+              </button>
+            </div>
           </div>
         </div>
       )}
