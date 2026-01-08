@@ -397,7 +397,8 @@ export const MobileDrafts: React.FC = () => {
     }
     // Clear auto-save data since we're leaving intentionally
     localStorage.removeItem(AUTOSAVE_KEY);
-    setViewMode('list');
+    // Navigate to folders page (recent drafts list)
+    navigate('/dashboard/folders');
   };
 
   if (viewMode === 'editor') {
