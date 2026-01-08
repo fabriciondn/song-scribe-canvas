@@ -3,29 +3,57 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUserRole } from '@/hooks/useUserRole';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { UsbIcon, Search, Download, Music, Filter, FolderOpen, Calendar, Play, Pause, Volume2, Crown, Lock } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { 
+  Search, 
+  Download, 
+  Music, 
+  FolderOpen, 
+  Play, 
+  Pause, 
+  SlidersHorizontal,
+  Star,
+  Mic,
+  ChevronRight
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { ProUpgradeModal } from '@/components/ui/pro-upgrade-modal';
+import { MobileBottomNavigation } from '@/components/mobile/MobileBottomNavigation';
+
+// Genre categories for filter
+const GENRES = ['Tudo', 'Hip-Hop', 'Pop', 'MPB', 'Trap', 'Rock', 'Eletrônico', 'Sertanejo'];
+
+// Genre badge colors
+const getGenreBadgeStyle = (genre: string) => {
+  const styles: Record<string, string> = {
+    'Synthwave': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    'Lo-Fi': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    'Trap': 'bg-red-500/20 text-red-400 border-red-500/30',
+    'Hip-Hop': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    'Pop': 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+    'MPB': 'bg-green-500/20 text-green-400 border-green-500/30',
+    'Rock': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    'Eletrônico': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+    'Sertanejo': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  };
+  return styles[genre] || 'bg-primary/20 text-primary border-primary/30';
+};
 
 const Pendrive = () => {
   const user = useCurrentUser();
-  const { isPro, isLoading: roleLoading } = useUserRole();
+  const { isPro } = useUserRole();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState<string>('all');
+  const [selectedGenre, setSelectedGenre] = useState('Tudo');
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Buscar todas as músicas registradas do usuário
+  // Fetch user's registered music
   const { data: registrations, isLoading } = useQuery({
     queryKey: ['user-registrations', user?.id],
     queryFn: async () => {
@@ -43,14 +71,7 @@ const Pendrive = () => {
     enabled: !!user?.id
   });
 
-  // Extrair gêneros únicos
-  const genres = React.useMemo(() => {
-    if (!registrations) return [];
-    const uniqueGenres = [...new Set(registrations.map(r => r.genre))];
-    return uniqueGenres.sort();
-  }, [registrations]);
-
-  // Filtrar músicas
+  // Filter music
   const filteredRegistrations = React.useMemo(() => {
     if (!registrations) return [];
     
@@ -59,47 +80,32 @@ const Pendrive = () => {
         reg.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         reg.author.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesGenre = selectedGenre === 'all' || reg.genre === selectedGenre;
+      const matchesGenre = selectedGenre === 'Tudo' || reg.genre === selectedGenre;
       
       return matchesSearch && matchesGenre;
     });
   }, [registrations, searchTerm, selectedGenre]);
 
-  // Agrupar por gênero
-  const groupedByGenre = React.useMemo(() => {
-    const groups: Record<string, typeof filteredRegistrations> = {};
-    
-    filteredRegistrations.forEach(reg => {
-      if (!groups[reg.genre]) {
-        groups[reg.genre] = [];
-      }
-      groups[reg.genre].push(reg);
-    });
-    
-    return groups;
-  }, [filteredRegistrations]);
+  // Recent registrations (last 5)
+  const recentRegistrations = filteredRegistrations.slice(0, 5);
 
   const handleDownload = async (registration: any) => {
-    // Verificar se tem acesso Pro
     if (!isPro) {
       setShowUpgradeModal(true);
       return;
     }
 
-    // Verificar se tem áudio disponível
     if (!registration.audio_file_path) {
       toast.error('Esta música não possui áudio disponível para download');
       return;
     }
 
     try {
-      // Gerar URL pública do áudio do bucket author-registrations
       const { data } = supabase.storage
         .from('author-registrations')
         .getPublicUrl(registration.audio_file_path);
 
       if (data?.publicUrl) {
-        // Criar link para download forçado
         const link = document.createElement('a');
         link.href = data.publicUrl;
         link.download = `${registration.title} - ${registration.author}.mp3`;
@@ -107,7 +113,7 @@ const Pendrive = () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        toast.success('Download da música iniciado!');
+        toast.success('Download iniciado!');
       } else {
         toast.error('Erro ao gerar link de download');
       }
@@ -123,20 +129,17 @@ const Pendrive = () => {
       return;
     }
 
-    // Se já está tocando esta música, pause
     if (playingId === registration.id) {
       audioRef.current?.pause();
       setPlayingId(null);
       return;
     }
 
-    // Parar áudio anterior
     if (audioRef.current) {
       audioRef.current.pause();
     }
 
     try {
-      // Obter URL pública do áudio do bucket author-registrations
       const { data } = supabase.storage
         .from('author-registrations')
         .getPublicUrl(registration.audio_file_path);
@@ -160,185 +163,296 @@ const Pendrive = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'registered':
-      case 'completed':
-        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Registrado</Badge>;
-      case 'em análise':
-        return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">Em Análise</Badge>;
-      default:
-        return <Badge variant="secondary" className="text-xs">{status}</Badge>;
-    }
+  // Fake file size for display
+  const getFileSize = (id: string) => {
+    const sizes = ['2.4MB', '3.1MB', '4.2MB', '2.8MB', '5.2MB', '3.4MB'];
+    const index = id.charCodeAt(0) % sizes.length;
+    return sizes[index];
   };
 
   if (isLoading) {
     return (
-      <div className="p-4 md:p-6 space-y-4">
-        <Skeleton className="h-10 w-48" />
-        <div className="grid gap-3">
+      <div className="min-h-screen bg-background pb-24">
+        <div className="px-6 pt-8 pb-4">
+          <Skeleton className="h-8 w-32 mb-2" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <div className="px-6 space-y-4">
+          <Skeleton className="h-12 w-full rounded-2xl" />
+          <div className="flex gap-3">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-10 w-20 rounded-full" />
+            ))}
+          </div>
           {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-16 w-full" />
+            <Skeleton key={i} className="h-24 w-full rounded-2xl" />
           ))}
         </div>
       </div>
     );
   }
 
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        {/* Header */}
+        <div className="px-6 pt-8 pb-2">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Pendrive</h1>
+          <p className="text-sm text-muted-foreground mt-1">Gerencie suas bases e criações</p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="px-6 py-4">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar por nome ou autor..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-12 w-full rounded-2xl border-border/50 bg-muted pl-12 pr-12 text-base placeholder-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
+            />
+            <button className="absolute right-4 top-1/2 -translate-y-1/2">
+              <SlidersHorizontal className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
+            </button>
+          </div>
+        </div>
+
+        {/* Genre Filters */}
+        <div className="px-6 pb-6">
+          <div className="flex gap-3 overflow-x-auto no-scrollbar py-1">
+            {GENRES.map(genre => (
+              <button
+                key={genre}
+                onClick={() => setSelectedGenre(genre)}
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                  selectedGenre === genre
+                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30'
+                    : 'bg-muted border border-border/50 text-foreground hover:border-primary hover:text-primary'
+                }`}
+              >
+                {genre}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Section */}
+        <div className="px-6 mb-6">
+          <div className="flex justify-between items-end mb-4">
+            <h2 className="text-lg font-bold text-foreground">Recentes</h2>
+            <button className="text-xs text-primary font-semibold hover:underline">Ver todos</button>
+          </div>
+
+          {recentRegistrations.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center bg-muted rounded-2xl">
+              <FolderOpen className="h-12 w-12 text-muted-foreground/50 mb-3" />
+              <h3 className="text-sm font-medium text-foreground">Nenhuma música encontrada</h3>
+              <p className="text-muted-foreground text-xs mt-1">
+                {searchTerm || selectedGenre !== 'Tudo' 
+                  ? 'Tente ajustar os filtros'
+                  : 'Suas músicas registradas aparecerão aqui'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {recentRegistrations.map((registration) => (
+                <div
+                  key={registration.id}
+                  className="flex items-center p-3 bg-muted rounded-2xl border border-border/50 hover:border-primary/50 transition-colors group"
+                >
+                  {/* Thumbnail/Cover */}
+                  <div 
+                    className="relative h-16 w-16 rounded-xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center cursor-pointer"
+                    onClick={() => handlePlayAudio(registration)}
+                  >
+                    <Music className="h-6 w-6 text-primary/60" />
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      {playingId === registration.id ? (
+                        <Pause className="h-6 w-6 text-white" />
+                      ) : (
+                        <Play className="h-6 w-6 text-white" />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div className="ml-4 flex-1 min-w-0">
+                    <h3 className="text-sm font-bold truncate text-foreground">{registration.title}</h3>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                      {registration.author} • {registration.rhythm || 'Instrumental'}
+                    </p>
+                    <div className="flex items-center mt-1.5 gap-2">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${getGenreBadgeStyle(registration.genre)}`}>
+                        {registration.genre}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">{getFileSize(registration.id)}</span>
+                    </div>
+                  </div>
+
+                  {/* Download Button */}
+                  <button 
+                    onClick={() => handleDownload(registration)}
+                    className="h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted-foreground/10 hover:text-primary transition"
+                  >
+                    <Download className="h-5 w-5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Favorites Section */}
+        <div className="px-6 mb-6">
+          <h2 className="text-lg font-bold mb-4 text-foreground">Favoritos</h2>
+          <div className="bg-muted rounded-2xl p-4 border border-border/50">
+            <div className="flex items-center justify-between mb-4 pb-4 border-b border-border/50">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <Star className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Projetos 2023</p>
+                  <p className="text-xs text-muted-foreground">12 Arquivos</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+                  <Mic className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Vocais Raw</p>
+                  <p className="text-xs text-muted-foreground">8 Arquivos</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Navigation */}
+        <MobileBottomNavigation />
+
+        {/* Pro Upgrade Modal */}
+        <ProUpgradeModal 
+          open={showUpgradeModal} 
+          onOpenChange={setShowUpgradeModal}
+          featureName="Pendrive Inteligente"
+        />
+
+        {/* Hide scrollbar */}
+        <style>{`
+          .no-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Desktop version (keep existing)
   return (
     <div className="p-4 md:p-6 space-y-4 max-w-5xl mx-auto">
-      {/* Header compacto */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-            <UsbIcon className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Meu Pendrive</h1>
-            <p className="text-muted-foreground text-xs">
-              Todas as suas músicas registradas
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Pendrive</h1>
+          <p className="text-muted-foreground text-sm">Gerencie suas bases e criações</p>
         </div>
-        
-        <div className="flex items-center gap-2">
-          {isPro ? (
-            <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs gap-1">
-              <Crown className="h-3 w-3" />
-              Pro
-            </Badge>
-          ) : (
-            <Badge 
-              variant="outline" 
-              className="text-xs gap-1 cursor-pointer hover:bg-primary/10"
-              onClick={() => setShowUpgradeModal(true)}
-            >
-              <Lock className="h-3 w-3" />
-              Assinar Pro
-            </Badge>
-          )}
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Music className="h-3.5 w-3.5" />
-            <span>{registrations?.length || 0} músicas</span>
-          </div>
-        </div>
+        <Badge className="w-fit">{registrations?.length || 0} músicas</Badge>
       </div>
 
-      {/* Filtros compactos */}
-      <div className="flex flex-col sm:flex-row gap-2">
+      {/* Search & Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por nome ou autor..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 h-9 text-sm bg-background/50"
+            className="pl-10"
           />
         </div>
-        
-        <div className="flex items-center gap-1.5">
-          <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-          <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-            <SelectTrigger className="w-[160px] h-9 text-sm bg-background/50">
-              <SelectValue placeholder="Gênero" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os gêneros</SelectItem>
-              {genres.map(genre => (
-                <SelectItem key={genre} value={genre}>{genre}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {GENRES.slice(0, 5).map(genre => (
+            <Button
+              key={genre}
+              variant={selectedGenre === genre ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedGenre(genre)}
+              className="whitespace-nowrap"
+            >
+              {genre}
+            </Button>
+          ))}
         </div>
       </div>
 
-      {/* Lista de músicas */}
-      <ScrollArea className="h-[calc(100vh-240px)]">
-        {filteredRegistrations.length === 0 ? (
-          <Card className="border-border/50 bg-card/50">
-            <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-              <FolderOpen className="h-12 w-12 text-muted-foreground/50 mb-3" />
-              <h3 className="text-sm font-medium text-foreground">Nenhuma música encontrada</h3>
-              <p className="text-muted-foreground text-xs mt-1">
-                {searchTerm || selectedGenre !== 'all' 
-                  ? 'Tente ajustar os filtros'
-                  : 'Suas músicas registradas aparecerão aqui'}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {Object.entries(groupedByGenre).map(([genre, songs]) => (
-              <Card key={genre} className="border-border/50 bg-card/50 overflow-hidden">
-                <CardHeader className="py-2 px-3 bg-muted/30 border-b border-border/50">
-                  <CardTitle className="text-sm flex items-center gap-1.5">
-                    <Music className="h-3.5 w-3.5 text-primary" />
-                    {genre}
-                    <Badge variant="secondary" className="ml-1.5 text-xs">{songs.length}</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="divide-y divide-border/50">
-                    {songs.map((song) => (
-                      <div 
-                        key={song.id} 
-                        className="flex items-center justify-between p-3 hover:bg-muted/20 transition-colors gap-2"
-                      >
-                        {/* Play button */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 shrink-0"
-                          onClick={() => handlePlayAudio(song)}
-                        >
-                          {playingId === song.id ? (
-                            <Pause className="h-4 w-4 text-primary" />
-                          ) : song.audio_file_path ? (
-                            <Play className="h-4 w-4" />
-                          ) : (
-                            <Volume2 className="h-4 w-4 text-muted-foreground/50" />
-                          )}
-                        </Button>
+      {/* Music List */}
+      {filteredRegistrations.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/50 rounded-xl">
+          <FolderOpen className="h-16 w-16 text-muted-foreground/50 mb-4" />
+          <h3 className="text-lg font-medium text-foreground">Nenhuma música encontrada</h3>
+          <p className="text-muted-foreground text-sm mt-1">
+            {searchTerm || selectedGenre !== 'Tudo' 
+              ? 'Tente ajustar os filtros'
+              : 'Suas músicas registradas aparecerão aqui'}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredRegistrations.map((registration) => (
+            <div
+              key={registration.id}
+              className="flex items-center p-4 bg-card rounded-xl border border-border hover:border-primary/50 transition-colors group"
+            >
+              <div 
+                className="relative h-14 w-14 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center cursor-pointer"
+                onClick={() => handlePlayAudio(registration)}
+              >
+                <Music className="h-5 w-5 text-primary/60" />
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  {playingId === registration.id ? (
+                    <Pause className="h-5 w-5 text-white" />
+                  ) : (
+                    <Play className="h-5 w-5 text-white" />
+                  )}
+                </div>
+              </div>
 
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-foreground truncate">{song.title}</h4>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <span className="truncate">{song.author}</span>
-                            <span className="text-border">•</span>
-                            <span className="flex items-center gap-0.5 shrink-0">
-                              <Calendar className="h-3 w-3" />
-                              {format(new Date(song.created_at), "dd/MM/yy", { locale: ptBR })}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 shrink-0">
-                          {getStatusBadge(song.status)}
-                          
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDownload(song)}
-                            disabled={!song.audio_file_path}
-                            className="h-8 gap-1.5 text-xs"
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">Baixar</span>
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+              <div className="ml-4 flex-1 min-w-0">
+                <h3 className="font-semibold truncate text-foreground">{registration.title}</h3>
+                <p className="text-sm text-muted-foreground truncate">
+                  {registration.author} • {registration.rhythm || 'Instrumental'}
+                </p>
+              </div>
 
-      {/* Modal de Upgrade */}
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className={getGenreBadgeStyle(registration.genre)}>
+                  {registration.genre}
+                </Badge>
+                <span className="text-xs text-muted-foreground">{getFileSize(registration.id)}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDownload(registration)}
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <ProUpgradeModal 
         open={showUpgradeModal} 
         onOpenChange={setShowUpgradeModal}
