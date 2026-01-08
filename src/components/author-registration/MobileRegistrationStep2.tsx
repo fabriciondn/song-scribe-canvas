@@ -402,26 +402,28 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
               className="w-full px-4 py-4 rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] focus:border-[#00C853] focus:ring-0 outline-none transition-all placeholder-gray-600 text-white text-[15px] resize-none"
             />
           </div>
+
+          {/* Continue Button (inline, abaixo das observações) */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={handleContinue}
+              disabled={!canContinue}
+              className={cn(
+                "w-full font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2",
+                canContinue
+                  ? "bg-[#00C853] text-black active:scale-[0.98] shadow-[0_0_20px_rgba(0,200,83,0.3)]"
+                  : "bg-gray-700 text-gray-400 cursor-not-allowed"
+              )}
+            >
+              Continuar
+              <MaterialIcon name="arrow_forward" className="text-xl" />
+            </button>
+          </div>
         </div>
       </main>
 
-      {/* Bottom Fixed Button */}
-      <div className="fixed bottom-0 left-0 right-0 w-full z-50 bg-black/95 backdrop-blur-md border-t border-white/10 p-4 pb-8 safe-area-bottom">
-        <button
-          type="button"
-          onClick={handleContinue}
-          disabled={!canContinue}
-          className={cn(
-            "w-full font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2",
-            canContinue 
-              ? "bg-[#00C853] text-black active:scale-[0.98] shadow-[0_0_20px_rgba(0,200,83,0.3)]" 
-              : "bg-gray-700 text-gray-400 cursor-not-allowed"
-          )}
-        >
-          Continuar
-          <MaterialIcon name="arrow_forward" className="text-xl" />
-        </button>
-      </div>
+      {/* Botão de continuar foi movido para abaixo de “Observações Adicionais” */}
     </div>
   );
 };
