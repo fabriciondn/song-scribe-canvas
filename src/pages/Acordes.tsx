@@ -85,7 +85,7 @@ export default function Acordes() {
             <div className="flex items-center justify-between">
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-foreground">{progress.available_acordes}</span>
-                <span className="text-muted-foreground">/ 30 acordes</span>
+                <span className="text-muted-foreground">/ 20 acordes</span>
               </div>
               <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-500/30">
                 R$ 1,00 = 1 acorde
