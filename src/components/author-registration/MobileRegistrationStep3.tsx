@@ -305,7 +305,7 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 px-4 pb-52 overflow-y-auto">
+      <main className="flex-1 px-4 pb-80 overflow-y-auto">
         {/* Steps Indicator */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
@@ -464,7 +464,7 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
       </main>
 
       {/* Bottom Fixed Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black via-black to-transparent p-6 pb-8">
+      <div className="fixed bottom-24 left-0 right-0 z-40 bg-gradient-to-t from-black via-black to-transparent p-6 pb-8">
         <button
           type="button"
           onClick={handleConfirmAndRegister}
