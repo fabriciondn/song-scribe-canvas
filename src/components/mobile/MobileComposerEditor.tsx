@@ -50,9 +50,36 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
   const [showSettings, setShowSettings] = useState(false);
   const [previewingBaseId, setPreviewingBaseId] = useState<string | null>(null);
   
-  // Settings state
-  const [showMicButton, setShowMicButton] = useState(true);
-  const [showPlayerToggle, setShowPlayerToggle] = useState(true);
+  // Settings state with localStorage persistence
+  const COMPOSER_SETTINGS_KEY = 'composer-panel-settings';
+  
+  const getInitialSettings = () => {
+    try {
+      const saved = localStorage.getItem(COMPOSER_SETTINGS_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Error loading composer settings:', e);
+    }
+    return { showMicButton: true, showPlayerToggle: true };
+  };
+  
+  const initialSettings = getInitialSettings();
+  const [showMicButton, setShowMicButton] = useState(initialSettings.showMicButton);
+  const [showPlayerToggle, setShowPlayerToggle] = useState(initialSettings.showPlayerToggle);
+  
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(COMPOSER_SETTINGS_KEY, JSON.stringify({
+        showMicButton,
+        showPlayerToggle
+      }));
+    } catch (e) {
+      console.error('Error saving composer settings:', e);
+    }
+  }, [showMicButton, showPlayerToggle]);
   const [isPlayerHidden, setIsPlayerHidden] = useState(false);
   
   // Audio player state
