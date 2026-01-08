@@ -734,12 +734,12 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
               </div>
               <button
                 onClick={() => setShowMicButton(!showMicButton)}
-                className={`w-12 h-7 rounded-full transition-colors relative ${
+                className={`w-11 h-6 rounded-full transition-all duration-200 relative flex items-center ${
                   showMicButton ? 'bg-[#00C853]' : 'bg-gray-600'
                 }`}
               >
-                <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
-                  showMicButton ? 'left-6' : 'left-1'
+                <span className={`inline-block w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${
+                  showMicButton ? 'translate-x-6' : 'translate-x-1'
                 }`} />
               </button>
             </div>
@@ -757,12 +757,12 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
               </div>
               <button
                 onClick={() => setShowPlayerToggle(!showPlayerToggle)}
-                className={`w-12 h-7 rounded-full transition-colors relative ${
+                className={`w-11 h-6 rounded-full transition-all duration-200 relative flex items-center ${
                   showPlayerToggle ? 'bg-[#00C853]' : 'bg-gray-600'
                 }`}
               >
-                <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
-                  showPlayerToggle ? 'left-6' : 'left-1'
+                <span className={`inline-block w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${
+                  showPlayerToggle ? 'translate-x-6' : 'translate-x-1'
                 }`} />
               </button>
             </div>
