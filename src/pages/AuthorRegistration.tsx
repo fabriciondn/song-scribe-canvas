@@ -14,6 +14,7 @@ import { useProfileValidation } from '@/hooks/useProfileValidation';
 import { trackAffiliateClick } from '@/services/affiliateService';
 import { MobileRegistrationStep1 } from '@/components/author-registration/MobileRegistrationStep1';
 import { MobileRegistrationStep2 } from '@/components/author-registration/MobileRegistrationStep2';
+import { MobileRegistrationStep3 } from '@/components/author-registration/MobileRegistrationStep3';
 import { useProfile } from '@/hooks/useProfile';
 
 export interface AuthorRegistrationData {
@@ -35,7 +36,7 @@ export interface AuthorRegistrationData {
 // Interface para dados do Step 1 mobile
 interface MobileStep1Data {
   title: string;
-  authors: Array<{ id: string; name: string; initials: string; percentage: number | null; isTitular: boolean; cpf?: string; }>;
+  authors: Array<{ id: string; name: string; initials: string; percentage: number | null; isTitular: boolean; cpf?: string; avatarUrl?: string; isFromPlatform?: boolean; }>;
   hasSamples: boolean;
 }
 
@@ -229,17 +230,21 @@ const AuthorRegistration: React.FC = () => {
       audioFile: data.audioFile,
       additionalInfo: data.additionalInfo,
       registrationType: data.registrationType,
-      termsAccepted: true, // Será confirmado na etapa 3
+      termsAccepted: false,
     }));
 
     setMobileStep(3);
-    setStep('review');
     console.log('Step 2 completed:', data);
   };
 
   // Handler para voltar ao Step 1 mobile
   const handleMobileStep2Back = () => {
     setMobileStep(1);
+  };
+
+  // Handler para voltar ao Step 2 mobile
+  const handleMobileStep3Back = () => {
+    setMobileStep(2);
   };
 
   // Renderização Mobile - Step 1
@@ -259,6 +264,18 @@ const AuthorRegistration: React.FC = () => {
         onContinue={handleMobileStep2Continue}
         onBack={handleMobileStep2Back}
         initialData={mobileStep2Data || undefined}
+      />
+    );
+  }
+
+  // Renderização Mobile - Step 3
+  if (isMobile && isProfileComplete && mobileStep === 3) {
+    return (
+      <MobileRegistrationStep3
+        onConfirm={handleRegisterComplete}
+        onBack={handleMobileStep3Back}
+        formData={formData}
+        authors={mobileStep1Data?.authors || []}
       />
     );
   }
@@ -294,14 +311,7 @@ const AuthorRegistration: React.FC = () => {
           <div className="space-y-4 md:space-y-6">
             <Button
               variant="outline"
-              onClick={() => {
-                if (isMobile && mobileStep === 3) {
-                  setMobileStep(2);
-                  setStep('form');
-                } else {
-                  handleBackToForm();
-                }
-              }}
+              onClick={handleBackToForm}
               className="mb-4"
               size={isMobile ? "sm" : "default"}
             >
