@@ -65,7 +65,7 @@ export const MobileNotificationCenter: React.FC = () => {
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-md p-0 bg-[#0A0A0A] border-gray-800">
         <SheetHeader className="p-4 border-b border-gray-800">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pr-8">
             <SheetTitle className="text-white font-bold text-lg">Notificações</SheetTitle>
             {unreadCount > 0 && (
               <Button 
