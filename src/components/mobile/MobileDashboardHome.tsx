@@ -9,6 +9,7 @@ import { useWeeklyRegistrations } from '@/hooks/useWeeklyRegistrations';
 import { useTheme } from '@/hooks/useTheme';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { MobileNotificationCenter } from './MobileNotificationCenter';
+
 // Componente para Material Symbols
 const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: string }> = ({ 
   name, 
@@ -33,7 +34,7 @@ export const MobileDashboardHome: React.FC = () => {
   const { progress } = useAcordes();
   const { stats } = useDashboardStats();
   const { weeklyData } = useWeeklyRegistrations();
-  const { toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
 
   const userName = profile?.artistic_name || profile?.name?.split(' ')[0] || 'Usuário';
   const userAvatar = profile?.avatar_url;
@@ -42,33 +43,31 @@ export const MobileDashboardHome: React.FC = () => {
   const totalRegistrations = stats?.registeredWorks?.total || 0;
   const totalDrafts = stats?.compositions?.drafts || 0;
 
-  // Dados reais do gráfico de barras por semana do mês
-
   return (
-    <div className="min-h-screen bg-[#000000] text-white pb-24 font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className="min-h-screen bg-background text-foreground pb-24 font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Header */}
-      <header className="pt-12 pb-6 px-6 flex items-center justify-between sticky top-0 z-10 bg-[#000000]/80 backdrop-blur-md">
+      <header className="pt-12 pb-6 px-6 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Avatar className="w-10 h-10 border-2 border-[#1E1E1E] shadow-sm">
+            <Avatar className="w-10 h-10 border-2 border-border shadow-sm">
               <AvatarImage src={userAvatar} alt={userName} />
-              <AvatarFallback className="bg-[#1E1E1E] text-white text-sm font-medium">
+              <AvatarFallback className="bg-muted text-foreground text-sm font-medium">
                 {userInitials}
               </AvatarFallback>
             </Avatar>
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#00C853] rounded-full border-2 border-[#000000]" />
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-primary rounded-full border-2 border-background" />
           </div>
           <div>
-            <p className="text-xs text-[#9CA3AF] font-medium">Bem-vindo de volta,</p>
+            <p className="text-xs text-muted-foreground font-medium">Bem-vindo de volta,</p>
             <h1 className="text-lg font-bold leading-tight">{userName}</h1>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button 
             onClick={toggleTheme}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full hover:bg-accent transition-colors"
           >
-            <MaterialIcon name="dark_mode" className="text-2xl" />
+            <MaterialIcon name={theme === 'dark' ? 'light_mode' : 'dark_mode'} className="text-2xl" />
           </button>
           {/* Notificações da plataforma */}
           <MobileNotificationCenter />
@@ -79,43 +78,43 @@ export const MobileDashboardHome: React.FC = () => {
       <main className="flex-1 px-6 space-y-8">
         {/* Card de Créditos */}
         <section>
-          <div className="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+          <div className="bg-gradient-to-br from-card to-background rounded-3xl p-6 shadow-xl relative overflow-hidden border border-border">
             {/* Efeitos de blur */}
-            <div className="absolute top-0 right-0 w-48 h-48 bg-[#00C853]/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none" />
             
             <div className="relative z-10">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <p className="text-gray-400 text-sm font-medium mb-1">Saldo disponível</p>
+                  <p className="text-muted-foreground text-sm font-medium mb-1">Saldo disponível</p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-extrabold tracking-tight">{credits || 0}</span>
-                    <span className="text-[#00C853] font-bold text-lg">Créditos</span>
+                    <span className="text-primary font-bold text-lg">Créditos</span>
                   </div>
                 </div>
                 <button 
                   onClick={() => navigate('/credits-checkout')}
-                  className="bg-white/10 hover:bg-white/20 active:scale-95 transition-all p-2 rounded-xl backdrop-blur-sm border border-white/5"
+                  className="bg-accent hover:bg-accent/80 active:scale-95 transition-all p-2 rounded-xl backdrop-blur-sm border border-border"
                 >
-                  <MaterialIcon name="add" className="text-[#00C853]" />
+                  <MaterialIcon name="add" className="text-primary" />
                 </button>
               </div>
               
               <div className="flex gap-3">
                 <button 
                   onClick={() => navigate('/dashboard/acordes')}
-                  className="flex-1 bg-white/5 rounded-xl p-3 border border-white/5 hover:bg-white/10 active:scale-[0.98] transition-all text-left"
+                  className="flex-1 bg-accent/50 rounded-xl p-3 border border-border hover:bg-accent active:scale-[0.98] transition-all text-left"
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <MaterialIcon name="trending_up" className="text-[#00C853] text-sm" />
-                    <span className="text-xs text-gray-300">Recompensas</span>
+                    <MaterialIcon name="trending_up" className="text-primary text-sm" />
+                    <span className="text-xs text-muted-foreground">Recompensas</span>
                   </div>
                   <span className="text-sm font-semibold">{totalAcordes} Acordes</span>
                 </button>
-                <div className="flex-1 bg-white/5 rounded-xl p-3 border border-white/5">
+                <div className="flex-1 bg-accent/50 rounded-xl p-3 border border-border">
                   <div className="flex items-center gap-2 mb-1">
                     <MaterialIcon name={isFrozen ? "ac_unit" : "stars"} className={isFrozen ? "text-blue-400 text-sm" : "text-yellow-400 text-sm"} />
-                    <span className="text-xs text-gray-300">{isFrozen ? 'Congelados' : 'Bônus'}</span>
+                    <span className="text-xs text-muted-foreground">{isFrozen ? 'Congelados' : 'Bônus'}</span>
                   </div>
                   <span className="text-sm font-semibold">{bonusCredits} Bônus</span>
                 </div>
@@ -130,24 +129,24 @@ export const MobileDashboardHome: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <button 
               onClick={() => navigate('/dashboard/composer')}
-              className="group flex flex-col items-start p-5 bg-[#1E1E1E] rounded-2xl border border-gray-800 hover:border-[#00C853]/50 transition-all active:scale-[0.98]"
+              className="group flex flex-col items-start p-5 bg-card rounded-2xl border border-border hover:border-primary/50 transition-all active:scale-[0.98]"
             >
-              <div className="w-12 h-12 rounded-full bg-[#00C853]/20 flex items-center justify-center mb-4 group-hover:bg-[#00C853] transition-colors text-[#00C853] group-hover:text-white">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-4 group-hover:bg-primary transition-colors text-primary group-hover:text-primary-foreground">
                 <MaterialIcon name="music_note" filled className="text-2xl" />
               </div>
               <span className="font-bold text-base mb-1">Nova Composição</span>
-              <span className="text-xs text-[#9CA3AF] text-left leading-snug">Rascunhe sua próxima ideia</span>
+              <span className="text-xs text-muted-foreground text-left leading-snug">Rascunhe sua próxima ideia</span>
             </button>
             
             <button 
               onClick={() => navigate('/dashboard/author-registration')}
-              className="group flex flex-col items-start p-5 bg-[#1E1E1E] rounded-2xl border border-gray-800 hover:border-blue-500/50 transition-all active:scale-[0.98]"
+              className="group flex flex-col items-start p-5 bg-card rounded-2xl border border-border hover:border-blue-500/50 transition-all active:scale-[0.98]"
             >
               <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mb-4 group-hover:bg-blue-500 transition-colors text-blue-400 group-hover:text-white">
                 <MaterialIcon name="copyright" filled className="text-2xl" />
               </div>
               <span className="font-bold text-base mb-1">Registrar Obra</span>
-              <span className="text-xs text-[#9CA3AF] text-left leading-snug">Proteja seus direitos</span>
+              <span className="text-xs text-muted-foreground text-left leading-snug">Proteja seus direitos</span>
             </button>
           </div>
         </section>
@@ -158,19 +157,19 @@ export const MobileDashboardHome: React.FC = () => {
             <h2 className="text-lg font-bold">Resumo Mensal</h2>
             <button 
               onClick={() => navigate('/dashboard/registered-works')}
-              className="text-[#00C853] text-sm font-semibold hover:underline"
+              className="text-primary text-sm font-semibold hover:underline"
             >
               Ver tudo
             </button>
           </div>
           
-          <div className="bg-[#1E1E1E] rounded-2xl p-5 border border-gray-800">
+          <div className="bg-card rounded-2xl p-5 border border-border">
             <div className="flex items-center justify-between mb-6">
               <div className="flex flex-col">
                 <span className="text-3xl font-bold">{totalRegistrations}</span>
-                <span className="text-xs text-[#9CA3AF] uppercase tracking-wide font-semibold">Total de Registros</span>
+                <span className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">Total de Registros</span>
               </div>
-              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-green-900/30 text-green-400">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-primary/20 text-primary">
                 <MaterialIcon name="bar_chart" />
               </div>
             </div>
@@ -182,12 +181,12 @@ export const MobileDashboardHome: React.FC = () => {
                   key={index}
                   className={`w-full rounded-t-md relative group cursor-pointer transition-colors ${
                     item.active 
-                      ? 'bg-[#00C853] shadow-[0_0_10px_rgba(0,200,83,0.3)]' 
-                      : 'bg-gray-800 hover:bg-[#00C853]/20'
+                      ? 'bg-primary shadow-[0_0_10px_rgba(0,200,83,0.3)]' 
+                      : 'bg-muted hover:bg-primary/20'
                   }`}
                   style={{ height: item.height }}
                 >
-                  <div className={`absolute -top-8 left-1/2 -translate-x-1/2 bg-[#1E1E1E] border border-gray-700 text-white text-[10px] py-1 px-2 rounded font-bold ${
+                  <div className={`absolute -top-8 left-1/2 -translate-x-1/2 bg-card border border-border text-foreground text-[10px] py-1 px-2 rounded font-bold ${
                     item.active ? 'block' : 'hidden group-hover:block'
                   }`}>
                     {item.value}
@@ -196,9 +195,9 @@ export const MobileDashboardHome: React.FC = () => {
               ))}
             </div>
             
-            <div className="flex justify-between mt-2 text-xs text-[#9CA3AF] font-medium">
+            <div className="flex justify-between mt-2 text-xs text-muted-foreground font-medium">
               {weeklyData.map((item, index) => (
-                <span key={index} className={item.active ? 'text-[#00C853] font-bold' : ''}>
+                <span key={index} className={item.active ? 'text-primary font-bold' : ''}>
                   {item.week}
                 </span>
               ))}
@@ -212,30 +211,30 @@ export const MobileDashboardHome: React.FC = () => {
           <div className="space-y-3">
             <button 
               onClick={() => navigate('/dashboard/drafts')}
-              className="w-full flex items-center p-3 bg-[#1E1E1E] rounded-xl border border-gray-800 hover:border-gray-700 transition-colors"
+              className="w-full flex items-center p-3 bg-card rounded-xl border border-border hover:border-primary/30 transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-orange-900/30 flex items-center justify-center text-orange-400 mr-3 flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400 mr-3 flex-shrink-0">
                 <MaterialIcon name="folder_open" className="text-xl" />
               </div>
               <div className="flex-1 min-w-0 text-left">
                 <h4 className="font-semibold text-sm truncate">Meus Rascunhos</h4>
-                <p className="text-xs text-[#9CA3AF]">{totalDrafts} rascunhos salvos</p>
+                <p className="text-xs text-muted-foreground">{totalDrafts} rascunhos salvos</p>
               </div>
-              <MaterialIcon name="chevron_right" className="text-gray-600" />
+              <MaterialIcon name="chevron_right" className="text-muted-foreground" />
             </button>
             
             <button 
               onClick={() => navigate('/dashboard/registered-works')}
-              className="w-full flex items-center p-3 bg-[#1E1E1E] rounded-xl border border-gray-800 hover:border-gray-700 transition-colors"
+              className="w-full flex items-center p-3 bg-card rounded-xl border border-border hover:border-primary/30 transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-[#00C853]/20 flex items-center justify-center text-[#00C853] mr-3 flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary mr-3 flex-shrink-0">
                 <MaterialIcon name="check_circle" className="text-xl" />
               </div>
               <div className="flex-1 min-w-0 text-left">
                 <h4 className="font-semibold text-sm truncate">Obras Registradas</h4>
-                <p className="text-xs text-[#9CA3AF]">{totalRegistrations} músicas protegidas</p>
+                <p className="text-xs text-muted-foreground">{totalRegistrations} músicas protegidas</p>
               </div>
-              <span className="text-xs font-bold text-[#00C853] bg-[#00C853]/10 px-2 py-1 rounded">Novo</span>
+              <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">Novo</span>
             </button>
           </div>
         </section>
