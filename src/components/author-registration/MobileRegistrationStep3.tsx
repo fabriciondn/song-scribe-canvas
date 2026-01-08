@@ -464,34 +464,34 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
       </main>
 
       {/* Bottom Fixed Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black via-black to-transparent p-4 pb-6">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black via-black to-transparent p-6 pb-8">
         <button
           type="button"
           onClick={handleConfirmAndRegister}
           disabled={!canConfirm}
           className={cn(
-            "w-full font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2",
+            "w-full font-semibold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#00C853]/30",
             canConfirm 
-              ? "bg-[#00C853] text-black active:scale-[0.98] shadow-[0_0_20px_rgba(0,200,83,0.3)]" 
+              ? "bg-[#00C853] text-white active:scale-95" 
               : "bg-gray-700 text-gray-400 cursor-not-allowed"
           )}
         >
           {isRegistering ? (
             <>
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-black border-t-transparent"></div>
-              Registrando...
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+              <span>Registrando...</span>
             </>
           ) : (
             <>
-              <MaterialIcon name="verified" filled className="text-xl" />
-              Confirmar e Registrar
+              <span className="material-icons-round text-xl">verified</span>
+              <span>Confirmar e Registrar</span>
             </>
           )}
         </button>
 
         {/* Bonus Info */}
-        <div className="mt-4 w-full flex items-center justify-center gap-2 bg-[#00C853]/10 border border-[#00C853]/20 rounded-2xl py-3 px-4 shadow-[0_0_15px_rgba(0,200,83,0.1)]">
-          <MaterialIcon name="stars" className="text-base text-[#00C853]" />
+        <div className="mt-4 w-full flex items-center justify-center gap-2 bg-[#003316] border border-[#00C853]/40 rounded-2xl py-3 px-4 shadow-[0_0_15px_rgba(0,200,83,0.1)]">
+          <span className="material-icons-round text-base text-[#00C853]">stars</span>
           <span className="text-xs font-bold text-[#00C853]">Após esse registro você ganhará 1 Acorde.</span>
         </div>
 
