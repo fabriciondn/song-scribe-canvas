@@ -274,6 +274,17 @@ export const MobileFoldersPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
+          {/* Add New Folder Card - Always First */}
+          <div
+            onClick={() => setIsNewFolderModalOpen(true)}
+            className="group relative aspect-square overflow-hidden rounded-2xl border-2 border-dashed border-border/50 hover:border-primary/50 bg-transparent transition cursor-pointer flex flex-col items-center justify-center gap-2"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              <Plus className="h-6 w-6" />
+            </div>
+            <span className="text-sm font-medium text-muted-foreground group-hover:text-primary">Nova Pasta</span>
+          </div>
+
           {filteredFolders.map((folder, index) => {
             const iconConfig = getFolderIconConfig(index);
             const count = folderCounts[folder.id] || 0;
@@ -333,17 +344,6 @@ export const MobileFoldersPage: React.FC = () => {
               </div>
             );
           })}
-
-          {/* Add New Folder Card */}
-          <div
-            onClick={() => setIsNewFolderModalOpen(true)}
-            className="group relative aspect-square overflow-hidden rounded-2xl border-2 border-dashed border-border/50 hover:border-primary/50 bg-transparent transition cursor-pointer flex flex-col items-center justify-center gap-2"
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-              <Plus className="h-6 w-6" />
-            </div>
-            <span className="text-sm font-medium text-muted-foreground group-hover:text-primary">Nova Pasta</span>
-          </div>
         </div>
 
         {filteredFolders.length === 0 && !isLoading && (
@@ -370,17 +370,6 @@ export const MobileFoldersPage: React.FC = () => {
           </p>
         </div>
       </main>
-
-      {/* Floating Action Button */}
-      <div className="fixed bottom-24 right-5 z-20">
-        <button
-          onClick={() => setIsNewFolderModalOpen(true)}
-          className="flex items-center gap-2 rounded-full bg-primary px-6 py-4 shadow-[0_0_20px_rgba(var(--primary)/0.3)] transition-transform hover:scale-105 active:scale-95"
-        >
-          <FolderPlus className="h-5 w-5 text-primary-foreground" />
-          <span className="text-base font-bold text-primary-foreground">Nova Pasta</span>
-        </button>
-      </div>
 
       {/* Bottom Navigation */}
       <MobileBottomNavigation />
