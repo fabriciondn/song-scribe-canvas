@@ -172,7 +172,7 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 px-4 pb-32 overflow-y-auto">
+      <main className="flex-1 px-4 pb-40 overflow-y-auto">
         {/* Steps Indicator */}
         <div className="flex flex-col items-center py-4">
           <div className="flex items-center gap-3">
@@ -406,7 +406,7 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
       </main>
 
       {/* Bottom Fixed Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-md border-t border-white/10 p-4 pb-8">
+      <div className="fixed bottom-0 left-0 right-0 w-full z-50 bg-black/95 backdrop-blur-md border-t border-white/10 p-4 pb-8 safe-area-bottom">
         <button
           type="button"
           onClick={handleContinue}
