@@ -13,6 +13,7 @@ import { useMobileDetection } from '@/hooks/use-mobile';
 import { useProfileValidation } from '@/hooks/useProfileValidation';
 import { trackAffiliateClick } from '@/services/affiliateService';
 import { MobileRegistrationStep1 } from '@/components/author-registration/MobileRegistrationStep1';
+import { useProfile } from '@/hooks/useProfile';
 
 export interface AuthorRegistrationData {
   title: string;
@@ -33,7 +34,7 @@ export interface AuthorRegistrationData {
 // Interface para dados do Step 1 mobile
 interface MobileStep1Data {
   title: string;
-  authors: Array<{ id: string; name: string; initials: string; percentage: number | null; isTitular: boolean; }>;
+  authors: Array<{ id: string; name: string; initials: string; percentage: number | null; isTitular: boolean; cpf?: string; }>;
   hasSamples: boolean;
 }
 
@@ -44,6 +45,7 @@ const AuthorRegistration: React.FC = () => {
   const { credits, isLoading: creditsLoading } = useUserCredits();
   const { isMobile } = useMobileDetection();
   const { isComplete: isProfileComplete } = useProfileValidation();
+  const { profile } = useProfile();
   const [step, setStep] = useState<'form' | 'review'>('form');
   const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(1);
   const [mobileStep1Data, setMobileStep1Data] = useState<MobileStep1Data | null>(null);
@@ -68,7 +70,7 @@ const AuthorRegistration: React.FC = () => {
     const refCode = searchParams.get('ref');
     if (refCode) {
       console.log('🔗 Link de afiliado detectado:', refCode);
-      
+
       // Capturar UTM params da URL
       const utmParams = {
         utm_source: searchParams.get('utm_source') || undefined,
@@ -76,7 +78,7 @@ const AuthorRegistration: React.FC = () => {
         utm_campaign: searchParams.get('utm_campaign') || undefined,
         utm_content: searchParams.get('utm_content') || undefined,
       };
-      
+
       // Registrar clique do afiliado
       trackAffiliateClick(refCode, utmParams)
         .then(() => console.log('✅ Clique de afiliado registrado'))
@@ -124,10 +126,9 @@ const AuthorRegistration: React.FC = () => {
               </div>
             </div>
 
-            
             <div className="space-y-4">
-              <Button 
-                size={isMobile ? "default" : "lg"} 
+              <Button
+                size={isMobile ? "default" : "lg"}
                 className="w-full"
                 onClick={() => navigate('/credits-checkout')}
               >
@@ -178,24 +179,31 @@ const AuthorRegistration: React.FC = () => {
   // Handler para o Step 1 mobile
   const handleMobileStep1Continue = (data: MobileStep1Data) => {
     setMobileStep1Data(data);
+
+    const titularFromStep = data.authors.find((a) => a.isTitular);
+    const authorName = profile?.name || titularFromStep?.name || '';
+    const authorCpf = profile?.cpf || '';
+
     // Atualizar formData com os dados do step 1
     const otherAuthors = data.authors
-      .filter(a => !a.isTitular)
-      .map(a => ({ name: a.name, cpf: '' }));
-    
-    setFormData(prev => ({
+      .filter((a) => !a.isTitular)
+      .map((a) => ({ name: a.name, cpf: a.cpf || '' }));
+
+    setFormData((prev) => ({
       ...prev,
       title: data.title,
+      author: authorName,
+      authorCpf,
       hasOtherAuthors: otherAuthors.length > 0,
       otherAuthors,
     }));
+
     setMobileStep(2);
-    // TODO: Avançar para step 2 quando implementado
     console.log('Step 1 completed:', data);
   };
 
-  // Renderização Mobile com novo design
-  if (isMobile && isProfileComplete) {
+  // Renderização Mobile com novo design (apenas Step 1)
+  if (isMobile && isProfileComplete && mobileStep === 1) {
     return (
       <MobileRegistrationStep1
         onContinue={handleMobileStep1Continue}
@@ -224,17 +232,18 @@ const AuthorRegistration: React.FC = () => {
         <ProfileCompletionCheck />
 
         {step === 'form' && isProfileComplete && (
-          <AuthorRegistrationSteps 
+          <AuthorRegistrationSteps
             initialData={formData}
             onSubmit={handleFormSubmit}
             userCredits={credits}
+            initialStep={isMobile && mobileStep === 2 ? 2 : 1}
           />
         )}
 
         {step === 'review' && isProfileComplete && (
           <div className="space-y-4 md:space-y-6">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleBackToForm}
               className="mb-4"
               size={isMobile ? "sm" : "default"}
@@ -242,7 +251,7 @@ const AuthorRegistration: React.FC = () => {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar ao formulário
             </Button>
-            
+
             <AuthorRegistrationReview
               data={formData}
               onRegister={handleRegisterComplete}

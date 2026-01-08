@@ -67,15 +67,17 @@ interface AuthorRegistrationStepsProps {
   initialData: AuthorRegistrationData;
   onSubmit: (data: AuthorRegistrationData) => void;
   userCredits: number;
+  initialStep?: 1 | 2;
 }
 
 export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = ({
   initialData,
   onSubmit,
   userCredits,
+  initialStep,
 }) => {
   const { isMobile } = useMobileDetection();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2>(initialStep ?? 1);
   const [step1Data, setStep1Data] = useState<Step1Data>({
     title: initialData.title,
     author: initialData.author,
