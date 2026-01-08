@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -54,7 +55,9 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
   const { profile } = useProfile();
   const { subscription } = useSubscription();
   const { userRole, getDefaultDashboard } = useRoleBasedNavigation();
+  const { toast } = useToast();
   const [draftsCount, setDraftsCount] = useState<number>(0);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Buscar contagem real de rascunhos
   useEffect(() => {
@@ -106,6 +109,14 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
   };
 
   const handleUpdateApp = async () => {
+    if (isUpdating) return;
+    setIsUpdating(true);
+    
+    toast({
+      title: "Atualizando...",
+      description: "Buscando atualizações do aplicativo.",
+    });
+    
     try {
       // Check for service worker updates
       if ('serviceWorker' in navigator) {
@@ -114,15 +125,30 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
           await registration.update();
         }
       }
-      // Clear caches and reload
+      // Clear caches
       if ('caches' in window) {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(name => caches.delete(name)));
       }
-      window.location.reload();
+      
+      toast({
+        title: "App atualizado!",
+        description: "A página será recarregada com as novas funcionalidades.",
+      });
+      
+      // Small delay to show the toast before reload
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error('Erro ao atualizar:', error);
-      window.location.reload();
+      toast({
+        title: "Atualizando...",
+        description: "Recarregando a página.",
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     }
   };
 
@@ -224,21 +250,8 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
 
         <Separator className="my-4 bg-gray-800" />
 
-        {/* Configurações e Suporte */}
+        {/* Suporte e Atualizar */}
         <nav className="space-y-1">
-          <button
-            className={cn(
-              'w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-colors',
-              location.pathname === '/dashboard/settings'
-                ? 'bg-[#1A3D2E] text-[#00C853]'
-                : 'text-[#9CA3AF] hover:bg-white/5'
-            )}
-            onClick={() => handleNavigation('/dashboard/settings')}
-          >
-            <MaterialIcon name="settings" className="text-xl" />
-            <span className="font-medium">Configurações</span>
-          </button>
-          
           <button
             className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left text-[#9CA3AF] hover:bg-white/5 transition-colors"
             onClick={handleSupport}
@@ -248,11 +261,15 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
           </button>
 
           <button
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left text-[#9CA3AF] hover:bg-white/5 transition-colors"
+            className={cn(
+              "w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-colors",
+              isUpdating ? "text-[#00C853] bg-[#1A3D2E]" : "text-[#9CA3AF] hover:bg-white/5"
+            )}
             onClick={handleUpdateApp}
+            disabled={isUpdating}
           >
-            <MaterialIcon name="sync" className="text-xl" />
-            <span className="font-medium">Atualizar App</span>
+            <MaterialIcon name="sync" className={cn("text-xl", isUpdating && "animate-spin")} />
+            <span className="font-medium">{isUpdating ? "Atualizando..." : "Atualizar App"}</span>
           </button>
         </nav>
 
