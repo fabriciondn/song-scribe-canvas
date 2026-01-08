@@ -401,21 +401,6 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
         </div>
       </header>
 
-      {/* Tags Bar - fixed below header */}
-      <div className="flex-shrink-0 px-4 py-3 flex items-center justify-center gap-3 overflow-x-auto no-scrollbar border-b border-gray-200 dark:border-gray-800 bg-[#F3F4F6] dark:bg-[#0F172A]">
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-gray-700 whitespace-nowrap">
-          <span className="material-icons-round text-[#00C853] text-sm">folder_open</span>
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-            {folderName || 'Sem pasta'}
-          </span>
-        </button>
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-gray-700 whitespace-nowrap">
-          <span className="material-icons-round text-[#00C853] text-sm">group_add</span>
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-            Compor em parceria
-          </span>
-        </button>
-      </div>
 
       {/* Main Content - ONLY this scrolls */}
       <main 
@@ -703,6 +688,39 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
           </SheetHeader>
           
           <div className="space-y-4 pb-8">
+            {/* Current Folder Info */}
+            <div className="flex items-center justify-between p-4 bg-[#1E293B] rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-[#00C853]/20 flex items-center justify-center">
+                  <span className="material-icons-round text-[#00C853]">folder_open</span>
+                </div>
+                <div>
+                  <p className="text-white font-medium">Pasta</p>
+                  <p className="text-gray-400 text-sm">{folderName || 'Sem pasta'}</p>
+                </div>
+              </div>
+              <span className="material-icons-round text-gray-500">chevron_right</span>
+            </div>
+
+            {/* Partnership Button */}
+            <button
+              className="w-full flex items-center justify-between p-4 bg-[#1E293B] rounded-xl hover:bg-[#334155] transition"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                  <span className="material-icons-round text-blue-500">group_add</span>
+                </div>
+                <div className="text-left">
+                  <p className="text-white font-medium">Compor em Parceria</p>
+                  <p className="text-gray-400 text-sm">Convidar colaboradores</p>
+                </div>
+              </div>
+              <span className="material-icons-round text-gray-500">chevron_right</span>
+            </button>
+
+            {/* Divider */}
+            <div className="border-t border-gray-700 my-2" />
+
             {/* Mic Button Toggle */}
             <div className="flex items-center justify-between p-4 bg-[#1E293B] rounded-xl">
               <div className="flex items-center gap-3">
