@@ -73,6 +73,7 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
   const [newAuthorCpf, setNewAuthorCpf] = useState('');
   const [partnerToken, setPartnerToken] = useState('');
   const [isSearchingToken, setIsSearchingToken] = useState(false);
+  const [foundCoAuthor, setFoundCoAuthor] = useState<Author | null>(null);
 
   function getInitials(name: string): string {
     const parts = name.trim().split(' ').filter(Boolean);
@@ -90,6 +91,14 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
       .replace(/(\d{3})(\d)/, '$1.$2')
       .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
       .substring(0, 14);
+  };
+
+  // Mascarar CPF para exibição
+  const maskCpf = (cpf: string) => {
+    if (!cpf) return '---';
+    const numbers = cpf.replace(/\D/g, '');
+    if (numbers.length !== 11) return cpf;
+    return `***.***.${numbers.substring(6, 9)}-${numbers.substring(9, 11)}`;
   };
 
   const handleAddAuthorManual = () => {
@@ -113,6 +122,7 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
     if (!partnerToken.trim()) return;
     
     setIsSearchingToken(true);
+    setFoundCoAuthor(null);
     try {
       // Buscar o token de parceiro na tabela composer_tokens
       const { data: tokenData, error: tokenError } = await supabase
@@ -155,8 +165,8 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
         return;
       }
 
-      // Adicionar o co-autor
-      const newAuthor: Author = {
+      // Mostrar dados encontrados para confirmação
+      setFoundCoAuthor({
         id: profileData.id,
         name: profileData.name || 'Usuário',
         initials: getInitials(profileData.name || 'US'),
@@ -165,16 +175,21 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
         cpf: profileData.cpf || '',
         avatarUrl: profileData.avatar_url || undefined,
         isFromPlatform: true,
-      };
+      });
       
-      setAuthors([...authors, newAuthor]);
-      resetModal();
-      toast.success(`${profileData.name} foi adicionado como co-autor!`);
     } catch (error) {
       console.error('Erro ao buscar token:', error);
       toast.error('Erro ao buscar co-autor. Tente novamente.');
     } finally {
       setIsSearchingToken(false);
+    }
+  };
+
+  const handleConfirmFoundCoAuthor = () => {
+    if (foundCoAuthor) {
+      setAuthors([...authors, foundCoAuthor]);
+      resetModal();
+      toast.success(`${foundCoAuthor.name} foi adicionado como co-autor!`);
     }
   };
 
@@ -184,6 +199,7 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
     setNewAuthorName('');
     setNewAuthorCpf('');
     setPartnerToken('');
+    setFoundCoAuthor(null);
   };
 
   const handleRemoveAuthor = (id: string) => {
@@ -515,7 +531,7 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
             )}
 
             {/* Token Mode */}
-            {addMode === 'token' && (
+            {addMode === 'token' && !foundCoAuthor && (
               <div className="space-y-4">
                 <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-4">
                   <div className="flex items-start gap-3">
@@ -561,6 +577,85 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
                     </>
                   )}
                 </button>
+              </div>
+            )}
+
+            {/* Found Co-Author Confirmation */}
+            {addMode === 'token' && foundCoAuthor && (
+              <div className="space-y-4">
+                <div className="bg-[#00C853]/10 border border-[#00C853]/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MaterialIcon name="check_circle" filled className="text-[#00C853] text-xl" />
+                    <span className="text-[#00C853] font-semibold">Co-autor encontrado!</span>
+                  </div>
+                  <p className="text-sm text-gray-400">
+                    Confirme os dados abaixo para adicionar como co-autor:
+                  </p>
+                </div>
+
+                {/* Found User Card */}
+                <div className="bg-[#2C2C2E] rounded-2xl p-5 border border-[#3C3C3E]">
+                  <div className="flex items-center gap-4 mb-4">
+                    {foundCoAuthor.avatarUrl ? (
+                      <img 
+                        src={foundCoAuthor.avatarUrl} 
+                        alt="Avatar" 
+                        className="w-16 h-16 rounded-full object-cover border-2 border-[#00C853]"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-[#00C853] flex items-center justify-center text-white font-bold text-lg">
+                        {foundCoAuthor.initials}
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-lg text-white">{foundCoAuthor.name}</h3>
+                        <MaterialIcon name="verified" filled className="text-blue-400 text-base" />
+                      </div>
+                      <p className="text-sm text-gray-400">Usuário verificado da plataforma</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-3 border-t border-[#3C3C3E]">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Nome:</span>
+                      <span className="text-sm text-white font-medium">{foundCoAuthor.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">CPF:</span>
+                      <span className="text-sm text-white font-medium">{maskCpf(foundCoAuthor.cpf || '')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Status:</span>
+                      <span className="text-sm text-[#00C853] font-medium flex items-center gap-1">
+                        <MaterialIcon name="verified" filled className="text-xs" />
+                        Verificado
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFoundCoAuthor(null);
+                      setPartnerToken('');
+                    }}
+                    className="flex-1 py-4 rounded-xl font-bold bg-[#2C2C2E] text-gray-300 border border-[#3C3C3E]"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmFoundCoAuthor}
+                    className="flex-1 py-4 rounded-xl font-bold bg-[#00C853] text-white flex items-center justify-center gap-2"
+                  >
+                    <MaterialIcon name="check" className="text-xl" />
+                    Confirmar
+                  </button>
+                </div>
               </div>
             )}
           </div>
