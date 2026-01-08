@@ -60,14 +60,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileFoldersPage } from '@/components/mobile/MobileFoldersPage';
+import { MobileDraftsPage } from '@/components/mobile/MobileDraftsPage';
 
 const Drafts: React.FC = () => {
   const isMobile = useIsMobile();
   
-  // No mobile, usar o MobileFoldersPage que tem o design correto com pastas + rascunhos
+  // No mobile, usar o MobileDraftsPage que tem o design correto com pastas + rascunhos
   if (isMobile) {
-    return <MobileFoldersPage />;
+    return <MobileDraftsPage />;
   }
 
   return <DesktopDrafts />;

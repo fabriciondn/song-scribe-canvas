@@ -63,7 +63,7 @@ const getDraftIcon = (draft: Draft) => {
   return { Icon: FileEdit, gradient: '' };
 };
 
-export const MobileFoldersPage: React.FC = () => {
+export const MobileDraftsPage: React.FC = () => {
   const [folders, setFolders] = useState<FolderType[]>([]);
   const [folderCounts, setFolderCounts] = useState<Record<string, number>>({});
   const [recentDrafts, setRecentDrafts] = useState<Draft[]>([]);
@@ -535,4 +535,4 @@ export const MobileFoldersPage: React.FC = () => {
   );
 };
 
-export default MobileFoldersPage;
+export default MobileDraftsPage;
