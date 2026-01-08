@@ -106,11 +106,7 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
     queryKey: ['music-bases-list'],
     queryFn: getBases,
   });
-
-  // Force light mode on mount
-  useEffect(() => {
-    setTheme('light');
-  }, [setTheme]);
+  // Theme is now persisted - no automatic override
 
   // Prevent iOS Safari overscroll bounce (white bar issue)
   useEffect(() => {
