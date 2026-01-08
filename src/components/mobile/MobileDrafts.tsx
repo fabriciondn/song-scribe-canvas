@@ -109,7 +109,6 @@ export const MobileDrafts: React.FC = () => {
           }
           
           setViewMode('editor');
-          sonnerToast.info('Rascunho restaurado automaticamente');
         }
       } catch (e) {
         console.error('Error restoring auto-save:', e);
