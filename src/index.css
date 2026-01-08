@@ -130,9 +130,9 @@
   }
   }
 
-  /* Prevent gray overscroll areas on iOS */
+  /* Prevent gray overscroll areas on iOS - uses theme colors */
   html, body {
-    background-color: #000000;
+    background-color: hsl(var(--background));
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
   }
@@ -146,14 +146,9 @@
     min-height: -webkit-fill-available;
   }
 
-  /* Ensure dark background is applied consistently */
-  .dark html,
-  .dark body,
-  html.dark,
-  body.dark,
-  .dark #root,
-  html.dark #root {
-    background-color: #000000;
+  #root {
+    background-color: hsl(var(--background));
+    min-height: 100%;
   }
 
 /* PWA Specific Styles */
