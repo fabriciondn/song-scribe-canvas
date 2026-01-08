@@ -458,17 +458,20 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
         </div>
       </main>
 
+      {/* Audio element always mounted to keep playing when panel is hidden */}
+      {selectedBase && (
+        <audio
+          ref={audioRef}
+          src={baseAudioUrl}
+          preload="metadata"
+          playsInline
+          className="hidden"
+        />
+      )}
+
       {/* Audio Player Panel - fixed at bottom, hideable */}
       {!isPlayerHidden && (
       <div className="flex-shrink-0 bg-black border-t border-gray-800 pt-4 pb-8 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)] z-20">
-        {selectedBase && (
-          <audio
-            ref={audioRef}
-            src={baseAudioUrl}
-            preload="metadata"
-            playsInline
-          />
-        )}
         
         <div className="flex flex-col gap-3">
           {/* Base name and speed controls */}
