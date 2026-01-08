@@ -105,6 +105,27 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
     onClose();
   };
 
+  const handleUpdateApp = async () => {
+    try {
+      // Check for service worker updates
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          await registration.update();
+        }
+      }
+      // Clear caches and reload
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      window.location.reload();
+    } catch (error) {
+      console.error('Erro ao atualizar:', error);
+      window.location.reload();
+    }
+  };
+
   return (
     <div className="flex flex-col h-full max-h-screen bg-[#0A0A0A] overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
       {/* User Profile Section */}
@@ -224,6 +245,14 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
           >
             <MaterialIcon name="support_agent" className="text-xl" />
             <span className="font-medium">Suporte</span>
+          </button>
+
+          <button
+            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left text-[#9CA3AF] hover:bg-white/5 transition-colors"
+            onClick={handleUpdateApp}
+          >
+            <MaterialIcon name="sync" className="text-xl" />
+            <span className="font-medium">Atualizar App</span>
           </button>
         </nav>
 
