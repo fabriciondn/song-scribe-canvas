@@ -471,7 +471,7 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
                 />
               </div>
               <span className="text-[15px] text-gray-400 leading-snug">
-                Esta obra contém samples ou trechos de terceiros?
+                Esta obra contém trechos de terceiros?
               </span>
             </label>
           </div>
