@@ -23,6 +23,7 @@ interface MobileComposerEditorProps {
   folderName: string;
   audioFiles: AudioFile[];
   isSaving: boolean;
+  draftId?: string | null;
   onTitleChange: (title: string) => void;
   onContentChange: (content: string) => void;
   onSave: () => void;
@@ -38,6 +39,7 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
   folderName,
   audioFiles,
   isSaving,
+  draftId,
   onTitleChange,
   onContentChange,
   onSave,
@@ -868,10 +870,15 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
       <CollaborativeSessionModal
         isOpen={showCollaborativeModal}
         onClose={() => setShowCollaborativeModal(false)}
-        onSessionJoined={(session, draftId) => {
+        draftId={draftId || undefined}
+        draftTitle={title || 'Novo Rascunho'}
+        onSessionCreated={(session) => {
+          // Session created, user can share token
+        }}
+        onSessionJoined={(session, joinedDraftId) => {
           setShowCollaborativeModal(false);
           // Navigate to the draft from the session
-          navigate(`/dashboard/composer?draft=${draftId}`);
+          navigate(`/dashboard/composer?draft=${joinedDraftId}`);
         }}
       />
     </div>
