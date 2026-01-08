@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Play, MessageCircle, Heart, Share2, Clock, Eye, Search, Copyright, Handshake, DollarSign, ShieldCheck } from 'lucide-react';
+import { Play, MessageCircle, Heart, Share2, Clock, Eye } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { ProOnlyWrapper } from '@/components/layout/ProOnlyWrapper';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +23,7 @@ interface Tutorial {
   views: number;
   category: string;
   videoUrl: string;
+  level?: string;
 }
 
 interface Comment {
@@ -35,8 +36,8 @@ interface Comment {
 }
 
 // Material Icon component
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className = '' }) => (
-  <span className={`material-symbols-rounded ${className}`}>{name}</span>
+const MaterialIcon: React.FC<{ name: string; className?: string; filled?: boolean }> = ({ name, className = '', filled = false }) => (
+  <span className={`material-symbols-outlined ${className}`} style={filled ? { fontVariationSettings: "'FILL' 1" } : undefined}>{name}</span>
 );
 
 // Static guides data
@@ -45,6 +46,43 @@ const STATIC_GUIDES = [
   { id: '2', title: 'Colaboração Segura', description: 'Contratos e splits.', icon: 'handshake' },
   { id: '3', title: 'Monetização', description: 'Spotify, Apple Music e mais.', icon: 'monetization_on' },
   { id: '4', title: 'Proteção Legal', description: 'Evite plágios.', icon: 'verified_user' },
+];
+
+// Static tutorials for mobile with exact images from HTML
+const STATIC_MOBILE_TUTORIALS: Tutorial[] = [
+  {
+    id: 'featured-1',
+    title: 'Como registrar sua primeira obra',
+    description: 'Aprenda passo a passo como registrar sua primeira composição.',
+    thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAAXVS4OFMWWA5Z9IOa4VgJlpc7x8PqeIOHK_jB6_d15OaD2FXLYLyzZqBR0-LA5X6kJcB3Dl7yPPTq1FXp_VrrDJ8SLqwm5jOgOOE1LD2mozJNddRFghoglOMbDUzvyaSGv1rKBANbENcs-33JC3RFQieupLoGFvsejKy-tahjxPEyIyIp7O8Pun-qE60gZtPiKupAawOFgMs4Tva7JUIpKLvZT8fZnVDtV_VLM3BVJetwY-I1gisA023mymjfoLAoOn91HG2dX0U',
+    duration: '5 min',
+    views: 1500,
+    category: 'Vídeo',
+    videoUrl: '',
+    level: 'Iniciante'
+  },
+  {
+    id: 'prod-1',
+    title: 'Masterização no Mobile',
+    description: 'Descubra as técnicas essenciais para masterizar suas faixas usando apenas o celular.',
+    thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAMvy2Nr8_zLfkFNei9hsWwALaEeKS0wzG3JsXQAYH39D34HcgK1DRoLgfQvAxTvS_WEjVkf_T3AlsYTUOg_d-DC_8SePoT3AX5S0gaCoUagfRgAO7H9a5a8DSJUdyARrp2gexbFEOtnLfc-Ul_kAUL2yc3N_cVWT0YTeeJXevyArntRMHwqZoGKk-02ug_EdwjvWu-0Id0YJGZbLSml3WwEXIaRpkzIBJcShgCPsifORm-OwdLv-EkDUs_JCXZg8tHwP-JC3XXKVA',
+    duration: '12:40',
+    views: 2300,
+    category: 'Áudio',
+    videoUrl: '',
+    level: 'Iniciante'
+  },
+  {
+    id: 'prod-2',
+    title: 'Sampling Criativo',
+    description: 'Como transformar sons do dia a dia em instrumentos únicos para suas batidas.',
+    thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDLe3va95J41GBVRkbSTd2zMBYP4HcOjc5UYzg1cG1EulsDpezIqFd0BLbJ1kLU1jqRyz9Tiudb3ZmS1g2HaYmMJcpD4_JeQO_dj4o4v1dQWXFYuyEGtMMAXg-A23ifJLQ0MYsXxHzDwFca2Rsbfs3hoCnAS2TZjLbuNy09JKe3c_A39-_wXGT-GvTalOUc6Gcgkc6TF6RLlEcLs0WEPHQvEbAYrK07-6o8yQ4KkLyiZnQ6lbZeESQaEpjhiHrmyg9paxnID7lvrmk',
+    duration: '08:15',
+    views: 1800,
+    category: 'Criação',
+    videoUrl: '',
+    level: 'Intermediário'
+  }
 ];
 
 const mockComments: Comment[] = [
@@ -150,23 +188,23 @@ export const Tutorials: React.FC = () => {
   // Mobile Loading State
   if (loading && isMobile) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <div className="sticky top-0 z-40 bg-background/90 backdrop-blur-md">
+      <div className="min-h-screen bg-black flex flex-col">
+        <div className="sticky top-0 z-40 bg-black/90 backdrop-blur-md">
           <div className="flex items-center justify-between p-4 pb-2">
-            <Skeleton className="h-8 w-32" />
-            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-8 w-32 bg-white/10" />
+            <Skeleton className="h-10 w-10 rounded-full bg-white/10" />
           </div>
           <div className="flex gap-3 px-4 pb-4 overflow-x-auto">
             {[1, 2, 3, 4].map(i => (
-              <Skeleton key={i} className="h-9 w-20 rounded-full flex-shrink-0" />
+              <Skeleton key={i} className="h-9 w-20 rounded-full flex-shrink-0 bg-white/10" />
             ))}
           </div>
         </div>
         <div className="flex-1 px-4 space-y-6 pb-24">
-          <Skeleton className="h-64 w-full rounded-3xl" />
+          <Skeleton className="h-64 w-full rounded-3xl bg-white/10" />
           <div className="space-y-4">
-            <Skeleton className="h-48 w-full rounded-3xl" />
-            <Skeleton className="h-48 w-full rounded-3xl" />
+            <Skeleton className="h-48 w-full rounded-3xl bg-white/10" />
+            <Skeleton className="h-48 w-full rounded-3xl bg-white/10" />
           </div>
         </div>
         <MobileBottomNavigation />
@@ -174,21 +212,33 @@ export const Tutorials: React.FC = () => {
     );
   }
 
-  // Mobile Layout
+  // Mobile Layout - Exact match to HTML
   if (isMobile) {
+    const displayTutorials = STATIC_MOBILE_TUTORIALS;
+    const featuredTutorial = displayTutorials[0];
+    const productionTutorials = displayTutorials.slice(1);
+
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-black text-white pb-8">
         {/* Sticky Header */}
-        <div className="sticky top-0 z-40 bg-background/90 backdrop-blur-md transition-all duration-300">
+        <div className="sticky top-0 z-40 bg-black/90 backdrop-blur-md transition-all duration-300">
           <div className="flex items-center justify-between p-4 pb-2">
             <h1 className="text-2xl font-bold leading-tight tracking-tight">Tutoriais</h1>
-            <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-muted transition-colors">
-              <Search className="w-5 h-5" />
+            <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition-colors">
+              <MaterialIcon name="search" className="text-2xl" />
             </button>
           </div>
           
-          {/* Category Filters */}
-          <div className="flex gap-3 px-4 pb-4 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {/* Category Filters - Exact match */}
+          <div 
+            className="flex gap-3 px-4 pb-4 overflow-x-auto"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              maskImage: 'linear-gradient(to right, black 85%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent 100%)'
+            }}
+          >
             {mobileCategories.map((category) => (
               <button
                 key={category}
@@ -196,13 +246,13 @@ export const Tutorials: React.FC = () => {
                 className={cn(
                   "flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-all active:scale-95",
                   selectedCategory === category
-                    ? "bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.3)]"
-                    : "bg-muted border border-border hover:bg-muted/80"
+                    ? "bg-[#1ed760] shadow-[0_0_10px_rgba(30,215,96,0.3)]"
+                    : "bg-white/10 border border-white/5 hover:bg-white/20"
                 )}
               >
                 <span className={cn(
                   "text-sm font-medium",
-                  selectedCategory === category ? "text-primary-foreground font-bold" : "text-muted-foreground"
+                  selectedCategory === category ? "text-black font-bold" : "text-slate-200"
                 )}>
                   {category}
                 </span>
@@ -212,120 +262,112 @@ export const Tutorials: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col gap-6 px-4 pb-24">
-          {/* Featured Section */}
-          {filteredTutorials.length > 0 && (
-            <div>
-              <div className="pb-3 pt-2 flex items-center justify-between">
-                <h3 className="text-lg font-bold leading-tight">Destaque</h3>
-              </div>
+        <div className="flex flex-col gap-6 w-full max-w-md mx-auto">
+          {/* Featured Section - Destaque */}
+          <div>
+            <div className="px-4 pb-3 pt-2 flex items-center justify-between">
+              <h3 className="text-lg font-bold leading-tight">Destaque</h3>
+            </div>
+            <div className="px-4">
               <div 
-                className="relative group cursor-pointer overflow-hidden rounded-3xl bg-card shadow-lg border border-border"
-                onClick={() => handleWatchTutorial(filteredTutorials[0])}
+                className="relative group cursor-pointer overflow-hidden rounded-[1.5rem] bg-[#121212] shadow-lg border border-white/5"
+                onClick={() => handleWatchTutorial(featuredTutorial)}
               >
                 <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                 <div 
                   className="w-full aspect-[4/3] bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                  style={{ backgroundImage: `url("${filteredTutorials[0].thumbnail}")` }}
+                  style={{ backgroundImage: `url("${featuredTutorial.thumbnail}")` }}
                 />
                 <div className="absolute inset-0 z-20 flex items-center justify-center opacity-90 group-hover:opacity-100 transition-opacity">
-                  <div className="w-14 h-14 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center pl-1 shadow-[0_0_20px_hsl(var(--primary)/0.5)]">
-                    <Play className="w-8 h-8 text-primary-foreground fill-current" />
+                  <div className="w-14 h-14 rounded-full bg-[#1ed760]/90 backdrop-blur-sm flex items-center justify-center pl-1 shadow-[0_0_20px_rgba(30,215,96,0.5)]">
+                    <MaterialIcon name="play_arrow" className="text-black text-3xl" />
                   </div>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 z-20 p-5 flex flex-col gap-1">
-                  <div className="inline-flex self-start items-center px-2 py-0.5 rounded bg-primary/90 backdrop-blur-sm text-[10px] font-bold uppercase tracking-wider text-primary-foreground mb-1">
+                  <div className="inline-flex self-start items-center px-2 py-0.5 rounded bg-[#1ed760]/90 backdrop-blur-sm text-[10px] font-bold uppercase tracking-wider text-black mb-1">
                     Novo
                   </div>
-                  <h2 className="text-white text-xl font-bold leading-tight">{filteredTutorials[0].title}</h2>
+                  <h2 className="text-white text-xl font-bold leading-tight">{featuredTutorial.title}</h2>
                   <div className="flex items-center gap-2 text-slate-300 text-sm font-medium mt-1">
                     <span className="flex items-center gap-1">
-                      <MaterialIcon name="videocam" className="text-base text-primary" />
+                      <MaterialIcon name="videocam" className="text-base text-[#1ed760]" />
                       Vídeo
                     </span>
                     <span>•</span>
-                    <span>{filteredTutorials[0].duration}</span>
+                    <span>{featuredTutorial.duration}</span>
                   </div>
                 </div>
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Learn Production Section */}
-          {filteredTutorials.length > 1 && (
-            <div>
-              <div className="pb-2 pt-2 flex items-center justify-between">
-                <h3 className="text-lg font-bold leading-tight">Aprenda Produção</h3>
-                <button className="text-primary text-sm font-semibold hover:text-primary/80">Ver tudo</button>
-              </div>
-              <div className="flex flex-col gap-4">
-                {filteredTutorials.slice(1, 3).map((tutorial) => (
-                  <div 
-                    key={tutorial.id}
-                    className="flex flex-col bg-card rounded-3xl p-3 shadow-sm hover:bg-muted/50 transition-colors cursor-pointer group border border-border"
-                    onClick={() => handleWatchTutorial(tutorial)}
-                  >
-                    <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-3">
-                      <div 
-                        className="w-full h-full bg-cover bg-center"
-                        style={{ backgroundImage: `url("${tutorial.thumbnail}")` }}
-                      />
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                      <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded text-xs font-medium text-white">
-                        {tutorial.duration}
-                      </div>
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Play className="w-5 h-5 text-white fill-current" />
-                      </div>
-                    </div>
-                    <div className="px-1 pb-1">
-                      <h4 className="text-base font-bold leading-tight text-foreground mb-1 group-hover:text-primary transition-colors">
-                        {tutorial.title}
-                      </h4>
-                      <p className="text-sm text-muted-foreground line-clamp-2">{tutorial.description}</p>
-                      <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground font-medium">
-                        <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full">{tutorial.category}</span>
-                        <span>•</span>
-                        <span>Iniciante</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Practical Guides Section */}
+          {/* Learn Production Section - Aprenda Produção */}
           <div>
-            <div className="pb-3 pt-2">
-              <h3 className="text-lg font-bold leading-tight">Guias Práticos</h3>
+            <div className="px-4 pb-2 pt-2 flex items-center justify-between">
+              <h3 className="text-lg font-bold leading-tight">Aprenda Produção</h3>
+              <a className="text-[#1ed760] text-sm font-semibold hover:text-[#1ed760]/80" href="#">Ver tudo</a>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {STATIC_GUIDES.map((guide) => (
+            <div className="flex flex-col gap-4 px-4">
+              {productionTutorials.map((tutorial) => (
                 <div 
-                  key={guide.id}
-                  className="bg-card p-4 rounded-3xl flex flex-col justify-between h-40 shadow-sm border border-border hover:border-primary/50 transition-colors cursor-pointer group"
+                  key={tutorial.id}
+                  className="flex flex-col bg-[#121212] rounded-[1.5rem] p-3 shadow-sm hover:bg-[#1a1a1a] transition-colors cursor-pointer group border border-white/5"
+                  onClick={() => handleWatchTutorial(tutorial)}
                 >
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:scale-110 transition-all duration-300">
-                    <MaterialIcon name={guide.icon} className="text-primary group-hover:text-primary-foreground transition-colors" />
+                  <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-3">
+                    <div 
+                      className="w-full h-full bg-cover bg-center"
+                      style={{ backgroundImage: `url("${tutorial.thumbnail}")` }}
+                    />
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+                    <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded text-xs font-medium text-white">
+                      {tutorial.duration}
+                    </div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <MaterialIcon name="play_arrow" className="text-white" />
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-foreground leading-tight mb-1">{guide.title}</h4>
-                    <p className="text-xs text-muted-foreground">{guide.description}</p>
+                  <div className="px-1 pb-1">
+                    <h4 className="text-base font-bold leading-tight text-white mb-1 group-hover:text-[#1ed760] transition-colors">
+                      {tutorial.title}
+                    </h4>
+                    <p className="text-sm text-slate-400 line-clamp-2">{tutorial.description}</p>
+                    <div className="mt-2 flex items-center gap-2 text-xs text-slate-400 font-medium">
+                      <span className="bg-[#1ed760]/10 text-[#1ed760] px-2 py-0.5 rounded-full">{tutorial.category}</span>
+                      <span>•</span>
+                      <span>{tutorial.level}</span>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Empty state */}
-          {filteredTutorials.length === 0 && !loading && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                Nenhum tutorial encontrado para a categoria selecionada.
-              </p>
+          {/* Practical Guides Section - Guias Práticos */}
+          <div>
+            <div className="px-4 pb-3 pt-2">
+              <h3 className="text-lg font-bold leading-tight">Guias Práticos</h3>
             </div>
-          )}
+            <div className="grid grid-cols-2 gap-3 px-4">
+              {STATIC_GUIDES.map((guide) => (
+                <div 
+                  key={guide.id}
+                  className="bg-[#121212] p-4 rounded-[1.5rem] flex flex-col justify-between h-40 shadow-sm border border-white/5 hover:border-[#1ed760]/50 transition-colors cursor-pointer group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#1ed760]/10 flex items-center justify-center mb-3 group-hover:bg-[#1ed760] group-hover:scale-110 transition-all duration-300">
+                    <MaterialIcon name={guide.icon} className="text-[#1ed760] group-hover:text-black transition-colors" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white leading-tight mb-1">{guide.title}</h4>
+                    <p className="text-xs text-slate-400">{guide.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Spacer for bottom navigation */}
+          <div className="h-8" />
         </div>
 
         <MobileBottomNavigation />
@@ -430,23 +472,19 @@ export const Tutorials: React.FC = () => {
                     <Card key={comment.id}>
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <Avatar className="w-8 h-8">
+                          <Avatar className="h-10 w-10">
                             <AvatarImage src={comment.avatar} />
                             <AvatarFallback>{comment.author[0]}</AvatarFallback>
                           </Avatar>
-                          
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-sm">{comment.author}</span>
-                              <Badge 
-                                variant={comment.type === 'suggestion' ? 'default' : 'secondary'}
-                                className="text-xs"
-                              >
+                              <span className="font-medium">{comment.author}</span>
+                              <Badge variant={comment.type === 'suggestion' ? 'default' : 'secondary'} className="text-xs">
                                 {comment.type === 'suggestion' ? '💡 Sugestão' : '❓ Dúvida'}
                               </Badge>
-                              <span className="text-xs text-muted-foreground">{comment.timestamp}</span>
                             </div>
-                            <p className="text-sm">{comment.content}</p>
+                            <p className="text-sm text-muted-foreground mb-1">{comment.content}</p>
+                            <span className="text-xs text-muted-foreground">{comment.timestamp}</span>
                           </div>
                         </div>
                       </CardContent>
@@ -457,32 +495,26 @@ export const Tutorials: React.FC = () => {
             </div>
 
             <div>
-              <h3 className="font-semibold mb-4">Tutoriais Relacionados</h3>
+              <h3 className="text-lg font-semibold mb-4">Tutoriais Relacionados</h3>
               <div className="space-y-3">
                 {tutorials
                   .filter(t => t.id !== selectedTutorial.id)
-                  .slice(0, 3)
+                  .slice(0, 4)
                   .map((tutorial) => (
                     <Card 
-                      key={tutorial.id}
-                      className="cursor-pointer hover:shadow-md transition-shadow"
+                      key={tutorial.id} 
+                      className="cursor-pointer hover:bg-accent transition-colors"
                       onClick={() => setSelectedTutorial(tutorial)}
                     >
                       <CardContent className="p-3">
                         <div className="flex gap-3">
-                          <img
-                            src={tutorial.thumbnail}
-                            alt={tutorial.title}
-                            className="w-20 h-12 object-cover rounded"
+                          <div 
+                            className="w-24 h-16 rounded bg-cover bg-center flex-shrink-0"
+                            style={{ backgroundImage: `url(${tutorial.thumbnail})` }}
                           />
-                          <div className="flex-1">
-                            <h4 className="font-medium text-sm line-clamp-2 mb-1">
-                              {tutorial.title}
-                            </h4>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Clock size={12} />
-                              {tutorial.duration}
-                            </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm line-clamp-2">{tutorial.title}</h4>
+                            <p className="text-xs text-muted-foreground mt-1">{tutorial.duration}</p>
                           </div>
                         </div>
                       </CardContent>
@@ -496,48 +528,45 @@ export const Tutorials: React.FC = () => {
     );
   }
 
-  // Desktop Loading State
+  // Desktop: Main tutorial list
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+    <ProOnlyWrapper featureName="Tutoriais Exclusivos">
+        <div className="min-h-screen bg-background">
+          <div className="container mx-auto px-4 py-6">
+            <div className="flex items-center gap-4 mb-6">
+              <Skeleton className="h-10 w-40" />
+              {desktopCategories.map((_, i) => (
+                <Skeleton key={i} className="h-10 w-24" />
+              ))}
+            </div>
+
+            <Skeleton className="h-64 w-full rounded-xl mb-8" />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Card key={i}>
+                  <Skeleton className="h-48 w-full rounded-t-lg" />
+                  <CardContent className="p-4">
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </ProOnlyWrapper>
     );
   }
 
-  // Desktop Empty State
-  if (tutorials.length === 0) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-6">
-          <div className="text-center py-12">
-            <h1 className="text-4xl font-bold mb-2">Tutoriais</h1>
-            <p className="text-muted-foreground">
-              Nenhum tutorial disponível no momento. Volte em breve!
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Desktop Main View
   return (
-    <ProOnlyWrapper featureName="Tutoriais">
+    <ProOnlyWrapper featureName="Tutoriais Exclusivos">
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-6">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Tutoriais</h1>
-            <p className="text-muted-foreground">
-              Aprenda técnicas avançadas de composição e produção musical com nossos tutoriais exclusivos.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <h1 className="text-2xl font-bold mr-4">Tutoriais</h1>
             {desktopCategories.map((category) => (
               <Button
                 key={category}
@@ -551,87 +580,85 @@ export const Tutorials: React.FC = () => {
           </div>
 
           {filteredTutorials.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-semibold mb-4">Em Destaque</h2>
-              <Card 
-                className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
-                onClick={() => handleWatchTutorial(filteredTutorials[0])}
-              >
-                <div className="relative">
-                  <img
-                    src={filteredTutorials[0].thumbnail}
-                    alt={filteredTutorials[0].title}
-                    className="w-full h-64 object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                    <Play size={64} className="text-white" />
-                  </div>
-                  <Badge className="absolute top-4 left-4">{filteredTutorials[0].category}</Badge>
-                  <div className="absolute bottom-4 right-4 bg-black/70 text-white px-2 py-1 rounded text-sm">
-                    {filteredTutorials[0].duration}
+            <Card 
+              className="mb-8 overflow-hidden cursor-pointer group"
+              onClick={() => handleWatchTutorial(filteredTutorials[0])}
+            >
+              <div className="relative">
+                <div 
+                  className="h-64 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                  style={{ backgroundImage: `url(${filteredTutorials[0].thumbnail})` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Play size={40} className="text-primary-foreground ml-1" />
                   </div>
                 </div>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold mb-2">{filteredTutorials[0].title}</h3>
-                  <p className="text-muted-foreground mb-4">{filteredTutorials[0].description}</p>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Eye size={16} />
-                      {filteredTutorials[0].views.toLocaleString()} visualizações
+                <div className="absolute bottom-0 left-0 p-6">
+                  <Badge className="mb-2">Destaque</Badge>
+                  <h2 className="text-2xl font-bold text-white mb-1">{filteredTutorials[0].title}</h2>
+                  <p className="text-white/80">{filteredTutorials[0].description}</p>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredTutorials.slice(1).map((tutorial) => (
+              <Card 
+                key={tutorial.id} 
+                className="overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow"
+                onClick={() => handleWatchTutorial(tutorial)}
+              >
+                <div className="relative">
+                  <div 
+                    className="h-48 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                    style={{ backgroundImage: `url(${tutorial.thumbnail})` }}
+                  />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center">
+                      <Play size={28} className="text-primary-foreground ml-1" />
                     </div>
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-black/70 px-2 py-1 rounded text-xs text-white">
+                    {tutorial.duration}
+                  </div>
+                </div>
+                <CardContent className="p-4">
+                  <Badge variant="secondary" className="mb-2">{tutorial.category}</Badge>
+                  <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                    {tutorial.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{tutorial.description}</p>
+                  <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Eye size={14} />
+                      {tutorial.views.toLocaleString()}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock size={14} />
+                      {tutorial.duration}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          )}
-
-          <div>
-            <h2 className="text-2xl font-semibold mb-6">
-              {selectedCategory === 'Todos' ? 'Todos os Tutoriais' : `Categoria: ${selectedCategory}`}
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTutorials.slice(1).map((tutorial) => (
-                <Card 
-                  key={tutorial.id}
-                  className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
-                  onClick={() => handleWatchTutorial(tutorial)}
-                >
-                  <div className="relative">
-                    <img
-                      src={tutorial.thumbnail}
-                      alt={tutorial.title}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                      <Play size={48} className="text-white" />
-                    </div>
-                    <Badge className="absolute top-3 left-3">{tutorial.category}</Badge>
-                    <div className="absolute bottom-3 right-3 bg-black/70 text-white px-2 py-1 rounded text-sm">
-                      {tutorial.duration}
-                    </div>
-                  </div>
-                  
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold mb-2 line-clamp-2">{tutorial.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                      {tutorial.description}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Eye size={14} />
-                      {tutorial.views.toLocaleString()} visualizações
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            ))}
           </div>
 
           {filteredTutorials.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                Nenhum tutorial encontrado para a categoria selecionada.
+              <p className="text-muted-foreground text-lg">
+                Nenhum tutorial encontrado para a categoria "{selectedCategory}".
               </p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => setSelectedCategory('Todos')}
+              >
+                Ver todos os tutoriais
+              </Button>
             </div>
           )}
         </div>
