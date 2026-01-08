@@ -410,6 +410,7 @@ export const MobileDrafts: React.FC = () => {
         folderName={getFolderName(selectedFolderId)}
         audioFiles={audioFiles}
         isSaving={isSaving}
+        draftId={activeId}
         onTitleChange={setTitle}
         onContentChange={setContent}
         onSave={handleSaveDraft}
