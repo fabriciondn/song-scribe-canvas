@@ -171,17 +171,29 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
           </div>
         </div>
 
-        {/* Upgrade Button */}
+        {/* Upgrade Button or Renewal Date */}
         <div className="flex gap-3">
-          <Button 
-            className="flex-1 h-12 bg-[#1A3D2E] hover:bg-[#1A3D2E]/80 text-[#00C853] font-semibold rounded-xl border-0"
-            onClick={() => {
-              navigate('/plans');
-              onClose();
-            }}
-          >
-            Upgrade
-          </Button>
+          {subscription?.status === 'active' && subscription?.plan_type === 'pro' ? (
+            <div className="flex-1 h-12 bg-[#1A3D2E] rounded-xl flex items-center justify-center gap-2 px-4">
+              <MaterialIcon name="autorenew" className="text-[#00C853] text-lg" />
+              <span className="text-[#00C853] font-medium text-sm">
+                {subscription?.expires_at 
+                  ? `Renova em ${new Date(subscription.expires_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}`
+                  : 'Assinatura ativa'
+                }
+              </span>
+            </div>
+          ) : (
+            <Button 
+              className="flex-1 h-12 bg-[#1A3D2E] hover:bg-[#1A3D2E]/80 text-[#00C853] font-semibold rounded-xl border-0"
+              onClick={() => {
+                navigate('/plans');
+                onClose();
+              }}
+            >
+              Upgrade
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
