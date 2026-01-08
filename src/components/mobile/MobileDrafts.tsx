@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,6 +49,8 @@ interface AutoSaveData {
 
 export const MobileDrafts: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const draftIdFromUrl = searchParams.get('draft');
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
@@ -209,6 +211,16 @@ export const MobileDrafts: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  // Load draft from URL parameter if present
+  useEffect(() => {
+    if (draftIdFromUrl && !isLoading && drafts.length > 0 && viewMode !== 'editor') {
+      const draftFromUrl = drafts.find(d => d.id === draftIdFromUrl);
+      if (draftFromUrl) {
+        handleEditDraft(draftFromUrl);
+      }
+    }
+  }, [draftIdFromUrl, isLoading, drafts, viewMode]);
 
   const handleNewDraft = () => {
     // Clear auto-save when starting fresh
