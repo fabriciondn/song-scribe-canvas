@@ -412,21 +412,12 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
           )}
         </div>
         
-        <div className="flex items-center -mr-2">
-          <button 
-            onClick={toggleTheme}
-            className="p-2 mr-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-          >
-            <span className="material-icons-round text-2xl text-gray-500 dark:text-gray-400 dark:hidden">dark_mode</span>
-            <span className="material-icons-round text-2xl text-gray-500 dark:text-gray-400 hidden dark:block">light_mode</span>
-          </button>
-          <button 
-            onClick={() => setShowSettings(true)}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-          >
-            <span className="material-icons-round text-2xl text-gray-500 dark:text-gray-400">more_vert</span>
-          </button>
-        </div>
+        <button 
+          onClick={() => setShowSettings(true)}
+          className="p-2 -mr-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+        >
+          <span className="material-icons-round text-2xl text-gray-500 dark:text-gray-400">more_vert</span>
+        </button>
       </header>
 
 
