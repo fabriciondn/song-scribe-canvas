@@ -102,13 +102,16 @@ export const MobileDashboardHome: React.FC = () => {
               </div>
               
               <div className="flex gap-3">
-                <div className="flex-1 bg-white/5 rounded-xl p-3 border border-white/5">
+                <button 
+                  onClick={() => navigate('/dashboard/acordes')}
+                  className="flex-1 bg-white/5 rounded-xl p-3 border border-white/5 hover:bg-white/10 active:scale-[0.98] transition-all text-left"
+                >
                   <div className="flex items-center gap-2 mb-1">
                     <MaterialIcon name="trending_up" className="text-[#00C853] text-sm" />
                     <span className="text-xs text-gray-300">Recompensas</span>
                   </div>
                   <span className="text-sm font-semibold">{totalAcordes} Acordes</span>
-                </div>
+                </button>
                 <div className="flex-1 bg-white/5 rounded-xl p-3 border border-white/5">
                   <div className="flex items-center gap-2 mb-1">
                     <MaterialIcon name={isFrozen ? "ac_unit" : "stars"} className={isFrozen ? "text-blue-400 text-sm" : "text-yellow-400 text-sm"} />
