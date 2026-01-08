@@ -57,7 +57,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userName }) =>
             onClick={() => navigate('/dashboard/acordes')}
           >
             <Music className="h-4 w-4" />
-            <span>{progress?.available_acordes}/30</span>
+            <span>{progress?.available_acordes}/20</span>
             <ChevronRight className="h-3 w-3" />
           </Badge>
         )}

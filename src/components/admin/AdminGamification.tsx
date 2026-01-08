@@ -226,7 +226,7 @@ export function AdminGamification() {
             <div>
               <p className="font-medium text-foreground">Como funciona</p>
               <p className="text-sm text-muted-foreground">
-                Cada acorde vale R$ 1,00. Os usuários precisam acumular 30 acordes para resgatar 1 crédito (R$ 30,00).
+                Cada acorde vale R$ 1,00. Os usuários precisam acumular 20 acordes para resgatar 1 crédito (R$ 19,99).
                 Configure as ações abaixo para definir quantos acordes cada ação concede.
               </p>
             </div>

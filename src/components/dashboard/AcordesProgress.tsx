@@ -50,7 +50,7 @@ export function AcordesProgress() {
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-foreground">{progress.available_acordes}/30 acordes</span>
+            <span className="text-sm font-medium text-foreground">{progress.available_acordes}/20 acordes</span>
             <Badge variant="outline" className="text-purple-400 border-purple-400/30 text-xs">
               +{nextObjective.acordes_reward}
             </Badge>
