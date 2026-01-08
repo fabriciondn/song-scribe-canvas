@@ -104,6 +104,7 @@ const AppContent = () => {
                 <Route path="acordes" element={<Acordes />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="trash" element={<Trash />} />
+                <Route path="pendrive" element={<Pendrive />} />
               </Route>
 
               {/* Rotas antigas fora de /dashboard continuam funcionando sem remontar o layout */}

@@ -74,13 +74,13 @@ export const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({ 
 
       {/* Pendrive */}
       <Link
-        to="/pendrive"
+        to="/dashboard/pendrive"
         className={cn(
           'flex flex-col items-center gap-1 p-2 transition-colors',
-          isActive('/pendrive') ? 'text-[#00C853]' : 'text-[#9CA3AF] hover:text-white'
+          isActive('/dashboard/pendrive') || isActive('/pendrive') ? 'text-[#00C853]' : 'text-[#9CA3AF] hover:text-white'
         )}
       >
-        <MaterialIcon name="usb" filled={isActive('/pendrive')} />
+        <MaterialIcon name="usb" filled={isActive('/dashboard/pendrive') || isActive('/pendrive')} />
         <span className="text-[10px] font-medium">Pendrive</span>
       </Link>
 
