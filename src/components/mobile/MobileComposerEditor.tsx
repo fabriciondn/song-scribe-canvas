@@ -51,6 +51,8 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
   
   // Settings state
   const [showMicButton, setShowMicButton] = useState(true);
+  const [showPlayerToggle, setShowPlayerToggle] = useState(true);
+  const [isPlayerHidden, setIsPlayerHidden] = useState(false);
   
   // Audio player state
   const [isPlaying, setIsPlaying] = useState(false);
@@ -432,9 +434,10 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
           />
         </div>
         
-        {/* Floating Mic Button - conditionally shown */}
-        {showMicButton && (
-          <div className="fixed right-4 z-30 flex flex-col gap-3" style={{ top: '50%', transform: 'translateY(-50%)' }}>
+        {/* Floating Buttons Container */}
+        <div className="fixed right-4 z-30 flex flex-col gap-3" style={{ top: '50%', transform: 'translateY(-50%)' }}>
+          {/* Mic Button - conditionally shown */}
+          {showMicButton && (
             <button 
               onClick={() => setIsRecording(!isRecording)}
               className={`w-10 h-10 rounded-full shadow-lg border flex items-center justify-center transition hover:scale-110 ${
@@ -449,11 +452,28 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
                 <span className="material-icons-round text-xl text-red-500">mic</span>
               )}
             </button>
-          </div>
-        )}
+          )}
+          
+          {/* Toggle Player Button - conditionally shown */}
+          {showPlayerToggle && (
+            <button 
+              onClick={() => setIsPlayerHidden(!isPlayerHidden)}
+              className={`w-10 h-10 rounded-full shadow-lg border flex items-center justify-center transition hover:scale-110 ${
+                isPlayerHidden 
+                  ? 'bg-[#00C853] border-[#00C853]/50' 
+                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+              }`}
+            >
+              <span className="material-icons-round text-xl text-gray-700 dark:text-gray-300">
+                {isPlayerHidden ? 'expand_less' : 'expand_more'}
+              </span>
+            </button>
+          )}
+        </div>
       </main>
 
-      {/* Audio Player Panel - fixed at bottom */}
+      {/* Audio Player Panel - fixed at bottom, hideable */}
+      {!isPlayerHidden && (
       <div className="flex-shrink-0 bg-black border-t border-gray-800 pt-4 pb-8 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)] z-20">
         {selectedBase && (
           <audio
@@ -588,6 +608,7 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
           </div>
         </div>
       </div>
+      )}
 
       {/* Base Selector Sheet */}
       <Sheet open={showBaseSelector} onOpenChange={setShowBaseSelector}>
@@ -701,6 +722,29 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
               >
                 <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
                   showMicButton ? 'left-6' : 'left-1'
+                }`} />
+              </button>
+            </div>
+
+            {/* Player Toggle Button Setting */}
+            <div className="flex items-center justify-between p-4 bg-[#1E293B] rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-[#00C853]/20 flex items-center justify-center">
+                  <span className="material-icons-round text-[#00C853]">expand_more</span>
+                </div>
+                <div>
+                  <p className="text-white font-medium">Ocultar Player</p>
+                  <p className="text-gray-400 text-sm">Botão para esconder área inferior</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPlayerToggle(!showPlayerToggle)}
+                className={`w-12 h-7 rounded-full transition-colors relative ${
+                  showPlayerToggle ? 'bg-[#00C853]' : 'bg-gray-600'
+                }`}
+              >
+                <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
+                  showPlayerToggle ? 'left-6' : 'left-1'
                 }`} />
               </button>
             </div>
