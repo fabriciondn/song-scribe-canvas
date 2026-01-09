@@ -49,6 +49,7 @@ import Ranking from "./pages/Ranking";
 import ResetPassword from "./pages/ResetPassword";
 import Pendrive from "./pages/Pendrive";
 import Acordes from "./pages/Acordes";
+import Sorteio from "./pages/Sorteio";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,6 +106,7 @@ const AppContent = () => {
                 <Route path="settings" element={<Settings />} />
                 <Route path="trash" element={<Trash />} />
                 <Route path="pendrive" element={<Pendrive />} />
+                <Route path="sorteio" element={<Sorteio />} />
                 <Route path="checkout" element={<Checkout />} />
                 <Route path="credits-checkout" element={<CreditsCheckout />} />
                 <Route path="subscription-checkout" element={<SubscriptionCheckout />} />
