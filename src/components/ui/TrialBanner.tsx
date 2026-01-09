@@ -28,7 +28,7 @@ export const TrialBanner: React.FC = () => {
         </div>
         <Button
           size="sm"
-          onClick={() => navigate('/subscription-checkout')}
+          onClick={() => navigate('/dashboard/subscription-checkout')}
           className="bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-sm h-5 px-2 text-xs ml-2"
         >
           <Crown className="mr-1 h-2.5 w-2.5" />

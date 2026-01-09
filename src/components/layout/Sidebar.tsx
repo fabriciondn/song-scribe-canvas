@@ -299,7 +299,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               ) : (
                 <Link 
-                  to="/subscription-checkout" 
+                  to="/dashboard/subscription-checkout" 
                   className="flex items-center justify-center gap-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
                   onClick={() => {
                     if (window.innerWidth < 768) {

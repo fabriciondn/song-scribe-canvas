@@ -73,7 +73,7 @@ const Plans = () => {
       setShowProfileWarning(true);
       return;
     }
-    navigate('/subscription-checkout');
+    navigate('/dashboard/subscription-checkout');
   };
 
   if (isLoading) {

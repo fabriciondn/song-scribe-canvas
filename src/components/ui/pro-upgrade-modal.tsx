@@ -39,7 +39,7 @@ export const ProUpgradeModal = ({
 
   const handleUpgrade = () => {
     onOpenChange(false);
-    navigate('/subscription-checkout');
+    navigate('/dashboard/subscription-checkout');
   };
 
   return (

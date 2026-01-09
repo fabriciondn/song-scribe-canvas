@@ -93,7 +93,7 @@ export const MobileDashboardHome: React.FC = () => {
                   </div>
                 </div>
                 <button 
-                  onClick={() => navigate('/credits-checkout')}
+                  onClick={() => navigate('/dashboard/credits-checkout')}
                   className="bg-accent hover:bg-accent/80 active:scale-95 transition-all p-2 rounded-xl backdrop-blur-sm border border-border"
                 >
                   <MaterialIcon name="add" className="text-primary" />

@@ -63,7 +63,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userName }) =>
         )}
         
         <Button asChild size="sm" className="gap-1.5 sm:gap-2 bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/25 h-9 sm:h-10 px-3 sm:px-4 rounded-full">
-          <Link to="/credits-checkout">
+          <Link to="/dashboard/credits-checkout">
             <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="text-xs sm:text-sm">Adicionar</span>
           </Link>
