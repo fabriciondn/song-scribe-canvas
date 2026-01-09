@@ -59,7 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (effectiveIsAdmin) return { canAccess: true, showDisabled: false };
 
     // Funções básicas: acessíveis para todos
-    const basicFunctions = ['author-registration', 'settings', 'dashboard', 'my-purchases', 'upgrade', 'ranking'];
+    const basicFunctions = ['author-registration', 'settings', 'dashboard', 'my-purchases', 'upgrade', 'ranking', 'sorteio'];
     if (basicFunctions.includes(functionKey)) {
       return { canAccess: true, showDisabled: false };
     }
