@@ -50,6 +50,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Pendrive from "./pages/Pendrive";
 import Acordes from "./pages/Acordes";
 import Sorteio from "./pages/Sorteio";
+import SorteioNumeros from "./pages/SorteioNumeros";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -107,6 +108,7 @@ const AppContent = () => {
                 <Route path="trash" element={<Trash />} />
                 <Route path="pendrive" element={<Pendrive />} />
                 <Route path="sorteio" element={<Sorteio />} />
+                <Route path="sorteio/numeros" element={<SorteioNumeros />} />
                 <Route path="checkout" element={<Checkout />} />
                 <Route path="credits-checkout" element={<CreditsCheckout />} />
                 <Route path="subscription-checkout" element={<SubscriptionCheckout />} />
