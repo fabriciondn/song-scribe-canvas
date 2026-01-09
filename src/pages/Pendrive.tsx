@@ -18,8 +18,16 @@ import {
   SlidersHorizontal,
   Star,
   Mic,
-  ChevronRight
+  ChevronRight,
+  ChevronDown,
+  Check
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from 'sonner';
 import { ProUpgradeModal } from '@/components/ui/pro-upgrade-modal';
 import { MobileBottomNavigation } from '@/components/mobile/MobileBottomNavigation';
@@ -380,21 +388,29 @@ const Pendrive = () => {
             className="pl-10"
           />
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-1">
-          {GENRES.slice(0, 6).map(genre => (
-            <button
-              key={genre.value}
-              onClick={() => setSelectedGenre(genre.value)}
-              className={`shrink-0 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 border ${
-                selectedGenre === genre.value
-                  ? `${genre.activeColor} border-transparent shadow-md`
-                  : `${genre.color} hover:shadow-sm`
-              }`}
-            >
-              {genre.value}
-            </button>
-          ))}
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="shrink-0 gap-2">
+              <SlidersHorizontal className="h-4 w-4" />
+              {selectedGenre === 'Tudo' ? 'Gênero' : selectedGenre}
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {GENRES.map(genre => (
+              <DropdownMenuItem
+                key={genre.value}
+                onClick={() => setSelectedGenre(genre.value)}
+                className="flex items-center justify-between cursor-pointer"
+              >
+                <span>{genre.value}</span>
+                {selectedGenre === genre.value && (
+                  <Check className="h-4 w-4 text-primary" />
+                )}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Music List */}
