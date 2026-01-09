@@ -19,7 +19,8 @@ import {
   ArrowUp,
   TrendingUp,
   Trophy,
-  Usb
+  Usb,
+  Gift
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -79,6 +80,13 @@ export const useMenuItems = () => {
         icon: Trophy,
         path: '/dashboard/ranking',
         functionKey: 'ranking',
+        isPro: false
+      },
+      {
+        label: 'Sorteio',
+        icon: Gift,
+        path: '/dashboard/sorteio',
+        functionKey: 'sorteio',
         isPro: false
       },
       {
