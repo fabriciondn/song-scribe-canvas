@@ -410,7 +410,7 @@ export default function CreditsCheckout() {
         {/* Success Modal */}
         <PaymentSuccessModal isOpen={showSuccessModal} creditsAdded={creditsAdded} onContinue={handleSuccessModalContinue} />
       </div>;
-  // Mobile Layout
+  }
   if (isMobile) {
     return (
       <>
