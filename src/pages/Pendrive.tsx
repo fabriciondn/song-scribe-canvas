@@ -225,23 +225,31 @@ const Pendrive = () => {
           </div>
         </div>
 
-        {/* Genre Filters */}
+        {/* Genre Filter Dropdown */}
         <div className="px-6 pb-6">
-          <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
-            {GENRES.map(genre => (
-              <button
-                key={genre.value}
-                onClick={() => setSelectedGenre(genre.value)}
-                className={`px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 border ${
-                  selectedGenre === genre.value
-                    ? `${genre.activeColor} border-transparent shadow-lg scale-105`
-                    : `${genre.color} hover:scale-102 hover:shadow-md`
-                }`}
-              >
-                {genre.value}
-              </button>
-            ))}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2 rounded-xl">
+                <SlidersHorizontal className="h-4 w-4" />
+                {selectedGenre === 'Tudo' ? 'Gênero' : selectedGenre}
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              {GENRES.map(genre => (
+                <DropdownMenuItem
+                  key={genre.value}
+                  onClick={() => setSelectedGenre(genre.value)}
+                  className="flex items-center justify-between cursor-pointer"
+                >
+                  <span>{genre.value}</span>
+                  {selectedGenre === genre.value && (
+                    <Check className="h-4 w-4 text-primary" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Recent Section */}
