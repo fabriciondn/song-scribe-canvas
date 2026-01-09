@@ -9,7 +9,7 @@ import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useTheme } from '@/hooks/useTheme';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { MobileNotificationCenter } from './MobileNotificationCenter';
-import guitarGiveawayImage from '@/assets/guitar-giveaway.jpg';
+import guitarSorteioImage from '@/assets/guitar-sorteio.jpg';
 
 // Componente para Material Symbols
 const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: string }> = ({ 
@@ -159,26 +159,33 @@ export const MobileDashboardHome: React.FC = () => {
           <section>
             <div 
               onClick={() => navigate('/dashboard/sorteio')}
-              className="relative rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+              className="relative w-full h-48 bg-black rounded-xl overflow-hidden border border-primary/30 shadow-[0_0_40px_rgba(19,236,91,0.15)] cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
-              <img 
-                src={guitarGiveawayImage} 
-                alt="Sorteio Violão" 
-                className="w-full h-44 object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded uppercase">
-                    Exclusivo Pro
+              {/* Imagem do violão à direita */}
+              <div 
+                className="absolute inset-y-0 right-[-10%] w-[70%] bg-cover bg-center"
+                style={{ backgroundImage: `url(${guitarSorteioImage})` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-l from-transparent via-black/20 to-black" />
+              </div>
+              
+              {/* Conteúdo à esquerda */}
+              <div className="absolute inset-0 p-6 flex flex-col justify-center items-start z-10 w-2/3">
+                <div className="inline-flex items-center gap-1 mb-3">
+                  <span className="bg-primary/20 text-primary text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    Premium
                   </span>
                 </div>
-                <h3 className="text-white text-xl font-bold mb-1">Sorteio de Violão</h3>
-                <p className="text-white/80 text-sm">Participe e concorra a um violão novinho!</p>
-                <div className="flex items-center gap-2 mt-3">
-                  <span className="text-primary font-bold text-sm">Participar agora</span>
-                  <MaterialIcon name="arrow_forward" className="text-primary text-lg" />
-                </div>
+                <h3 className="text-white text-2xl font-bold leading-tight mb-1">
+                  Ganhe este
+                </h3>
+                <h3 className="text-primary text-2xl font-bold leading-tight mb-4">
+                  Violão!
+                </h3>
+                <button className="inline-flex items-center gap-2 bg-primary text-black font-bold px-5 py-2.5 rounded-full text-sm hover:bg-primary/90 transition-colors shadow-[0_0_20px_rgba(19,236,91,0.3)]">
+                  Ver Sorteio
+                  <MaterialIcon name="arrow_forward" className="text-lg" />
+                </button>
               </div>
             </div>
           </section>
