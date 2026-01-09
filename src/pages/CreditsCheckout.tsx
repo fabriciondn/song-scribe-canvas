@@ -15,6 +15,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { PaymentSuccessModal } from '@/components/checkout/PaymentSuccessModal';
 import { usePaymentConfirmation } from '@/hooks/usePaymentConfirmation';
 import { useProfileValidation } from '@/hooks/useProfileValidation';
+import { useAbandonedCart } from '@/hooks/useAbandonedCart';
 import { toast as sonnerToast } from 'sonner';
 
 interface PixData {
@@ -45,6 +46,14 @@ export default function CreditsCheckout() {
     theme
   } = useTheme();
   const { isComplete: isProfileComplete, missingFields, completionPercentage } = useProfileValidation();
+  const { 
+    pendingData: abandonedCartData, 
+    hasPendingPayment, 
+    isExpired: isAbandonedCartExpired,
+    savePendingPayment,
+    clearPendingPayment 
+  } = useAbandonedCart();
+  
   const [credits, setCredits] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [pixData, setPixData] = useState<PixData | null>(null);
@@ -55,6 +64,24 @@ export default function CreditsCheckout() {
   const [couponCode, setCouponCode] = useState('');
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [restoredFromCart, setRestoredFromCart] = useState(false);
+
+  // Restaurar pagamento pendente do carrinho abandonado
+  useEffect(() => {
+    if (hasPendingPayment && abandonedCartData && !restoredFromCart) {
+      // Restaurar dados do carrinho abandonado
+      setCredits(abandonedCartData.credits);
+      
+      // Se PIX ainda válido, restaurar QR code
+      if (!isAbandonedCartExpired && abandonedCartData.pixData.qr_code) {
+        setPixData(abandonedCartData.pixData);
+        setShowQRCode(true);
+        sonnerToast.info('Seu pagamento pendente foi restaurado');
+      }
+      
+      setRestoredFromCart(true);
+    }
+  }, [hasPendingPayment, abandonedCartData, isAbandonedCartExpired, restoredFromCart]);
   const {
     isChecking
   } = usePaymentConfirmation({
@@ -65,6 +92,9 @@ export default function CreditsCheckout() {
       setPaymentConfirmed(true);
       setShowQRCode(false);
       setShowSuccessModal(true);
+      
+      // Limpar carrinho abandonado após pagamento confirmado
+      clearPendingPayment();
 
       // Processar comissão de afiliado na primeira compra
       if (user?.id) {
@@ -278,12 +308,27 @@ export default function CreditsCheckout() {
         return;
       }
       if (data?.success && data?.qr_code && data?.payment_id) {
-        setPixData({
+        const newPixData = {
           qr_code: data.qr_code,
           qr_code_url: data.qr_code_url || '',
           payment_id: data.payment_id
-        });
+        };
+        
+        setPixData(newPixData);
         setShowQRCode(true);
+        
+        // Salvar dados do PIX para recuperação (carrinho abandonado)
+        if (data.transaction_id) {
+          savePendingPayment({
+            pixData: newPixData,
+            credits: credits,
+            bonusCredits: pricing.bonusCredits,
+            totalAmount: pricing.totalAmount,
+            createdAt: new Date().toISOString(),
+            transactionId: data.transaction_id
+          });
+        }
+        
         toast({
           title: "PIX Gerado!",
           description: "Use o QR Code para realizar o pagamento via Mercado Pago."

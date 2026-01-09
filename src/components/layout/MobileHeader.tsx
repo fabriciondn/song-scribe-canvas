@@ -11,7 +11,7 @@ import { useMobileDetection } from '@/hooks/use-mobile';
 import { Link } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MobileSidebar } from './MobileSidebar';
-
+import { AbandonedCartIndicator } from '@/components/ui/abandoned-cart-indicator';
 interface MobileHeaderProps {
   toggleSidebar?: () => void;
 }
@@ -57,6 +57,9 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({ toggleSidebar }) => 
         <Badge variant="secondary" className="text-xs px-2 py-1 hidden xs:flex">
           {credits || 0}
         </Badge>
+
+        {/* Abandoned Cart Indicator */}
+        <AbandonedCartIndicator />
 
         {/* Theme Toggle */}
         <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8">
