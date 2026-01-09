@@ -221,12 +221,12 @@ const Partnerships: React.FC = () => {
           <header className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-foreground">Parcerias</h1>
-              <p className="text-sm text-muted-foreground mt-1">Gerencie seus colaboradores</p>
+              <p className="text-xs text-muted-foreground mt-1">Gerencie seu token para colaborar em registros autorais</p>
             </div>
             <div className="flex items-center gap-3">
               <button 
                 onClick={toggleTheme}
-                className="p-2 rounded-full bg-muted border border-border hover:bg-muted/80 transition-colors"
+                className="p-2 rounded-full bg-card border border-border hover:bg-muted transition-colors"
               >
                 {theme === 'dark' ? (
                   <Sun className="h-5 w-5 text-primary" />
@@ -234,164 +234,141 @@ const Partnerships: React.FC = () => {
                   <Moon className="h-5 w-5 text-primary" />
                 )}
               </button>
-              <button className="p-2 rounded-full bg-muted border border-border hover:bg-muted/80 transition-colors">
+              <button className="p-2 rounded-full bg-card border border-border hover:bg-muted transition-colors">
                 <Bell className="h-5 w-5 text-primary" />
               </button>
             </div>
           </header>
 
-          {/* Search */}
-          <div className="relative mb-8">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Buscar parceiro..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full py-3 pl-10 pr-4 h-12 bg-muted border-border rounded-xl text-base placeholder-muted-foreground"
-            />
-          </div>
-
-          {/* Invite Button */}
-          <div className="mb-8">
-            <button className="w-full group relative overflow-hidden rounded-2xl bg-primary p-5 shadow-lg shadow-primary/30 transition-all active:scale-[0.98]">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="flex items-center justify-between relative z-10">
-                <div className="flex items-center space-x-4">
-                  <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm">
-                    <UserPlus className="h-6 w-6 text-primary-foreground" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-primary-foreground font-semibold text-lg">Convidar Novo</h3>
-                    <p className="text-primary-foreground/80 text-xs">Adicione compositores ou músicos</p>
-                  </div>
-                </div>
-                <ChevronRight className="h-6 w-6 text-primary-foreground" />
+          {/* Meu Token de Compositor Section */}
+          <section className="mb-6 w-full bg-card border border-border rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <Key className="h-5 w-5 text-foreground" />
+              <h2 className="font-bold text-foreground text-sm uppercase tracking-wide">Meu Token de Compositor</h2>
+            </div>
+            <p className="text-xs text-muted-foreground mb-8 leading-relaxed">
+              Compartilhe seu token para que outros compositores possam te adicionar como coautor em registros autorais.
+            </p>
+            
+            {isLoading ? (
+              <div className="flex flex-col items-center text-center">
+                <Skeleton className="w-12 h-12 rounded-full mb-4" />
+                <Skeleton className="h-4 w-48 mb-2" />
+                <Skeleton className="h-3 w-32" />
               </div>
-            </button>
-          </div>
-
-          {/* Active Partners Section */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-foreground">Ativos</h2>
-            <button className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">Ver todos</button>
-          </div>
-
-          <div className="space-y-4 mb-8">
-            {MOCK_PARTNERS.map((partner) => (
-              <div 
-                key={partner.id}
-                className={`group bg-muted p-4 rounded-xl border border-border shadow-sm hover:shadow-md transition-all ${partner.status === 'pending' ? 'opacity-80' : ''}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      {partner.initials ? (
-                        <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${partner.gradientFrom} ${partner.gradientTo} flex items-center justify-center text-white font-bold ring-2 ring-border`}>
-                          {partner.initials}
-                        </div>
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-primary font-bold ring-2 ring-border">
-                          {getInitials(partner.name)}
-                        </div>
-                      )}
-                      {partner.status === 'active' && (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-primary rounded-full border-2 border-muted" />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">{partner.name}</h3>
-                      <p className="text-xs text-muted-foreground">
-                        {partner.role} • {partner.status === 'pending' ? 'Pendente' : `${partner.projects} Projeto${partner.projects !== 1 ? 's' : ''}`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    {partner.status === 'pending' ? (
-                      <span className="px-2 py-1 rounded-md bg-yellow-500/20 text-yellow-500 text-[10px] font-bold">
-                        AGUARDANDO
-                      </span>
-                    ) : (
-                      <>
-                        <span className="block font-bold text-primary">{partner.splitAverage}%</span>
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Split Médio</span>
-                      </>
-                    )}
-                  </div>
+            ) : myToken ? (
+              <div className="space-y-4">
+                <div className="bg-muted/50 border border-border rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground mb-1">Seu Token</p>
+                  <p className="font-mono text-sm text-foreground break-all">{myToken.token}</p>
                 </div>
-
-                <div className="mt-4 pt-3 border-t border-border flex justify-between items-center">
-                  {partner.status === 'pending' ? (
-                    <div className="flex-1" />
-                  ) : (
-                    <div className="flex -space-x-2">
-                      {partner.projectBadges?.map((badge, idx) => (
-                        <div 
-                          key={badge.id}
-                          className={`w-6 h-6 rounded-full ${badge.color} flex items-center justify-center text-[8px] text-white border border-muted`}
-                        >
-                          {badge.id.toUpperCase()}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {partner.status === 'pending' ? (
-                    <div className="flex items-center space-x-3">
-                      <button className="text-xs font-medium text-destructive hover:text-destructive/80">Cancelar</button>
-                      <button className="text-xs font-medium text-primary hover:text-primary/80">Reenviar</button>
-                    </div>
-                  ) : (
-                    <button className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors flex items-center">
-                      Gerenciar
-                      <Settings className="h-4 w-4 ml-1" />
-                    </button>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span>Expira em: {formatDate(myToken.expires_at)}</span>
+                  {isTokenExpiringSoon(myToken.expires_at) && (
+                    <Badge variant="destructive" className="text-[10px]">Expirando</Badge>
                   )}
                 </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleCopyToken}
+                    className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    {isCopied ? 'Copiado!' : 'Copiar Token'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleRevokeToken}
+                    className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4 ring-1 ring-border">
+                  <Key className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <h3 className="text-sm font-semibold text-foreground mb-1">Você ainda não possui um token</h3>
+                <p className="text-[10px] text-muted-foreground mb-5 max-w-[220px]">
+                  Gere um token para que outros compositores possam te adicionar como coautor.
+                </p>
+                <Button 
+                  onClick={handleGenerateToken}
+                  disabled={isGenerating}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2.5 rounded-lg flex items-center gap-2 shadow-lg shadow-primary/20"
+                >
+                  <Key className="h-4 w-4" />
+                  {isGenerating ? 'Gerando...' : 'Gerar Token'}
+                </Button>
+              </div>
+            )}
+          </section>
 
-          {/* Suggestions Section */}
-          <h2 className="text-lg font-bold mb-4 text-foreground">Sugestões para você</h2>
-          <div className="flex space-x-4 overflow-x-auto pb-4 hide-scrollbar">
-            {MOCK_SUGGESTIONS.map((suggestion) => (
-              <div 
-                key={suggestion.id}
-                className="min-w-[140px] bg-muted p-3 rounded-xl border border-border shadow-sm flex flex-col items-center text-center"
-              >
-                {suggestion.isStudio ? (
-                  <div className="w-14 h-14 rounded-full mb-2 bg-muted-foreground/10 flex items-center justify-center">
-                    <Music className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                ) : (
-                  <div className="w-14 h-14 rounded-full mb-2 bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-primary font-bold">
-                    {getInitials(suggestion.name)}
-                  </div>
-                )}
-                <h4 className="font-medium text-sm truncate w-full text-foreground">{suggestion.name}</h4>
-                <p className="text-[10px] text-muted-foreground mb-2">{suggestion.role}</p>
-                <button className="text-xs bg-muted-foreground/10 hover:bg-primary hover:text-primary-foreground text-foreground py-1 px-3 rounded-full transition-colors w-full">
-                  Conectar
-                </button>
+          {/* Como Funciona Section */}
+          <section className="mb-6 w-full bg-card border border-border rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="h-5 w-5 text-foreground" />
+              <h2 className="font-bold text-foreground text-sm uppercase tracking-wide">Como Funciona</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              <div className="bg-muted/50 rounded-lg p-4 border border-border/50 flex flex-col items-start">
+                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold mb-2 ring-1 ring-primary/20">1</div>
+                <h3 className="text-xs font-bold text-foreground mb-1">Gere seu Token</h3>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">Crie um token único que identifica você como compositor.</p>
               </div>
-            ))}
-          </div>
+              <div className="bg-muted/50 rounded-lg p-4 border border-border/50 flex flex-col items-start">
+                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold mb-2 ring-1 ring-primary/20">2</div>
+                <h3 className="text-xs font-bold text-foreground mb-1">Compartilhe</h3>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">Envie seu token para o parceiro que fará o registro autoral.</p>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-4 border border-border/50 flex flex-col items-start">
+                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold mb-2 ring-1 ring-primary/20">3</div>
+                <h3 className="text-xs font-bold text-foreground mb-1">Seja Adicionado</h3>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">Seu nome e CPF serão preenchidos automaticamente como coautor.</p>
+              </div>
+            </div>
+          </section>
+
+          {/* Registros em Parceria Section */}
+          <section className="w-full bg-card border border-border rounded-xl p-6 shadow-sm mb-8">
+            <div className="flex items-center gap-2 mb-1">
+              <FileText className="h-5 w-5 text-foreground" />
+              <h2 className="font-bold text-foreground text-sm uppercase tracking-wide">Registros em Parceria</h2>
+            </div>
+            <p className="text-xs text-muted-foreground mb-8">
+              Registros autorais onde você participa como autor ou coautor.
+            </p>
+            
+            {partnershipRegistrations.length > 0 ? (
+              <div className="space-y-3">
+                {partnershipRegistrations.map((registration, idx) => (
+                  <div key={idx} className="bg-muted/50 rounded-lg p-4 border border-border/50">
+                    <h4 className="font-medium text-sm text-foreground">{registration.title}</h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {registration.coauthors?.join(', ') || 'Sem coautores'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center text-center pb-6">
+                <div className="mb-4 opacity-20">
+                  <FileText className="h-12 w-12 text-foreground" />
+                </div>
+                <h3 className="text-sm font-medium text-foreground mb-1">Nenhum registro em parceria encontrado</h3>
+                <p className="text-[10px] text-muted-foreground">
+                  Registros com coautores aparecerão aqui.
+                </p>
+              </div>
+            )}
+          </section>
         </div>
 
         {/* Bottom Navigation */}
         <MobileBottomNavigation />
-
-        {/* Hide scrollbar styles */}
-        <style>{`
-          .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-          }
-          .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-        `}</style>
       </div>
     );
   }
