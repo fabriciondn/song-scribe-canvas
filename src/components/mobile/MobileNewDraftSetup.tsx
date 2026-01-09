@@ -154,26 +154,26 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-['Outfit',sans-serif]">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-['Outfit',sans-serif]">
       {/* Header */}
       <header className="px-6 pt-6 pb-4 flex items-center gap-4">
         <button 
           onClick={onBack}
-          className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center hover:bg-[#3C3C3E] transition-colors"
+          className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-accent transition-colors"
         >
-          <MaterialIcon name="arrow_back" className="text-xl text-slate-300" />
+          <MaterialIcon name="arrow_back" className="text-xl text-muted-foreground" />
         </button>
-        <h1 className="text-xl font-bold text-white flex-1 text-center pr-10">Novo Rascunho</h1>
+        <h1 className="text-xl font-bold flex-1 text-center pr-10">Novo Rascunho</h1>
       </header>
 
       {/* Content */}
       <main className="flex-1 px-6 pb-32 overflow-y-auto">
         {/* Icon and description */}
         <div className="flex flex-col items-center justify-center py-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#00C853]/20 to-[#00C853]/5 rounded-2xl flex items-center justify-center mb-3 shadow-lg shadow-[#00C853]/10">
-            <MaterialIcon name="post_add" className="text-3xl text-[#00C853]" />
+          <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center mb-3 shadow-lg shadow-primary/10">
+            <MaterialIcon name="post_add" className="text-3xl text-primary" />
           </div>
-          <p className="text-center text-slate-400 text-sm max-w-[250px]">
+          <p className="text-center text-muted-foreground text-sm max-w-[250px]">
             Configure os detalhes da sua nova ideia musical antes de começar.
           </p>
         </div>
@@ -182,7 +182,7 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
         <div className="space-y-6">
           {/* Nome do Projeto */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-slate-300 ml-1">
+            <label className="block text-sm font-semibold text-muted-foreground ml-1">
               Nome do Projeto
             </label>
             <div className="relative">
@@ -191,9 +191,9 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ex: Minha Música Nova"
-                className="w-full bg-[#2C2C2E] border-2 border-transparent focus:border-[#00C853] focus:ring-0 rounded-2xl px-5 py-4 text-white font-medium transition-all placeholder-slate-500 outline-none"
+                className="w-full bg-muted border-2 border-transparent focus:border-primary focus:ring-0 rounded-2xl px-5 py-4 text-foreground font-medium transition-all placeholder-muted-foreground outline-none"
               />
-              <div className="absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 pointer-events-none">
+              <div className="absolute inset-y-0 right-0 flex items-center px-4 text-muted-foreground pointer-events-none">
                 <MaterialIcon name="edit" className="text-xl" />
               </div>
             </div>
@@ -201,7 +201,7 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
 
           {/* Salvar na Pasta */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-slate-300 ml-1">
+            <label className="block text-sm font-semibold text-muted-foreground ml-1">
               Salvar na Pasta
             </label>
             
@@ -212,12 +212,12 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
                   placeholder="Nome da nova pasta"
-                  className="flex-1 bg-[#2C2C2E] border-2 border-[#00C853] focus:ring-0 rounded-2xl px-5 py-4 text-white font-medium transition-all placeholder-slate-500 outline-none"
+                  className="flex-1 bg-muted border-2 border-primary focus:ring-0 rounded-2xl px-5 py-4 text-foreground font-medium transition-all placeholder-muted-foreground outline-none"
                   autoFocus
                 />
                 <button
                   onClick={handleCreateFolder}
-                  className="px-4 bg-[#00C853] rounded-2xl text-white font-bold"
+                  className="px-4 bg-primary rounded-2xl text-primary-foreground font-bold"
                 >
                   <MaterialIcon name="check" />
                 </button>

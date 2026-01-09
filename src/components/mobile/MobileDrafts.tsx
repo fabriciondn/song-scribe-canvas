@@ -423,29 +423,29 @@ export const MobileDrafts: React.FC = () => {
 
   // Render List Screen
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-['Outfit',sans-serif]">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-['Outfit',sans-serif]">
       {/* Header */}
       <header className="px-6 pt-6 pb-4 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <button 
             onClick={() => navigate('/dashboard')}
-            className="p-2 -ml-2 rounded-full hover:bg-slate-800 transition-colors"
+            className="p-2 -ml-2 rounded-full hover:bg-accent transition-colors"
           >
-            <MaterialIcon name="arrow_back" className="text-2xl text-slate-300" />
+            <MaterialIcon name="arrow_back" className="text-2xl text-muted-foreground" />
           </button>
           <div className="flex items-center gap-2">
             <button 
               onClick={handleNewDraft}
-              className="p-2 rounded-full bg-[#00C853] hover:bg-[#00B848] transition-colors"
+              className="p-2 rounded-full bg-primary hover:bg-primary/90 transition-colors"
             >
-              <MaterialIcon name="add" className="text-xl text-white" />
+              <MaterialIcon name="add" className="text-xl text-primary-foreground" />
             </button>
           </div>
         </div>
         
         <div>
-          <h1 className="text-3xl font-bold text-white">Compor</h1>
-          <p className="text-slate-400 mt-1 text-sm">Seus rascunhos e ideias musicais</p>
+          <h1 className="text-3xl font-bold">Compor</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Seus rascunhos e ideias musicais</p>
         </div>
       </header>
 
