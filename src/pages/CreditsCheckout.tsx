@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Coins, Gift, Check, AlertTriangle, User, Ticket, X, CheckCircle, Loader2 } from 'lucide-react';
+import { useMobileDetection } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,7 @@ interface AppliedCoupon {
 }
 export default function CreditsCheckout() {
   const navigate = useNavigate();
+  const { isMobile } = useMobileDetection();
   const {
     user
   } = useAuth();
@@ -408,10 +410,10 @@ export default function CreditsCheckout() {
         {/* Success Modal */}
         <PaymentSuccessModal isOpen={showSuccessModal} creditsAdded={creditsAdded} onContinue={handleSuccessModalContinue} />
       </div>;
-  }
-  return <>
-      {/* Layout Mobile */}
-      <div className="block md:hidden">
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <>
         <div className="min-h-screen bg-background pb-24">
           <div className="w-full max-w-md mx-auto p-4">
             {/* Header */}
@@ -707,61 +709,64 @@ export default function CreditsCheckout() {
             )}
           </div>
         </div>
-      </div>
+        <PaymentSuccessModal isOpen={showSuccessModal} creditsAdded={creditsAdded} onContinue={handleSuccessModalContinue} />
+      </>
+    );
+  }
 
-      {/* Layout Desktop */}
-      <div className="hidden md:block">
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-8">
-              <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
-              <p className="text-muted-foreground text-sm mt-1">Checkout</p>
-            </div>
+  // Desktop Layout
+  return (
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8">
+            <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
+            <p className="text-muted-foreground text-sm mt-1">Checkout</p>
+          </div>
 
-            <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-6">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar ao Dashboard
-            </Button>
+          <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-6">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar ao Dashboard
+          </Button>
 
-            {!isProfileComplete && (
-              <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950 mb-6 max-w-2xl mx-auto">
-                <CardHeader>
-                  <CardTitle className="text-amber-800 dark:text-amber-300 flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" />
-                    Perfil Incompleto ({completionPercentage}%)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-amber-500 transition-all duration-300"
-                        style={{ width: `${completionPercentage}%` }}
-                      />
-                    </div>
+          {!isProfileComplete && (
+            <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950 mb-6 max-w-2xl mx-auto">
+              <CardHeader>
+                <CardTitle className="text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  Perfil Incompleto ({completionPercentage}%)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-amber-500 transition-all duration-300"
+                      style={{ width: `${completionPercentage}%` }}
+                    />
                   </div>
-                  <p className="text-amber-700 dark:text-amber-300">
-                    Para adicionar saldo, você precisa completar seu perfil. Os seguintes campos são obrigatórios:
-                  </p>
-                  <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-400 space-y-1">
-                    {missingFields.map((field, index) => (
-                      <li key={index}>{field}</li>
-                    ))}
-                  </ul>
-                  <Button 
-                    onClick={() => navigate('/dashboard/settings')} 
-                    className="w-full"
-                    size="lg"
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    Completar Perfil
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+                </div>
+                <p className="text-amber-700 dark:text-amber-300">
+                  Para adicionar saldo, você precisa completar seu perfil. Os seguintes campos são obrigatórios:
+                </p>
+                <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-400 space-y-1">
+                  {missingFields.map((field, index) => (
+                    <li key={index}>{field}</li>
+                  ))}
+                </ul>
+                <Button 
+                  onClick={() => navigate('/dashboard/settings')} 
+                  className="w-full"
+                  size="lg"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Completar Perfil
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
-            {isProfileComplete && (
-
+          {isProfileComplete && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-h-[calc(100vh-200px)]">
               {/* Left Column - Credit Selection */}
               <div className="lg:col-span-2 space-y-6">
@@ -942,11 +947,10 @@ export default function CreditsCheckout() {
                 </Card>
               </div>
             </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
-      {/* Success Modal */}
       <PaymentSuccessModal isOpen={showSuccessModal} creditsAdded={creditsAdded} onContinue={handleSuccessModalContinue} />
-    </>;
+    </>
+  );
 }
