@@ -385,7 +385,7 @@ const Pendrive = () => {
             <button
               key={genre.value}
               onClick={() => setSelectedGenre(genre.value)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 border ${
+              className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 border ${
                 selectedGenre === genre.value
                   ? `${genre.activeColor} border-transparent shadow-md`
                   : `${genre.color} hover:shadow-sm`
