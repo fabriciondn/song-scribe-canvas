@@ -183,7 +183,7 @@ export const MobileDashboardHome: React.FC = () => {
                   Violão!
                 </h3>
                 <button className="inline-flex items-center gap-2 bg-primary text-black font-bold px-5 py-2.5 rounded-full text-sm hover:bg-primary/90 transition-colors shadow-[0_0_20px_rgba(19,236,91,0.3)]">
-                  Ver Sorteio
+                  Participar
                   <MaterialIcon name="arrow_forward" className="text-lg" />
                 </button>
               </div>
