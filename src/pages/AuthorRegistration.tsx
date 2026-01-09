@@ -143,7 +143,7 @@ const AuthorRegistration: React.FC = () => {
               <Button
                 size={isMobile ? "default" : "lg"}
                 className="w-full"
-                onClick={() => navigate('/credits-checkout')}
+                onClick={() => navigate('/dashboard/credits-checkout')}
               >
                 <CreditCard className="mr-2 h-4 w-4" />
                 Adicionar Créditos via Pix

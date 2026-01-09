@@ -148,7 +148,7 @@ export const useMenuItems = () => {
       {
         label: 'Upgrade Pro',
         icon: ArrowUp,
-        path: '/subscription-checkout',
+        path: '/dashboard/subscription-checkout',
         functionKey: 'upgrade',
         isPro: false
       },

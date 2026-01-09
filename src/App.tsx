@@ -105,6 +105,10 @@ const AppContent = () => {
                 <Route path="settings" element={<Settings />} />
                 <Route path="trash" element={<Trash />} />
                 <Route path="pendrive" element={<Pendrive />} />
+                <Route path="checkout" element={<Checkout />} />
+                <Route path="credits-checkout" element={<CreditsCheckout />} />
+                <Route path="subscription-checkout" element={<SubscriptionCheckout />} />
+                <Route path="pendrive-checkout" element={<PendriveCheckout />} />
               </Route>
 
               {/* Rotas antigas fora de /dashboard continuam funcionando sem remontar o layout */}
@@ -118,7 +122,6 @@ const AppContent = () => {
               <Route path="/partnerships" element={<Partnerships />} />
               <Route path="/pendrive" element={<Pendrive />} />
               <Route path="/plans" element={<Plans />} />
-              <Route path="/checkout" element={<Checkout />} />
             </Route>
 
             <Route path="/admin" element={<AdminDashboard />} />
@@ -135,9 +138,6 @@ const AppContent = () => {
             <Route path="/ref/:code" element={<AffiliateLink />} />
             <Route path="/formulario" element={<PublicRegistrationForm />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/credits-checkout" element={<CreditsCheckout />} />
-            <Route path="/subscription-checkout" element={<SubscriptionCheckout />} />
-            <Route path="/pendrive-checkout" element={<PendriveCheckout />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </PageFunctionStatusWrapper>

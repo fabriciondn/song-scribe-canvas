@@ -39,7 +39,7 @@ const PendriveUpgradeModal = ({ open, onOpenChange }: PendriveUpgradeModalProps)
         'Sistema de parcerias',
       ],
       buttonText: 'Assinar Pendrive',
-      route: '/pendrive-checkout',
+      route: '/dashboard/pendrive-checkout',
     },
     {
       id: 'pro',
@@ -64,7 +64,7 @@ const PendriveUpgradeModal = ({ open, onOpenChange }: PendriveUpgradeModalProps)
         'Suporte prioritário',
       ],
       buttonText: 'Assinar Completo',
-      route: '/subscription-checkout',
+      route: '/dashboard/subscription-checkout',
     },
   ];
 
