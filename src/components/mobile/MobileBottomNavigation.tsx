@@ -36,13 +36,13 @@ export const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({ 
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 w-full bg-[#1E1E1E] border-t border-gray-800 pb-6 pt-2 px-6 flex justify-between items-center z-50 font-['Plus_Jakarta_Sans',sans-serif]">
+    <nav className="fixed bottom-0 left-0 right-0 w-full bg-card border-t border-border pb-6 pt-2 px-6 flex justify-between items-center z-50 font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Início */}
       <Link
         to="/dashboard"
         className={cn(
           'flex flex-col items-center gap-1 p-2 transition-colors',
-          isActive('/dashboard') ? 'text-[#00C853]' : 'text-[#9CA3AF] hover:text-white'
+          isActive('/dashboard') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
         )}
       >
         <MaterialIcon name="home" filled={isActive('/dashboard')} />
@@ -54,7 +54,7 @@ export const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({ 
         to="/dashboard/registered-works"
         className={cn(
           'flex flex-col items-center gap-1 p-2 transition-colors',
-          isActive('/dashboard/registered-works') ? 'text-[#00C853]' : 'text-[#9CA3AF] hover:text-white'
+          isActive('/dashboard/registered-works') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
         )}
       >
         <MaterialIcon name="workspace_premium" filled={isActive('/dashboard/registered-works')} />
@@ -65,11 +65,11 @@ export const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({ 
       <div className="relative -top-6 flex flex-col items-center group">
         <Link
           to="/dashboard/composer"
-          className="w-14 h-14 bg-[#00C853] rounded-full flex items-center justify-center text-white shadow-lg shadow-[#00C853]/40 hover:scale-105 active:scale-95 transition-transform border-4 border-[#000000]"
+          className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/40 hover:scale-105 active:scale-95 transition-transform border-4 border-background"
         >
           <MaterialIcon name="history_edu" className="text-3xl" />
         </Link>
-        <span className="text-[10px] font-medium text-[#9CA3AF] mt-1 group-hover:text-[#00C853] transition-colors">Compor</span>
+        <span className="text-[10px] font-medium text-muted-foreground mt-1 group-hover:text-primary transition-colors">Compor</span>
       </div>
 
       {/* Pendrive */}
@@ -77,7 +77,7 @@ export const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({ 
         to="/dashboard/pendrive"
         className={cn(
           'flex flex-col items-center gap-1 p-2 transition-colors',
-          isActive('/dashboard/pendrive') || isActive('/pendrive') ? 'text-[#00C853]' : 'text-[#9CA3AF] hover:text-white'
+          isActive('/dashboard/pendrive') || isActive('/pendrive') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
         )}
       >
         <MaterialIcon name="usb" filled={isActive('/dashboard/pendrive') || isActive('/pendrive')} />
@@ -87,7 +87,7 @@ export const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({ 
       {/* Menu */}
       <button
         onClick={onMenuClick}
-        className="flex flex-col items-center gap-1 p-2 text-[#9CA3AF] hover:text-white transition-colors"
+        className="flex flex-col items-center gap-1 p-2 text-muted-foreground hover:text-foreground transition-colors"
       >
         <MaterialIcon name="menu" />
         <span className="text-[10px] font-medium">Menu</span>

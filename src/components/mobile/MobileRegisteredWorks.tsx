@@ -54,7 +54,7 @@ export const MobileRegisteredWorks: React.FC = () => {
   const [searchParams] = useSearchParams();
   const workId = searchParams.get('id');
   const currentUser = useCurrentUser();
-  const { toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const [filter, setFilter] = useState<FilterType>('all');
 
   const { data: works, isLoading } = useQuery({
@@ -138,30 +138,30 @@ export const MobileRegisteredWorks: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-['Outfit',sans-serif]">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-['Outfit',sans-serif]">
       {/* Header */}
       <header className="px-6 pt-6 pb-4 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <button 
             onClick={() => navigate('/dashboard')}
-            className="p-2 -ml-2 rounded-full hover:bg-slate-800 transition-colors"
+            className="p-2 -ml-2 rounded-full hover:bg-accent transition-colors"
           >
-            <MaterialIcon name="arrow_back" className="text-2xl text-slate-300" />
+            <MaterialIcon name="arrow_back" className="text-2xl text-muted-foreground" />
           </button>
           <div className="flex items-center gap-1">
             <button 
               onClick={toggleTheme}
-              className="p-2 rounded-full hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-full hover:bg-accent transition-colors"
             >
-              <MaterialIcon name="light_mode" className="text-2xl text-slate-300" />
+              <MaterialIcon name={theme === 'dark' ? 'light_mode' : 'dark_mode'} className="text-2xl text-muted-foreground" />
             </button>
             <MobileNotificationCenter />
           </div>
         </div>
         
         <div>
-          <h1 className="text-3xl font-bold text-white">Meus Certificados</h1>
-          <p className="text-slate-400 mt-1 text-sm">Gerencie suas obras e direitos autorais</p>
+          <h1 className="text-3xl font-bold">Meus Certificados</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Gerencie suas obras e direitos autorais</p>
         </div>
 
         {/* Filter Tabs */}
@@ -170,8 +170,8 @@ export const MobileRegisteredWorks: React.FC = () => {
             onClick={() => setFilter('all')}
             className={`px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
               filter === 'all'
-                ? 'bg-[#00C853] text-white shadow-lg shadow-[#00C853]/30'
-                : 'bg-[#1C1C1E] text-slate-300 border border-slate-700'
+                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                : 'bg-card text-muted-foreground border border-border'
             }`}
           >
             Todas
@@ -180,8 +180,8 @@ export const MobileRegisteredWorks: React.FC = () => {
             onClick={() => setFilter('analysis')}
             className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
               filter === 'analysis'
-                ? 'bg-[#00C853] text-white shadow-lg shadow-[#00C853]/30'
-                : 'bg-[#1C1C1E] text-slate-300 border border-slate-700'
+                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                : 'bg-card text-muted-foreground border border-border'
             }`}
           >
             Em Análise
@@ -190,8 +190,8 @@ export const MobileRegisteredWorks: React.FC = () => {
             onClick={() => setFilter('drafts')}
             className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
               filter === 'drafts'
-                ? 'bg-[#00C853] text-white shadow-lg shadow-[#00C853]/30'
-                : 'bg-[#1C1C1E] text-slate-300 border border-slate-700'
+                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                : 'bg-card text-muted-foreground border border-border'
             }`}
           >
             Rascunhos

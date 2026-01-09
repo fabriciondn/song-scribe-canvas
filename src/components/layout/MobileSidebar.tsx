@@ -153,21 +153,21 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="flex flex-col h-full max-h-screen bg-[#0A0A0A] overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className="flex flex-col h-full max-h-screen bg-background overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
       {/* User Profile Section */}
       <div className="p-6 flex-shrink-0">
         <div className="flex items-center gap-4 mb-5">
           <div className="relative">
-            <Avatar className="h-16 w-16 border-2 border-[#00C853]">
+            <Avatar className="h-16 w-16 border-2 border-primary">
               <AvatarImage src={userAvatar || ""} alt={userName} />
-              <AvatarFallback className="bg-[#1E1E1E] text-white text-lg font-semibold">
+              <AvatarFallback className="bg-muted text-foreground text-lg font-semibold">
                 {userInitials}
               </AvatarFallback>
             </Avatar>
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-lg text-white truncate">{userName}</h3>
-            <p className="text-sm text-[#9CA3AF]">{planLabel}</p>
+            <h3 className="font-bold text-lg text-foreground truncate">{userName}</h3>
+            <p className="text-sm text-muted-foreground">{planLabel}</p>
           </div>
         </div>
 
@@ -197,15 +197,15 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
           <Button
             variant="ghost"
             size="icon"
-            className="h-12 w-12 bg-[#1E293B] hover:bg-[#1E293B]/80 rounded-xl"
+            className="h-12 w-12 bg-muted hover:bg-muted/80 rounded-xl"
             onClick={() => handleNavigation('/dashboard/settings')}
           >
-            <MaterialIcon name="settings" className="text-[#9CA3AF]" />
+            <MaterialIcon name="settings" className="text-muted-foreground" />
           </Button>
         </div>
       </div>
 
-      <Separator className="bg-gray-800 mx-4" />
+      <Separator className="bg-border mx-4" />
 
       {/* Navigation Menu */}
       <div className="flex-1 overflow-y-auto py-4 px-4">
@@ -219,15 +219,15 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
                 className={cn(
                   'w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-colors',
                   isActive 
-                    ? 'bg-[#1A3D2E] text-[#00C853]' 
-                    : 'text-[#9CA3AF] hover:bg-white/5'
+                    ? 'bg-primary/20 text-primary' 
+                    : 'text-muted-foreground hover:bg-accent'
                 )}
                 onClick={() => handleNavigation(item.href)}
               >
                 <MaterialIcon name={item.icon} filled={isActive} className="text-xl" />
                 <span className="font-medium flex-1">{item.title}</span>
                 {item.showBadge && draftsCount > 0 && (
-                  <Badge className="bg-[#00C853] text-black text-xs font-bold px-2">
+                  <Badge className="bg-primary text-primary-foreground text-xs font-bold px-2">
                     {draftsCount}
                   </Badge>
                 )}
@@ -236,7 +236,7 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
           })}
         </nav>
 
-        <Separator className="my-4 bg-gray-800" />
+        <Separator className="my-4 bg-border" />
 
         <nav className="space-y-1">
           {secondaryNavigationItems.map((item) => {
@@ -248,8 +248,8 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
                 className={cn(
                   'w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-colors',
                   isActive 
-                    ? 'bg-[#1A3D2E] text-[#00C853]' 
-                    : 'text-[#9CA3AF] hover:bg-white/5'
+                    ? 'bg-primary/20 text-primary' 
+                    : 'text-muted-foreground hover:bg-accent'
                 )}
                 onClick={() => handleNavigation(item.href)}
               >
@@ -260,12 +260,12 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
           })}
         </nav>
 
-        <Separator className="my-4 bg-gray-800" />
+        <Separator className="my-4 bg-border" />
 
         {/* Suporte e Atualizar */}
         <nav className="space-y-1">
           <button
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left text-[#9CA3AF] hover:bg-white/5 transition-colors"
+            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left text-muted-foreground hover:bg-accent transition-colors"
             onClick={handleSupport}
           >
             <MaterialIcon name="support_agent" className="text-xl" />
@@ -275,7 +275,7 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
           <button
             className={cn(
               "w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-colors",
-              isUpdating ? "text-[#00C853] bg-[#1A3D2E]" : "text-[#9CA3AF] hover:bg-white/5"
+              isUpdating ? "text-primary bg-primary/20" : "text-muted-foreground hover:bg-accent"
             )}
             onClick={handleUpdateApp}
             disabled={isUpdating}
@@ -288,9 +288,9 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
         {/* Admin/Moderator Section */}
         {(userRole?.role === 'admin' || userRole?.role === 'moderator') && (
           <>
-            <Separator className="my-4 bg-gray-800" />
+            <Separator className="my-4 bg-border" />
             <button
-              className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left text-[#9CA3AF] hover:bg-white/5 transition-colors"
+              className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left text-muted-foreground hover:bg-accent transition-colors"
               onClick={handleDashboardClick}
             >
               <MaterialIcon name={userRole?.role === 'admin' ? 'admin_panel_settings' : 'shield_person'} className="text-xl" />
@@ -312,7 +312,7 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
           <span className="font-medium">Sair da conta</span>
         </button>
         
-        <p className="text-center text-xs text-[#6B7280] mt-4">Versão 2.4.0</p>
+        <p className="text-center text-xs text-muted-foreground mt-4">Versão 2.4.0</p>
       </div>
     </div>
   );
