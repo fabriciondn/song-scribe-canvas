@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useSubscriptionCredits } from '@/hooks/useSubscriptionCredits';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useAcordes } from '@/hooks/useAcordes';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useTheme } from '@/hooks/useTheme';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { MobileNotificationCenter } from './MobileNotificationCenter';
+import guitarGiveawayImage from '@/assets/guitar-giveaway.jpg';
 
 // Componente para Material Symbols
 const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: string }> = ({ 
@@ -30,9 +32,12 @@ export const MobileDashboardHome: React.FC = () => {
   const { profile } = useProfile();
   const { credits } = useUserCredits();
   const { bonusCredits, isFrozen } = useSubscriptionCredits();
+  const { subscription } = useSubscription();
   const { progress } = useAcordes();
   const { stats } = useDashboardStats();
   const { theme, toggleTheme } = useTheme();
+  
+  const isPro = subscription?.status === 'active' && subscription?.plan_type === 'pro';
 
   const userName = profile?.artistic_name || profile?.name?.split(' ')[0] || 'Usuário';
   const userAvatar = profile?.avatar_url;
@@ -148,6 +153,36 @@ export const MobileDashboardHome: React.FC = () => {
             </button>
           </div>
         </section>
+
+        {/* Card Sorteio Violão - Apenas para Pro */}
+        {isPro && (
+          <section>
+            <div 
+              onClick={() => navigate('/dashboard/sorteio')}
+              className="relative rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+            >
+              <img 
+                src={guitarGiveawayImage} 
+                alt="Sorteio Violão" 
+                className="w-full h-44 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded uppercase">
+                    Exclusivo Pro
+                  </span>
+                </div>
+                <h3 className="text-white text-xl font-bold mb-1">Sorteio de Violão</h3>
+                <p className="text-white/80 text-sm">Participe e concorra a um violão novinho!</p>
+                <div className="flex items-center gap-2 mt-3">
+                  <span className="text-primary font-bold text-sm">Participar agora</span>
+                  <MaterialIcon name="arrow_forward" className="text-primary text-lg" />
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Atividade Recente */}
         <section>
