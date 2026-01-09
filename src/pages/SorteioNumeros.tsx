@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useUserCredits } from '@/hooks/useUserCredits';
 import { toast } from 'sonner';
 import { MobileBottomNavigation } from '@/components/mobile/MobileBottomNavigation';
 import { useMobileDetection } from '@/hooks/use-mobile';
@@ -27,12 +28,13 @@ const unavailableNumbers = [1, 2, 7, 17, 18, 45, 67, 89, 102, 156, 203, 287, 312
 const SorteioNumeros: React.FC = () => {
   const navigate = useNavigate();
   const { subscription } = useSubscription();
+  const { credits } = useUserCredits();
   const { isMobile } = useMobileDetection();
   
   const isPro = subscription?.status === 'active' && subscription?.plan_type === 'pro';
   
-  // Créditos disponíveis para selecionar números (simulado)
-  const maxCredits = 5;
+  // PRO = 1 número base + 1 número por crédito comprado
+  const maxNumbers = isPro ? 1 + (credits || 0) : 0;
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
   const [activeRange, setActiveRange] = useState<string>('001-100');
   const [visibleCount, setVisibleCount] = useState(30);
@@ -62,8 +64,8 @@ const SorteioNumeros: React.FC = () => {
     if (selectedNumbers.includes(num)) {
       setSelectedNumbers(prev => prev.filter(n => n !== num));
     } else {
-      if (selectedNumbers.length >= maxCredits) {
-        toast.error(`Você pode selecionar no máximo ${maxCredits} números`);
+      if (selectedNumbers.length >= maxNumbers) {
+        toast.error(`Você pode selecionar no máximo ${maxNumbers} número${maxNumbers !== 1 ? 's' : ''}`);
         return;
       }
       setSelectedNumbers(prev => [...prev, num]);
@@ -155,11 +157,11 @@ const SorteioNumeros: React.FC = () => {
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2 mb-1">
                   <MaterialIcon name="confirmation_number" className="text-primary text-[20px]" />
-                  <p className="text-primary text-sm font-bold uppercase tracking-wider">Status PRO</p>
+                  <p className="text-primary text-sm font-bold uppercase tracking-wider">Benefício PRO</p>
                 </div>
-                <p className="text-foreground text-xl font-bold leading-tight">{maxCredits} créditos disponíveis</p>
+                <p className="text-foreground text-xl font-bold leading-tight">{maxNumbers} número{maxNumbers !== 1 ? 's' : ''} disponíve{maxNumbers !== 1 ? 'is' : 'l'}</p>
                 <p className="text-muted-foreground text-sm font-normal leading-normal">
-                  Você já selecionou {selectedNumbers.length} de {maxCredits} números.
+                  Você já selecionou {selectedNumbers.length} de {maxNumbers} números.
                 </p>
               </div>
             </div>
