@@ -45,6 +45,7 @@ const secondaryNavigationItems = [
   { title: 'Tutoriais', href: '/dashboard/tutorials', icon: 'school' },
   { title: 'Parcerias', href: '/dashboard/partnerships', icon: 'handshake' },
   { title: 'Ranking', href: '/dashboard/ranking', icon: 'leaderboard' },
+  { title: 'Sorteio', href: '/dashboard/sorteio', icon: 'redeem' },
   { title: 'Lixeira', href: '/dashboard/trash', icon: 'delete' },
 ];
 
