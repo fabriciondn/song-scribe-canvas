@@ -158,7 +158,7 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
       {/* Header */}
       <header className="px-6 pt-6 pb-4 flex items-center gap-4">
         <button 
-          onClick={onBack}
+          onClick={() => navigate('/dashboard')}
           className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-accent transition-colors"
         >
           <MaterialIcon name="arrow_back" className="text-xl text-muted-foreground" />
