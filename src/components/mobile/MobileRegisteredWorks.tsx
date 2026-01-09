@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useTheme } from '@/hooks/useTheme';
+import { useWeeklyRegistrations } from '@/hooks/useWeeklyRegistrations';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { MobileNotificationCenter } from '@/components/mobile/MobileNotificationCenter';
 import { MobileCertificateDetails } from '@/components/mobile/MobileCertificateDetails';
 import { toast } from 'sonner';
@@ -55,7 +57,11 @@ export const MobileRegisteredWorks: React.FC = () => {
   const workId = searchParams.get('id');
   const currentUser = useCurrentUser();
   const { theme, toggleTheme } = useTheme();
+  const { weeklyData } = useWeeklyRegistrations();
+  const { stats } = useDashboardStats();
   const [filter, setFilter] = useState<FilterType>('all');
+  
+  const totalRegistrations = stats?.registeredWorks?.total || 0;
 
   const { data: works, isLoading } = useQuery({
     queryKey: ['registered-works-mobile', currentUser?.id],
@@ -164,8 +170,50 @@ export const MobileRegisteredWorks: React.FC = () => {
           <p className="text-muted-foreground mt-1 text-sm">Gerencie suas obras e direitos autorais</p>
         </div>
 
+        {/* Resumo Mensal Card */}
+        <div className="bg-card rounded-2xl p-5 border border-border mt-4">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col">
+              <span className="text-3xl font-bold">{totalRegistrations}</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">Total de Registros</span>
+            </div>
+            <div className="h-10 w-10 flex items-center justify-center rounded-full bg-primary/20 text-primary">
+              <MaterialIcon name="bar_chart" />
+            </div>
+          </div>
+          
+          {/* Gráfico de barras */}
+          <div className="flex items-end gap-2 h-24 w-full">
+            {weeklyData.map((item, index) => (
+              <div 
+                key={index}
+                className={`w-full rounded-t-md relative group cursor-pointer transition-colors ${
+                  item.active 
+                    ? 'bg-primary shadow-[0_0_10px_rgba(0,200,83,0.3)]' 
+                    : 'bg-muted hover:bg-primary/20'
+                }`}
+                style={{ height: item.height }}
+              >
+                <div className={`absolute -top-8 left-1/2 -translate-x-1/2 bg-card border border-border text-foreground text-[10px] py-1 px-2 rounded font-bold ${
+                  item.active ? 'block' : 'hidden group-hover:block'
+                }`}>
+                  {item.value}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex justify-between mt-2 text-xs text-muted-foreground font-medium">
+            {weeklyData.map((item, index) => (
+              <span key={index} className={item.active ? 'text-primary font-bold' : ''}>
+                {item.week}
+              </span>
+            ))}
+          </div>
+        </div>
+
         {/* Filter Tabs */}
-        <div className="flex gap-3 overflow-x-auto pb-2 mt-2 no-scrollbar">
+        <div className="flex gap-3 overflow-x-auto pb-2 mt-4 no-scrollbar">
           <button
             onClick={() => setFilter('all')}
             className={`px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
