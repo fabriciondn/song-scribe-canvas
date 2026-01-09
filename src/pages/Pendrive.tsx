@@ -24,23 +24,22 @@ import { toast } from 'sonner';
 import { ProUpgradeModal } from '@/components/ui/pro-upgrade-modal';
 import { MobileBottomNavigation } from '@/components/mobile/MobileBottomNavigation';
 
-// Genre categories for filter
-const GENRES = ['Tudo', 'Hip-Hop', 'Pop', 'MPB', 'Trap', 'Rock', 'Eletrônico', 'Sertanejo'];
+// Genre categories for filter with colors
+const GENRES = [
+  { value: 'Tudo', color: 'bg-muted text-foreground border-border', activeColor: 'bg-primary text-primary-foreground' },
+  { value: 'Hip-Hop', color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20', activeColor: 'bg-orange-500 text-white' },
+  { value: 'Pop', color: 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20', activeColor: 'bg-pink-500 text-white' },
+  { value: 'MPB', color: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20', activeColor: 'bg-green-500 text-white' },
+  { value: 'Trap', color: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20', activeColor: 'bg-red-500 text-white' },
+  { value: 'Rock', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20', activeColor: 'bg-blue-500 text-white' },
+  { value: 'Eletrônico', color: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20', activeColor: 'bg-cyan-500 text-white' },
+  { value: 'Sertanejo', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20', activeColor: 'bg-amber-500 text-white' },
+];
 
-// Genre badge colors
+// Genre badge colors for list items
 const getGenreBadgeStyle = (genre: string) => {
-  const styles: Record<string, string> = {
-    'Synthwave': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    'Lo-Fi': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    'Trap': 'bg-red-500/20 text-red-400 border-red-500/30',
-    'Hip-Hop': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-    'Pop': 'bg-pink-500/20 text-pink-400 border-pink-500/30',
-    'MPB': 'bg-green-500/20 text-green-400 border-green-500/30',
-    'Rock': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    'Eletrônico': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-    'Sertanejo': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  };
-  return styles[genre] || 'bg-primary/20 text-primary border-primary/30';
+  const genreData = GENRES.find(g => g.value === genre);
+  return genreData?.color || 'bg-primary/10 text-primary border-primary/20';
 };
 
 const Pendrive = () => {
@@ -220,18 +219,18 @@ const Pendrive = () => {
 
         {/* Genre Filters */}
         <div className="px-6 pb-6">
-          <div className="flex gap-3 overflow-x-auto no-scrollbar py-1">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
             {GENRES.map(genre => (
               <button
-                key={genre}
-                onClick={() => setSelectedGenre(genre)}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                  selectedGenre === genre
-                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30'
-                    : 'bg-muted border border-border/50 text-foreground hover:border-primary hover:text-primary'
+                key={genre.value}
+                onClick={() => setSelectedGenre(genre.value)}
+                className={`px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 border ${
+                  selectedGenre === genre.value
+                    ? `${genre.activeColor} border-transparent shadow-lg scale-105`
+                    : `${genre.color} hover:scale-102 hover:shadow-md`
                 }`}
               >
-                {genre}
+                {genre.value}
               </button>
             ))}
           </div>
@@ -382,16 +381,18 @@ const Pendrive = () => {
           />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {GENRES.slice(0, 5).map(genre => (
-            <Button
-              key={genre}
-              variant={selectedGenre === genre ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedGenre(genre)}
-              className="whitespace-nowrap"
+          {GENRES.slice(0, 6).map(genre => (
+            <button
+              key={genre.value}
+              onClick={() => setSelectedGenre(genre.value)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 border ${
+                selectedGenre === genre.value
+                  ? `${genre.activeColor} border-transparent shadow-md`
+                  : `${genre.color} hover:shadow-sm`
+              }`}
             >
-              {genre}
-            </Button>
+              {genre.value}
+            </button>
           ))}
         </div>
       </div>
