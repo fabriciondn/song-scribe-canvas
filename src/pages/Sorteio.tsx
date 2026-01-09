@@ -44,15 +44,8 @@ const Sorteio: React.FC = () => {
       return;
     }
     
-    setIsParticipating(true);
-    
-    // Simular participação
-    setTimeout(() => {
-      setIsParticipating(false);
-      toast.success('🎉 Você está participando do sorteio!', {
-        description: 'Boa sorte! O resultado será divulgado em breve.',
-      });
-    }, 1500);
+    // Navegar para a página de seleção de números
+    navigate('/dashboard/sorteio/numeros');
   };
 
   const handleShare = () => {
