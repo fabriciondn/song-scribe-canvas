@@ -380,12 +380,12 @@ const Pendrive = () => {
             className="pl-10"
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-3 overflow-x-auto pb-1">
           {GENRES.slice(0, 6).map(genre => (
             <button
               key={genre.value}
               onClick={() => setSelectedGenre(genre.value)}
-              className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 border ${
+              className={`shrink-0 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 border ${
                 selectedGenre === genre.value
                   ? `${genre.activeColor} border-transparent shadow-md`
                   : `${genre.color} hover:shadow-sm`
