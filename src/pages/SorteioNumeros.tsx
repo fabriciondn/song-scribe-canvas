@@ -2,9 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUserCredits } from '@/hooks/useUserCredits';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { raffleService } from '@/services/raffleService';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { MobileBottomNavigation } from '@/components/mobile/MobileBottomNavigation';
 import { useMobileDetection } from '@/hooks/use-mobile';
+import { Loader2 } from 'lucide-react';
 
 // Componente para Material Symbols
 const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: string }> = ({ 
@@ -22,31 +26,101 @@ const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: strin
   </span>
 );
 
-// Simular números indisponíveis (já reservados por outros)
-const unavailableNumbers = [1, 2, 7, 17, 18, 45, 67, 89, 102, 156, 203, 287, 312, 356, 401, 423, 467, 489];
-
 const SorteioNumeros: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { subscription } = useSubscription();
   const { credits } = useUserCredits();
+  const { user } = useAuth();
   const { isMobile } = useMobileDetection();
   
   const isPro = subscription?.status === 'active' && subscription?.plan_type === 'pro';
   
-  // PRO = 1 número base + 1 número por crédito comprado
-  const maxNumbers = isPro ? 1 + (credits || 0) : 0;
-  const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
   const [activeRange, setActiveRange] = useState<string>('001-100');
   const [visibleCount, setVisibleCount] = useState(30);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [pendingSelections, setPendingSelections] = useState<number[]>([]);
 
-  const ranges = [
-    { label: '001-100', start: 1, end: 100 },
-    { label: '101-200', start: 101, end: 200 },
-    { label: '201-300', start: 201, end: 300 },
-    { label: '301-400', start: 301, end: 400 },
-    { label: '401-500', start: 401, end: 500 },
-  ];
+  // Buscar configurações do sorteio
+  const { data: raffleSettings, isLoading: loadingRaffle } = useQuery({
+    queryKey: ['active-raffle'],
+    queryFn: raffleService.getActiveRaffle
+  });
+
+  // Buscar todas as reservas do sorteio
+  const { data: allReservations = [], isLoading: loadingReservations } = useQuery({
+    queryKey: ['raffle-reservations', raffleSettings?.id],
+    queryFn: () => raffleService.getReservations(raffleSettings!.id),
+    enabled: !!raffleSettings?.id
+  });
+
+  // Buscar reservas do usuário atual
+  const { data: userReservations = [] } = useQuery({
+    queryKey: ['user-raffle-reservations', raffleSettings?.id, user?.id],
+    queryFn: () => raffleService.getUserReservations(raffleSettings!.id, user!.id),
+    enabled: !!raffleSettings?.id && !!user?.id
+  });
+
+  // Mutation para reservar número
+  const reserveMutation = useMutation({
+    mutationFn: async (numbers: number[]) => {
+      if (!raffleSettings?.id || !user?.id) throw new Error('Dados inválidos');
+      
+      const results = [];
+      for (const num of numbers) {
+        const result = await raffleService.reserveNumber(raffleSettings.id, user.id, num);
+        results.push(result);
+      }
+      return results;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['raffle-reservations'] });
+      queryClient.invalidateQueries({ queryKey: ['user-raffle-reservations'] });
+      setPendingSelections([]);
+      toast.success('🎉 Números confirmados!', {
+        description: `Você está participando com ${userReservations.length + pendingSelections.length} número(s).`,
+      });
+      navigate('/dashboard/sorteio');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao reservar números');
+    }
+  });
+
+  // Calcular números disponíveis para o usuário
+  const baseNumbers = raffleSettings?.base_numbers_for_pro || 1;
+  const numbersPerCredit = raffleSettings?.numbers_per_credit || 1;
+  const maxNumbers = isPro ? baseNumbers + ((credits || 0) * numbersPerCredit) : 0;
+  const alreadyReserved = userReservations.length;
+  const availableToSelect = maxNumbers - alreadyReserved;
+
+  // Números já reservados por outros (não pelo usuário atual)
+  const unavailableNumbers = useMemo(() => {
+    return allReservations
+      .filter(r => r.user_id !== user?.id)
+      .map(r => r.number);
+  }, [allReservations, user?.id]);
+
+  // Números já reservados pelo usuário atual
+  const myReservedNumbers = useMemo(() => {
+    return userReservations.map(r => r.number);
+  }, [userReservations]);
+
+  const totalNumbers = raffleSettings?.total_numbers || 1000;
+
+  const ranges = useMemo(() => {
+    const result = [];
+    for (let i = 0; i < totalNumbers; i += 100) {
+      const start = i + 1;
+      const end = Math.min(i + 100, totalNumbers);
+      result.push({
+        label: `${String(start).padStart(3, '0')}-${String(end).padStart(3, '0')}`,
+        start,
+        end
+      });
+    }
+    return result;
+  }, [totalNumbers]);
 
   const currentRange = ranges.find(r => r.label === activeRange) || ranges[0];
 
@@ -59,16 +133,16 @@ const SorteioNumeros: React.FC = () => {
   }, [currentRange, visibleCount]);
 
   const toggleNumber = (num: number) => {
-    if (unavailableNumbers.includes(num)) return;
+    if (unavailableNumbers.includes(num) || myReservedNumbers.includes(num)) return;
     
-    if (selectedNumbers.includes(num)) {
-      setSelectedNumbers(prev => prev.filter(n => n !== num));
+    if (pendingSelections.includes(num)) {
+      setPendingSelections(prev => prev.filter(n => n !== num));
     } else {
-      if (selectedNumbers.length >= maxNumbers) {
-        toast.error(`Você pode selecionar no máximo ${maxNumbers} número${maxNumbers !== 1 ? 's' : ''}`);
+      if (pendingSelections.length >= availableToSelect) {
+        toast.error(`Você pode selecionar no máximo ${availableToSelect} número${availableToSelect !== 1 ? 's' : ''} adicionais`);
         return;
       }
-      setSelectedNumbers(prev => [...prev, num]);
+      setPendingSelections(prev => [...prev, num]);
     }
   };
 
@@ -77,31 +151,56 @@ const SorteioNumeros: React.FC = () => {
   };
 
   const handleConfirm = () => {
-    if (selectedNumbers.length === 0) {
+    if (pendingSelections.length === 0) {
       toast.error('Selecione pelo menos um número');
       return;
     }
     
     setIsConfirming(true);
-    
-    setTimeout(() => {
-      setIsConfirming(false);
-      toast.success('🎉 Números confirmados!', {
-        description: `Você está participando com ${selectedNumbers.length} número(s).`,
-      });
-      navigate('/dashboard/sorteio');
-    }, 1500);
+    reserveMutation.mutate(pendingSelections);
   };
 
   const loadMore = () => {
     setVisibleCount(prev => Math.min(prev + 30, 100));
   };
 
-  const getNumberState = (num: number): 'available' | 'selected' | 'unavailable' => {
+  const getNumberState = (num: number): 'available' | 'selected' | 'mine' | 'unavailable' => {
     if (unavailableNumbers.includes(num)) return 'unavailable';
-    if (selectedNumbers.includes(num)) return 'selected';
+    if (myReservedNumbers.includes(num)) return 'mine';
+    if (pendingSelections.includes(num)) return 'selected';
     return 'available';
   };
+
+  // Loading
+  if (loadingRaffle || loadingReservations) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando sorteio...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Sorteio não encontrado ou inativo
+  if (!raffleSettings) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
+        <div className="text-center">
+          <MaterialIcon name="event_busy" className="text-6xl text-muted-foreground mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Sorteio Indisponível</h1>
+          <p className="text-muted-foreground mb-6">Não há sorteio ativo no momento.</p>
+          <button 
+            onClick={() => navigate('/dashboard')}
+            className="bg-primary text-primary-foreground font-bold px-6 py-3 rounded-xl"
+          >
+            Voltar ao Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Redirecionar se não for PRO
   if (!isPro) {
@@ -140,11 +239,10 @@ const SorteioNumeros: React.FC = () => {
         </div>
       </div>
 
-      {/* Título */}
       <div className="px-4 pt-6 pb-2">
         <h1 className="text-foreground tracking-tight text-3xl font-bold leading-tight mb-2">Escolha seu número</h1>
         <p className="text-muted-foreground text-base font-normal leading-relaxed">
-          Participe do sorteio exclusivo de um <span className="text-foreground font-medium">Violão Taylor</span>. Selecione seus números da sorte abaixo.
+          Participe do sorteio: <span className="text-foreground font-medium">{raffleSettings.name}</span>. Selecione seus números da sorte abaixo.
         </p>
       </div>
 
@@ -159,9 +257,9 @@ const SorteioNumeros: React.FC = () => {
                   <MaterialIcon name="confirmation_number" className="text-primary text-[20px]" />
                   <p className="text-primary text-sm font-bold uppercase tracking-wider">Benefício PRO</p>
                 </div>
-                <p className="text-foreground text-xl font-bold leading-tight">{maxNumbers} número{maxNumbers !== 1 ? 's' : ''} disponíve{maxNumbers !== 1 ? 'is' : 'l'}</p>
+                <p className="text-foreground text-xl font-bold leading-tight">{maxNumbers} número{maxNumbers !== 1 ? 's' : ''} no total</p>
                 <p className="text-muted-foreground text-sm font-normal leading-normal">
-                  Você já selecionou {selectedNumbers.length} de {maxNumbers} números.
+                  Você já reservou {alreadyReserved} • Pode selecionar mais {availableToSelect} número{availableToSelect !== 1 ? 's' : ''}.
                 </p>
               </div>
             </div>
@@ -199,7 +297,7 @@ const SorteioNumeros: React.FC = () => {
       </div>
 
       {/* Legenda */}
-      <div className="flex items-center justify-center gap-6 py-4 px-4 text-xs font-medium text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-center gap-4 py-4 px-4 text-xs font-medium text-muted-foreground">
         <div className="flex items-center gap-2">
           <div className="size-3 rounded-full border border-border bg-background" />
           <span>Disponível</span>
@@ -207,6 +305,10 @@ const SorteioNumeros: React.FC = () => {
         <div className="flex items-center gap-2">
           <div className="size-3 rounded-full bg-primary" />
           <span className="text-foreground">Selecionado</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="size-3 rounded-full bg-blue-500" />
+          <span className="text-blue-500">Meu número</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="size-3 rounded-full bg-muted" />
@@ -224,17 +326,19 @@ const SorteioNumeros: React.FC = () => {
               <button
                 key={num}
                 onClick={() => toggleNumber(num)}
-                disabled={state === 'unavailable'}
+                disabled={state === 'unavailable' || state === 'mine'}
                 className={`aspect-square flex flex-col items-center justify-center rounded-lg text-sm font-medium transition-all ${
                   state === 'selected'
                     ? 'bg-primary text-primary-foreground font-bold shadow-[0_0_12px_rgba(19,236,91,0.4)] scale-105'
+                    : state === 'mine'
+                    ? 'bg-blue-500 text-white font-bold cursor-default'
                     : state === 'unavailable'
                     ? 'bg-muted text-muted-foreground/40 cursor-not-allowed'
                     : 'bg-background border border-border hover:border-primary hover:text-primary'
                 }`}
               >
                 {formatNumber(num)}
-                {state === 'selected' && (
+                {(state === 'selected' || state === 'mine') && (
                   <MaterialIcon name="check" className="text-[14px] mt-0.5" />
                 )}
               </button>
@@ -258,15 +362,15 @@ const SorteioNumeros: React.FC = () => {
       <div className="fixed bottom-0 left-0 z-20 w-full bg-gradient-to-t from-background via-background/95 to-transparent pb-8 pt-8 px-4">
         <button 
           onClick={handleConfirm}
-          disabled={selectedNumbers.length === 0 || isConfirming}
+          disabled={pendingSelections.length === 0 || isConfirming || reserveMutation.isPending}
           className="flex w-full cursor-pointer items-center justify-center rounded-xl bg-primary py-4 text-primary-foreground shadow-lg shadow-primary/20 transition-transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isConfirming ? (
-            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary-foreground" />
+          {isConfirming || reserveMutation.isPending ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
             <>
               <span className="text-base font-bold leading-normal mr-2">
-                Confirmar ({selectedNumbers.length}) número{selectedNumbers.length !== 1 ? 's' : ''}
+                Confirmar ({pendingSelections.length}) número{pendingSelections.length !== 1 ? 's' : ''}
               </span>
               <MaterialIcon name="arrow_forward" className="text-[20px]" />
             </>
