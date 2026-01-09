@@ -410,30 +410,33 @@ export default function CreditsCheckout() {
       </div>;
   }
   return <>
-      {/* Hook para detectar mobile */}
+      {/* Layout Mobile */}
       <div className="block md:hidden">
-        {/* Layout Mobile */}
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
-          <div className="max-w-md mx-auto">
-            <div className="text-center mb-6">
-              <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-8 mx-auto" />
-              <p className="text-muted-foreground text-xs mt-1">Checkout</p>
-            </div>
-
-            <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-4 text-sm">
-              <ArrowLeft className="mr-1 h-3 w-3" />
-              Voltar ao Dashboard
-            </Button>
+        <div className="min-h-screen bg-background pb-24">
+          <div className="w-full max-w-md mx-auto p-4">
+            {/* Header */}
+            <header className="flex flex-col items-center mb-6 relative">
+              <h1 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">Checkout</h1>
+              <div className="w-full flex items-center justify-start">
+                <button 
+                  onClick={() => navigate('/dashboard')}
+                  className="flex items-center text-muted-foreground hover:text-primary transition-colors text-sm font-medium"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  Voltar ao Dashboard
+                </button>
+              </div>
+            </header>
 
             {!isProfileComplete && (
               <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950 mb-6">
-                <CardHeader>
-                  <CardTitle className="text-amber-800 dark:text-amber-300 flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" />
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-amber-800 dark:text-amber-300 flex items-center gap-2 text-base">
+                    <AlertTriangle className="h-4 w-4" />
                     Perfil Incompleto ({completionPercentage}%)
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3">
                   <div className="bg-muted/50 rounded-lg p-2">
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div 
@@ -443,7 +446,7 @@ export default function CreditsCheckout() {
                     </div>
                   </div>
                   <p className="text-sm text-amber-700 dark:text-amber-300">
-                    Para adicionar saldo, você precisa completar seu perfil. Os seguintes campos são obrigatórios:
+                    Complete seu perfil antes de comprar créditos:
                   </p>
                   <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-400 space-y-1">
                     {missingFields.map((field, index) => (
@@ -462,93 +465,121 @@ export default function CreditsCheckout() {
             )}
 
             {isProfileComplete && (
-
-            <div className="space-y-4">
-              {/* Mobile Credit Selection */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-foreground text-lg">
-                    <Coins className="h-4 w-4" />
-                    Comprar Créditos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label className="text-sm">Quantidade de Créditos</Label>
-                    <Select value={credits.toString()} onValueChange={value => setCredits(parseInt(value))}>
-                      <SelectTrigger className="text-base font-semibold mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({
-                        length: 20
-                      }, (_, i) => i + 1).map(num => <SelectItem key={num} value={num.toString()}>
-                            {num} {num === 1 ? 'crédito' : 'créditos'}
-                          </SelectItem>)}
-                      </SelectContent>
-                    </Select>
+              <main className="space-y-4">
+                {/* Comprar Créditos Card */}
+                <section className="bg-card rounded-xl p-5 shadow-sm border border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Coins className="h-5 w-5 text-muted-foreground" />
+                    <h2 className="font-semibold text-lg text-foreground">Comprar Créditos</h2>
                   </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1.5 ml-1">
+                        Quantidade de Créditos
+                      </label>
+                      <Select value={credits.toString()} onValueChange={value => setCredits(parseInt(value))}>
+                        <SelectTrigger className="w-full bg-muted border-border rounded-lg px-4 py-3 text-foreground">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
+                            <SelectItem key={num} value={num.toString()}>
+                              {num} {num === 1 ? 'crédito' : 'créditos'}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className="bg-muted p-3 rounded-lg text-sm">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-muted-foreground">Créditos base:</span>
-                      <span className="font-medium">{credits}</span>
-                    </div>
-                    {pricing.bonusCredits > 0 && <div className="flex justify-between items-center mb-1">
-                        <span className="text-muted-foreground">Créditos bônus:</span>
-                        <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
-                      </div>}
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-muted-foreground">Total de créditos:</span>
-                      <span className="font-bold text-primary">{pricing.finalCredits}</span>
-                    </div>
-                    <hr className="my-2" />
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">Valor total:</span>
-                      <div className="text-right">
-                        {pricing.savings > 0 && <div className="text-xs text-muted-foreground line-through">
-                            R$ {pricing.originalPrice.toFixed(2)}
-                          </div>}
-                        <div className="text-base font-bold text-foreground">
-                          R$ {pricing.totalAmount.toFixed(2)}
+                    {/* Resumo de valores */}
+                    <div className="bg-muted/50 rounded-lg p-3 space-y-2 border border-border/50">
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Créditos base:</span>
+                        <span className="font-medium text-foreground">{credits}</span>
+                      </div>
+                      {pricing.bonusCredits > 0 && (
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                          <span>Créditos bônus:</span>
+                          <span className="font-medium text-green-500">+{pricing.bonusCredits}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Total de créditos:</span>
+                        <span className="font-bold text-primary">{pricing.finalCredits}</span>
+                      </div>
+                      <div className="pt-2 mt-2 border-t border-border flex justify-between items-end">
+                        <span className="font-medium text-foreground">Valor total:</span>
+                        <div className="text-right">
+                          {pricing.savings > 0 && (
+                            <div className="text-xs text-muted-foreground line-through">
+                              R$ {pricing.originalPrice.toFixed(2)}
+                            </div>
+                          )}
+                          <span className="font-bold text-xl text-foreground">
+                            R$ {pricing.totalAmount.toFixed(2)}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </section>
 
-              {/* Mobile Order Bump */}
-              <Card className={`border-2 cursor-pointer transition-all ${credits === 10 ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-green-200 hover:border-green-300'}`} onClick={() => setCredits(10)}>
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="bg-green-100 p-1.5 rounded-full">
-                        <Gift className="h-3 w-3 text-green-600" />
-                      </div>
-                       <div>
-                         <h3 className="font-semibold text-green-800 dark:text-green-200 text-sm">Super Oferta</h3>
-                         <p className="text-xs text-green-700 dark:text-green-300 font-semibold">10 Créditos + 2 GRÁTIS</p>
-                         <p className="text-xs text-green-600 dark:text-green-400">12 créditos por R$ 17,99 cada (apenas os 10)</p>
-                       </div>
-                     </div>
-                     <div className="text-right">
-                       <div className="text-xs text-green-600 dark:text-green-400 line-through">R$ 239,88</div>
-                       <div className="text-sm font-bold text-green-800 dark:text-green-200">R$ 179,90</div>
+                {/* Oferta Especial */}
+                <div>
+                  <section 
+                    onClick={() => setCredits(10)}
+                    className={`relative rounded-xl p-0 shadow-lg border-2 overflow-hidden cursor-pointer transition-all duration-300 transform hover:scale-[1.01] ${
+                      credits === 10 
+                        ? 'border-green-500 bg-green-500/5' 
+                        : 'border-green-500/50 bg-card'
+                    }`}
+                  >
+                    {/* Badge */}
+                    <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-black px-3 py-1.5 rounded-bl-xl z-20 shadow-md tracking-wider">
+                      OFERTA LIMITADA
                     </div>
+                    
+                    {/* Glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-transparent to-transparent opacity-60 pointer-events-none" />
+                    
+                    <div className="p-5 flex items-center gap-4 relative z-10">
+                      <div className="flex-shrink-0 relative">
+                        <div className="absolute inset-0 bg-green-500 blur-xl opacity-40 animate-pulse rounded-full" />
+                        <div className="w-12 h-12 rounded-full bg-background border border-green-500 flex items-center justify-center relative z-10 shadow-[0_0_10px_rgba(34,197,94,0.4)]">
+                          <Gift className="h-6 w-6 text-green-500" />
+                        </div>
+                      </div>
+                      
+                      <div className="flex-grow min-w-0 pr-2">
+                        <h3 className="text-green-500 font-bold text-[11px] uppercase tracking-widest mb-1">
+                          Aproveite o Desconto
+                        </h3>
+                        <p className="text-foreground text-sm leading-snug font-medium">
+                          Leve <span className="text-green-500 font-black text-base">+2 Registros GRÁTIS</span> agora!
+                        </p>
+                        <div className="mt-2 flex items-baseline gap-2">
+                          <span className="text-xs text-muted-foreground line-through decoration-red-500/70 decoration-2">R$ 239,88</span>
+                          <span className="text-lg font-bold text-foreground">R$ 179,90</span>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                  
+                  <div className="mt-2 text-center">
+                    <p className="text-[13px] text-muted-foreground font-medium">
+                      12 créditos por R$ 17,99 cada (apenas os 10)
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
 
-              {/* Mobile Coupon Section */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-foreground text-base flex items-center gap-2">
-                    <Ticket className="h-4 w-4" />
-                    Cupom de Desconto
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+                {/* Cupom de Desconto */}
+                <section className="bg-card rounded-xl p-5 shadow-sm border border-border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Ticket className="h-5 w-5 text-muted-foreground rotate-90" />
+                    <h2 className="font-semibold text-base text-foreground">Cupom de Desconto</h2>
+                  </div>
+                  
                   {appliedCoupon ? (
                     <div className="flex items-center justify-between p-2 bg-green-500/10 rounded-lg border border-green-500/30">
                       <div className="flex items-center gap-2">
@@ -567,91 +598,112 @@ export default function CreditsCheckout() {
                   ) : (
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Digite o cupom"
+                        placeholder="DIGITE O CUPOM"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        className="uppercase text-sm"
+                        className="flex-grow bg-muted border-border rounded-lg px-4 py-2.5 text-sm uppercase placeholder:text-muted-foreground"
                         onKeyDown={(e) => e.key === 'Enter' && handleValidateCoupon()}
                       />
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant="secondary"
                         onClick={handleValidateCoupon}
                         disabled={isValidatingCoupon}
+                        className="px-5"
                       >
                         {isValidatingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Aplicar'}
                       </Button>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </section>
 
-              {/* Mobile Summary */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-foreground text-lg">Resumo do Pedido</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
+                {/* Resumo do Pedido */}
+                <section className="bg-card rounded-xl p-5 shadow-sm border border-border">
+                  <h2 className="font-bold text-lg text-foreground mb-4">Resumo do Pedido</h2>
+                  
+                  {/* Dados do usuário */}
+                  <div className="space-y-2 mb-6">
+                    <div className="flex justify-between items-start text-xs sm:text-sm">
                       <span className="text-muted-foreground">Nome:</span>
-                      <span className="font-medium">{profile?.name || 'Não informado'}</span>
+                      <span className="text-foreground font-medium text-right max-w-[60%] truncate">
+                        {profile?.name || 'Não informado'}
+                      </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-start text-xs sm:text-sm">
                       <span className="text-muted-foreground">Email:</span>
-                      <span className="font-medium">{user.email}</span>
+                      <span className="text-foreground font-medium text-right max-w-[60%] truncate">
+                        {user.email}
+                      </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-start text-xs sm:text-sm">
                       <span className="text-muted-foreground">CPF:</span>
-                      <span className="font-medium">{profile?.cpf || 'Não informado'}</span>
+                      <span className="text-foreground font-medium text-right">
+                        {profile?.cpf || 'Não informado'}
+                      </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-start text-xs sm:text-sm">
                       <span className="text-muted-foreground">Telefone:</span>
-                      <span className="font-medium">{profile?.cellphone || 'Não informado'}</span>
+                      <span className="text-foreground font-medium text-right">
+                        {profile?.cellphone || 'Não informado'}
+                      </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-start text-xs sm:text-sm">
                       <span className="text-muted-foreground">Créditos atuais:</span>
-                      <span className="font-medium">{profile?.credits || 0}</span>
+                      <span className="text-foreground font-bold text-right">
+                        {profile?.credits || 0}
+                      </span>
                     </div>
                   </div>
 
-                  <hr />
-
-                  <div className="space-y-1 text-sm">
-                    <h4 className="font-semibold text-foreground">Detalhes da Compra</h4>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Quantidade:</span>
-                      <span className="font-medium">{credits} créditos</span>
+                  {/* Detalhes da compra */}
+                  <div className="pt-4 border-t border-border space-y-2">
+                    <h3 className="text-sm font-medium text-foreground mb-2">Detalhes da Compra</h3>
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>Quantidade:</span>
+                      <span className="font-medium text-foreground">{credits} créditos</span>
                     </div>
-                    {pricing.bonusCredits > 0 && <div className="flex justify-between">
-                        <span className="text-muted-foreground">Créditos bônus:</span>
-                        <span className="font-medium text-green-600">+{pricing.bonusCredits}</span>
-                      </div>}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total de créditos:</span>
+                    {pricing.bonusCredits > 0 && (
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Créditos bônus:</span>
+                        <span className="font-medium text-green-500">+{pricing.bonusCredits}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>Total de créditos:</span>
                       <span className="font-bold text-primary">{pricing.finalCredits}</span>
                     </div>
                     {appliedCoupon && pricing.couponDiscount > 0 && (
-                      <div className="flex justify-between text-green-600">
+                      <div className="flex justify-between text-sm text-green-500">
                         <span>Desconto ({appliedCoupon.discount_percentage}%):</span>
                         <span>- R$ {pricing.couponDiscount.toFixed(2)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-base">
-                      <span className="font-bold">Valor total:</span>
-                      <span className="font-bold text-primary">R$ {pricing.totalAmount.toFixed(2)}</span>
+                    <div className="flex justify-between items-center mt-3 pt-2">
+                      <span className="text-lg font-bold text-foreground">Valor total:</span>
+                      <span className="text-xl font-bold text-primary">R$ {pricing.totalAmount.toFixed(2)}</span>
                     </div>
                   </div>
 
-                  <Button onClick={handleProcessPayment} disabled={isProcessing} className="w-full" size="lg">
-                    {isProcessing ? <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  {/* Botão de finalizar */}
+                  <Button 
+                    onClick={handleProcessPayment} 
+                    disabled={isProcessing} 
+                    className="w-full mt-6 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                    size="lg"
+                  >
+                    {isProcessing ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
                         Processando...
-                      </div> : `Finalizar Compra - R$ ${pricing.totalAmount.toFixed(2)}`}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span>Finalizar Compra - R$ {pricing.totalAmount.toFixed(2)}</span>
+                        <ArrowLeft className="h-4 w-4 rotate-180" />
+                      </div>
+                    )}
                   </Button>
-                </CardContent>
-              </Card>
-            </div>
+                </section>
+              </main>
             )}
           </div>
         </div>
