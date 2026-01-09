@@ -356,6 +356,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         payment_id: mercadoPagoData.id.toString(),
+        transaction_id: transaction.id,
         qr_code: qrCodeData,
         qr_code_url: qrCodeBase64 ? `data:image/png;base64,${qrCodeBase64}` : null,
         amount: totalAmount,

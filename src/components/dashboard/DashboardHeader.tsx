@@ -9,6 +9,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAcordes } from '@/hooks/useAcordes';
 import { AuthContext } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { AbandonedCartIndicator } from '@/components/ui/abandoned-cart-indicator';
 
 interface DashboardHeaderProps {
   userName?: string;
@@ -70,6 +71,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userName }) =>
         </Button>
         
         <NotificationCenter />
+        
+        <AbandonedCartIndicator />
         
         <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
