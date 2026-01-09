@@ -1678,6 +1678,95 @@ export type Database = {
         }
         Relationships: []
       }
+      raffle_reservations: {
+        Row: {
+          id: string
+          number: number
+          raffle_id: string
+          reserved_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          number: number
+          raffle_id: string
+          reserved_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          number?: number
+          raffle_id?: string
+          reserved_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_reservations_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffle_settings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      raffle_settings: {
+        Row: {
+          base_numbers_for_pro: number
+          created_at: string
+          description: string | null
+          draw_date: string | null
+          id: string
+          is_active: boolean
+          is_visible_in_menu: boolean
+          max_number: number
+          min_number: number
+          name: string
+          numbers_per_credit: number
+          prize_description: string | null
+          prize_image_url: string | null
+          rules: string | null
+          total_numbers: number
+          updated_at: string
+        }
+        Insert: {
+          base_numbers_for_pro?: number
+          created_at?: string
+          description?: string | null
+          draw_date?: string | null
+          id?: string
+          is_active?: boolean
+          is_visible_in_menu?: boolean
+          max_number?: number
+          min_number?: number
+          name?: string
+          numbers_per_credit?: number
+          prize_description?: string | null
+          prize_image_url?: string | null
+          rules?: string | null
+          total_numbers?: number
+          updated_at?: string
+        }
+        Update: {
+          base_numbers_for_pro?: number
+          created_at?: string
+          description?: string | null
+          draw_date?: string | null
+          id?: string
+          is_active?: boolean
+          is_visible_in_menu?: boolean
+          max_number?: number
+          min_number?: number
+          name?: string
+          numbers_per_credit?: number
+          prize_description?: string | null
+          prize_image_url?: string | null
+          rules?: string | null
+          total_numbers?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       registration_rate_limits: {
         Row: {
           created_at: string | null

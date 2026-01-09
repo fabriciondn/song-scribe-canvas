@@ -21,6 +21,7 @@ import { AdminForms } from '@/components/admin/AdminForms';
 import { AdminAffiliateWithdrawals } from '@/components/admin/AdminAffiliateWithdrawals';
 import { AdminCoupons } from '@/components/admin/AdminCoupons';
 import { AdminGamification } from '@/components/admin/AdminGamification';
+import { AdminRaffle } from '@/components/admin/AdminRaffle';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -115,6 +116,8 @@ const AdminDashboard: React.FC = () => {
         return <AdminCoupons />;
       case 'gamification':
         return <AdminGamification />;
+      case 'raffle':
+        return <AdminRaffle />;
       case 'content':
         return <AdminContent />;
       case 'tutorials':
