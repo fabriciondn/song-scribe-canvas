@@ -5,7 +5,6 @@ import { useUserCredits } from '@/hooks/useUserCredits';
 import { useSubscriptionCredits } from '@/hooks/useSubscriptionCredits';
 import { useAcordes } from '@/hooks/useAcordes';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
-import { useWeeklyRegistrations } from '@/hooks/useWeeklyRegistrations';
 import { useTheme } from '@/hooks/useTheme';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { MobileNotificationCenter } from './MobileNotificationCenter';
@@ -33,7 +32,6 @@ export const MobileDashboardHome: React.FC = () => {
   const { bonusCredits, isFrozen } = useSubscriptionCredits();
   const { progress } = useAcordes();
   const { stats } = useDashboardStats();
-  const { weeklyData } = useWeeklyRegistrations();
   const { theme, toggleTheme } = useTheme();
 
   const userName = profile?.artistic_name || profile?.name?.split(' ')[0] || 'Usuário';
@@ -148,60 +146,6 @@ export const MobileDashboardHome: React.FC = () => {
               <span className="font-bold text-base mb-1">Registrar Obra</span>
               <span className="text-xs text-muted-foreground text-left leading-snug">Proteja seus direitos</span>
             </button>
-          </div>
-        </section>
-
-        {/* Resumo Mensal */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold">Resumo Mensal</h2>
-            <button 
-              onClick={() => navigate('/dashboard/registered-works')}
-              className="text-primary text-sm font-semibold hover:underline"
-            >
-              Ver tudo
-            </button>
-          </div>
-          
-          <div className="bg-card rounded-2xl p-5 border border-border">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex flex-col">
-                <span className="text-3xl font-bold">{totalRegistrations}</span>
-                <span className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">Total de Registros</span>
-              </div>
-              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-primary/20 text-primary">
-                <MaterialIcon name="bar_chart" />
-              </div>
-            </div>
-            
-            {/* Gráfico de barras */}
-            <div className="flex items-end gap-2 h-24 w-full">
-              {weeklyData.map((item, index) => (
-                <div 
-                  key={index}
-                  className={`w-full rounded-t-md relative group cursor-pointer transition-colors ${
-                    item.active 
-                      ? 'bg-primary shadow-[0_0_10px_rgba(0,200,83,0.3)]' 
-                      : 'bg-muted hover:bg-primary/20'
-                  }`}
-                  style={{ height: item.height }}
-                >
-                  <div className={`absolute -top-8 left-1/2 -translate-x-1/2 bg-card border border-border text-foreground text-[10px] py-1 px-2 rounded font-bold ${
-                    item.active ? 'block' : 'hidden group-hover:block'
-                  }`}>
-                    {item.value}
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="flex justify-between mt-2 text-xs text-muted-foreground font-medium">
-              {weeklyData.map((item, index) => (
-                <span key={index} className={item.active ? 'text-primary font-bold' : ''}>
-                  {item.week}
-                </span>
-              ))}
-            </div>
           </div>
         </section>
 
