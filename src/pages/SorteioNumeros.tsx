@@ -223,7 +223,7 @@ const SorteioNumeros: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col pb-24">
+    <div className="min-h-screen bg-background text-foreground flex flex-col pb-48">
       {/* Header */}
       <div className="sticky top-0 z-30 flex items-center bg-background/80 backdrop-blur-md p-4 pb-2 justify-between border-b border-border">
         <button 
@@ -370,7 +370,7 @@ const SorteioNumeros: React.FC = () => {
       </div>
 
       {/* Botão Fixo */}
-      <div className="fixed bottom-0 left-0 z-20 w-full bg-gradient-to-t from-background via-background/95 to-transparent pb-8 pt-8 px-4">
+      <div className="fixed bottom-20 left-0 z-20 w-full bg-gradient-to-t from-background via-background/95 to-transparent pb-4 pt-6 px-4">
         <button 
           onClick={handleConfirm}
           disabled={pendingSelections.length === 0 || isConfirming || reserveMutation.isPending}
