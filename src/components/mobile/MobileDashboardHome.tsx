@@ -7,6 +7,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useAcordes } from '@/hooks/useAcordes';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useTheme } from '@/hooks/useTheme';
+import { useRaffleVisibility } from '@/hooks/useRaffleVisibility';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { MobileNotificationCenter } from './MobileNotificationCenter';
 import guitarSorteioImage from '@/assets/guitar-sorteio.jpg';
@@ -36,6 +37,7 @@ export const MobileDashboardHome: React.FC = () => {
   const { progress } = useAcordes();
   const { stats } = useDashboardStats();
   const { theme, toggleTheme } = useTheme();
+  const { isRaffleVisible } = useRaffleVisibility();
   
   const isPro = subscription?.status === 'active' && subscription?.plan_type === 'pro';
 
@@ -154,8 +156,8 @@ export const MobileDashboardHome: React.FC = () => {
           </div>
         </section>
 
-        {/* Card Sorteio Violão - Apenas para Pro */}
-        {isPro && (
+        {/* Card Sorteio Violão - Apenas para Pro e se visível */}
+        {isPro && isRaffleVisible && (
           <section>
             <div 
               onClick={() => navigate('/dashboard/sorteio')}
