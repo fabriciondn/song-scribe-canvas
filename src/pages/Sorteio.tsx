@@ -156,7 +156,7 @@ const Sorteio: React.FC = () => {
               ) : (
                 <>
                   <span className="text-primary-foreground font-bold text-lg tracking-wide group-hover:tracking-wider transition-all">
-                    RESERVAR MINHA SORTE
+                    QUERO PARTICIPAR
                   </span>
                   <MaterialIcon name="arrow_forward" className="text-primary-foreground group-hover:translate-x-1 transition-transform" />
                 </>
@@ -283,7 +283,7 @@ const Sorteio: React.FC = () => {
                 ) : (
                   <>
                     <span className="text-primary-foreground font-bold text-lg tracking-wide group-hover:tracking-wider transition-all">
-                      RESERVAR MINHA SORTE
+                      QUERO PARTICIPAR
                     </span>
                     <MaterialIcon name="arrow_forward" className="text-primary-foreground group-hover:translate-x-1 transition-transform" />
                   </>
