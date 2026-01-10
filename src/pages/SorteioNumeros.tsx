@@ -275,7 +275,7 @@ const SorteioNumeros: React.FC = () => {
             </div>
             <div className="flex gap-2">
               <button 
-                onClick={() => navigate('/dashboard/acordes')}
+                onClick={() => navigate('/dashboard/sorteio/como-funciona')}
                 className="group flex flex-1 items-center justify-between rounded-lg bg-accent/50 p-3 hover:bg-accent transition-colors border border-border"
               >
                 <span className="text-sm font-medium text-foreground pl-1">Como ganhar mais números?</span>
