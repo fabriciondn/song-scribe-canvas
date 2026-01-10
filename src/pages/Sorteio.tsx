@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useTheme } from '@/hooks/useTheme';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { useQuery } from '@tanstack/react-query';
 import { raffleService } from '@/services/raffleService';
+import { useRaffleVisibility } from '@/hooks/useRaffleVisibility';
 import { toast } from 'sonner';
 import { MobileBottomNavigation } from '@/components/mobile/MobileBottomNavigation';
 import guitarImage from '@/assets/guitar-sorteio.jpg';
@@ -31,8 +32,16 @@ const Sorteio: React.FC = () => {
   const { theme } = useTheme();
   const { isMobile } = useMobileDetection();
   const [isParticipating, setIsParticipating] = useState(false);
+  const { isRaffleVisible, isLoading: loadingVisibility } = useRaffleVisibility();
   
   const isPro = subscription?.status === 'active' && subscription?.plan_type === 'pro';
+
+  // Redirecionar se o sorteio estiver oculto
+  useEffect(() => {
+    if (!loadingVisibility && !isRaffleVisible) {
+      navigate('/dashboard');
+    }
+  }, [isRaffleVisible, loadingVisibility, navigate]);
   
   // Buscar dados do sorteio ativo (dinâmico, definido no painel admin)
   const { data: raffleSettings } = useQuery({

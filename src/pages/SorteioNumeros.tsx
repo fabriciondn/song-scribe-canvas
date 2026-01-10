@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { raffleService } from '@/services/raffleService';
 import { useAuth } from '@/hooks/useAuth';
+import { useRaffleVisibility } from '@/hooks/useRaffleVisibility';
 import { toast } from 'sonner';
 import { MobileBottomNavigation } from '@/components/mobile/MobileBottomNavigation';
 import { useMobileDetection } from '@/hooks/use-mobile';
@@ -33,6 +34,7 @@ const SorteioNumeros: React.FC = () => {
   const { credits } = useUserCredits();
   const { user } = useAuth();
   const { isMobile } = useMobileDetection();
+  const { isRaffleVisible, isLoading: loadingVisibility } = useRaffleVisibility();
   
   const isPro = subscription?.status === 'active' && subscription?.plan_type === 'pro';
   
@@ -41,6 +43,13 @@ const SorteioNumeros: React.FC = () => {
   const [isConfirming, setIsConfirming] = useState(false);
   const [pendingSelections, setPendingSelections] = useState<number[]>([]);
   const [showMyNumbers, setShowMyNumbers] = useState(false);
+
+  // Redirecionar se o sorteio estiver oculto
+  useEffect(() => {
+    if (!loadingVisibility && !isRaffleVisible) {
+      navigate('/dashboard');
+    }
+  }, [isRaffleVisible, loadingVisibility, navigate]);
 
   // Buscar configurações do sorteio
   const { data: raffleSettings, isLoading: loadingRaffle } = useQuery({

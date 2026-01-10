@@ -2,8 +2,9 @@ import { useMemo } from 'react';
 import { useMenuFunctions } from '@/hooks/useMenuFunctions';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAffiliateRole } from '@/hooks/useAffiliateRole';
+import { useRaffleVisibility } from '@/hooks/useRaffleVisibility';
 import { 
-  BarChart3, 
+  BarChart3,
   Shield, 
   Edit, 
   FileMusic, 
@@ -36,6 +37,7 @@ export const useMenuItems = () => {
   const { functions, loading } = useMenuFunctions();
   const { isPro } = useUserRole();
   const { isAffiliate } = useAffiliateRole();
+  const { isRaffleVisible, isLoading: raffleLoading } = useRaffleVisibility();
 
   const menuItems = useMemo(() => {
     const baseItems: MenuItem[] = [
@@ -196,6 +198,11 @@ export const useMenuItems = () => {
         // Remover a função "Planos" do menu
         if (item.functionKey === 'plans') return false;
         
+        // Para o sorteio: ocultar se o admin desativou a visibilidade
+        if (item.functionKey === 'sorteio' && !isRaffleVisible) {
+          return false;
+        }
+        
         // Para a função "affiliate": se estiver oculta, mostrar apenas para afiliados
         if (item.functionKey === 'affiliate' && item.isHidden) {
           return isAffiliate;
@@ -210,10 +217,10 @@ export const useMenuItems = () => {
         
         return true;
       });
-  }, [functions, isPro, isAffiliate]);
+  }, [functions, isPro, isAffiliate, isRaffleVisible]);
 
   return {
     menuItems,
-    isLoading: loading
+    isLoading: loading || raffleLoading
   };
 };

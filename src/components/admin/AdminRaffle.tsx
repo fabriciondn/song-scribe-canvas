@@ -242,6 +242,47 @@ export const AdminRaffle: React.FC = () => {
         </div>
       </div>
 
+      {/* Card de Visibilidade do Sorteio - Controle rápido */}
+      <Card className={raffleSettings?.is_visible_in_menu ? "border-green-500/50 bg-green-500/5" : "border-red-500/50 bg-red-500/5"}>
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {raffleSettings?.is_visible_in_menu ? (
+                <div className="p-3 bg-green-500/20 rounded-xl">
+                  <Eye className="h-6 w-6 text-green-500" />
+                </div>
+              ) : (
+                <div className="p-3 bg-red-500/20 rounded-xl">
+                  <EyeOff className="h-6 w-6 text-red-500" />
+                </div>
+              )}
+              <div>
+                <h3 className="font-bold text-lg">
+                  {raffleSettings?.is_visible_in_menu ? 'Sorteio Visível' : 'Sorteio Oculto'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {raffleSettings?.is_visible_in_menu 
+                    ? 'O sorteio está aparecendo no menu e no dashboard para os usuários'
+                    : 'O sorteio está oculto em todo o sistema (menu, cards, páginas)'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">
+                {raffleSettings?.is_visible_in_menu ? 'Visível' : 'Oculto'}
+              </span>
+              <Switch
+                checked={raffleSettings?.is_visible_in_menu ?? false}
+                onCheckedChange={(checked) => {
+                  updateSettingsMutation.mutate({ is_visible_in_menu: checked });
+                }}
+                disabled={updateSettingsMutation.isPending}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
