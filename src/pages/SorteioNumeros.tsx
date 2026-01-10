@@ -370,27 +370,29 @@ const SorteioNumeros: React.FC = () => {
       </div>
 
       {/* Botão Fixo */}
-      <div className="fixed bottom-20 left-0 z-20 w-full bg-gradient-to-t from-background via-background/95 to-transparent pb-4 pt-6 px-4">
-        <button 
-          onClick={handleConfirm}
-          disabled={pendingSelections.length === 0 || isConfirming || reserveMutation.isPending}
-          className="flex w-full cursor-pointer items-center justify-center rounded-xl bg-primary py-4 text-primary-foreground shadow-lg shadow-primary/20 transition-transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isConfirming || reserveMutation.isPending ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <>
-              <span className="text-base font-bold leading-normal mr-2">
-                Confirmar ({pendingSelections.length}) número{pendingSelections.length !== 1 ? 's' : ''}
-              </span>
-              <MaterialIcon name="arrow_forward" className="text-[20px]" />
-            </>
-          )}
-        </button>
-        <p className="mt-4 text-center text-[10px] text-muted-foreground uppercase tracking-widest">
-          Regulado pela Loteria Federal do Brasil
-        </p>
-      </div>
+      {pendingSelections.length > 0 && (
+        <div className="fixed bottom-20 left-0 z-20 w-full bg-gradient-to-t from-background via-background/95 to-transparent pb-4 pt-6 px-4 animate-in slide-in-from-bottom-4 duration-300">
+          <button 
+            onClick={handleConfirm}
+            disabled={isConfirming || reserveMutation.isPending}
+            className="flex w-full cursor-pointer items-center justify-center rounded-xl bg-primary py-4 text-primary-foreground shadow-lg shadow-primary/20 transition-transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isConfirming || reserveMutation.isPending ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <>
+                <span className="text-base font-bold leading-normal mr-2">
+                  Confirmar ({pendingSelections.length}) número{pendingSelections.length !== 1 ? 's' : ''}
+                </span>
+                <MaterialIcon name="arrow_forward" className="text-[20px]" />
+              </>
+            )}
+          </button>
+          <p className="mt-4 text-center text-[10px] text-muted-foreground uppercase tracking-widest">
+            Regulado pela Loteria Federal do Brasil
+          </p>
+        </div>
+      )}
 
       {isMobile && <MobileBottomNavigation />}
 
