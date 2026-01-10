@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useTheme } from '@/hooks/useTheme';
 import { useMobileDetection } from '@/hooks/use-mobile';
+import { useQuery } from '@tanstack/react-query';
+import { raffleService } from '@/services/raffleService';
 import { toast } from 'sonner';
 import { MobileBottomNavigation } from '@/components/mobile/MobileBottomNavigation';
 import guitarImage from '@/assets/guitar-sorteio.jpg';
@@ -32,10 +34,22 @@ const Sorteio: React.FC = () => {
   
   const isPro = subscription?.status === 'active' && subscription?.plan_type === 'pro';
   
-  // Simulação de dados do sorteio
-  const totalSlots = 500;
-  const reservedSlots = 450;
-  const progressPercent = (reservedSlots / totalSlots) * 100;
+  // Buscar dados do sorteio ativo (dinâmico, definido no painel admin)
+  const { data: raffleSettings } = useQuery({
+    queryKey: ['active-raffle'],
+    queryFn: raffleService.getActiveRaffle,
+  });
+
+  const { data: reservations = [] } = useQuery({
+    queryKey: ['raffle-reservations', raffleSettings?.id],
+    queryFn: () => raffleService.getReservations(raffleSettings!.id),
+    enabled: !!raffleSettings?.id,
+  });
+
+  const totalSlots = raffleSettings?.total_numbers ?? 0;
+  const reservedSlots = reservations.length;
+  const progressPercent = totalSlots > 0 ? (reservedSlots / totalSlots) * 100 : 0;
+  const remainingPercent = Math.max(0, 100 - Math.round(progressPercent));
 
   const handleParticipate = () => {
     if (!isPro) {
@@ -133,7 +147,7 @@ const Sorteio: React.FC = () => {
                 <span className="text-foreground">{reservedSlots} de {totalSlots}</span> números já reservados
               </p>
               <p className="text-primary text-xs font-bold uppercase tracking-widest drop-shadow-[0_0_8px_rgba(0,200,83,0.5)]">
-                Últimos {100 - Math.round(progressPercent)}%!
+                Últimos {remainingPercent}%!
               </p>
             </div>
             <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden backdrop-blur-sm">
@@ -260,7 +274,7 @@ const Sorteio: React.FC = () => {
                   <span className="text-foreground font-bold">{reservedSlots} de {totalSlots}</span> números já reservados
                 </p>
                 <p className="text-primary text-sm font-bold uppercase tracking-wider">
-                  Últimos {100 - Math.round(progressPercent)}%!
+                  Últimos {remainingPercent}%!
                 </p>
               </div>
               <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
