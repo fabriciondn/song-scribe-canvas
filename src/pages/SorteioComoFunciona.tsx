@@ -1,9 +1,22 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, DollarSign, Sparkles, ArrowLeft, ArrowRight } from 'lucide-react';
 import { MobileBottomNavigation } from '@/components/mobile/MobileBottomNavigation';
 import { useMobileDetection } from '@/hooks/use-mobile';
-import guitarImage from '@/assets/guitar-sorteio.jpg';
+import guitarComoFuncionaImage from '@/assets/guitar-como-funciona.png';
+
+// Material Symbols component
+const MaterialIcon: React.FC<{ name: string; className?: string; size?: number }> = ({ 
+  name, 
+  className = '',
+  size = 24 
+}) => (
+  <span 
+    className={`material-symbols-outlined ${className}`}
+    style={{ fontSize: `${size}px` }}
+  >
+    {name}
+  </span>
+);
 
 const SorteioComoFunciona: React.FC = () => {
   const navigate = useNavigate();
@@ -18,7 +31,7 @@ const SorteioComoFunciona: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-['Outfit',sans-serif]">
+    <div className="min-h-screen bg-black text-white font-['Spline_Sans',sans-serif] antialiased selection:bg-primary/30 selection:text-white">
       <div className="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden pb-24">
         {/* Top App Bar */}
         <div className="sticky top-0 z-50 flex items-center bg-black/80 backdrop-blur-md px-4 py-3 justify-between">
@@ -26,7 +39,7 @@ const SorteioComoFunciona: React.FC = () => {
             onClick={handleBack}
             className="flex size-10 items-center justify-center rounded-full hover:bg-white/10 transition-colors group"
           >
-            <ArrowLeft className="text-white group-hover:text-primary transition-colors w-6 h-6" />
+            <MaterialIcon name="arrow_back" className="text-white group-hover:text-primary transition-colors" size={24} />
           </button>
           <h2 className="text-white text-base font-semibold tracking-wide uppercase opacity-80">Como funciona</h2>
           <div className="size-10" />
@@ -38,7 +51,7 @@ const SorteioComoFunciona: React.FC = () => {
             {/* Background Image */}
             <div 
               className="absolute inset-0 bg-center bg-no-repeat bg-cover"
-              style={{ backgroundImage: `url(${guitarImage})` }}
+              style={{ backgroundImage: `url(${guitarComoFuncionaImage})` }}
             />
             {/* Overlay Gradient */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/60 to-black" />
@@ -64,7 +77,7 @@ const SorteioComoFunciona: React.FC = () => {
             {/* Step 1: Connector */}
             <div className="flex flex-col items-center pt-2">
               <div className="flex items-center justify-center size-10 rounded-full bg-[#111111] border border-primary/30 shadow-[0_0_15px_rgba(6,249,47,0.1)] z-10">
-                <Lock className="text-primary w-5 h-5" />
+                <MaterialIcon name="lock_open" className="text-primary" size={20} />
               </div>
               <div className="w-[2px] bg-gradient-to-b from-primary/50 to-primary/10 h-full min-h-[60px] rounded-full my-2" />
             </div>
@@ -82,7 +95,7 @@ const SorteioComoFunciona: React.FC = () => {
             {/* Step 2: Connector */}
             <div className="flex flex-col items-center">
               <div className="flex items-center justify-center size-10 rounded-full bg-[#111111] border border-white/10 z-10">
-                <DollarSign className="text-white w-5 h-5" />
+                <MaterialIcon name="monetization_on" className="text-white" size={20} />
               </div>
             </div>
             {/* Step 2: Content */}
@@ -104,7 +117,7 @@ const SorteioComoFunciona: React.FC = () => {
             <div className="absolute -right-6 -top-6 size-24 bg-primary/10 rounded-full blur-xl" />
             <div className="relative flex items-start gap-4">
               <div className="shrink-0 pt-1">
-                <Sparkles className="text-primary w-7 h-7" />
+                <MaterialIcon name="auto_awesome" className="text-primary" size={28} />
               </div>
               <div>
                 <h4 className="text-white text-base font-bold mb-1">Matemática da Sorte</h4>
@@ -123,10 +136,10 @@ const SorteioComoFunciona: React.FC = () => {
         <div className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black via-black to-transparent z-40">
           <button 
             onClick={handleBecomePro}
-            className="w-full h-14 bg-primary hover:bg-primary/90 active:scale-[0.98] transition-all rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(6,249,47,0.3)] group"
+            className="w-full h-14 bg-primary hover:bg-[#05d928] active:scale-[0.98] transition-all rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(6,249,47,0.3)] group"
           >
             <span className="text-black text-lg font-bold mr-2">Ser PRO agora</span>
-            <ArrowRight className="text-black group-hover:translate-x-1 transition-transform w-5 h-5" />
+            <MaterialIcon name="arrow_forward" className="text-black group-hover:translate-x-1 transition-transform" size={20} />
           </button>
         </div>
       </div>
