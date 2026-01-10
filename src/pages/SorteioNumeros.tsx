@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { MobileBottomNavigation } from '@/components/mobile/MobileBottomNavigation';
 import { useMobileDetection } from '@/hooks/use-mobile';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 
 // Componente para Material Symbols
 const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: string }> = ({ 
@@ -40,6 +40,7 @@ const SorteioNumeros: React.FC = () => {
   const [visibleCount, setVisibleCount] = useState(30);
   const [isConfirming, setIsConfirming] = useState(false);
   const [pendingSelections, setPendingSelections] = useState<number[]>([]);
+  const [showMyNumbers, setShowMyNumbers] = useState(false);
 
   // Buscar configurações do sorteio
   const { data: raffleSettings, isLoading: loadingRaffle } = useQuery({
@@ -263,15 +264,25 @@ const SorteioNumeros: React.FC = () => {
                 </p>
               </div>
             </div>
-            <button 
-              onClick={() => navigate('/dashboard/acordes')}
-              className="group flex w-full items-center justify-between rounded-lg bg-accent/50 p-3 hover:bg-accent transition-colors border border-border"
-            >
-              <span className="text-sm font-medium text-foreground pl-1">Como ganhar mais números?</span>
-              <div className="flex size-8 items-center justify-center rounded-full bg-muted group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                <MaterialIcon name="arrow_forward" className="text-[18px]" />
-              </div>
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => navigate('/dashboard/acordes')}
+                className="group flex flex-1 items-center justify-between rounded-lg bg-accent/50 p-3 hover:bg-accent transition-colors border border-border"
+              >
+                <span className="text-sm font-medium text-foreground pl-1">Como ganhar mais números?</span>
+                <div className="flex size-8 items-center justify-center rounded-full bg-muted group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                  <MaterialIcon name="arrow_forward" className="text-[18px]" />
+                </div>
+              </button>
+              {myReservedNumbers.length > 0 && (
+                <button 
+                  onClick={() => setShowMyNumbers(true)}
+                  className="flex items-center justify-center rounded-lg bg-blue-500/10 p-3 hover:bg-blue-500/20 transition-colors border border-blue-500/30"
+                >
+                  <MaterialIcon name="visibility" className="text-blue-500 text-[20px]" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -382,6 +393,59 @@ const SorteioNumeros: React.FC = () => {
       </div>
 
       {isMobile && <MobileBottomNavigation />}
+
+      {/* Modal Ver Meus Números */}
+      {showMyNumbers && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <MaterialIcon name="confirmation_number" className="text-blue-500 text-[24px]" />
+                <h3 className="text-lg font-bold text-foreground">Meus Números</h3>
+              </div>
+              <button 
+                onClick={() => setShowMyNumbers(false)}
+                className="flex size-10 items-center justify-center rounded-full hover:bg-accent transition-colors"
+              >
+                <X className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </div>
+            
+            <div className="p-4">
+              <p className="text-muted-foreground text-sm mb-4">
+                Você reservou <span className="text-foreground font-bold">{myReservedNumbers.length}</span> número{myReservedNumbers.length !== 1 ? 's' : ''} neste sorteio.
+              </p>
+              
+              {myReservedNumbers.length > 0 ? (
+                <div className="grid grid-cols-5 gap-2 max-h-60 overflow-y-auto">
+                  {myReservedNumbers.sort((a, b) => a - b).map((num) => (
+                    <div
+                      key={num}
+                      className="aspect-square flex items-center justify-center rounded-lg bg-blue-500 text-white text-sm font-bold"
+                    >
+                      {formatNumber(num)}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <MaterialIcon name="inbox" className="text-4xl mb-2" />
+                  <p>Você ainda não reservou nenhum número.</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 border-t border-border">
+              <button 
+                onClick={() => setShowMyNumbers(false)}
+                className="w-full py-3 rounded-xl bg-accent hover:bg-accent/80 text-foreground font-medium transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
