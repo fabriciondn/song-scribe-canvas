@@ -12,7 +12,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, LogOut, Home, CreditCard, Plus, Moon, Sun, Shield, Settings } from 'lucide-react';
-import { AbandonedCartIndicator } from '@/components/ui/abandoned-cart-indicator';
+
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -142,8 +142,6 @@ export const Header = ({
       
       {/* Right section */}
       <div className="flex items-center gap-2 flex-1 justify-end">
-        <AbandonedCartIndicator />
-        
         {!user && (
           <Link to="/">
             <Button size="sm">Entrar</Button>
