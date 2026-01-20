@@ -36,7 +36,10 @@ export const WorkCard: React.FC<WorkCardProps> = ({ work, onViewDetails }) => {
       <CardContent className="pt-0 p-4 space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-3 w-3" />
-          <span>Registrado em: {new Date(work.created_at).toLocaleDateString('pt-BR')}</span>
+          <span>
+            {work.status === 'registered' ? 'Registrado em: ' : 'Enviado em: '}
+            {new Date(work.created_at).toLocaleDateString('pt-BR')}
+          </span>
         </div>
         
         <div className="flex justify-between items-center pt-2">
