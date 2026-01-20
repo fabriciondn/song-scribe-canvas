@@ -390,7 +390,7 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
                   <input 
                     ref={fileInputRef}
                     type="file" 
-                    accept="audio/*"
+                    accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.aiff,.webm"
                     onChange={handleFileChange}
                     className="hidden"
                   />

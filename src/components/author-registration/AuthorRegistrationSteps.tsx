@@ -148,7 +148,10 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
       return;
     }
 
-    if (!ACCEPTED_AUDIO_TYPES.includes(file.type)) {
+    const isMimeTypeAccepted = ACCEPTED_AUDIO_TYPES.includes(file.type);
+    const isExtensionAccepted = /\.(mp3|wav|m4a|ogg|flac|aiff|aac|webm)$/i.test(file.name);
+
+    if (!isMimeTypeAccepted && !isExtensionAccepted) {
       setAudioError('Por favor, selecione um arquivo MP3 válido');
       setAudioFile(null);
       return;
