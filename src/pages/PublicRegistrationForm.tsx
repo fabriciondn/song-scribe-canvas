@@ -2,21 +2,27 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   artisticName: z.string().optional(),
   email: z.string().email('E-mail inválido'),
   fullName: z.string().min(1, 'Nome completo é obrigatório'),
   cpf: z.string().min(11, 'CPF deve ter pelo menos 11 dígitos'),
-  birthDate: z.string().min(1, 'Data de nascimento é obrigatória'),
+  birthDate: z.date({
+    required_error: 'Data de nascimento é obrigatória',
+  }),
   cep: z.string().min(8, 'CEP deve ter 8 dígitos'),
   street: z.string().min(1, 'Rua é obrigatória'),
   number: z.string().min(1, 'Número é obrigatório'),
@@ -38,7 +44,7 @@ export default function PublicRegistrationForm() {
       email: '',
       fullName: '',
       cpf: '',
-      birthDate: '',
+      birthDate: undefined,
       cep: '',
       street: '',
       number: '',
@@ -90,7 +96,7 @@ export default function PublicRegistrationForm() {
           email: values.email,
           full_name: values.fullName,
           cpf: values.cpf,
-          birth_date: values.birthDate,
+          birth_date: format(values.birthDate, 'yyyy-MM-dd'),
           cep: values.cep,
           street: values.street,
           number: values.number,
@@ -227,11 +233,40 @@ export default function PublicRegistrationForm() {
                   control={form.control}
                   name="birthDate"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                       <FormLabel>Data de Nascimento *</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "dd/MM/yyyy", { locale: ptBR })
+                              ) : (
+                                <span>Selecione a data</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
