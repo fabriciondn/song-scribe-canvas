@@ -45,7 +45,25 @@ const GENRES = [
 ];
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-const ACCEPTED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/ogg', 'audio/flac', 'audio/x-m4a', 'audio/aiff'];
+const ACCEPTED_AUDIO_TYPES = [
+  'audio/mpeg',
+  'audio/mp3', 
+  'audio/wav',
+  'audio/wave',
+  'audio/x-wav',
+  'audio/m4a',
+  'audio/x-m4a',
+  'audio/mp4',
+  'audio/aac',
+  'audio/ogg',
+  'audio/flac',
+  'audio/aiff',
+  'audio/x-aiff',
+  'audio/x-mpeg',
+  'audio/mpeg3',
+  'audio/x-mpeg-3',
+  'audio/webm'
+];
 
 interface MobileRegistrationStep2Props {
   onContinue: (data: {
