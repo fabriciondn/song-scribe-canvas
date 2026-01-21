@@ -72,11 +72,14 @@ export default function CreditsCheckout() {
       // Restaurar dados do carrinho abandonado
       setCredits(abandonedCartData.credits);
       
-      // Se PIX ainda válido, restaurar QR code
+      // Se PIX ainda válido, restaurar QR code diretamente
       if (!isAbandonedCartExpired && abandonedCartData.pixData.qr_code) {
         setPixData(abandonedCartData.pixData);
         setShowQRCode(true);
         sonnerToast.info('Seu pagamento pendente foi restaurado');
+      } else if (isAbandonedCartExpired) {
+        // PIX expirado - notificar usuário que será gerado novo
+        sonnerToast.warning('Seu PIX expirou. Clique em "Pagar com PIX" para gerar um novo código.');
       }
       
       setRestoredFromCart(true);
