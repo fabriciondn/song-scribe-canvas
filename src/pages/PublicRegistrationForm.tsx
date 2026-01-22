@@ -31,6 +31,7 @@ const formSchema = z.object({
   city: z.string().min(1, 'Cidade é obrigatória'),
   state: z.string().min(1, 'Estado é obrigatório'),
   phone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos'),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
 });
 
 export default function PublicRegistrationForm() {
@@ -45,7 +46,7 @@ export default function PublicRegistrationForm() {
       email: '',
       fullName: '',
       cpf: '',
-      birthDate: undefined,
+      birthDate: '',
       cep: '',
       street: '',
       number: '',
@@ -53,6 +54,7 @@ export default function PublicRegistrationForm() {
       city: '',
       state: '',
       phone: '',
+      password: '',
     },
   });
 
@@ -110,6 +112,7 @@ export default function PublicRegistrationForm() {
           state: values.state,
           phone: values.phone,
           artistic_name: values.artisticName || null,
+          password: values.password,
         });
 
       if (error) throw error;
@@ -263,23 +266,43 @@ export default function PublicRegistrationForm() {
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefone *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="(11) 99999-9999" 
-                        type="tel"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Telefone *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="(11) 99999-9999" 
+                          type="tel"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Senha de Acesso *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Mínimo 6 caracteres" 
+                          type="password"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Endereço</h3>
