@@ -2,27 +2,28 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, CalendarIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   artisticName: z.string().optional(),
   email: z.string().email('E-mail inválido'),
   fullName: z.string().min(1, 'Nome completo é obrigatório'),
   cpf: z.string().min(11, 'CPF deve ter pelo menos 11 dígitos'),
-  birthDate: z.date({
-    required_error: 'Data de nascimento é obrigatória',
-  }),
+  birthDate: z.string().min(10, 'Data de nascimento é obrigatória').refine((val) => {
+    // Validate DD/MM/YYYY format
+    const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+    if (!regex.test(val)) return false;
+    const [, day, month, year] = val.match(regex) || [];
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return date instanceof Date && !isNaN(date.getTime()) && 
+           date <= new Date() && date >= new Date("1900-01-01");
+  }, 'Data inválida. Use o formato DD/MM/AAAA'),
   cep: z.string().min(8, 'CEP deve ter 8 dígitos'),
   street: z.string().min(1, 'Rua é obrigatória'),
   number: z.string().min(1, 'Número é obrigatório'),
@@ -90,13 +91,17 @@ export default function PublicRegistrationForm() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
+      // Convert DD/MM/YYYY to YYYY-MM-DD for database
+      const [day, month, year] = values.birthDate.split('/');
+      const formattedBirthDate = `${year}-${month}-${day}`;
+
       const { error } = await supabase
         .from('public_registration_forms')
         .insert({
           email: values.email,
           full_name: values.fullName,
           cpf: values.cpf,
-          birth_date: format(values.birthDate, 'yyyy-MM-dd'),
+          birth_date: formattedBirthDate,
           cep: values.cep,
           street: values.street,
           number: values.number,
@@ -233,40 +238,25 @@ export default function PublicRegistrationForm() {
                   control={form.control}
                   name="birthDate"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem>
                       <FormLabel>Data de Nascimento *</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd/MM/yyyy", { locale: ptBR })
-                              ) : (
-                                <span>Selecione a data</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
+                      <FormControl>
+                        <Input 
+                          placeholder="DD/MM/AAAA" 
+                          {...field}
+                          maxLength={10}
+                          onChange={(e) => {
+                            let value = e.target.value.replace(/\D/g, '');
+                            if (value.length >= 2) {
+                              value = value.substring(0, 2) + '/' + value.substring(2);
                             }
-                            initialFocus
-                            className={cn("p-3 pointer-events-auto")}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                            if (value.length >= 5) {
+                              value = value.substring(0, 5) + '/' + value.substring(5);
+                            }
+                            field.onChange(value.substring(0, 10));
+                          }}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
