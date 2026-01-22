@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Eye, Calendar, User, Mail, Phone, MapPin } from 'lucide-react';
+import { Search, Eye, Calendar, User, Mail, Phone, MapPin, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DataMask } from '@/components/ui/data-mask';
@@ -25,6 +25,8 @@ interface RegistrationForm {
   neighborhood: string;
   city: string;
   state: string;
+  phone: string | null;
+  password: string | null;
   created_at: string;
 }
 
@@ -63,8 +65,10 @@ export const AdminForms: React.FC = () => {
 
       if (error) throw error;
 
-      setForms(data || []);
-      setFilteredForms(data || []);
+      // Cast para incluir campo password que pode não estar nos types ainda
+      const formsData = (data || []) as unknown as RegistrationForm[];
+      setForms(formsData);
+      setFilteredForms(formsData);
     } catch (error) {
       console.error('Erro ao carregar formulários:', error);
       toast.error('Erro ao carregar formulários');
@@ -234,6 +238,26 @@ export const AdminForms: React.FC = () => {
                   <span className="text-sm font-medium">CPF</span>
                 </div>
                 <DataMask data={selectedForm.cpf} type="cpf" />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Telefone</span>
+                  </div>
+                  <p className="text-sm pl-6">{selectedForm.phone || 'Não informado'}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Lock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Senha de Acesso</span>
+                  </div>
+                  <p className="text-sm pl-6 font-mono bg-muted px-2 py-1 rounded inline-block">
+                    {selectedForm.password || 'Não informada'}
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-2">

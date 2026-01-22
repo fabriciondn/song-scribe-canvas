@@ -1637,6 +1637,7 @@ export type Database = {
           id: string
           neighborhood: string
           number: string
+          password: string | null
           phone: string | null
           state: string
           street: string
@@ -1654,6 +1655,7 @@ export type Database = {
           id?: string
           neighborhood: string
           number: string
+          password?: string | null
           phone?: string | null
           state: string
           street: string
@@ -1671,6 +1673,7 @@ export type Database = {
           id?: string
           neighborhood?: string
           number?: string
+          password?: string | null
           phone?: string | null
           state?: string
           street?: string
