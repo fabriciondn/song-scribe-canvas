@@ -51,7 +51,10 @@ export const MobileDashboardHome: React.FC = () => {
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Header */}
-      <header className="pt-12 pb-6 px-6 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-md">
+      <header 
+        className="pb-6 px-6 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-md"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}
+      >
         <div className="flex items-center gap-3">
           <div className="relative">
             <Avatar className="w-10 h-10 border-2 border-border shadow-sm">
@@ -134,9 +137,9 @@ export const MobileDashboardHome: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <button 
               onClick={() => navigate('/dashboard/composer')}
-              className="group flex flex-col items-start p-5 bg-card rounded-2xl border border-border hover:border-primary/50 transition-all active:scale-[0.98]"
+              className="group flex flex-col items-start p-6 min-h-[140px] bg-card rounded-2xl border border-border hover:border-primary/50 transition-all active:scale-[0.98]"
             >
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-4 group-hover:bg-primary transition-colors text-primary group-hover:text-primary-foreground">
+              <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mb-4 group-hover:bg-primary transition-colors text-primary group-hover:text-primary-foreground">
                 <MaterialIcon name="music_note" filled className="text-2xl" />
               </div>
               <span className="font-bold text-base mb-1">Nova Composição</span>
@@ -145,9 +148,9 @@ export const MobileDashboardHome: React.FC = () => {
             
             <button 
               onClick={() => navigate('/dashboard/author-registration')}
-              className="group flex flex-col items-start p-5 bg-card rounded-2xl border border-border hover:border-blue-500/50 transition-all active:scale-[0.98]"
+              className="group flex flex-col items-start p-6 min-h-[140px] bg-card rounded-2xl border border-border hover:border-blue-500/50 transition-all active:scale-[0.98]"
             >
-              <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mb-4 group-hover:bg-blue-500 transition-colors text-blue-400 group-hover:text-white">
+              <div className="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center mb-4 group-hover:bg-blue-500 transition-colors text-blue-400 group-hover:text-white">
                 <MaterialIcon name="copyright" filled className="text-2xl" />
               </div>
               <span className="font-bold text-base mb-1">Registrar Obra</span>
@@ -199,7 +202,7 @@ export const MobileDashboardHome: React.FC = () => {
           <div className="space-y-3">
             <button 
               onClick={() => navigate('/dashboard/drafts')}
-              className="w-full flex items-center p-3 bg-card rounded-xl border border-border hover:border-primary/30 transition-colors"
+              className="w-full flex items-center p-4 bg-card rounded-xl border border-border hover:border-primary/30 transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400 mr-3 flex-shrink-0">
                 <MaterialIcon name="folder_open" className="text-xl" />
@@ -213,7 +216,7 @@ export const MobileDashboardHome: React.FC = () => {
             
             <button 
               onClick={() => navigate('/dashboard/registered-works')}
-              className="w-full flex items-center p-3 bg-card rounded-xl border border-border hover:border-primary/30 transition-colors"
+              className="w-full flex items-center p-4 bg-card rounded-xl border border-border hover:border-primary/30 transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary mr-3 flex-shrink-0">
                 <MaterialIcon name="check_circle" className="text-xl" />
