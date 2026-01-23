@@ -53,7 +53,8 @@ export const MobileDashboardHome: React.FC = () => {
       {/* Header */}
       <header 
         className="pb-6 px-6 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-md"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}
+        // iOS PWA às vezes retorna 0 para safe-area; garantimos um mínimo para não colar no notch/Dynamic Island
+        style={{ paddingTop: "max(48px, calc(env(safe-area-inset-top, 0px) + 16px))" }}
       >
         <div className="flex items-center gap-3">
           <div className="relative">
