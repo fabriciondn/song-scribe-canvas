@@ -160,11 +160,9 @@
     --safe-area-inset-left: env(safe-area-inset-left);
   }
   
+  /* Only apply top safe area for notch/Dynamic Island - components handle bottom */
   body {
-    padding-top: var(--safe-area-inset-top);
-    padding-right: var(--safe-area-inset-right);
-    padding-bottom: var(--safe-area-inset-bottom);
-    padding-left: var(--safe-area-inset-left);
+    padding-top: env(safe-area-inset-top);
   }
 }
 
