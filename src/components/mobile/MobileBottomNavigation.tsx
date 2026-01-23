@@ -38,7 +38,8 @@ export const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({ 
   return (
     <nav 
       className="fixed bottom-0 left-0 right-0 w-full bg-card border-t border-border pt-3 px-6 flex justify-between items-center z-50 font-['Plus_Jakarta_Sans',sans-serif]"
-      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)' }}
+      // iOS PWA pode retornar 0 para safe-area; garantimos um mínimo para não colar no home indicator
+      style={{ paddingBottom: "max(40px, calc(env(safe-area-inset-bottom, 0px) + 24px))" }}
     >
       {/* Início */}
       <Link
