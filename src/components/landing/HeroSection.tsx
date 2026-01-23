@@ -11,7 +11,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onGetStarted,
   onLearnMore
 }) => {
-  return <section className="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-20 overflow-x-hidden" style={{ touchAction: 'pan-y' }}>
+  return <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-20 pb-20">
       {/* Shader Background */}
       <ShaderBackground />
       
@@ -67,23 +67,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <span>Validade jurídica garantida</span>
               </div>
             </div>
-
-            {/* Video Player - Mobile (abaixo do conteúdo) */}
-            <div className="lg:hidden mt-8">
-              <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-primary/20">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none z-10" />
-                <iframe
-                  className="w-full h-full"
-                  src="https://www.youtube.com/embed/tKQ7kZjvjqI?controls=1&modestbranding=1&rel=0"
-                  title="Apresentação Compuse"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            </div>
           </div>
 
-          {/* Video Player - Desktop (lado direito) */}
+          {/* Video Player - Lado Direito */}
           <div className="hidden lg:flex items-center justify-center">
             <div className="relative w-full max-w-3xl aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-primary/20 hover:border-primary/40 transition-all duration-300">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none z-10" />
