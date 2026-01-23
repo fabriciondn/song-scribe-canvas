@@ -67,7 +67,7 @@ const ACCEPTED_AUDIO_TYPES = [
 
 interface MobileRegistrationStep2Props {
   onContinue: (data: {
-    registrationType: 'lyrics_only' | 'complete';
+    registrationType: 'lyrics_only' | 'complete' | 'melody_only';
     genre: string;
     version: string;
     lyrics: string;
@@ -76,7 +76,7 @@ interface MobileRegistrationStep2Props {
   }) => void;
   onBack: () => void;
   initialData?: {
-    registrationType: 'lyrics_only' | 'complete';
+    registrationType: 'lyrics_only' | 'complete' | 'melody_only';
     genre: string;
     version: string;
     lyrics: string;
@@ -94,7 +94,7 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
   const { theme, toggleTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [registrationType, setRegistrationType] = useState<'lyrics_only' | 'complete'>(
+  const [registrationType, setRegistrationType] = useState<'lyrics_only' | 'complete' | 'melody_only'>(
     initialData?.registrationType || 'complete'
   );
   const [genre, setGenre] = useState(initialData?.genre || '');
@@ -145,7 +145,7 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
 
   const handleContinue = () => {
     // Validações
-    if (!lyrics.trim()) {
+    if (registrationType !== 'melody_only' && !lyrics.trim()) {
       toast.error('A letra da música é obrigatória');
       return;
     }
@@ -155,8 +155,8 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
       return;
     }
 
-    if (registrationType === 'complete' && !audioFile) {
-      toast.error('O arquivo de áudio é obrigatório para registro completo');
+    if ((registrationType === 'complete' || registrationType === 'melody_only') && !audioFile) {
+      toast.error('O arquivo de áudio é obrigatório para este tipo de registro');
       return;
     }
 
@@ -170,7 +170,11 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
     });
   };
 
-  const canContinue = lyrics.trim().length > 0 && genre !== '' && (registrationType === 'lyrics_only' || audioFile !== null);
+  const canContinue = genre !== '' && (
+    (registrationType === 'lyrics_only' && lyrics.trim().length > 0) ||
+    (registrationType === 'melody_only' && audioFile !== null) ||
+    (registrationType === 'complete' && lyrics.trim().length > 0 && audioFile !== null)
+  );
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-['Inter',sans-serif]">
@@ -309,6 +313,47 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
                 onChange={() => setRegistrationType('lyrics_only')}
               />
             </label>
+
+            {/* Melody Only */}
+            <label 
+              className={cn(
+                "relative flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition-all",
+                registrationType === 'melody_only' 
+                  ? "border-[#00C853] bg-[#00C853]/5" 
+                  : "border-[#2C2C2E] bg-[#1C1C1E]"
+              )}
+            >
+              <div 
+                className={cn(
+                  "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all",
+                  registrationType === 'melody_only' 
+                    ? "border-[#00C853] bg-[#00C853]" 
+                    : "border-[#3C3C3E]"
+                )}
+              >
+                {registrationType === 'melody_only' && (
+                  <div className="h-2 w-2 rounded-full bg-black"></div>
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="text-[15px] font-semibold text-white">Apenas Melodia</p>
+                <p className="text-[13px] text-gray-400">Proteção somente do arquivo de áudio</p>
+              </div>
+              <MaterialIcon 
+                name="graphic_eq" 
+                className={cn(
+                  "text-xl",
+                  registrationType === 'melody_only' ? "text-[#00C853]" : "text-gray-500"
+                )} 
+              />
+              <input 
+                type="radio" 
+                name="registrationType" 
+                className="sr-only"
+                checked={registrationType === 'melody_only'}
+                onChange={() => setRegistrationType('melody_only')}
+              />
+            </label>
           </div>
 
           {/* Genre */}
@@ -349,32 +394,34 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
             />
           </div>
 
-          {/* Lyrics */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className="block text-[15px] font-medium text-white">
-                Letra da Música <span className="text-[#00C853]">*</span>
-              </label>
-              <button 
-                type="button"
-                onClick={handlePasteLyrics}
-                className="text-[#00C853] text-xs font-semibold flex items-center gap-1"
-              >
-                <MaterialIcon name="content_paste" className="text-base" />
-                Colar
-              </button>
+          {/* Lyrics - só mostra se não for apenas melodia */}
+          {registrationType !== 'melody_only' && (
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="block text-[15px] font-medium text-white">
+                  Letra da Música <span className="text-[#00C853]">*</span>
+                </label>
+                <button 
+                  type="button"
+                  onClick={handlePasteLyrics}
+                  className="text-[#00C853] text-xs font-semibold flex items-center gap-1"
+                >
+                  <MaterialIcon name="content_paste" className="text-base" />
+                  Colar
+                </button>
+              </div>
+              <Textarea
+                placeholder="Cole ou digite a letra da sua composição aqui..."
+                value={lyrics}
+                onChange={(e) => setLyrics(e.target.value)}
+                rows={6}
+                className="w-full px-4 py-4 rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] focus:border-[#00C853] focus:ring-0 outline-none transition-all placeholder-gray-600 text-white text-[15px] resize-y"
+              />
             </div>
-            <Textarea
-              placeholder="Cole ou digite a letra da sua composição aqui..."
-              value={lyrics}
-              onChange={(e) => setLyrics(e.target.value)}
-              rows={6}
-              className="w-full px-4 py-4 rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] focus:border-[#00C853] focus:ring-0 outline-none transition-all placeholder-gray-600 text-white text-[15px] resize-y"
-            />
-          </div>
+          )}
 
-          {/* Audio File */}
-          {registrationType === 'complete' && (
+          {/* Audio File - mostra para complete e melody_only */}
+          {(registrationType === 'complete' || registrationType === 'melody_only') && (
             <div className="space-y-2">
               <label className="block text-[15px] font-medium text-white">
                 Arquivo de Áudio <span className="text-[#00C853]">*</span>
