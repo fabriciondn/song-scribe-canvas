@@ -8,13 +8,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useProfile } from '@/hooks/useProfile';
-import { Loader2, User, MapPin, CreditCard, Camera, Upload } from 'lucide-react';
+import { Loader2, User, MapPin, CreditCard, Camera, Upload, CheckCircle, XCircle } from 'lucide-react';
+import { formatCpf, validateCpf, getCpfErrorMessage } from '@/utils/cpfValidation';
 
 const OptimizedSettings = () => {
   const { profile, isLoading, updateProfile, uploadAvatar } = useProfile();
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cpfError, setCpfError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     name: profile?.name || '',
@@ -52,14 +54,36 @@ const OptimizedSettings = () => {
   }, [profile]);
 
   const handleInputChange = useCallback((field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    // Aplicar formatação automática para CPF
+    if (field === 'cpf') {
+      const formattedCpf = formatCpf(value);
+      setFormData(prev => ({
+        ...prev,
+        [field]: formattedCpf
+      }));
+      // Validar CPF em tempo real
+      const errorMsg = getCpfErrorMessage(formattedCpf);
+      setCpfError(errorMsg);
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   }, []);
 
   const handleSaveSettings = useCallback(async () => {
     if (!profile) return;
+    
+    // Validar CPF antes de salvar
+    if (formData.cpf && formData.cpf.replace(/\D/g, '').length > 0) {
+      const cpfValidationError = getCpfErrorMessage(formData.cpf);
+      if (cpfValidationError) {
+        setCpfError(cpfValidationError);
+        toast.error('CPF inválido. Por favor, corrija antes de salvar.');
+        return;
+      }
+    }
     
     setIsUpdating(true);
     
@@ -249,13 +273,28 @@ const OptimizedSettings = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="cpf">CPF</Label>
-              <Input
-                id="cpf"
-                value={formData.cpf}
-                onChange={(e) => handleInputChange('cpf', e.target.value)}
-                placeholder="000.000.000-00"
-                className="h-11"
-              />
+              <div className="relative">
+                <Input
+                  id="cpf"
+                  value={formData.cpf}
+                  onChange={(e) => handleInputChange('cpf', e.target.value)}
+                  placeholder="000.000.000-00"
+                  maxLength={14}
+                  className={`h-11 pr-10 ${cpfError ? 'border-destructive focus-visible:ring-destructive' : formData.cpf && formData.cpf.replace(/\D/g, '').length === 11 && !cpfError ? 'border-primary focus-visible:ring-primary' : ''}`}
+                />
+                {formData.cpf && formData.cpf.replace(/\D/g, '').length === 11 && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {cpfError ? (
+                      <XCircle className="h-5 w-5 text-destructive" />
+                    ) : (
+                      <CheckCircle className="h-5 w-5 text-primary" />
+                    )}
+                  </div>
+                )}
+              </div>
+              {cpfError && (
+                <p className="text-sm text-destructive">{cpfError}</p>
+              )}
             </div>
           </div>
 
@@ -387,7 +426,7 @@ const OptimizedSettings = () => {
       <div className="flex justify-center">
         <Button 
           onClick={handleSaveSettings}
-          disabled={isUpdating}
+          disabled={isUpdating || !!cpfError}
           className="min-w-[180px] h-11"
           size="lg"
         >
