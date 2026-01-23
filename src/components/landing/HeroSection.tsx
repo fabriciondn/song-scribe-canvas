@@ -11,7 +11,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onGetStarted,
   onLearnMore
 }) => {
-  return <section className="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-20" style={{ touchAction: 'pan-y' }}>
+  return <section className="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-20 overflow-x-hidden" style={{ touchAction: 'pan-y' }}>
       {/* Shader Background */}
       <ShaderBackground />
       
