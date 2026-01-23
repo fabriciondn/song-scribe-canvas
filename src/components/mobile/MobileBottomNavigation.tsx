@@ -36,7 +36,7 @@ export const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({ 
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 w-full bg-card border-t border-border pb-6 pt-2 px-6 flex justify-between items-center z-50 font-['Plus_Jakarta_Sans',sans-serif]">
+    <nav className="fixed bottom-0 left-0 right-0 w-full bg-card border-t border-border pt-2 px-6 flex justify-between items-center z-50 font-['Plus_Jakarta_Sans',sans-serif]" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)' }}>
       {/* Início */}
       <Link
         to="/dashboard"
