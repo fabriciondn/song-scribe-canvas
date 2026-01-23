@@ -71,7 +71,7 @@ const Index: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden">
       {/* Fixed Header */}
       <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-black/80 border-b border-gray-800/50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
