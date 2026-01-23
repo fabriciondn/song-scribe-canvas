@@ -97,13 +97,13 @@ export const ComposersCarousel: React.FC = () => {
     ? [...composers.slice(0, 20), ...composers.slice(0, 20)] // Limitar a 40 elementos no mobile
     : [...composers, ...composers, ...composers];
   
-  return <div className="w-full">
+  return <div className="w-full" style={{ touchAction: 'pan-y' }}>
       <h3 className="text-xl md:text-2xl font-bold text-center mb-6">
         Compositores na{' '}
         <span className="text-primary">Compuse</span>
       </h3>
       
-      <div className="w-full overflow-hidden" ref={emblaRef}>
+      <div className="w-full overflow-hidden" ref={emblaRef} style={{ touchAction: 'pan-x' }}>
         <div className="flex gap-4">
           {infiniteComposers.map((composer, index) => <div key={`${composer.id}-${index}`} className="flex-shrink-0 flex flex-col items-center gap-3">
               <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-primary/20">
