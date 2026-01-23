@@ -11,13 +11,22 @@ interface Composer {
 }
 export const ComposersCarousel: React.FC = () => {
   const [composers, setComposers] = useState<Composer[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
   const [emblaRef] = useEmblaCarousel({
     loop: true,
     dragFree: true,
     align: 'start'
   }, [AutoScroll({
     playOnInit: true,
-    speed: 0.5,
+    speed: isMobile ? 0.3 : 0.5, // Velocidade reduzida no mobile
     stopOnInteraction: false
   })]);
   useEffect(() => {
@@ -83,8 +92,11 @@ export const ComposersCarousel: React.FC = () => {
   };
   if (composers.length === 0) return null;
 
-  // Duplicar compositores 3x para efeito infinito contínuo
-  const infiniteComposers = [...composers, ...composers, ...composers];
+  // Duplicar compositores 2x no mobile (menos elementos) ou 3x no desktop
+  const infiniteComposers = isMobile 
+    ? [...composers.slice(0, 20), ...composers.slice(0, 20)] // Limitar a 40 elementos no mobile
+    : [...composers, ...composers, ...composers];
+  
   return <div className="w-full">
       <h3 className="text-xl md:text-2xl font-bold text-center mb-6">
         Compositores na{' '}

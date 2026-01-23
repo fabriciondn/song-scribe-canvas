@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -191,12 +191,59 @@ function ShaderPlane() {
   );
 }
 
+// Fallback estático para mobile - gradiente CSS otimizado
+const MobileFallback: React.FC = () => {
+  return (
+    <div 
+      className="absolute inset-0 w-full h-full"
+      style={{
+        background: `
+          radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 189, 75, 0.3) 0%, transparent 50%),
+          radial-gradient(ellipse 60% 40% at 70% 80%, rgba(0, 150, 60, 0.2) 0%, transparent 40%),
+          linear-gradient(180deg, #041A10 0%, #000000 50%, #041A10 100%)
+        `
+      }}
+    >
+      {/* Animação sutil com CSS */}
+      <div 
+        className="absolute inset-0 opacity-30"
+        style={{
+          background: 'radial-gradient(ellipse 50% 30% at 30% 50%, rgba(0, 189, 75, 0.4) 0%, transparent 60%)',
+          animation: 'pulse 4s ease-in-out infinite'
+        }}
+      />
+    </div>
+  );
+};
+
 export const ShaderBackground: React.FC = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Detectar se é mobile na montagem
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768 || 
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Em mobile, usar fallback CSS para melhor performance
+  if (isMobile) {
+    return <MobileFallback />;
+  }
+
   return (
     <div className="absolute inset-0 w-full h-full">
       <Canvas
         camera={{ position: [0, 0, 1] }}
         style={{ width: '100%', height: '100%' }}
+        dpr={[1, 1.5]} // Limitar DPR para performance
+        gl={{ antialias: false, powerPreference: 'high-performance' }}
       >
         <ShaderPlane />
       </Canvas>
