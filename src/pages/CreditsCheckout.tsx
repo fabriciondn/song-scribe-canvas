@@ -828,7 +828,22 @@ export default function CreditsCheckout() {
                   <CardContent className="space-y-6">
                     <div>
                       <Label htmlFor="credits">Quantidade de Créditos</Label>
-                      <Input id="credits" type="number" min="1" max="100" value={credits} onChange={e => setCredits(Math.max(1, parseInt(e.target.value) || 1))} className="text-lg font-semibold" />
+                      <Input 
+                        id="credits" 
+                        type="number" 
+                        min="1" 
+                        max="100" 
+                        value={credits} 
+                        onChange={e => {
+                          const value = parseInt(e.target.value);
+                          if (!isNaN(value) && value >= 1) {
+                            setCredits(Math.min(100, value));
+                          } else if (e.target.value === '') {
+                            setCredits(1);
+                          }
+                        }} 
+                        className="text-lg font-semibold" 
+                      />
                     </div>
 
                     <div className="bg-muted p-4 rounded-lg">
