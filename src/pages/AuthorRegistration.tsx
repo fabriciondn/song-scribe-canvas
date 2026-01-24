@@ -50,6 +50,57 @@ interface MobileStep2Data {
   additionalInfo: string;
 }
 
+const STORAGE_KEY = 'author_registration_draft';
+
+// Função para salvar dados no sessionStorage
+const saveToStorage = (data: {
+  formData: AuthorRegistrationData;
+  step: 'form' | 'review';
+  mobileStep: 1 | 2 | 3;
+  mobileStep1Data: MobileStep1Data | null;
+  mobileStep2Data: MobileStep2Data | null;
+}) => {
+  try {
+    // Não salvar o audioFile pois não é serializável
+    const dataToSave = {
+      ...data,
+      formData: { ...data.formData, audioFile: null },
+      mobileStep2Data: data.mobileStep2Data ? { ...data.mobileStep2Data, audioFile: null } : null,
+    };
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+  } catch (e) {
+    console.error('Erro ao salvar dados no storage:', e);
+  }
+};
+
+// Função para carregar dados do sessionStorage
+const loadFromStorage = (): {
+  formData: AuthorRegistrationData;
+  step: 'form' | 'review';
+  mobileStep: 1 | 2 | 3;
+  mobileStep1Data: MobileStep1Data | null;
+  mobileStep2Data: MobileStep2Data | null;
+} | null => {
+  try {
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (e) {
+    console.error('Erro ao carregar dados do storage:', e);
+  }
+  return null;
+};
+
+// Função para limpar dados do sessionStorage
+const clearStorage = () => {
+  try {
+    sessionStorage.removeItem(STORAGE_KEY);
+  } catch (e) {
+    console.error('Erro ao limpar storage:', e);
+  }
+};
+
 const AuthorRegistration: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -58,11 +109,15 @@ const AuthorRegistration: React.FC = () => {
   const { isMobile } = useMobileDetection();
   const { isComplete: isProfileComplete } = useProfileValidation();
   const { profile } = useProfile();
-  const [step, setStep] = useState<'form' | 'review'>('form');
-  const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(1);
-  const [mobileStep1Data, setMobileStep1Data] = useState<MobileStep1Data | null>(null);
-  const [mobileStep2Data, setMobileStep2Data] = useState<MobileStep2Data | null>(null);
-  const [formData, setFormData] = useState<AuthorRegistrationData>({
+  
+  // Carregar dados salvos do storage
+  const savedData = loadFromStorage();
+  
+  const [step, setStep] = useState<'form' | 'review'>(savedData?.step || 'form');
+  const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(savedData?.mobileStep || 1);
+  const [mobileStep1Data, setMobileStep1Data] = useState<MobileStep1Data | null>(savedData?.mobileStep1Data || null);
+  const [mobileStep2Data, setMobileStep2Data] = useState<MobileStep2Data | null>(savedData?.mobileStep2Data || null);
+  const [formData, setFormData] = useState<AuthorRegistrationData>(savedData?.formData || {
     title: '',
     author: '',
     authorCpf: '',
@@ -77,6 +132,17 @@ const AuthorRegistration: React.FC = () => {
     termsAccepted: false,
     registrationType: 'complete',
   });
+
+  // Salvar dados sempre que houver mudanças
+  useEffect(() => {
+    saveToStorage({
+      formData,
+      step,
+      mobileStep,
+      mobileStep1Data,
+      mobileStep2Data,
+    });
+  }, [formData, step, mobileStep, mobileStep1Data, mobileStep2Data]);
 
   // Capturar código de afiliado da URL
   useEffect(() => {
@@ -164,6 +230,9 @@ const AuthorRegistration: React.FC = () => {
   };
 
   const handleRegisterComplete = () => {
+    // Limpar o storage ao completar o registro
+    clearStorage();
+    
     // Limpar o formulário e voltar para o início
     setFormData({
       title: '',
