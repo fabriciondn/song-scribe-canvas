@@ -142,7 +142,7 @@ serve(async (req) => {
           id: userId,
           name: body.name,
           email: body.email,
-          credits: body.credits || (body.role === 'moderator' ? 500 : 10)
+          credits: body.credits ?? 0
         };
 
         // Adicionar campos opcionais do formulário se fornecidos
@@ -168,16 +168,16 @@ serve(async (req) => {
           throw profileError;
         }
       } else {
-        // If user exists, update credits if needed
-        const { error: updateError } = await supabaseAdmin
-          .from('profiles')
-          .update({
-            credits: body.credits || (body.role === 'moderator' ? 500 : 10)
-          })
-          .eq('id', userId);
-          
-        if (updateError) {
-          console.error('Error updating profile credits:', updateError);
+        // User exists, no credits update needed unless explicitly provided
+        if (body.credits !== undefined && body.credits > 0) {
+          const { error: updateError } = await supabaseAdmin
+            .from('profiles')
+            .update({ credits: body.credits })
+            .eq('id', userId);
+            
+          if (updateError) {
+            console.error('Error updating profile credits:', updateError);
+          }
         }
       }
 
