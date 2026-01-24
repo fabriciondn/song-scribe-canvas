@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Coins, Gift, Check, AlertTriangle, User, Ticket, X, CheckCircle, Loader2 } from 'lucide-react';
 import { useMobileDetection } from '@/hooks/use-mobile';
@@ -193,14 +193,14 @@ export default function CreditsCheckout() {
     sonnerToast.success('Cupom removido');
   };
 
-  const calculatePricing = (creditAmount: number) => {
+  const pricing = useMemo(() => {
     let unitPrice = 19.99;
     let bonusCredits = 0;
     let savings = 0;
-    let originalPrice = 19.99 * creditAmount;
+    let originalPrice = 19.99 * credits;
 
     // Super Oferta de 10 créditos + 2 grátis
-    if (creditAmount === 10) {
+    if (credits === 10) {
       unitPrice = 17.99;
       bonusCredits = 2;
       // Preço original seria 12 créditos x 19,99 = 239,88
@@ -208,7 +208,7 @@ export default function CreditsCheckout() {
       originalPrice = 19.99 * 12; // 239,88
       savings = originalPrice - 10 * unitPrice; // 239,88 - 179,90 = 59,98
     }
-    let totalAmount = creditAmount * unitPrice;
+    let totalAmount = credits * unitPrice;
     
     // Aplicar desconto do cupom
     let couponDiscount = 0;
@@ -223,11 +223,10 @@ export default function CreditsCheckout() {
       originalPrice,
       bonusCredits,
       savings,
-      finalCredits: creditAmount + bonusCredits,
+      finalCredits: credits + bonusCredits,
       couponDiscount
     };
-  };
-  const pricing = calculatePricing(credits);
+  }, [credits, appliedCoupon]);
   const handleProcessPayment = async () => {
     if (!user) {
       toast({
