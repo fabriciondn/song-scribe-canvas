@@ -13,6 +13,17 @@ interface CreateUserRequest {
   password: string;
   role: 'moderator' | 'user';
   credits?: number;
+  // Campos adicionais do formulário de registro
+  artistic_name?: string;
+  cpf?: string;
+  birth_date?: string;
+  phone?: string;
+  cep?: string;
+  street?: string;
+  number?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
 }
 
 serve(async (req) => {
@@ -127,14 +138,28 @@ serve(async (req) => {
     try {
       // Create or update user profile (only if user was just created)
       if (!userExists) {
+        const profileData: Record<string, unknown> = {
+          id: userId,
+          name: body.name,
+          email: body.email,
+          credits: body.credits || (body.role === 'moderator' ? 500 : 10)
+        };
+
+        // Adicionar campos opcionais do formulário se fornecidos
+        if (body.artistic_name) profileData.artistic_name = body.artistic_name;
+        if (body.cpf) profileData.cpf = body.cpf;
+        if (body.birth_date) profileData.birth_date = body.birth_date;
+        if (body.phone) profileData.cellphone = body.phone;
+        if (body.cep) profileData.cep = body.cep;
+        if (body.street) profileData.street = body.street;
+        if (body.number) profileData.number = body.number;
+        if (body.neighborhood) profileData.neighborhood = body.neighborhood;
+        if (body.city) profileData.city = body.city;
+        if (body.state) profileData.state = body.state;
+
         const { error: profileError } = await supabaseAdmin
           .from('profiles')
-          .upsert({
-            id: userId,
-            name: body.name,
-            email: body.email,
-            credits: body.credits || (body.role === 'moderator' ? 500 : 10)
-          });
+          .upsert(profileData);
 
         if (profileError) {
           console.error('Error creating profile:', profileError);

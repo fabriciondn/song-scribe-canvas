@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Eye, Calendar, User, Mail, Phone, MapPin, Lock } from 'lucide-react';
+import { Search, Eye, Calendar, User, Mail, Phone, MapPin, Lock, UserPlus, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DataMask } from '@/components/ui/data-mask';
@@ -37,6 +37,7 @@ export const AdminForms: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedForm, setSelectedForm] = useState<RegistrationForm | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
   useEffect(() => {
     fetchForms();
@@ -104,6 +105,65 @@ export const AdminForms: React.FC = () => {
   const handleViewForm = (form: RegistrationForm) => {
     setSelectedForm(form);
     setIsDialogOpen(true);
+  };
+
+  const handleCreateAccount = async () => {
+    if (!selectedForm) return;
+    
+    if (!selectedForm.password) {
+      toast.error('Este formulário não possui senha cadastrada');
+      return;
+    }
+
+    setIsCreatingAccount(true);
+    
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData.session?.access_token) {
+        toast.error('Sessão expirada. Faça login novamente.');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-user-by-admin', {
+        body: {
+          name: selectedForm.full_name,
+          email: selectedForm.email,
+          password: selectedForm.password,
+          role: 'user',
+          credits: 10,
+          artistic_name: selectedForm.artistic_name || undefined,
+          cpf: selectedForm.cpf,
+          birth_date: selectedForm.birth_date,
+          phone: selectedForm.phone || undefined,
+          cep: selectedForm.cep,
+          street: selectedForm.street,
+          number: selectedForm.number,
+          neighborhood: selectedForm.neighborhood,
+          city: selectedForm.city,
+          state: selectedForm.state,
+        },
+      });
+
+      if (error) {
+        console.error('Erro ao criar conta:', error);
+        toast.error(error.message || 'Erro ao criar conta');
+        return;
+      }
+
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      toast.success('Conta criada com sucesso! O usuário já pode fazer login.');
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error('Erro ao criar conta:', error);
+      toast.error('Erro ao criar conta. Tente novamente.');
+    } finally {
+      setIsCreatingAccount(false);
+    }
   };
 
   if (isLoading) {
@@ -273,10 +333,27 @@ export const AdminForms: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-4 border-t">
+              <div className="pt-4 border-t flex items-center justify-between">
                 <div className="text-xs text-muted-foreground">
                   Formulário enviado em: {formatDateTime(selectedForm.created_at)}
                 </div>
+                <Button
+                  onClick={handleCreateAccount}
+                  disabled={isCreatingAccount || !selectedForm.password}
+                  className="gap-2"
+                >
+                  {isCreatingAccount ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Criando...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-4 w-4" />
+                      Criar Conta
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           )}
