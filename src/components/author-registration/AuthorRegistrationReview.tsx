@@ -38,6 +38,29 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
+  // Função para renovar sessão antes de operações críticas
+  const refreshSession = async (): Promise<boolean> => {
+    try {
+      console.log('🔄 Tentando renovar sessão...');
+      const { data, error } = await supabase.auth.refreshSession();
+      
+      if (error) {
+        console.error('❌ Erro ao renovar sessão:', error);
+        return false;
+      }
+      
+      if (data.session) {
+        console.log('✅ Sessão renovada com sucesso');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ Erro ao renovar sessão:', error);
+      return false;
+    }
+  };
+
   // Função melhorada para upload de áudio com validações
   const uploadAudioFile = async (audioFile: File, userId: string): Promise<string | null> => {
     try {
@@ -45,6 +68,16 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       console.log('📊 Tamanho do arquivo:', (audioFile.size / 1024 / 1024).toFixed(2), 'MB');
       console.log('🎧 Tipo do arquivo:', audioFile.type);
       console.log('👤 User ID para upload:', userId);
+
+      // Renovar sessão antes do upload para evitar token expirado
+      const sessionRefreshed = await refreshSession();
+      if (!sessionRefreshed) {
+        // Tentar verificar se a sessão atual ainda é válida
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
+          throw new Error('Sua sessão expirou. Por favor, faça login novamente.');
+        }
+      }
 
       // Validação de tamanho do arquivo (50MB)
       const maxSize = 50 * 1024 * 1024; // 50MB
@@ -81,6 +114,35 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
 
       if (uploadError) {
         console.error('❌ Erro detalhado no upload:', uploadError);
+        
+        // Se o erro for de token expirado, tentar renovar e fazer upload novamente
+        if (uploadError.message.includes('exp') || uploadError.message.includes('timestamp') || uploadError.message.includes('JWT')) {
+          console.log('🔄 Token expirado detectado, tentando renovar...');
+          const refreshed = await refreshSession();
+          
+          if (refreshed) {
+            // Tentar upload novamente após renovar a sessão
+            const { data: retryData, error: retryError } = await supabase.storage
+              .from('author-registrations')
+              .upload(fileName, audioFile, {
+                cacheControl: '3600',
+                upsert: false,
+                contentType: audioFile.type || 'audio/mpeg'
+              });
+            
+            if (retryError) {
+              console.error('❌ Erro no retry do upload:', retryError);
+              throw new Error('Sua sessão expirou. Por favor, faça login novamente.');
+            }
+            
+            if (retryData?.path) {
+              console.log('✅ Upload realizado com sucesso após retry:', retryData.path);
+              return retryData.path;
+            }
+          }
+          
+          throw new Error('Sua sessão expirou. Por favor, faça login novamente.');
+        }
         
         // Tratamento específico de erros
         if (uploadError.message.includes('Payload too large')) {
