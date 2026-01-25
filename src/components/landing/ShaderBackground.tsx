@@ -1,6 +1,24 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+
+// Detecta se é mobile/tablet para usar fallback CSS mais leve
+const useIsMobileDevice = () => {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 1024 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  });
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+    };
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+};
 
 const fragmentShader = `
   #ifdef GL_ES
@@ -191,7 +209,54 @@ function ShaderPlane() {
   );
 }
 
+// Fallback CSS leve para dispositivos móveis
+const MobileFallbackBackground: React.FC = () => {
+  return (
+    <div className="absolute inset-0 w-full h-full overflow-hidden">
+      {/* Base escura */}
+      <div className="absolute inset-0 bg-black" />
+      
+      {/* Gradiente verde animado com CSS */}
+      <div 
+        className="absolute inset-0 opacity-60"
+        style={{
+          background: `
+            radial-gradient(ellipse 80% 60% at 20% 30%, rgba(0, 200, 83, 0.25) 0%, transparent 60%),
+            radial-gradient(ellipse 60% 80% at 80% 70%, rgba(30, 215, 96, 0.2) 0%, transparent 50%),
+            radial-gradient(ellipse 100% 100% at 50% 50%, rgba(18, 168, 106, 0.15) 0%, transparent 70%)
+          `,
+          animation: 'pulse-bg 8s ease-in-out infinite'
+        }}
+      />
+      
+      {/* Overlay sutil */}
+      <div 
+        className="absolute inset-0 opacity-40"
+        style={{
+          background: 'linear-gradient(135deg, rgba(0, 200, 83, 0.1) 0%, transparent 50%, rgba(30, 215, 96, 0.08) 100%)'
+        }}
+      />
+      
+      {/* Keyframes inline */}
+      <style>{`
+        @keyframes pulse-bg {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.02); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 export const ShaderBackground: React.FC = () => {
+  const isMobile = useIsMobileDevice();
+
+  // Em mobile, usa fallback CSS leve
+  if (isMobile) {
+    return <MobileFallbackBackground />;
+  }
+
+  // Em desktop, usa shader WebGL completo
   return (
     <div className="absolute inset-0 w-full h-full">
       <Canvas
