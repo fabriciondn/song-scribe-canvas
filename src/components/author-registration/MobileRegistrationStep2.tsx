@@ -85,6 +85,43 @@ interface MobileRegistrationStep2Props {
   };
 }
 
+const STEP2_STORAGE_KEY = 'mobile_registration_step2_draft';
+
+// Funções para persistência local do Step 2
+const saveStep2ToStorage = (data: { 
+  registrationType: 'lyrics_only' | 'complete'; 
+  genre: string; 
+  version: string; 
+  lyrics: string; 
+  additionalInfo: string;
+  audioFileName?: string;
+}) => {
+  try {
+    sessionStorage.setItem(STEP2_STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Erro ao salvar Step2 no storage:', e);
+  }
+};
+
+const loadStep2FromStorage = (): { 
+  registrationType: 'lyrics_only' | 'complete'; 
+  genre: string; 
+  version: string; 
+  lyrics: string; 
+  additionalInfo: string;
+  audioFileName?: string;
+} | null => {
+  try {
+    const saved = sessionStorage.getItem(STEP2_STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (e) {
+    console.error('Erro ao carregar Step2 do storage:', e);
+  }
+  return null;
+};
+
 export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = ({
   onContinue,
   onBack,
@@ -94,14 +131,37 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
   const { theme, toggleTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [registrationType, setRegistrationType] = useState<'lyrics_only' | 'complete'>(
-    initialData?.registrationType || 'complete'
-  );
-  const [genre, setGenre] = useState(initialData?.genre || '');
-  const [version, setVersion] = useState(initialData?.version || '');
-  const [lyrics, setLyrics] = useState(initialData?.lyrics || '');
+  // Carregar dados salvos do storage OU usar initialData
+  const savedData = loadStep2FromStorage();
+  
+  const [registrationType, setRegistrationType] = useState<'lyrics_only' | 'complete'>(() => {
+    return savedData?.registrationType || initialData?.registrationType || 'complete';
+  });
+  const [genre, setGenre] = useState(() => {
+    return savedData?.genre || initialData?.genre || '';
+  });
+  const [version, setVersion] = useState(() => {
+    return savedData?.version || initialData?.version || '';
+  });
+  const [lyrics, setLyrics] = useState(() => {
+    return savedData?.lyrics || initialData?.lyrics || '';
+  });
   const [audioFile, setAudioFile] = useState<File | null>(initialData?.audioFile || null);
-  const [additionalInfo, setAdditionalInfo] = useState(initialData?.additionalInfo || '');
+  const [additionalInfo, setAdditionalInfo] = useState(() => {
+    return savedData?.additionalInfo || initialData?.additionalInfo || '';
+  });
+  
+  // Persistir dados localmente sempre que houver mudanças (exceto audioFile que não é serializável)
+  useEffect(() => {
+    saveStep2ToStorage({ 
+      registrationType, 
+      genre, 
+      version, 
+      lyrics, 
+      additionalInfo,
+      audioFileName: audioFile?.name,
+    });
+  }, [registrationType, genre, version, lyrics, additionalInfo, audioFile]);
 
   const handlePasteLyrics = async () => {
     try {

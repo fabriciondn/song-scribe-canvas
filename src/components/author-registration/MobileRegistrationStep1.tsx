@@ -48,6 +48,29 @@ interface MobileRegistrationStep1Props {
   };
 }
 
+const STEP1_STORAGE_KEY = 'mobile_registration_step1_draft';
+
+// Funções para persistência local do Step 1
+const saveStep1ToStorage = (data: { title: string; authors: Author[]; hasSamples: boolean }) => {
+  try {
+    sessionStorage.setItem(STEP1_STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Erro ao salvar Step1 no storage:', e);
+  }
+};
+
+const loadStep1FromStorage = (): { title: string; authors: Author[]; hasSamples: boolean } | null => {
+  try {
+    const saved = sessionStorage.getItem(STEP1_STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (e) {
+    console.error('Erro ao carregar Step1 do storage:', e);
+  }
+  return null;
+};
+
 export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = ({
   onContinue,
   initialData,
@@ -56,17 +79,33 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
   const { profile } = useProfile();
   const { theme, toggleTheme } = useTheme();
   
-  const [title, setTitle] = useState(initialData?.title || '');
-  const [hasSamples, setHasSamples] = useState(initialData?.hasSamples || false);
-  const [authors, setAuthors] = useState<Author[]>(initialData?.authors || [
-    {
-      id: 'titular',
-      name: profile?.name || 'Você',
-      initials: getInitials(profile?.name || 'VC'),
-      percentage: 100,
-      isTitular: true,
-    }
-  ]);
+  // Carregar dados salvos do storage OU usar initialData OU criar padrão
+  const savedData = loadStep1FromStorage();
+  
+  const [title, setTitle] = useState(() => {
+    return savedData?.title || initialData?.title || '';
+  });
+  const [hasSamples, setHasSamples] = useState(() => {
+    return savedData?.hasSamples ?? initialData?.hasSamples ?? false;
+  });
+  const [authors, setAuthors] = useState<Author[]>(() => {
+    if (savedData?.authors?.length) return savedData.authors;
+    if (initialData?.authors?.length) return initialData.authors;
+    return [
+      {
+        id: 'titular',
+        name: profile?.name || 'Você',
+        initials: getInitials(profile?.name || 'VC'),
+        percentage: 100,
+        isTitular: true,
+      }
+    ];
+  });
+  
+  // Persistir dados localmente sempre que houver mudanças
+  React.useEffect(() => {
+    saveStep1ToStorage({ title, authors, hasSamples });
+  }, [title, authors, hasSamples]);
   
   // Modal states
   const [showAddAuthorModal, setShowAddAuthorModal] = useState(false);
