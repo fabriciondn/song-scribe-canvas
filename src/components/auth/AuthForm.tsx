@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 type AuthMode = 'login' | 'register';
 
@@ -49,7 +50,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
         const affiliateCode = localStorage.getItem('affiliate_code');
         if (affiliateCode) {
           try {
-            const { supabase } = await import('@/integrations/supabase/client');
             await new Promise(resolve => setTimeout(resolve, 1000));
             const { data: { user: newUser } } = await supabase.auth.getUser();
             
