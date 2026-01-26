@@ -92,10 +92,12 @@ const loadFromStorage = (): {
   return null;
 };
 
-// Função para limpar dados do sessionStorage
+// Função para limpar dados do sessionStorage (incluindo steps mobile)
 const clearStorage = () => {
   try {
     sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem('mobile_registration_step1_draft');
+    sessionStorage.removeItem('mobile_registration_step2_draft');
   } catch (e) {
     console.error('Erro ao limpar storage:', e);
   }
