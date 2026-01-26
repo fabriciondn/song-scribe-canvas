@@ -39,14 +39,11 @@ export const MobileSplashScreen: React.FC<MobileSplashScreenProps> = ({
       }`}
       style={{ minHeight: '100dvh' }}
     >
-      {/* Efeitos de blur no fundo */}
+      {/* Efeitos de blur no fundo - otimizado para performance */}
       <div 
-        className="absolute top-[-10%] right-[-10%] w-[80vw] h-[80vw] bg-primary/10 rounded-full blur-[120px] pointer-events-none"
-        style={{ 
-          animation: 'pulse-subtle 4s infinite ease-in-out' 
-        }}
+        className="absolute top-[-10%] right-[-10%] w-[80vw] h-[80vw] bg-primary/10 rounded-full blur-[60px] pointer-events-none"
       />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-primary/5 rounded-full blur-[50px] pointer-events-none" />
       
       {/* Logo centralizada com animação */}
       <div className="flex-1 flex flex-col items-center justify-center w-full px-8 relative z-10">
@@ -93,11 +90,11 @@ export const MobileSplashScreen: React.FC<MobileSplashScreenProps> = ({
         </div>
       </div>
 
-      {/* Keyframes CSS */}
+      {/* Keyframes CSS - otimizado */}
       <style>{`
-        @keyframes pulse-subtle {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(1.05); }
+        @keyframes slide-up {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @keyframes slide-up {
           from { opacity: 0; transform: translateY(20px); }
