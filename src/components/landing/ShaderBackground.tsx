@@ -5,16 +5,33 @@ import * as THREE from 'three';
 // Detecta se é mobile/tablet para usar fallback CSS mais leve
 const useIsMobileDevice = () => {
   const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth < 1024 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (typeof window === 'undefined') return true; // SSR: assume mobile para fallback leve
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+    const isSmallScreen = window.innerWidth < 1024;
+    const isMobileUA = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return isSmallScreen || isTouchDevice || isMobileUA;
   });
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+      const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+      const isSmallScreen = window.innerWidth < 1024;
+      const isMobileUA = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(isSmallScreen || isTouchDevice || isMobileUA);
     };
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    
+    // Debounce para evitar re-renders excessivos
+    let timeoutId: NodeJS.Timeout;
+    const debouncedCheck = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkMobile, 150);
+    };
+    
+    window.addEventListener('resize', debouncedCheck);
+    return () => {
+      window.removeEventListener('resize', debouncedCheck);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return isMobile;
@@ -209,41 +226,32 @@ function ShaderPlane() {
   );
 }
 
-// Fallback CSS leve para dispositivos móveis
+// Fallback CSS ESTÁTICO e leve para dispositivos móveis (sem animações)
 const MobileFallbackBackground: React.FC = () => {
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden">
       {/* Base escura */}
       <div className="absolute inset-0 bg-black" />
       
-      {/* Gradiente verde animado com CSS */}
+      {/* Gradiente verde ESTÁTICO - sem animação para melhor performance */}
       <div 
-        className="absolute inset-0 opacity-60"
+        className="absolute inset-0 opacity-50"
         style={{
           background: `
-            radial-gradient(ellipse 80% 60% at 20% 30%, rgba(0, 200, 83, 0.25) 0%, transparent 60%),
-            radial-gradient(ellipse 60% 80% at 80% 70%, rgba(30, 215, 96, 0.2) 0%, transparent 50%),
-            radial-gradient(ellipse 100% 100% at 50% 50%, rgba(18, 168, 106, 0.15) 0%, transparent 70%)
-          `,
-          animation: 'pulse-bg 8s ease-in-out infinite'
+            radial-gradient(ellipse 80% 60% at 20% 30%, rgba(0, 200, 83, 0.2) 0%, transparent 60%),
+            radial-gradient(ellipse 60% 80% at 80% 70%, rgba(30, 215, 96, 0.15) 0%, transparent 50%),
+            radial-gradient(ellipse 100% 100% at 50% 50%, rgba(18, 168, 106, 0.1) 0%, transparent 70%)
+          `
         }}
       />
       
-      {/* Overlay sutil */}
+      {/* Overlay sutil estático */}
       <div 
-        className="absolute inset-0 opacity-40"
+        className="absolute inset-0 opacity-30"
         style={{
-          background: 'linear-gradient(135deg, rgba(0, 200, 83, 0.1) 0%, transparent 50%, rgba(30, 215, 96, 0.08) 100%)'
+          background: 'linear-gradient(135deg, rgba(0, 200, 83, 0.08) 0%, transparent 50%, rgba(30, 215, 96, 0.05) 100%)'
         }}
       />
-      
-      {/* Keyframes inline */}
-      <style>{`
-        @keyframes pulse-bg {
-          0%, 100% { opacity: 0.5; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.02); }
-        }
-      `}</style>
     </div>
   );
 };
