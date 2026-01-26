@@ -1,125 +1,114 @@
 
-# Plano de Otimização de Performance da Landing Page para Mobile
+# Plano de Correção do PWA Mobile
 
-## Problema
-A landing page está lenta e "travando" em dispositivos móveis (especialmente iPhone), causando uma experiência ruim para os usuários.
+## Problema Principal
+O PWA está incompleto - faltam componentes essenciais para funcionar como um aplicativo instalável no celular.
 
-## Causas Identificadas
-1. **ComposersCarousel carrega todos os usuários do banco de dados** sem limite
-2. **Efeitos visuais pesados** (blur, gradientes, animações contínuas)
-3. **YouTube iframe carrega imediatamente** consumindo recursos
-4. **Detecção de mobile pode falhar** em alguns dispositivos
-5. **Todas as seções renderizam de uma vez** sem lazy loading
+## O que será feito
 
----
+### 1. Criar o Web App Manifest
+**Arquivo novo:** `public/manifest.json`
 
-## Solução Proposta
+Este arquivo informa ao navegador como exibir o app quando instalado:
+- Nome do aplicativo: "Compuse"
+- Cores do tema (preto e verde)
+- Ícones em múltiplos tamanhos
+- Orientação e modo de exibição (tela cheia)
 
-### Etapa 1: Otimizar o ComposersCarousel
-**Arquivo:** `src/components/landing/ComposersCarousel.tsx`
+### 2. Configurar o Plugin PWA no Vite
+**Arquivo:** `vite.config.ts` e `package.json`
 
-- Limitar a query do Supabase para buscar apenas os **50 últimos compositores** em vez de todos
-- Reduzir a duplicação de 3x para 2x no mobile
-- Desativar o carrossel em mobile muito lento e mostrar versão estática
+- Instalar `vite-plugin-pwa`
+- Configurar geração automática de Service Worker
+- Habilitar cache offline de recursos estáticos
+- Configurar estratégia de atualização
 
-```text
-Antes: .select('id, name, artistic_name, avatar_url').not('name', 'is', null)
-Depois: .select('id, name, artistic_name, avatar_url').not('name', 'is', null).limit(50)
-```
+### 3. Adicionar Link do Manifest no HTML
+**Arquivo:** `index.html`
 
-### Etapa 2: Melhorar Detecção de Mobile no ShaderBackground
-**Arquivo:** `src/components/landing/ShaderBackground.tsx`
+- Adicionar `<link rel="manifest" href="/manifest.json">`
+- Corrigir referências de ícones para usar os da pasta `/icons/`
 
-- Melhorar a detecção para incluir mais dispositivos móveis
-- Remover a animação CSS do fallback mobile (tornar estático)
-- Usar `matchMedia` para detecção mais confiável
+### 4. Otimizar Splash Screen Mobile
+**Arquivo:** `src/components/mobile/MobileSplashScreen.tsx`
 
-```text
-Antes: window.innerWidth < 1024
-Depois: window.innerWidth < 1024 || window.matchMedia('(pointer: coarse)').matches
-```
+- Reduzir blur de 120px → 60px
+- Remover animação pulse do fundo
+- Simplificar efeitos visuais para melhor performance
 
-### Etapa 3: Lazy Load do YouTube iframe
-**Arquivo:** `src/components/landing/HeroSection.tsx`
+### 5. Atualizar Ícones no HTML
+**Arquivo:** `index.html`
 
-- Usar atributo `loading="lazy"` no iframe
-- Adicionar `srcdoc` para mostrar placeholder antes do carregamento
-- O vídeo só é mostrado em desktop (já está assim), então não é crítico
-
-### Etapa 4: Reduzir Animações em Mobile
-**Arquivos:** Múltiplas seções da landing
-
-- Desativar `animate-pulse` em mobile
-- Substituir `blur-3xl` por cores sólidas em mobile
-- Simplificar gradientes
-
-### Etapa 5: Implementar Lazy Loading das Seções (Opcional)
-**Arquivo:** `src/pages/Index.tsx`
-
-- Usar `React.lazy()` + `Suspense` para carregar seções conforme scroll
-- Alternativa: usar IntersectionObserver para renderização condicional
+- Usar ícones com tamanhos específicos da pasta `/public/icons/`
+- Adicionar ícones para diferentes dispositivos Apple
 
 ---
 
-## Prioridade de Implementação
+## Arquivos que serão modificados
 
-| Prioridade | Etapa | Impacto |
-|------------|-------|---------|
-| 🔴 Alta | Etapa 1 (ComposersCarousel) | Reduz query pesada |
-| 🔴 Alta | Etapa 2 (ShaderBackground) | Garante fallback leve |
-| 🟡 Média | Etapa 4 (Animações) | Menos CPU/GPU |
-| 🟢 Baixa | Etapa 3 (YouTube) | Só afeta desktop |
-| 🟢 Baixa | Etapa 5 (Lazy sections) | Melhoria incremental |
+| Arquivo | Ação |
+|---------|------|
+| `public/manifest.json` | Criar (novo) |
+| `vite.config.ts` | Adicionar plugin PWA |
+| `package.json` | Adicionar dependência |
+| `index.html` | Adicionar link manifest e corrigir ícones |
+| `src/components/mobile/MobileSplashScreen.tsx` | Otimizar performance |
 
 ---
 
 ## Resultado Esperado
 
-- Carregamento inicial mais rápido (menos dados do banco)
-- Scroll mais suave (menos animações contínuas)
-- Menos travamentos em iPhones e Android antigos
-- Mesma aparência visual mantida
+Após as correções:
+- O app poderá ser instalado na tela inicial do celular
+- Funcionará offline (com cache de recursos)
+- Terá ícone e splash screen adequados
+- Performance melhorada no iPhone
 
 ---
 
 ## Detalhes Técnicos
 
-### Mudanças no ComposersCarousel
-```typescript
-// Limitar busca a 50 compositores
-const { data: allProfiles } = await supabase
-  .from('profiles')
-  .select('id, name, artistic_name, avatar_url')
-  .not('name', 'is', null)
-  .order('created_at', { ascending: false })
-  .limit(50); // ← NOVO
-
-// Reduzir duplicação em mobile
-const isMobile = window.innerWidth < 768;
-const infiniteComposers = isMobile 
-  ? [...composers, ...composers] // 2x em mobile
-  : [...composers, ...composers, ...composers]; // 3x em desktop
+### Novo arquivo: manifest.json
+```json
+{
+  "name": "Compuse - Registro Autoral",
+  "short_name": "Compuse",
+  "description": "Registro autoral com validade jurídica",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
 ```
 
-### Mudanças no ShaderBackground
+### Configuração vite-plugin-pwa
 ```typescript
-// Detecção mais robusta
-const checkMobile = () => {
-  const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
-  const isSmallScreen = window.innerWidth < 1024;
-  const isMobileUA = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  setIsMobile(isSmallScreen || isTouchDevice || isMobileUA);
-};
+import { VitePWA } from 'vite-plugin-pwa'
 
-// Fallback estático (sem animação)
-<div className="absolute inset-0 bg-gradient-to-br from-black via-gray-950 to-green-950/30" />
+// No array de plugins:
+VitePWA({
+  registerType: 'autoUpdate',
+  workbox: {
+    globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+    runtimeCaching: [
+      {
+        urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+        handler: 'CacheFirst',
+        options: { cacheName: 'google-fonts-cache' }
+      }
+    ]
+  }
+})
 ```
 
-### Mudanças nas Animações
-```tsx
-// Condicional baseado em preferência do sistema
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-// Ou classe CSS condicional
-className={`${isMobile ? '' : 'animate-pulse'}`}
+### Otimização do Splash Screen
+```typescript
+// Reduzir blur de 120px para 60px
+// Remover animação pulse-subtle do fundo
+// Usar transform ao invés de filter para animações
 ```
