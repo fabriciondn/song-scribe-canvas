@@ -22,7 +22,7 @@ export const ComposersCarousel: React.FC = () => {
   })]);
   useEffect(() => {
     const fetchComposers = async () => {
-      // Buscar TODOS os perfis públicos (sem limite)
+      // Buscar apenas os 50 últimos perfis para performance
       const {
         data: allProfiles,
         error
@@ -30,7 +30,8 @@ export const ComposersCarousel: React.FC = () => {
         .from('profiles')
         .select('id, name, artistic_name, avatar_url')
         .not('name', 'is', null)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
       if (error) {
         console.error('Erro ao buscar compositores:', error);
       }
@@ -83,8 +84,14 @@ export const ComposersCarousel: React.FC = () => {
   };
   if (composers.length === 0) return null;
 
-  // Duplicar compositores 3x para efeito infinito contínuo
-  const infiniteComposers = [...composers, ...composers, ...composers];
+  // Detectar mobile para reduzir duplicação e consumo de memória
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  
+  // Duplicar 2x em mobile, 3x em desktop para efeito infinito
+  const infiniteComposers = isMobile 
+    ? [...composers, ...composers] 
+    : [...composers, ...composers, ...composers];
+    
   return <div className="w-full">
       <h3 className="text-xl md:text-2xl font-bold text-center mb-6">
         Compositores na{' '}

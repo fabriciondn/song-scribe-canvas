@@ -56,14 +56,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </Button>
             </div>
             
-            {/* Trust indicators */}
+            {/* Trust indicators - sem animate-pulse em mobile para performance */}
             <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 justify-center lg:justify-start">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-primary rounded-full lg:animate-pulse" />
                 <span>Certificado em 5 minutos</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse delay-500" />
+                <div className="w-2 h-2 bg-green-400 rounded-full lg:animate-pulse lg:delay-500" />
                 <span>Validade jurídica garantida</span>
               </div>
             </div>
@@ -77,6 +77,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 className="w-full h-full"
                 src="https://www.youtube.com/embed/tKQ7kZjvjqI?controls=1&modestbranding=1&rel=0"
                 title="Apresentação Compuse"
+                loading="lazy"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />

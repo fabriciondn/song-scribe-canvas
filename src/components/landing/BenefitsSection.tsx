@@ -28,9 +28,9 @@ export const BenefitsSection: React.FC = () => {
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-950 to-black" />
       
-      {/* Decorative elements */}
-      <div className="absolute top-1/2 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-green-500/3 rounded-full blur-3xl" />
+      {/* Decorative elements - blur reduzido em mobile para performance */}
+      <div className="absolute top-1/2 left-0 w-64 h-64 bg-primary/5 rounded-full blur-xl lg:blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-green-500/3 rounded-full blur-xl lg:blur-3xl" />
       
       <div className="relative z-10 max-w-7xl mx-auto">
         <div className="text-center mb-16 space-y-4">
