@@ -166,8 +166,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
   if (showForgotPassword) {
     return (
       <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-4 relative overflow-hidden font-['Outfit',sans-serif]">
-        {/* Glow Effects */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {/* Glow Effects - desabilitado no mobile para performance */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden hidden md:block">
           <div className="absolute w-96 h-96 -top-20 -right-20 bg-[#00C853] rounded-full blur-[90px] opacity-[0.12]" />
           <div className="absolute w-80 h-80 -bottom-20 -left-20 bg-[#00C853] rounded-full blur-[90px] opacity-[0.12]" />
         </div>
@@ -237,8 +237,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
 
   return (
     <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-4 relative overflow-hidden font-['Outfit',sans-serif]">
-      {/* Glow Effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      {/* Glow Effects - desabilitado no mobile para performance */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden hidden md:block">
         <div className="absolute w-96 h-96 -top-20 -right-20 bg-[#00C853] rounded-full blur-[90px] opacity-[0.12]" />
         <div className="absolute w-80 h-80 -bottom-20 -left-20 bg-[#00C853] rounded-full blur-[90px] opacity-[0.12]" />
       </div>
