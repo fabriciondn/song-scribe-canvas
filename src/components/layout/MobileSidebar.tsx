@@ -156,7 +156,10 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
   return (
     <div className="flex flex-col h-full max-h-screen bg-background overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
       {/* User Profile Section */}
-      <div className="p-6 flex-shrink-0">
+      <div 
+        className="px-6 pb-6 flex-shrink-0"
+        style={{ paddingTop: 'max(24px, calc(env(safe-area-inset-top, 0px) + 16px))' }}
+      >
         <div className="flex items-center gap-4 mb-5">
           <div className="relative">
             <Avatar className="h-16 w-16 border-2 border-primary">
