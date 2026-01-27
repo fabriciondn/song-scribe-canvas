@@ -158,7 +158,7 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
       {/* User Profile Section */}
       <div 
         className="px-6 pb-6 flex-shrink-0"
-        style={{ paddingTop: 'max(24px, calc(env(safe-area-inset-top, 0px) + 16px))' }}
+        style={{ paddingTop: 'max(48px, calc(env(safe-area-inset-top, 0px) + 16px))' }}
       >
         <div className="flex items-center gap-4 mb-5">
           <div className="relative">
