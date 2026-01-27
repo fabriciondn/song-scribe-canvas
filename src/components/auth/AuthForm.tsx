@@ -36,10 +36,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
     try {
       if (mode === 'login') {
         await login(email, password);
-        toast({
-          title: 'Login realizado com sucesso!',
-          description: 'Bem-vindo de volta ao Compuse.',
-        });
       } else {
         if (!name) {
           throw new Error('Nome é obrigatório');
