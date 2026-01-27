@@ -208,7 +208,7 @@ export const MobileDraftsPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-black pb-24">
         {/* Header Skeleton */}
-        <div className="px-6 pt-14 pb-6 sticky top-0 z-40 bg-black/95 backdrop-blur-sm">
+        <div className="px-6 pt-14 pb-6 sticky top-0 z-40 bg-black/[0.97]">
           <div className="flex items-center justify-between mb-6">
             <Skeleton className="h-10 w-40 bg-[#1C1C1E]" />
             <div className="flex gap-2">
@@ -245,7 +245,7 @@ export const MobileDraftsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-black text-white pb-24">
       {/* Header */}
-      <header className="px-6 pt-14 pb-6 sticky top-0 z-40 bg-black/95 backdrop-blur-sm">
+      <header className="px-6 pt-14 pb-6 sticky top-0 z-40 bg-black/[0.97]">
         {/* Search Bar (when open) */}
         {isSearchOpen ? (
           <div className="flex items-center gap-3 mb-6">

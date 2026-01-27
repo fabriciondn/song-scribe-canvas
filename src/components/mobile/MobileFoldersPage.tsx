@@ -202,7 +202,7 @@ export const MobileFoldersPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-background pb-24">
         {/* Header Skeleton */}
-        <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border px-4 py-4">
+        <header className="sticky top-0 z-10 bg-background/[0.97] border-b border-border px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Skeleton className="h-10 w-10 rounded-full" />
@@ -232,7 +232,7 @@ export const MobileFoldersPage: React.FC = () => {
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-background pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border px-4 py-4">
+      <header className="sticky top-0 z-10 bg-background/[0.97] border-b border-border px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button 

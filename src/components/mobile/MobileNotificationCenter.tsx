@@ -59,7 +59,7 @@ export const MobileNotificationCenter: React.FC = () => {
         <button className="relative p-2 rounded-full hover:bg-white/10 transition-colors">
           <MaterialIcon name="notifications" className="text-2xl" />
           {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#000000] animate-pulse" />
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#000000]" />
           )}
         </button>
       </SheetTrigger>

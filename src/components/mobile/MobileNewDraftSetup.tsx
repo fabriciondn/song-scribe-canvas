@@ -320,7 +320,7 @@ export const MobileNewDraftSetup: React.FC<MobileNewDraftSetupProps> = ({ onCont
                     onClick={(e) => handlePlayPreview(base, e)}
                     className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-md transition-all ${
                       playingBaseId === base.id 
-                        ? 'bg-[#00C853] animate-pulse' 
+                        ? 'bg-[#00C853]'
                         : index % 3 === 0 ? 'bg-gradient-to-br from-indigo-500 to-purple-600' :
                           index % 3 === 1 ? 'bg-gradient-to-br from-orange-400 to-amber-500' :
                           'bg-gradient-to-br from-cyan-500 to-blue-600'
