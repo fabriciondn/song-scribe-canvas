@@ -31,9 +31,22 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#000000] flex flex-col overflow-x-hidden touch-manipulation overscroll-contain" style={{ backgroundColor: '#000000' }}>
-      {/* Conteúdo principal com scroll otimizado - sem header no novo design */}
-      <main className="flex-1 overflow-y-auto pb-24 overscroll-contain bg-[#000000] will-change-scroll">
+    <div 
+      className="fixed inset-0 bg-[#000000] flex flex-col touch-manipulation" 
+      style={{ 
+        backgroundColor: '#000000',
+        height: '100dvh', // Dynamic viewport height para Android
+        WebkitOverflowScrolling: 'touch'
+      }}
+    >
+      {/* Conteúdo principal com scroll - altura calculada para permitir scroll */}
+      <main 
+        className="flex-1 overflow-y-auto pb-24 bg-[#000000]"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain'
+        }}
+      >
         {children}
       </main>
       
