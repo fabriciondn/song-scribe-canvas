@@ -39,11 +39,11 @@ export const MobileSplashScreen: React.FC<MobileSplashScreenProps> = ({
       }`}
       style={{ minHeight: '100dvh' }}
     >
-      {/* Efeitos de blur no fundo - otimizado para performance */}
+      {/* Efeitos decorativos no fundo - otimizado para performance */}
       <div 
-        className="absolute top-[-10%] right-[-10%] w-[80vw] h-[80vw] bg-primary/10 rounded-full blur-[60px] pointer-events-none"
+        className="absolute top-[-10%] right-[-10%] w-[80vw] h-[80vw] bg-primary/10 rounded-full blur-[40px] pointer-events-none"
       />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-primary/5 rounded-full blur-[50px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-primary/5 rounded-full blur-[30px] pointer-events-none" />
       
       {/* Logo centralizada com animação */}
       <div className="flex-1 flex flex-col items-center justify-center w-full px-8 relative z-10">

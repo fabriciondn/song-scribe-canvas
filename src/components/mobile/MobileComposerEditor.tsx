@@ -377,7 +377,7 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
       }}
     >
       {/* Header - fixed at top */}
-      <header className="flex-shrink-0 pt-12 pb-4 px-6 flex items-center justify-between bg-white/80 dark:bg-[#1E293B]/80 backdrop-blur-md z-20 border-b border-gray-200 dark:border-gray-800">
+      <header className="flex-shrink-0 pt-12 pb-4 px-6 flex items-center justify-between bg-white/[0.97] dark:bg-[#1E293B]/[0.97] z-20 border-b border-gray-200 dark:border-gray-800">
         <button 
           onClick={onBack}
           className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
@@ -827,11 +827,8 @@ export const MobileComposerEditor: React.FC<MobileComposerEditorProps> = ({
         </SheetContent>
       </Sheet>
 
-      {/* Background Effects */}
-      <div className="fixed top-0 left-0 w-full h-full -z-10 bg-[#F3F4F6] dark:bg-[#0F172A] overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#00C853]/5 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px]" />
-      </div>
+      {/* Background - Simplified for performance */}
+      <div className="fixed top-0 left-0 w-full h-full -z-10 bg-[#F3F4F6] dark:bg-[#0F172A] pointer-events-none" />
 
       {/* Custom Slider Styles */}
       <style>{`

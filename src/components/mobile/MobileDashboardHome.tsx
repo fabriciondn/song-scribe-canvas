@@ -52,7 +52,7 @@ export const MobileDashboardHome: React.FC = () => {
     <div className="min-h-screen bg-background text-foreground pb-24 font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Header */}
       <header 
-        className="pb-6 px-6 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-md"
+        className="pb-6 px-6 flex items-center justify-between sticky top-0 z-10 bg-background/[0.97]"
         // iOS PWA às vezes retorna 0 para safe-area; garantimos um mínimo para não colar no notch/Dynamic Island
         style={{ paddingTop: "max(48px, calc(env(safe-area-inset-top, 0px) + 16px))" }}
       >
@@ -89,8 +89,8 @@ export const MobileDashboardHome: React.FC = () => {
         <section>
           <div className="bg-gradient-to-br from-card to-background rounded-3xl p-6 shadow-xl relative overflow-hidden border border-border">
             {/* Efeitos de blur */}
-            <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 rounded-full blur-xl -mr-16 -mt-16 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-xl -ml-10 -mb-10 pointer-events-none" />
             
             <div className="relative z-10">
               <div className="flex justify-between items-start mb-6">
