@@ -18,6 +18,10 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ['favicon.ico', 'app-icon.png', 'icons/*.png'],
       manifest: false, // Using manual manifest.json in public folder
       workbox: {
+        // iOS PWA costuma ficar preso em SW antigo; garantir que o novo SW assume controle imediatamente
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10 MB limit
         runtimeCaching: [
