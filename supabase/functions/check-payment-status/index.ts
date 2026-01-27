@@ -47,23 +47,39 @@ serve(async (req) => {
       );
     }
 
-    // Primeiro verificar no banco se já foi processado
+    // Primeiro verificar no banco se já foi processado (PRIORIDADE MÁXIMA)
     const supabaseService = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
-    const { data: transaction } = await supabaseService
+    // Usar maybeSingle para evitar erros se não encontrar
+    const { data: transaction, error: transactionError } = await supabaseService
       .from('credit_transactions')
-      .select('status')
+      .select('status, credits_purchased, bonus_credits')
       .eq('payment_id', paymentId.toString())
-      .single();
+      .maybeSingle();
 
+    console.log('[CHECK-PAYMENT-STATUS] 🔍 Database check:', { 
+      found: !!transaction, 
+      status: transaction?.status,
+      error: transactionError?.message 
+    });
+
+    // Se a transação já foi completada no banco, retornar imediatamente
+    // Não precisamos checar a API do Mercado Pago pois o webhook já processou
     if (transaction?.status === 'completed') {
-      console.log('[CHECK-PAYMENT-STATUS] ✅ Payment already processed in database');
+      const creditsAdded = (transaction.credits_purchased || 0) + (transaction.bonus_credits || 0);
+      console.log('[CHECK-PAYMENT-STATUS] ✅ Payment already processed in database, credits:', creditsAdded);
       return new Response(
-        JSON.stringify({ isPaid: true, paid: true, status: 'completed' }),
+        JSON.stringify({ 
+          isPaid: true, 
+          paid: true, 
+          status: 'completed',
+          creditsAdded,
+          source: 'database'
+        }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

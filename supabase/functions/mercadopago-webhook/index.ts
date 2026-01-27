@@ -24,13 +24,31 @@ serve(async (req) => {
     const body = await req.json();
     console.log('📨 Webhook payload:', JSON.stringify(body, null, 2));
 
-    // Mercado Pago envia notificações de diferentes tipos
-    if (body.type !== 'payment') {
-      console.log('⏭️ Webhook ignored - not payment type, type:', body.type);
+    // Mercado Pago envia notificações em dois formatos:
+    // Formato novo: { type: "payment", data: { id: "123" } }
+    // Formato antigo: { topic: "payment", resource: "123" }
+    
+    const isNewFormat = body.type === 'payment';
+    const isOldFormat = body.topic === 'payment';
+    
+    if (!isNewFormat && !isOldFormat) {
+      console.log('⏭️ Webhook ignored - not payment type, type:', body.type, 'topic:', body.topic);
       return new Response('OK - Not payment type', { status: 200, headers: corsHeaders });
     }
 
-    const paymentId = body.data?.id;
+    // Extrair payment ID baseado no formato
+    let paymentId = body.data?.id;
+    
+    // Se for formato antigo, extrair do resource
+    if (!paymentId && isOldFormat && body.resource) {
+      // resource pode ser só o ID ou uma URL completa
+      const resourceStr = body.resource.toString();
+      paymentId = resourceStr.includes('/') 
+        ? resourceStr.split('/').pop() 
+        : resourceStr;
+      console.log('📋 Extracted payment ID from old format:', paymentId);
+    }
+    
     if (!paymentId) {
       console.log('⚠️ Payment ID not found in webhook');
       return new Response('Payment ID missing', { status: 400, headers: corsHeaders });
