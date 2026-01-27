@@ -52,7 +52,7 @@ export const MobileDashboardHome: React.FC = () => {
     <div className="min-h-screen bg-background text-foreground pb-24 font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Header */}
       <header 
-        className="pb-6 px-6 flex items-center justify-between sticky top-0 z-10 bg-background/[0.97]"
+        className="pb-6 px-6 flex items-center justify-between"
         // iOS PWA às vezes retorna 0 para safe-area; garantimos um mínimo para não colar no notch/Dynamic Island
         style={{ paddingTop: "max(48px, calc(env(safe-area-inset-top, 0px) + 16px))" }}
       >
