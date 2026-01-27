@@ -1,49 +1,36 @@
 
-# Correção do Layout do Header Mobile
+# Correção do Menu Lateral Mobile (Safe Area)
 
-## Problema Identificado
-O header sticky do `MobileDashboardHome` está sobrepondo o conteúdo porque:
-1. O header usa `sticky top-0` com padding-top dinâmico para safe-area
-2. O conteúdo `<main>` não tem margin-top correspondente para compensar a altura do header
-3. O conteúdo rola "por baixo" do header ao invés de começar abaixo dele
+## Problema
+O menu lateral no iOS está com a parte superior "estourando" para cima, ficando atrás da barra de status do sistema (horário, bateria, etc.). Isso acontece porque o componente não está respeitando a **safe-area-inset-top** do iOS.
+
+## Causa Técnica
+O `MobileSidebar` usa apenas `p-6` (24px fixo) como padding, sem considerar a área segura do iOS para dispositivos com notch ou Dynamic Island.
 
 ## Solução
+Adicionar um padding-top dinâmico que soma a safe-area do iOS ao espaçamento desejado.
 
-Remover o `sticky` do header e deixá-lo como elemento estático no fluxo normal do documento. Isso garante que o conteúdo sempre comece abaixo do header sem sobreposição.
+## Alteração
 
-### Arquivo a Modificar
+**Arquivo:** `src/components/layout/MobileSidebar.tsx`
 
-**`src/components/mobile/MobileDashboardHome.tsx`**
-
-Linha 55 - Remover o sticky do header:
-
-```typescript
-// ANTES
-className="pb-6 px-6 flex items-center justify-between sticky top-0 z-10 bg-background/[0.97]"
-
-// DEPOIS  
-className="pb-6 px-6 flex items-center justify-between"
+**Antes (linha 159):**
+```tsx
+<div className="p-6 flex-shrink-0">
 ```
 
-### Por que esta solução?
-
-| Abordagem | Prós | Contras |
-|-----------|------|---------|
-| **Remover sticky (escolhida)** | Simples, sem sobreposição, comportamento nativo de scroll | Header desaparece ao rolar |
-| Manter sticky + adicionar padding-top no main | Header sempre visível | Cálculo complexo da altura dinâmica |
-| Converter para fixed | Header sempre visível | Requer refatoração do layout inteiro |
-
-A abordagem mais simples e estável é remover o `sticky` - isso é comum em muitos apps mobile onde o header não precisa ficar fixo.
-
----
-
-## Mudança Técnica
-
-```text
-Arquivo: src/components/mobile/MobileDashboardHome.tsx
-Linha: 55
-
-Remover: sticky top-0 z-10 bg-background/[0.97]
+**Depois:**
+```tsx
+<div 
+  className="px-6 pb-6 flex-shrink-0"
+  style={{ paddingTop: 'max(24px, calc(env(safe-area-inset-top, 0px) + 16px))' }}
+>
 ```
 
-O header permanecerá no topo do conteúdo, mas rolará junto com a página, evitando qualquer sobreposição de elementos.
+## Impacto
+- Nenhuma outra funcionalidade será alterada
+- O menu funcionará corretamente em dispositivos com e sem notch
+- O design permanece idêntico, apenas com o espaçamento correto no topo
+
+## Após a Implementação
+Será necessário publicar novamente (Publish -> Update) e reinstalar o PWA no iPhone para ver a mudança.
