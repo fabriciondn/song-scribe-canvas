@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { AuthForm } from '../components/auth/AuthForm';
@@ -10,15 +10,25 @@ import { ComparisonSection } from '@/components/landing/ComparisonSection';
 import { LegalProofSection } from '@/components/landing/LegalProofSection';
 import { FinalCTASection } from '@/components/landing/FinalCTASection';
 
+// Detectar se é iOS PWA (standalone mode)
+const isIOSPWA = () => {
+  if (typeof window === 'undefined') return false;
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const isStandalone = (window.navigator as any).standalone === true;
+  return isIOS && isStandalone;
+};
+
 const Index: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [isPending, startTransition] = useTransition();
   
   // Verificar se veio de link de afiliado
   const urlParams = new URLSearchParams(window.location.search);
   const hasAffiliateRef = urlParams.has('ref');
   
   const [showAuth, setShowAuth] = useState(hasAffiliateRef);
+  const [isIOSPwaMode] = useState(isIOSPWA);
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
@@ -36,8 +46,11 @@ const Index: React.FC = () => {
     };
   }, []);
 
+  // Usar startTransition para suavizar a troca de tela no iOS
   const handleGetStarted = () => {
-    setShowAuth(true);
+    startTransition(() => {
+      setShowAuth(true);
+    });
   };
 
   const handleLearnMore = () => {
@@ -72,8 +85,8 @@ const Index: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Fixed Header */}
-      <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-black/80 border-b border-gray-800/50">
+      {/* Fixed Header - sem backdrop-blur no iOS PWA para evitar travamento */}
+      <header className={`fixed top-0 w-full z-50 border-b border-gray-800/50 ${isIOSPwaMode ? 'bg-black/95' : 'backdrop-blur-xl bg-black/80'}`}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img 

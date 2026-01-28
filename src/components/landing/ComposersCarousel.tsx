@@ -1,8 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import useEmblaCarousel from 'embla-carousel-react';
 import AutoScroll from 'embla-carousel-auto-scroll';
+
+// Detectar se é iOS PWA (standalone mode) - desativar AutoScroll para evitar travamento
+const isIOSPWA = () => {
+  if (typeof window === 'undefined') return false;
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const isStandalone = (window.navigator as any).standalone === true;
+  return isIOS && isStandalone;
+};
+
 interface Composer {
   id: string;
   name: string;
@@ -11,15 +20,24 @@ interface Composer {
 }
 export const ComposersCarousel: React.FC = () => {
   const [composers, setComposers] = useState<Composer[]>([]);
+  
+  // No iOS PWA, desativar AutoScroll para evitar travamento na transição
+  const plugins = useMemo(() => {
+    if (isIOSPWA()) {
+      return []; // Sem AutoScroll no iOS PWA
+    }
+    return [AutoScroll({
+      playOnInit: true,
+      speed: 0.5,
+      stopOnInteraction: false
+    })];
+  }, []);
+  
   const [emblaRef] = useEmblaCarousel({
     loop: true,
     dragFree: true,
     align: 'start'
-  }, [AutoScroll({
-    playOnInit: true,
-    speed: 0.5,
-    stopOnInteraction: false
-  })]);
+  }, plugins);
   useEffect(() => {
     const fetchComposers = async () => {
       // Buscar apenas os 50 últimos perfis para performance
