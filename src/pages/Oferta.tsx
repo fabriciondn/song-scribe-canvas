@@ -6,7 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { MessageCircle, Music, Shield, Clock, CheckCircle, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { trackPageView, trackVideoPlay, trackVideoProgress, trackButtonClick } from '@/services/offerAnalyticsService';
+import { trackPageView, trackVideoPlay, trackVideoProgress, trackVideoComplete, trackButtonClick } from '@/services/offerAnalyticsService';
 
 const Oferta: React.FC = () => {
   const navigate = useNavigate();
@@ -84,6 +84,10 @@ const Oferta: React.FC = () => {
     };
   }, []);
 
+  // Duração do vídeo em segundos (aproximadamente 3 minutos)
+  const videoDuration = 180;
+  const hasTrackedComplete = useRef(false);
+
   // Start tracking video progress when component mounts (video autoplays)
   useEffect(() => {
     // Video starts automatically, so we track play after a short delay
@@ -95,7 +99,14 @@ const Oferta: React.FC = () => {
         // Start tracking progress every 30 seconds
         videoProgressInterval.current = setInterval(() => {
           watchTimeRef.current += 30;
-          trackVideoProgress(watchTimeRef.current, Math.min((watchTimeRef.current / 180) * 100, 100));
+          const percentComplete = Math.min((watchTimeRef.current / videoDuration) * 100, 100);
+          trackVideoProgress(watchTimeRef.current, percentComplete);
+          
+          // Registrar conclusão quando atingir 90% ou mais
+          if (percentComplete >= 90 && !hasTrackedComplete.current) {
+            trackVideoComplete();
+            hasTrackedComplete.current = true;
+          }
         }, 30000);
       }
     }, 2000);
