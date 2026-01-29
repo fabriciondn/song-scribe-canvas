@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { getOfferPageStats } from '@/services/offerAnalyticsService';
-import { Eye, Play, Clock, CalendarIcon, Users, CheckCircle, MessageCircle, UserPlus } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Eye, Play, Clock, CalendarIcon, Users, CheckCircle, MessageCircle, UserPlus, Code, Save } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from '@/hooks/use-toast';
 
 const COLORS = ['#22c55e', '#8b5cf6', '#f59e0b', '#ef4444'];
 
@@ -27,9 +31,62 @@ interface OfferStats {
 }
 
 export const AdminOfferAnalytics: React.FC = () => {
+  const queryClient = useQueryClient();
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
     start: subDays(new Date(), 30),
     end: new Date()
+  });
+  const [metaPixelCode, setMetaPixelCode] = useState('');
+
+  // Fetch Meta Pixel code
+  const { data: pixelSettings, isLoading: pixelLoading } = useQuery({
+    queryKey: ['offer-page-settings', 'meta_pixel_code'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('offer_page_settings')
+        .select('setting_value')
+        .eq('setting_key', 'meta_pixel_code')
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data?.setting_value || '';
+    },
+  });
+
+  // Update local state when data loads
+  React.useEffect(() => {
+    if (pixelSettings !== undefined) {
+      setMetaPixelCode(pixelSettings);
+    }
+  }, [pixelSettings]);
+
+  // Save Meta Pixel mutation
+  const savePixelMutation = useMutation({
+    mutationFn: async (code: string) => {
+      const { error } = await supabase
+        .from('offer_page_settings')
+        .upsert({
+          setting_key: 'meta_pixel_code',
+          setting_value: code,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'setting_key' });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['offer-page-settings'] });
+      toast({
+        title: 'Meta Pixel salvo!',
+        description: 'O código do pixel foi atualizado com sucesso.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erro ao salvar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
   });
 
   const { data: rawStats, isLoading, refetch } = useQuery({
@@ -350,6 +407,51 @@ export const AdminOfferAnalytics: React.FC = () => {
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Meta Pixel Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Code className="h-5 w-5" />
+            Meta Pixel (Facebook)
+          </CardTitle>
+          <CardDescription>
+            Cole o código completo do Meta Pixel aqui. Ele será inserido automaticamente no head da página /oferta para rastrear eventos no Facebook Ads.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="meta-pixel">Código do Pixel</Label>
+            <Textarea
+              id="meta-pixel"
+              placeholder={`<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+...
+</script>
+<!-- End Meta Pixel Code -->`}
+              value={metaPixelCode}
+              onChange={(e) => setMetaPixelCode(e.target.value)}
+              className="font-mono text-xs min-h-[200px]"
+              disabled={pixelLoading}
+            />
+            <p className="text-xs text-muted-foreground">
+              Obtenha o código do pixel no <a href="https://business.facebook.com/events_manager" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Gerenciador de Eventos do Facebook</a>
+            </p>
+          </div>
+          
+          <Button
+            onClick={() => savePixelMutation.mutate(metaPixelCode)}
+            disabled={savePixelMutation.isPending}
+            className="w-full sm:w-auto"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {savePixelMutation.isPending ? 'Salvando...' : 'Salvar Pixel'}
+          </Button>
         </CardContent>
       </Card>
     </div>
