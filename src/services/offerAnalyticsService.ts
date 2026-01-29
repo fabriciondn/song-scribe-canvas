@@ -15,22 +15,28 @@ export const trackOfferEvent = async (
   eventType: 'page_view' | 'video_play' | 'video_progress' | 'video_complete' | 'button_click',
   eventData: Record<string, any> = {}
 ) => {
+  const sessionId = getSessionId();
+  console.log('[Analytics] Enviando evento:', eventType, 'Session:', sessionId);
+  
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('offer_page_analytics')
       .insert({
         event_type: eventType,
         event_data: eventData,
-        session_id: getSessionId(),
+        session_id: sessionId,
         user_agent: navigator.userAgent,
         referrer: document.referrer || null
-      });
+      })
+      .select();
 
     if (error) {
-      console.error('Erro ao registrar evento:', error);
+      console.error('[Analytics] Erro ao registrar evento:', error.message, error.details, error.hint);
+    } else {
+      console.log('[Analytics] Evento registrado com sucesso:', eventType, data);
     }
   } catch (error) {
-    console.error('Erro ao registrar evento de analytics:', error);
+    console.error('[Analytics] Exceção ao registrar evento:', error);
   }
 };
 
