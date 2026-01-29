@@ -1321,6 +1321,36 @@ export type Database = {
           },
         ]
       }
+      offer_page_analytics: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          referrer: string | null
+          session_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          referrer?: string | null
+          session_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          referrer?: string | null
+          session_id?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       partnership_audio_recordings: {
         Row: {
           created_at: string
@@ -2428,6 +2458,10 @@ export type Database = {
       }
       get_function_status: { Args: { p_function_key: string }; Returns: string }
       get_moderator_dashboard_stats: { Args: never; Returns: Json }
+      get_offer_page_stats: {
+        Args: { p_end_date?: string; p_start_date?: string }
+        Returns: Json
+      }
       get_online_users: {
         Args: never
         Returns: {

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,9 +6,13 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { MessageCircle, Music, Shield, Clock, CheckCircle, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { trackPageView, trackVideoPlay, trackVideoProgress, trackButtonClick } from '@/services/offerAnalyticsService';
 
 const Oferta: React.FC = () => {
   const navigate = useNavigate();
+  const videoProgressInterval = useRef<NodeJS.Timeout | null>(null);
+  const watchTimeRef = useRef(0);
+  const hasTrackedPlay = useRef(false);
 
   // Force dark theme and enable scroll
   useEffect(() => {
@@ -16,13 +20,45 @@ const Oferta: React.FC = () => {
     document.documentElement.style.overflowY = 'auto';
     document.body.style.overflowY = 'auto';
     
+    // Track page view
+    trackPageView();
+    
     return () => {
       document.documentElement.style.overflowY = '';
       document.body.style.overflowY = '';
+      
+      // Clear interval on unmount
+      if (videoProgressInterval.current) {
+        clearInterval(videoProgressInterval.current);
+      }
     };
   }, []);
 
-  // Fetch composers for testimonials (reusing from ComposersCarousel logic)
+  // Start tracking video progress when component mounts (video autoplays)
+  useEffect(() => {
+    // Video starts automatically, so we track play after a short delay
+    const playTimer = setTimeout(() => {
+      if (!hasTrackedPlay.current) {
+        trackVideoPlay();
+        hasTrackedPlay.current = true;
+        
+        // Start tracking progress every 30 seconds
+        videoProgressInterval.current = setInterval(() => {
+          watchTimeRef.current += 30;
+          trackVideoProgress(watchTimeRef.current, Math.min((watchTimeRef.current / 180) * 100, 100));
+        }, 30000);
+      }
+    }, 2000);
+
+    return () => {
+      clearTimeout(playTimer);
+      if (videoProgressInterval.current) {
+        clearInterval(videoProgressInterval.current);
+      }
+    };
+  }, []);
+
+  // Fetch composers for testimonials
   const { data: composers } = useQuery({
     queryKey: ['composers-testimonials'],
     queryFn: async () => {
@@ -40,14 +76,15 @@ const Oferta: React.FC = () => {
   });
 
   const handleRegisterClick = () => {
+    trackButtonClick('register');
     navigate('/?action=register');
   };
 
   const handleWhatsAppClick = () => {
+    trackButtonClick('whatsapp');
     window.open('https://wa.me/5519995081355?text=Ol%C3%A1%2C%20vim%20pela%20oferta%20de%20R%2419%2C99%20e%20quero%20registrar%20minha%20m%C3%BAsica!', '_blank');
   };
 
-  // Testimonials with fixed quotes (using real profile data when available)
   const testimonialQuotes = [
     "Registrei minha primeira música em menos de 10 minutos. Incrível!",
     "O suporte pelo WhatsApp é muito rápido, me ajudaram em tudo.",

@@ -12,6 +12,7 @@ import { AdminTutorials } from '@/components/admin/AdminTutorials';
 import { AdminBanners } from '@/components/admin/AdminBanners';
 import { AdminCertificates } from '@/components/admin/AdminCertificates';
 import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
+import { AdminOfferAnalytics } from '@/components/admin/AdminOfferAnalytics';
 import { AdminSettings } from '@/components/admin/AdminSettings';
 import { AdminLogs } from '@/components/admin/AdminLogs';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
@@ -130,6 +131,8 @@ const AdminDashboard: React.FC = () => {
         return <AdminForms />;
       case 'analytics':
         return <AdminAnalytics />;
+      case 'offer-analytics':
+        return <AdminOfferAnalytics />;
       case 'logs':
         return <AdminLogs />;
       case 'menu-functions':
