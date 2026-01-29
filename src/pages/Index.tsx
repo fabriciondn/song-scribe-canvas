@@ -23,11 +23,15 @@ const Index: React.FC = () => {
   const navigate = useNavigate();
   const [isPending, startTransition] = useTransition();
   
-  // Verificar se veio de link de afiliado
+  // Verificar se veio de link de afiliado ou ação de registro
   const urlParams = new URLSearchParams(window.location.search);
   const hasAffiliateRef = urlParams.has('ref');
+  const hasRegisterAction = urlParams.get('action') === 'register';
   
-  const [showAuth, setShowAuth] = useState(hasAffiliateRef);
+  const [showAuth, setShowAuth] = useState(hasAffiliateRef || hasRegisterAction);
+  const [defaultAuthMode] = useState<'login' | 'register'>(
+    hasRegisterAction || hasAffiliateRef ? 'register' : 'login'
+  );
   const [isIOSPwaMode] = useState(isIOSPWA);
 
   useEffect(() => {
@@ -88,7 +92,7 @@ const Index: React.FC = () => {
               ← Voltar para o site
             </Button>
           </div>
-          <AuthForm defaultMode={hasAffiliateRef ? 'register' : 'login'} />
+          <AuthForm defaultMode={defaultAuthMode} />
         </div>
       </div>
     );
