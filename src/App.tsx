@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom
 import { AuthProvider, LoginMessageProvider } from "./context/AuthContext";
 import { ImpersonationProvider } from "./context/ImpersonationContext";
 import { useImpersonationSync } from "./hooks/useImpersonationSync";
+import { useVisitorPresence } from "./hooks/useVisitorPresence";
 import { NotificationProvider } from "@/components/ui/notification";
 import { ImpersonationBanner } from "@/components/ui/impersonation-banner";
 import { RoleRedirect } from "@/components/layout/RoleRedirect";
@@ -65,6 +66,7 @@ const queryClient = new QueryClient({
 
 const AppContent = () => {
   useImpersonationSync();
+  useVisitorPresence(); // Track visitor presence in real-time
   const [showSplash, setShowSplash] = useState(true);
   const { isMobile } = useMobileDetection();
 
