@@ -30,6 +30,11 @@ const adminMenuItems = [
     id: "overview",
   },
   {
+    title: "Visitantes Online",
+    icon: Users,
+    id: "online-visitors",
+  },
+  {
     title: "Usuários",
     icon: Users,
     id: "users",
