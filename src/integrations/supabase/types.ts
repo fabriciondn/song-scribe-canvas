@@ -2483,7 +2483,7 @@ export type Database = {
       get_function_status: { Args: { p_function_key: string }; Returns: string }
       get_moderator_dashboard_stats: { Args: never; Returns: Json }
       get_offer_page_stats: {
-        Args: { p_end_date?: string; p_start_date?: string }
+        Args: { p_end_date: string; p_start_date: string }
         Returns: Json
       }
       get_online_users: {
