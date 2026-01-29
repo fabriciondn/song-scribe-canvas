@@ -141,13 +141,18 @@ const Oferta: React.FC = () => {
     }
   });
 
-  const handleRegisterClick = () => {
-    trackButtonClick('register');
+  const handleRegisterClick = async () => {
+    console.log('[Oferta] Clique no botão REGISTRAR');
+    // Track primeiro, depois navega
+    await trackButtonClick('register');
     navigate('/?action=register');
   };
 
-  const handleWhatsAppClick = () => {
-    trackButtonClick('whatsapp');
+  const handleWhatsAppClick = async () => {
+    console.log('[Oferta] Clique no botão WHATSAPP');
+    // Track primeiro com await para garantir registro
+    await trackButtonClick('whatsapp');
+    // Depois abre o WhatsApp
     window.open('https://wa.me/5519995081355?text=Ol%C3%A1%2C%20vim%20pela%20oferta%20de%20R%2419%2C99%20e%20quero%20registrar%20minha%20m%C3%BAsica!', '_blank');
   };
 
