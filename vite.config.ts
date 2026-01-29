@@ -67,6 +67,8 @@ export default defineConfig(({ mode }) => ({
     chunkSizeWarningLimit: 1000
   },
   resolve: {
+    // Avoid duplicate React instances (common cause of "Cannot read properties of null (reading 'useEffect')")
+    dedupe: ["react", "react-dom"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
