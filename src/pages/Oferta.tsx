@@ -107,7 +107,7 @@ const Oferta: React.FC = () => {
           {/* Video */}
           <div className="relative w-full max-w-3xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-primary/30 mb-8">
             <iframe
-              src="https://player.vimeo.com/video/1159784001?badge=0&autopause=0&player_id=0&app_id=58479"
+              src="https://player.vimeo.com/video/1159784001?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&muted=1&loop=1"
               className="w-full h-full"
               frameBorder="0"
               allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
