@@ -97,12 +97,16 @@ const Oferta: React.FC = () => {
         {/* Hero Section */}
         <section className="max-w-4xl mx-auto px-6 py-12 text-center">
           {/* Headline */}
-          <h1 className="text-3xl md:text-5xl font-bold mb-8 leading-tight">
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
             <span className="text-white">Sua música protegida por apenas</span>{' '}
             <span className="bg-gradient-to-r from-primary to-green-300 bg-clip-text text-transparent">
               R$19,99
             </span>
           </h1>
+          
+          <p className="text-sm text-gray-400 mb-6 flex items-center justify-center gap-2">
+            🔊 Ative o som e aumente o volume para uma melhor experiência
+          </p>
 
           {/* Video */}
           <div className="relative w-full max-w-3xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-primary/30 mb-8">
