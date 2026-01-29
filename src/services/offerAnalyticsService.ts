@@ -63,12 +63,29 @@ export const trackButtonClick = (buttonName: 'whatsapp' | 'register') =>
 // Buscar estatísticas (para admin)
 export const getOfferPageStats = async (startDate?: Date, endDate?: Date) => {
   try {
+    // Garantir que startDate começa no início do dia
+    const start = startDate 
+      ? new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    
+    // Garantir que endDate vai até o final do dia (23:59:59.999)
+    const end = endDate 
+      ? new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999)
+      : new Date();
+    
+    console.log('[Analytics] Buscando stats de', start.toISOString(), 'até', end.toISOString());
+    
     const { data, error } = await supabase.rpc('get_offer_page_stats', {
-      p_start_date: startDate?.toISOString() || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      p_end_date: endDate?.toISOString() || new Date().toISOString()
+      p_start_date: start.toISOString(),
+      p_end_date: end.toISOString()
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error('[Analytics] Erro na RPC:', error);
+      throw error;
+    }
+    
+    console.log('[Analytics] Stats recebidas:', data);
     return data;
   } catch (error) {
     console.error('Erro ao buscar estatísticas:', error);
