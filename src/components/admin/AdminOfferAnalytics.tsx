@@ -37,47 +37,57 @@ export const AdminOfferAnalytics: React.FC = () => {
     end: new Date()
   });
   const [metaPixelCode, setMetaPixelCode] = useState('');
+  const [metaPixelId, setMetaPixelId] = useState('');
+  const [metaAccessToken, setMetaAccessToken] = useState('');
 
-  // Fetch Meta Pixel code
-  const { data: pixelSettings, isLoading: pixelLoading } = useQuery({
-    queryKey: ['offer-page-settings', 'meta_pixel_code'],
+  // Fetch all Meta settings
+  const { data: allSettings, isLoading: settingsLoading } = useQuery({
+    queryKey: ['offer-page-settings'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('offer_page_settings')
-        .select('setting_value')
-        .eq('setting_key', 'meta_pixel_code')
-        .single();
+        .select('setting_key, setting_value')
+        .in('setting_key', ['meta_pixel_code', 'meta_pixel_id', 'meta_access_token']);
       
-      if (error && error.code !== 'PGRST116') throw error;
-      return data?.setting_value || '';
+      if (error) throw error;
+      
+      const settings: Record<string, string> = {};
+      data?.forEach(item => {
+        settings[item.setting_key] = item.setting_value || '';
+      });
+      return settings;
     },
   });
 
   // Update local state when data loads
   React.useEffect(() => {
-    if (pixelSettings !== undefined) {
-      setMetaPixelCode(pixelSettings);
+    if (allSettings) {
+      setMetaPixelCode(allSettings.meta_pixel_code || '');
+      setMetaPixelId(allSettings.meta_pixel_id || '');
+      setMetaAccessToken(allSettings.meta_access_token || '');
     }
-  }, [pixelSettings]);
+  }, [allSettings]);
 
-  // Save Meta Pixel mutation
-  const savePixelMutation = useMutation({
-    mutationFn: async (code: string) => {
-      const { error } = await supabase
-        .from('offer_page_settings')
-        .upsert({
-          setting_key: 'meta_pixel_code',
-          setting_value: code,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'setting_key' });
-      
-      if (error) throw error;
+  // Save Meta settings mutation
+  const saveMetaSettingsMutation = useMutation({
+    mutationFn: async (settings: { key: string; value: string }[]) => {
+      for (const setting of settings) {
+        const { error } = await supabase
+          .from('offer_page_settings')
+          .upsert({
+            setting_key: setting.key,
+            setting_value: setting.value,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'setting_key' });
+        
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['offer-page-settings'] });
       toast({
-        title: 'Meta Pixel salvo!',
-        description: 'O código do pixel foi atualizado com sucesso.',
+        title: 'Configurações salvas!',
+        description: 'As configurações do Meta foram atualizadas com sucesso.',
       });
     },
     onError: (error) => {
@@ -88,6 +98,14 @@ export const AdminOfferAnalytics: React.FC = () => {
       });
     },
   });
+
+  const handleSaveMetaSettings = () => {
+    saveMetaSettingsMutation.mutate([
+      { key: 'meta_pixel_code', value: metaPixelCode },
+      { key: 'meta_pixel_id', value: metaPixelId },
+      { key: 'meta_access_token', value: metaAccessToken },
+    ]);
+  };
 
   const { data: rawStats, isLoading, refetch } = useQuery({
     queryKey: ['offer-analytics', dateRange.start, dateRange.end],
@@ -418,12 +436,13 @@ export const AdminOfferAnalytics: React.FC = () => {
             Meta Pixel (Facebook)
           </CardTitle>
           <CardDescription>
-            Cole o código completo do Meta Pixel aqui. Ele será inserido automaticamente no head da página /oferta para rastrear eventos no Facebook Ads.
+            Configure o Meta Pixel e a API de Conversões para rastrear eventos no Facebook Ads.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
+          {/* Código do Pixel (Client-side) */}
           <div className="space-y-2">
-            <Label htmlFor="meta-pixel">Código do Pixel</Label>
+            <Label htmlFor="meta-pixel">Código do Pixel (Client-side)</Label>
             <Textarea
               id="meta-pixel"
               placeholder={`<!-- Meta Pixel Code -->
@@ -436,21 +455,59 @@ n.callMethod.apply(n,arguments):n.queue.push(arguments)};
 <!-- End Meta Pixel Code -->`}
               value={metaPixelCode}
               onChange={(e) => setMetaPixelCode(e.target.value)}
-              className="font-mono text-xs min-h-[200px]"
-              disabled={pixelLoading}
+              className="font-mono text-xs min-h-[150px]"
+              disabled={settingsLoading}
             />
             <p className="text-xs text-muted-foreground">
               Obtenha o código do pixel no <a href="https://business.facebook.com/events_manager" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Gerenciador de Eventos do Facebook</a>
             </p>
           </div>
+
+          {/* Divider */}
+          <div className="border-t pt-4">
+            <h4 className="font-medium mb-4">API de Conversões (Server-side)</h4>
+            
+            {/* Pixel ID */}
+            <div className="space-y-2 mb-4">
+              <Label htmlFor="meta-pixel-id">Pixel ID</Label>
+              <input
+                id="meta-pixel-id"
+                type="text"
+                placeholder="Ex: 123456789012345"
+                value={metaPixelId}
+                onChange={(e) => setMetaPixelId(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
+                disabled={settingsLoading}
+              />
+              <p className="text-xs text-muted-foreground">
+                O ID numérico do seu pixel. Encontre no Gerenciador de Eventos.
+              </p>
+            </div>
+
+            {/* Access Token */}
+            <div className="space-y-2">
+              <Label htmlFor="meta-access-token">Token de Acesso (API de Conversões)</Label>
+              <Textarea
+                id="meta-access-token"
+                placeholder="EAANV0SYT658BO..."
+                value={metaAccessToken}
+                onChange={(e) => setMetaAccessToken(e.target.value)}
+                className="font-mono text-xs min-h-[80px]"
+                disabled={settingsLoading}
+              />
+              <p className="text-xs text-muted-foreground">
+                Gere o token em Configurações do Pixel → API de Conversões → Gerar Token de Acesso
+              </p>
+            </div>
+          </div>
           
           <Button
-            onClick={() => savePixelMutation.mutate(metaPixelCode)}
-            disabled={savePixelMutation.isPending}
+            onClick={handleSaveMetaSettings}
+            disabled={saveMetaSettingsMutation.isPending}
             className="w-full sm:w-auto"
           >
             <Save className="h-4 w-4 mr-2" />
-            {savePixelMutation.isPending ? 'Salvando...' : 'Salvar Pixel'}
+            {saveMetaSettingsMutation.isPending ? 'Salvando...' : 'Salvar Configurações'}
           </Button>
         </CardContent>
       </Card>
