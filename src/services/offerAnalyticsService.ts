@@ -1,0 +1,64 @@
+import { supabase } from '@/integrations/supabase/client';
+
+// Gerar ou recuperar session ID
+const getSessionId = (): string => {
+  let sessionId = sessionStorage.getItem('offer_session_id');
+  if (!sessionId) {
+    sessionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem('offer_session_id', sessionId);
+  }
+  return sessionId;
+};
+
+// Registrar evento de analytics
+export const trackOfferEvent = async (
+  eventType: 'page_view' | 'video_play' | 'video_progress' | 'video_complete' | 'button_click',
+  eventData: Record<string, any> = {}
+) => {
+  try {
+    const { error } = await supabase
+      .from('offer_page_analytics')
+      .insert({
+        event_type: eventType,
+        event_data: eventData,
+        session_id: getSessionId(),
+        user_agent: navigator.userAgent,
+        referrer: document.referrer || null
+      });
+
+    if (error) {
+      console.error('Erro ao registrar evento:', error);
+    }
+  } catch (error) {
+    console.error('Erro ao registrar evento de analytics:', error);
+  }
+};
+
+// Funções específicas para cada tipo de evento
+export const trackPageView = () => trackOfferEvent('page_view');
+
+export const trackVideoPlay = () => trackOfferEvent('video_play');
+
+export const trackVideoProgress = (watchTime: number, percentComplete: number) => 
+  trackOfferEvent('video_progress', { watchTime, percentComplete });
+
+export const trackVideoComplete = () => trackOfferEvent('video_complete');
+
+export const trackButtonClick = (buttonName: 'whatsapp' | 'register') => 
+  trackOfferEvent('button_click', { button: buttonName });
+
+// Buscar estatísticas (para admin)
+export const getOfferPageStats = async (startDate?: Date, endDate?: Date) => {
+  try {
+    const { data, error } = await supabase.rpc('get_offer_page_stats', {
+      p_start_date: startDate?.toISOString() || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      p_end_date: endDate?.toISOString() || new Date().toISOString()
+    });
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas:', error);
+    return null;
+  }
+};

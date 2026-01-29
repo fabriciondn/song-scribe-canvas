@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield, Users, FileText, BarChart3, Settings, ScrollText, Moon, Sun, UserCheck, DollarSign, Ticket, Music, Gift } from "lucide-react";
+import { Shield, Users, FileText, BarChart3, Settings, ScrollText, Moon, Sun, UserCheck, DollarSign, Ticket, Music, Gift, TrendingUp } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -103,6 +103,11 @@ const adminMenuItems = [
     title: "Analytics",
     icon: BarChart3,
     id: "analytics",
+  },
+  {
+    title: "Analytics Oferta",
+    icon: TrendingUp,
+    id: "offer-analytics",
   },
   {
     title: "Logs",
