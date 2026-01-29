@@ -46,6 +46,17 @@ const Index: React.FC = () => {
     };
   }, []);
 
+  // Ensure scroll works on landing page (safety net for desktop)
+  useEffect(() => {
+    document.documentElement.style.overflowY = 'auto';
+    document.body.style.overflowY = 'auto';
+    
+    return () => {
+      document.documentElement.style.overflowY = '';
+      document.body.style.overflowY = '';
+    };
+  }, []);
+
   // Usar startTransition para suavizar a troca de tela no iOS
   const handleGetStarted = () => {
     startTransition(() => {
