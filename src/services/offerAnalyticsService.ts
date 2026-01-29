@@ -1,13 +1,20 @@
 import { supabase } from '@/integrations/supabase/client';
 
-// Gerar ou recuperar session ID
+console.log('[Analytics Service] Modulo carregado - versao 2026.01.29');
+
+// Gerar ou recuperar session ID com fallback para sessionStorage bloqueado
 const getSessionId = (): string => {
-  let sessionId = sessionStorage.getItem('offer_session_id');
-  if (!sessionId) {
-    sessionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    sessionStorage.setItem('offer_session_id', sessionId);
+  try {
+    let sessionId = sessionStorage.getItem('offer_session_id');
+    if (!sessionId) {
+      sessionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      sessionStorage.setItem('offer_session_id', sessionId);
+    }
+    return sessionId;
+  } catch (e) {
+    console.warn('[Analytics] sessionStorage bloqueado, usando ID temporario');
+    return `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
-  return sessionId;
 };
 
 // Registrar evento de analytics
