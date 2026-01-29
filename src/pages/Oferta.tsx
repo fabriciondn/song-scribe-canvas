@@ -8,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { trackPageView, trackVideoPlay, trackVideoProgress, trackVideoComplete, trackButtonClick } from '@/services/offerAnalyticsService';
 
+console.log('[Oferta] Componente carregado - versao 2026.01.29');
+
 const Oferta: React.FC = () => {
   const navigate = useNavigate();
   const videoProgressInterval = useRef<NodeJS.Timeout | null>(null);
@@ -66,12 +68,15 @@ const Oferta: React.FC = () => {
 
   // Force dark theme and enable scroll
   useEffect(() => {
+    console.log('[Oferta] useEffect principal executando - iniciando tracking');
     document.documentElement.classList.add('dark');
     document.documentElement.style.overflowY = 'auto';
     document.body.style.overflowY = 'auto';
     
     // Track page view
+    console.log('[Oferta] Chamando trackPageView...');
     trackPageView();
+    console.log('[Oferta] trackPageView chamado com sucesso');
     
     return () => {
       document.documentElement.style.overflowY = '';
