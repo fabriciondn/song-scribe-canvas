@@ -13,6 +13,56 @@ const Oferta: React.FC = () => {
   const videoProgressInterval = useRef<NodeJS.Timeout | null>(null);
   const watchTimeRef = useRef(0);
   const hasTrackedPlay = useRef(false);
+  const pixelInjected = useRef(false);
+
+  // Fetch and inject Meta Pixel code
+  const { data: pixelCode } = useQuery({
+    queryKey: ['offer-page-pixel'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('offer_page_settings')
+        .select('setting_value')
+        .eq('setting_key', 'meta_pixel_code')
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data?.setting_value || '';
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  // Inject Meta Pixel into head
+  useEffect(() => {
+    if (pixelCode && !pixelInjected.current) {
+      // Create a container for the pixel code
+      const pixelContainer = document.createElement('div');
+      pixelContainer.id = 'meta-pixel-container';
+      pixelContainer.innerHTML = pixelCode;
+      
+      // Extract and execute script tags
+      const scripts = pixelContainer.querySelectorAll('script');
+      scripts.forEach((script) => {
+        const newScript = document.createElement('script');
+        if (script.src) {
+          newScript.src = script.src;
+        } else {
+          newScript.textContent = script.textContent;
+        }
+        document.head.appendChild(newScript);
+      });
+      
+      // Also add noscript tags
+      const noscripts = pixelContainer.querySelectorAll('noscript');
+      noscripts.forEach((noscript) => {
+        const newNoscript = document.createElement('noscript');
+        newNoscript.innerHTML = noscript.innerHTML;
+        document.head.appendChild(newNoscript);
+      });
+      
+      pixelInjected.current = true;
+      console.log('Meta Pixel injected successfully');
+    }
+  }, [pixelCode]);
 
   // Force dark theme and enable scroll
   useEffect(() => {
