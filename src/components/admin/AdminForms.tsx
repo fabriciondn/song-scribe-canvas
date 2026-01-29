@@ -131,7 +131,7 @@ export const AdminForms: React.FC = () => {
           email: selectedForm.email,
           password: selectedForm.password,
           role: 'user',
-          credits: 10,
+          // Não passar credits para criar com 0 por padrão
           artistic_name: selectedForm.artistic_name || undefined,
           cpf: selectedForm.cpf,
           birth_date: selectedForm.birth_date,
