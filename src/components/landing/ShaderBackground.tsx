@@ -4,7 +4,7 @@ import React from 'react';
 // Substituímos o shader WebGL pesado por gradientes CSS animados
 export const ShaderBackground: React.FC = () => {
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden">
+    <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
       {/* Base escura */}
       <div className="absolute inset-0 bg-black" />
       

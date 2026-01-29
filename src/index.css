@@ -133,8 +133,14 @@
   /* Prevent gray overscroll areas on iOS - uses theme colors */
   html, body {
     background-color: hsl(var(--background));
-    overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Overscroll behavior only for touch devices (iOS/mobile) - keeps desktop scroll normal */
+  @media (hover: none) {
+    html, body {
+      overscroll-behavior: none;
+    }
   }
 
   html {

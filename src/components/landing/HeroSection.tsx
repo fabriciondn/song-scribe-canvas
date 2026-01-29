@@ -16,7 +16,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       <ShaderBackground />
       
       {/* Overlay escuro para melhor contraste */}
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-black/40 pointer-events-none" />
       
       {/* Conteúdo principal com max-width */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
