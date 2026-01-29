@@ -52,6 +52,7 @@ import Acordes from "./pages/Acordes";
 import Sorteio from "./pages/Sorteio";
 import SorteioNumeros from "./pages/SorteioNumeros";
 import SorteioComoFunciona from "./pages/SorteioComoFunciona";
+import Oferta from "./pages/Oferta";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -87,6 +88,7 @@ const AppContent = () => {
         <PageFunctionStatusWrapper>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/oferta" element={<Oferta />} />
 
             {/* Mantém o Dashboard montado ao navegar entre funções (evita piscada do menu) */}
             <Route element={<Dashboard />}>
