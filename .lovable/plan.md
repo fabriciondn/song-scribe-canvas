@@ -1,49 +1,138 @@
 
-# Plano: Ajustar Ícones na Visão Geral Mobile Admin
+# Plano: Implementar Layout Mobile Completo para Admin Dashboard
 
-## Resumo
-O componente `MobileAdminOverview.tsx` já implementa o design enviado corretamente. A única diferença é o tipo de ícone utilizado. Como o design de referência usa **Material Symbols** e o projeto utiliza **Lucide React** como padrão, vou substituir os ícones atuais pelos equivalentes mais próximos disponíveis no Lucide.
+## Objetivo
+Substituir completamente o layout mobile do painel administrativo pelo design enviado, incluindo header próprio, navegação inferior glass-effect e conteúdo 100% fiel ao HTML/CSS fornecido.
 
-## Mapeamento de Ícones
+## Arquivos a Criar/Modificar
 
-| Design Original (Material) | Implementação Atual (Lucide) | Ação |
-|---------------------------|------------------------------|------|
-| `groups` | `Users` | Manter (equivalente) |
-| `description` | `FileText` | Manter (equivalente) |
-| `payments` | `CreditCard` | Mudar para `Banknote` ou `Wallet` (mais próximo de "pagamentos") |
+### 1. Criar `src/components/admin/MobileAdminDashboard.tsx` (NOVO)
+Layout shell completo para mobile com:
 
-## Verificação de Conformidade
+**Header (sticky top)**
+- Fundo: `bg-black/80 backdrop-blur-md border-b border-white/5`
+- Ícone escudo verde: `size-10 bg-primary rounded-lg` com ícone shield
+- Título: "Compuse" (bold) + "ADMIN CONSOLE" (verde, uppercase, tracking)
+- Notificação com badge verde
+- Avatar com borda verde
 
-| Elemento | Design | Implementação | Status |
-|----------|--------|---------------|--------|
-| Cards horizontais com scroll | `min-w-[280px]`, `overflow-x-auto`, `gap-4` | Implementado | OK |
-| Background cards | `bg-[#0A0A0A]` | Implementado | OK |
-| Bordas | `border border-white/10` | Implementado | OK |
-| Badge percentual | `text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full` | Implementado | OK |
-| Números grandes | `text-4xl font-bold` | Implementado | OK |
-| Texto descritivo | `text-white/50 text-sm font-medium` | Implementado | OK |
-| Grid 2x2 planos | `grid grid-cols-2 gap-4` | Implementado | OK |
-| Indicador dot com glow | `shadow-[0_0_8px_rgba(34,197,94,0.6)]` | Implementado | OK |
-| Seção origem usuários | Barras de progresso com cores diferenciadas | Implementado | OK |
-| Hide scrollbar | `.hide-scrollbar` CSS | Implementado | OK |
+**Navegação Inferior (fixed bottom)**
+- Classe: `glass-nav` (rgba(10,10,10,0.85) + blur 20px)
+- 4 botões: Formulários, Registros, Usuários, Menu
+- Ícones Material Symbols (simulados com Lucide)
+- Linha indicadora na parte inferior
 
-## Alterações
+**Roteamento interno**
+- Estado para controlar a aba ativa
+- Renderização condicional do conteúdo
 
-### Arquivo: `src/components/admin/MobileAdminOverview.tsx`
-- **Nenhuma alteração necessária** - o componente já está 100% fiel ao design enviado
+### 2. Atualizar `src/components/admin/MobileAdminOverview.tsx`
+Remover qualquer estrutura de layout e manter apenas o conteúdo:
 
-## Conclusão
+**Cards Horizontais**
+- `min-w-[280px]`, scroll horizontal com `hide-scrollbar`
+- 3 cards: Compositores, Obras, Faturado
+- Ícones, badges percentuais, números grandes
 
-O componente **já está implementado exatamente conforme o design de referência**. Os ícones utilizados (Lucide) são os equivalentes apropriados aos Material Symbols do design original, mantendo a consistência visual do projeto.
+**Grid Status dos Planos**
+- 2x2 grid
+- Indicadores coloridos com glow
+- Clicáveis para abrir modais
 
-A implementação inclui:
-- Cards horizontais com scroll oculto
-- Background escuro `#0A0A0A`
-- Bordas sutis `white/10`
-- Badges com percentuais
-- Grid 2x2 para status dos planos
-- Indicadores coloridos com glow effect
-- Seção de origem com barras de progresso
+**Seção Origem dos Usuários**
+- Progress bars
+- Percentuais calculados
+
+### 3. Atualizar `src/pages/AdminDashboard.tsx`
+Adicionar detecção mobile e renderizar `MobileAdminDashboard` quando em celular:
+
+```typescript
+const isMobile = useIsMobile();
+
+if (isMobile) {
+  return <MobileAdminDashboard />;
+}
+
+// ... layout desktop existente
+```
+
+## Design Exato (do HTML fornecido)
+
+### Header
+```html
+<header class="sticky top-0 z-50 flex items-center justify-between px-6 py-5 bg-black/80 backdrop-blur-md border-b border-white/5">
+  <div class="flex items-center gap-3">
+    <div class="size-10 bg-primary rounded-lg flex items-center justify-center">
+      <span class="material-symbols-outlined text-black font-bold">shield_person</span>
+    </div>
+    <div>
+      <h1 class="text-lg font-bold leading-none">Compuse</h1>
+      <p class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Admin Console</p>
+    </div>
+  </div>
+  <!-- Notificação + Avatar -->
+</header>
+```
+
+### Navegação Inferior
+```html
+<nav class="fixed bottom-0 left-0 right-0 glass-nav h-20 px-4 flex items-center justify-around pb-6">
+  <button class="flex flex-col items-center gap-1.5 text-primary">
+    <span>description</span>
+    <span class="text-[10px] font-bold">Formulários</span>
+  </button>
+  <!-- Registros, Usuários, Menu -->
+</nav>
+<div class="fixed bottom-1 left-1/2 -translate-x-1/2 w-36 h-1 bg-white/20 rounded-full z-[60]"></div>
+```
+
+### Estilos Glass-Nav
+```css
+.glass-nav {
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+```
+
+## Fluxo de Navegação Mobile
+
+| Botão | Componente Renderizado |
+|-------|------------------------|
+| Formulários (default) | `AdminForms` ou Overview |
+| Registros | `AdminRegistrations` |
+| Usuários | `AdminUsers` |
+| Menu | Sheet lateral com todas opções |
+
+## Detalhes Técnicos
+
+### Ícones (Lucide equivalentes)
+- `description` → `FileText`
+- `inventory` → `Package`
+- `person` → `User`
+- `menu` → `Menu`
+- `groups` → `Users`
+- `payments` → `Wallet`
+- `notifications` → `Bell`
+- `shield_person` → `ShieldCheck`
+
+### Cores Exatas
+- Background: `#000000`
+- Cards: `#0A0A0A`
+- Primary: `#22C55E`
+- Bordas: `rgba(255, 255, 255, 0.1)`
+
+### Safe Areas
+- Top: `calc(env(safe-area-inset-top, 0px) + 20px)`
+- Bottom: `calc(env(safe-area-inset-bottom, 0px) + 24px)`
+
+## Resultado Esperado
+
+Um painel admin mobile que funciona como app nativo com:
+- Header fixo com branding
+- Conteúdo scrollável
+- Navegação inferior fixa com blur glass
+- Linha indicadora de home
+- Transições suaves entre abas
 - Modais funcionais para detalhes
-
-**Não são necessárias alterações adicionais.**
