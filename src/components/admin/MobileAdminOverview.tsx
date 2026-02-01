@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getAdminDashboardStats, getRevenueTransactions, getUsersByPlan } from '@/services/adminService';
 import { RevenueDetailsModal } from './RevenueDetailsModal';
 import { UsersByPlanModal } from './UsersByPlanModal';
-import { Users, FileText, CreditCard } from 'lucide-react';
+import { Users, FileText, Wallet } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const MobileAdminOverview: React.FC = () => {
@@ -71,7 +71,7 @@ export const MobileAdminOverview: React.FC = () => {
 
   return (
     <>
-      <div className="px-4 mt-6 space-y-8">
+      <main className="px-4 mt-6 space-y-8 pb-28">
         {/* Stats Cards - Horizontal Scroll */}
         <section>
           <div className="flex overflow-x-auto gap-4 py-2 hide-scrollbar">
@@ -106,7 +106,7 @@ export const MobileAdminOverview: React.FC = () => {
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="p-2 bg-primary/10 rounded-lg">
-                  <CreditCard className="w-6 h-6 text-primary" />
+                  <Wallet className="w-6 h-6 text-primary" />
                 </div>
                 <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">Meta 85%</span>
               </div>
@@ -245,7 +245,7 @@ export const MobileAdminOverview: React.FC = () => {
             </div>
           </div>
         </section>
-      </div>
+      </main>
 
       <RevenueDetailsModal
         open={showRevenueModal}
