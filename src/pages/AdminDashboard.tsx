@@ -25,6 +25,7 @@ import { AdminGamification } from '@/components/admin/AdminGamification';
 import { AdminRaffle } from '@/components/admin/AdminRaffle';
 import { OnlineVisitorsPanel } from '@/components/admin/OnlineVisitorsPanel';
 import { AdminRegistrations } from '@/components/admin/AdminRegistrations';
+import { MobileAdminDashboard } from '@/components/admin/MobileAdminDashboard';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -35,10 +36,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Shield, Users, BarChart3, AlertTriangle, CheckCircle, Clock, Activity } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
   const { isAdmin, isLoading } = useUserRole();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('overview');
   const [systemHealth, setSystemHealth] = useState({
     status: 'healthy',
@@ -77,6 +80,11 @@ const AdminDashboard: React.FC = () => {
   if (!isAdmin) {
     console.log('❌ AdminDashboard: Usuário não é admin, redirecionando...');
     return <Navigate to="/dashboard" replace />;
+  }
+
+  // Renderizar layout mobile
+  if (isMobile) {
+    return <MobileAdminDashboard />;
   }
 
   const getStatusIcon = (status: string) => {
