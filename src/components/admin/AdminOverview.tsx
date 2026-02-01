@@ -5,6 +5,8 @@ import { getAdminDashboardStats, getRevenueTransactions, getUsersByPlan } from '
 import { RevenueDetailsModal } from './RevenueDetailsModal';
 import { UsersByPlanModal } from './UsersByPlanModal';
 import { UserOriginReport } from './UserOriginReport';
+import { MobileAdminOverview } from './MobileAdminOverview';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Users, 
   Shield,
@@ -16,6 +18,7 @@ import {
 } from 'lucide-react';
 
 export const AdminOverview: React.FC = () => {
+  const isMobile = useIsMobile();
   const [showRevenueModal, setShowRevenueModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'pro' | 'trial' | 'free' | 'inactive' | null>(null);
   
@@ -45,6 +48,11 @@ export const AdminOverview: React.FC = () => {
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  // Mobile version
+  if (isMobile) {
+    return <MobileAdminOverview />;
   }
 
   return (
