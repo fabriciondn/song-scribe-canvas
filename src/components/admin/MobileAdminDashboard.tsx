@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { useProfile } from '@/hooks/useProfile';
 import { Link } from 'react-router-dom';
 import { MobileAdminOverview } from './MobileAdminOverview';
+import { MobileAdminForms } from './MobileAdminForms';
 import { AdminForms } from './AdminForms';
 import { AdminRegistrations } from './AdminRegistrations';
 import { AdminUsers } from './AdminUsers';
@@ -55,14 +56,20 @@ const menuItems = [
 export const MobileAdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showFullscreenForms, setShowFullscreenForms] = useState(false);
   const { profile } = useProfile();
+
+  // Se estiver na tela fullscreen de formulários
+  if (showFullscreenForms) {
+    return <MobileAdminForms onBack={() => setShowFullscreenForms(false)} />;
+  }
 
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
         return <MobileAdminOverview />;
       case 'forms':
-        return <AdminForms />;
+        return <MobileAdminForms onBack={() => setActiveTab('overview')} />;
       case 'registrations':
         return <AdminRegistrations />;
       case 'users':
