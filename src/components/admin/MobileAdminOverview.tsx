@@ -30,7 +30,6 @@ export const MobileAdminOverview: React.FC = () => {
     enabled: !!selectedPlan,
   });
 
-  // Dados de origem dos usuários
   const { data: originData } = useQuery({
     queryKey: ['admin-user-origin-data'],
     queryFn: async () => {
@@ -71,12 +70,19 @@ export const MobileAdminOverview: React.FC = () => {
 
   return (
     <>
-      <main className="px-4 mt-6 space-y-8 pb-28">
+      <div className="px-4 py-6 space-y-8">
         {/* Stats Cards - Horizontal Scroll */}
         <section>
-          <div className="flex overflow-x-auto gap-4 py-2 hide-scrollbar">
+          <div 
+            className="flex gap-4 py-2 overflow-x-auto"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
             {/* Total Compositores */}
-            <div className="min-w-[280px] bg-[#0A0A0A] rounded-xl p-6 border border-white/10 relative overflow-hidden">
+            <div className="min-w-[280px] flex-shrink-0 bg-[#0A0A0A] rounded-xl p-6 border border-white/10">
               <div className="flex justify-between items-start mb-4">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <Users className="w-6 h-6 text-primary" />
@@ -88,7 +94,7 @@ export const MobileAdminOverview: React.FC = () => {
             </div>
 
             {/* Obras Protegidas */}
-            <div className="min-w-[280px] bg-[#0A0A0A] rounded-xl p-6 border border-white/10 relative overflow-hidden">
+            <div className="min-w-[280px] flex-shrink-0 bg-[#0A0A0A] rounded-xl p-6 border border-white/10">
               <div className="flex justify-between items-start mb-4">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <FileText className="w-6 h-6 text-primary" />
@@ -101,7 +107,7 @@ export const MobileAdminOverview: React.FC = () => {
 
             {/* Total Faturado */}
             <div 
-              className="min-w-[280px] bg-[#0A0A0A] rounded-xl p-6 border border-white/10 relative overflow-hidden cursor-pointer active:opacity-80"
+              className="min-w-[280px] flex-shrink-0 bg-[#0A0A0A] rounded-xl p-6 border border-white/10 cursor-pointer active:opacity-80"
               onClick={() => setShowRevenueModal(true)}
             >
               <div className="flex justify-between items-start mb-4">
@@ -245,7 +251,7 @@ export const MobileAdminOverview: React.FC = () => {
             </div>
           </div>
         </section>
-      </main>
+      </div>
 
       <RevenueDetailsModal
         open={showRevenueModal}
@@ -265,12 +271,8 @@ export const MobileAdminOverview: React.FC = () => {
       )}
 
       <style>{`
-        .hide-scrollbar::-webkit-scrollbar {
+        div::-webkit-scrollbar {
           display: none;
-        }
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
         }
       `}</style>
     </>
