@@ -40,7 +40,7 @@ const setCachedAdminRole = (userId: string, role: string | null) => {
 };
 
 export const useUserRole = (): UserRole => {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   
   const impersonationContext = useContext(ImpersonationContext);
   const isImpersonating = impersonationContext?.isImpersonating || false;
@@ -64,6 +64,7 @@ export const useUserRole = (): UserRole => {
     if (!currentUserId) {
       setAdminRole(null);
       setAdminLoading(false);
+      lastFetchedUserId.current = null;
       return;
     }
 
@@ -77,6 +78,10 @@ export const useUserRole = (): UserRole => {
     if (cached !== null) {
       setAdminRole(cached === 'null' ? null : cached);
       setAdminLoading(false);
+    } else {
+      // Sem cache: manter loading enquanto busca para evitar redirects prematuros
+      setAdminRole(null);
+      setAdminLoading(true);
     }
 
     const fetchAdminRole = async () => {
@@ -95,6 +100,7 @@ export const useUserRole = (): UserRole => {
           setAdminRole(null);
           setCachedAdminRole(currentUserId, 'null');
         }
+
         lastFetchedUserId.current = currentUserId;
       } catch (error) {
         console.error('❌ useUserRole: Erro ao buscar role administrativo:', error);
@@ -108,6 +114,18 @@ export const useUserRole = (): UserRole => {
   }, [currentUserId]);
 
   const finalRole = useMemo((): UserRole => {
+    // Enquanto o auth ainda está inicializando, evitar decisões de permissão/redirecionamento
+    if (authLoading) {
+      return {
+        isPro: false,
+        isAdmin: false,
+        isModerator: false,
+        isAffiliate: false,
+        isLoading: true,
+        role: 'user'
+      };
+    }
+
     if (!currentUserId) {
       return {
         isPro: false,
@@ -138,7 +156,7 @@ export const useUserRole = (): UserRole => {
 
     let role: 'admin' | 'moderator' | 'affiliate' | 'user' = 'user';
     if (isAdmin) role = 'admin';
-    else if (isModerator) role = 'moderator'; 
+    else if (isModerator) role = 'moderator';
     else if (isAffiliate) role = 'affiliate';
 
     return {
@@ -149,7 +167,7 @@ export const useUserRole = (): UserRole => {
       isLoading: false,
       role
     };
-  }, [currentUserId, adminRole, adminLoading, subscriptionIsPro, subscriptionLoading, isAffiliate, affiliateLoading]);
+  }, [authLoading, currentUserId, adminRole, adminLoading, subscriptionIsPro, subscriptionLoading, isAffiliate, affiliateLoading]);
 
   return finalRole;
 };
