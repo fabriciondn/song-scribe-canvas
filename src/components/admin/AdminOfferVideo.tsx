@@ -62,6 +62,29 @@ export const AdminOfferVideo: React.FC = () => {
       return;
     }
 
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+
+    // Validate allowed formats (must match bucket allowed_mime_types)
+    const allowedMimeTypes = [
+      'video/mp4',
+      'video/webm',
+      'video/quicktime', // .mov
+      'video/x-msvideo', // .avi
+      'video/x-m4v',
+    ];
+    const allowedExtensions = ['mp4', 'webm', 'mov', 'avi', 'm4v'];
+
+    // Some browsers may provide an empty mime type; validate by extension as a fallback.
+    if (file.type && !allowedMimeTypes.includes(file.type)) {
+      toast.error(`Formato não permitido (${file.type}). Use MP4, WebM, MOV, AVI ou M4V.`);
+      return;
+    }
+
+    if (!file.type && fileExt && !allowedExtensions.includes(fileExt)) {
+      toast.error(`Extensão não permitida (.${fileExt}). Use MP4, WebM, MOV, AVI ou M4V.`);
+      return;
+    }
+
     // Validate file size (max 100MB)
     const maxSize = 100 * 1024 * 1024;
     if (file.size > maxSize) {
@@ -74,8 +97,8 @@ export const AdminOfferVideo: React.FC = () => {
 
     try {
       // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `offer-video-${Date.now()}.${fileExt}`;
+      const safeExt = fileExt && allowedExtensions.includes(fileExt) ? fileExt : 'mp4';
+      const fileName = `offer-video-${Date.now()}.${safeExt}`;
 
       // Delete old video if exists
       if (videoUrl) {
@@ -102,11 +125,17 @@ export const AdminOfferVideo: React.FC = () => {
 
       // Update settings with new URL
       await updateVideoUrl.mutateAsync(urlData.publicUrl);
-      
+
       toast.success('Vídeo enviado com sucesso!');
     } catch (error) {
-      console.error('Upload error:', error);
-      toast.error('Erro ao enviar vídeo');
+      // Mostrar o erro real do Supabase (status/message), para diagnosticar corretamente
+      const err: any = error;
+      const status = err?.statusCode || err?.status || err?.code;
+      const message = err?.message || err?.error_description || err?.error || 'Erro desconhecido';
+      const details = status ? `(${status}) ${message}` : message;
+
+      console.error('Upload error (offer video):', error);
+      toast.error(`Erro ao enviar vídeo: ${details}`);
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
