@@ -62,10 +62,10 @@ export const AdminOfferVideo: React.FC = () => {
       return;
     }
 
-    // Validate file size (max 200MB)
-    const maxSize = 200 * 1024 * 1024;
+    // Validate file size (max 50MB - Supabase Free tier limit)
+    const maxSize = 50 * 1024 * 1024;
     if (file.size > maxSize) {
-      toast.error('O vídeo deve ter no máximo 200MB');
+      toast.error('O vídeo deve ter no máximo 50MB (limite do Supabase Free)');
       return;
     }
 
@@ -140,7 +140,7 @@ export const AdminOfferVideo: React.FC = () => {
           Vídeo da Página de Oferta
         </CardTitle>
         <CardDescription>
-          Faça upload de um vídeo MP4 (máx. 200MB) para exibir na página /oferta com player customizado
+          Faça upload de um vídeo MP4 (máx. 50MB) para exibir na página /oferta com player customizado
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -204,7 +204,7 @@ export const AdminOfferVideo: React.FC = () => {
                 <Upload className="h-12 w-12 mx-auto text-gray-500" />
                 <div>
                   <p className="text-gray-300">Clique para selecionar um vídeo</p>
-                  <p className="text-sm text-gray-500 mt-1">MP4, WebM ou MOV • Máximo 200MB</p>
+                  <p className="text-sm text-gray-500 mt-1">MP4, WebM ou MOV • Máximo 50MB (Supabase Free)</p>
                 </div>
               </label>
             )}
