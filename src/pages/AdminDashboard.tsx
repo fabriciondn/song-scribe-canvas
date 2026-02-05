@@ -36,26 +36,71 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Shield, Users, BarChart3, AlertTriangle, CheckCircle, Clock, Activity } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
-  const { isAdmin, isLoading } = useUserRole();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAdmin, isLoading: roleLoading } = useUserRole();
+
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('overview');
+  const [adminConfirmed, setAdminConfirmed] = useState<boolean | null>(null);
+  const [adminConfirming, setAdminConfirming] = useState(false);
+
   const [systemHealth, setSystemHealth] = useState({
     status: 'healthy',
     uptime: '99.9%',
     activeUsers: 0,
     responseTime: '120ms'
   });
-  
+
   const { profile } = useProfile();
 
+  // Se o hook de role ainda não sabe, confirmar server-side antes de redirecionar
   useEffect(() => {
-    if (!isLoading && isAdmin) {
+    const shouldConfirm =
+      !authLoading &&
+      !roleLoading &&
+      isAuthenticated &&
+      !isAdmin &&
+      adminConfirmed === null &&
+      !adminConfirming;
+
+    if (!shouldConfirm) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setAdminConfirming(true);
+        const { data, error } = await supabase.rpc('check_admin_access');
+        if (error) throw error;
+        if (cancelled) return;
+
+        setAdminConfirmed(!!data);
+      } catch (e) {
+        console.error('❌ AdminDashboard: Falha ao confirmar acesso admin:', e);
+        if (!cancelled) setAdminConfirmed(false);
+      } finally {
+        if (!cancelled) setAdminConfirming(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, roleLoading, isAuthenticated, isAdmin, adminConfirmed, adminConfirming]);
+
+  const effectiveIsAdmin = isAdmin || adminConfirmed === true;
+  const gateLoading = authLoading || roleLoading || (isAuthenticated && !isAdmin && adminConfirmed === null);
+
+  useEffect(() => {
+    if (!gateLoading && effectiveIsAdmin) {
       console.log('✅ AdminDashboard: Usuário confirmado como admin');
-      
+
       // Simular dados de saúde do sistema
       setSystemHealth({
         status: 'healthy',
@@ -64,20 +109,28 @@ const AdminDashboard: React.FC = () => {
         responseTime: Math.floor(Math.random() * 50) + 100 + 'ms'
       });
     }
-  }, [isAdmin, isLoading]);
+  }, [effectiveIsAdmin, gateLoading]);
 
-  if (isLoading) {
+  if (gateLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Verificando permissões de administrador...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary mx-auto" />
+          <p className="text-muted-foreground">
+            {authLoading || roleLoading
+              ? 'Verificando sessão e permissões...'
+              : 'Confirmando permissões de administrador...'}
+          </p>
         </div>
       </div>
     );
   }
 
-  if (!isAdmin) {
+  if (!isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (!effectiveIsAdmin) {
     console.log('❌ AdminDashboard: Usuário não é admin, redirecionando...');
     return <Navigate to="/dashboard" replace />;
   }
