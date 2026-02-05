@@ -101,16 +101,30 @@ const Oferta: React.FC = () => {
         trackVideoPlay();
         hasTrackedPlay.current = true;
         
-        // Start tracking progress every 30 seconds
+        // Start tracking progress every 30 seconds - PARA quando completar
         videoProgressInterval.current = setInterval(() => {
+          // Se já completou, para de rastrear
+          if (hasTrackedComplete.current) {
+            if (videoProgressInterval.current) {
+              clearInterval(videoProgressInterval.current);
+              videoProgressInterval.current = null;
+            }
+            return;
+          }
+          
           watchTimeRef.current += 30;
           const percentComplete = Math.min((watchTimeRef.current / videoDuration) * 100, 100);
           trackVideoProgress(watchTimeRef.current, percentComplete);
           
-          // Registrar conclusão quando atingir 90% ou mais
+          // Registrar conclusão quando atingir 90% ou mais E PARAR
           if (percentComplete >= 90 && !hasTrackedComplete.current) {
             trackVideoComplete();
             hasTrackedComplete.current = true;
+            // Limpar o interval imediatamente
+            if (videoProgressInterval.current) {
+              clearInterval(videoProgressInterval.current);
+              videoProgressInterval.current = null;
+            }
           }
         }, 30000);
       }
