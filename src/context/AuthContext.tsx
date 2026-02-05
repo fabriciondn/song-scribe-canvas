@@ -5,6 +5,7 @@ import {
   cleanupAuthState, 
   safeSupabaseCall, 
   ensureSingleAuthListener,
+  resetAuthListener,
   debounce 
 } from '@/lib/authUtils';
 
@@ -58,25 +59,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Initialize auth state (singleton pattern)
   useEffect(() => {
-    if (!ensureSingleAuthListener()) {
-      return; // Already initialized elsewhere
-    }
+    const canInitListener = ensureSingleAuthListener();
 
     console.log('🚀 Initializing auth listener');
 
-    // Set up auth state change listener with debouncing
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      debouncedSessionHandler
-    );
+    // Set up auth state change listener with debouncing (quando permitido)
+    const subscription = canInitListener
+      ? supabase.auth.onAuthStateChange(debouncedSessionHandler).data.subscription
+      : null;
 
-    // Get current session with rate limiting
+    // Get current session with rate limiting (sempre roda)
     const initSession = async () => {
       const result = await safeSupabaseCall(
         () => supabase.auth.getSession(),
         1, // Only 1 retry for initial session
         500 // 500ms delay
       );
-      
+
       if (result?.data?.session) {
         setSession(result.data.session);
         setUser(result.data.session.user);
@@ -88,8 +87,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       console.log('🛑 Cleaning up auth listener');
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
       debouncedSessionHandler.cancel();
+
+      // CRÍTICO: em dev/StrictMode o effect monta/desmonta 2x.
+      // Se não resetar, o 2º mount fica sem listener e quebra checagens de role (ex: /admin).
+      resetAuthListener();
     };
   }, []);
 
