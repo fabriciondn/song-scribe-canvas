@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Settings, Database, Mail, Shield, Users, Bell } from 'lucide-react';
 import { useAdminSettings } from '@/hooks/useAdminSettings';
+import { AdminOfferVideo } from './AdminOfferVideo';
 
 export const AdminSettings: React.FC = () => {
   const {
@@ -221,6 +222,9 @@ export const AdminSettings: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Vídeo da Página de Oferta */}
+      <AdminOfferVideo />
     </div>
   );
 };

@@ -7,14 +7,12 @@ import { MessageCircle, Music, Shield, Clock, CheckCircle, Star } from 'lucide-r
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { trackPageView, trackVideoPlay, trackVideoProgress, trackVideoComplete, trackButtonClick } from '@/services/offerAnalyticsService';
+import { CustomVideoPlayer } from '@/components/offer/CustomVideoPlayer';
 
-console.log('[Oferta] Componente carregado - versao 2026.01.29');
+console.log('[Oferta] Componente carregado - versao 2026.02.05');
 
 const Oferta: React.FC = () => {
   const navigate = useNavigate();
-  const videoProgressInterval = useRef<NodeJS.Timeout | null>(null);
-  const watchTimeRef = useRef(0);
-  const hasTrackedPlay = useRef(false);
   const pixelInjected = useRef(false);
 
   // Fetch and inject Meta Pixel code
@@ -30,7 +28,23 @@ const Oferta: React.FC = () => {
       if (error && error.code !== 'PGRST116') throw error;
       return data?.setting_value || '';
     },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Fetch custom video URL from settings
+  const { data: customVideoUrl } = useQuery({
+    queryKey: ['offer-video-url'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('offer_page_settings')
+        .select('setting_value')
+        .eq('setting_key', 'video_url')
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data?.setting_value || null;
+    },
+    staleTime: 1000 * 60 * 5,
   });
 
   // Inject Meta Pixel into head
@@ -81,60 +95,6 @@ const Oferta: React.FC = () => {
     return () => {
       document.documentElement.style.overflowY = '';
       document.body.style.overflowY = '';
-      
-      // Clear interval on unmount
-      if (videoProgressInterval.current) {
-        clearInterval(videoProgressInterval.current);
-      }
-    };
-  }, []);
-
-  // Duração do vídeo em segundos (aproximadamente 3 minutos)
-  const videoDuration = 180;
-  const hasTrackedComplete = useRef(false);
-
-  // Start tracking video progress when component mounts (video autoplays)
-  useEffect(() => {
-    // Video starts automatically, so we track play after a short delay
-    const playTimer = setTimeout(() => {
-      if (!hasTrackedPlay.current) {
-        trackVideoPlay();
-        hasTrackedPlay.current = true;
-        
-        // Start tracking progress every 30 seconds - PARA quando completar
-        videoProgressInterval.current = setInterval(() => {
-          // Se já completou, para de rastrear
-          if (hasTrackedComplete.current) {
-            if (videoProgressInterval.current) {
-              clearInterval(videoProgressInterval.current);
-              videoProgressInterval.current = null;
-            }
-            return;
-          }
-          
-          watchTimeRef.current += 30;
-          const percentComplete = Math.min((watchTimeRef.current / videoDuration) * 100, 100);
-          trackVideoProgress(watchTimeRef.current, percentComplete);
-          
-          // Registrar conclusão quando atingir 90% ou mais E PARAR
-          if (percentComplete >= 90 && !hasTrackedComplete.current) {
-            trackVideoComplete();
-            hasTrackedComplete.current = true;
-            // Limpar o interval imediatamente
-            if (videoProgressInterval.current) {
-              clearInterval(videoProgressInterval.current);
-              videoProgressInterval.current = null;
-            }
-          }
-        }, 30000);
-      }
-    }, 2000);
-
-    return () => {
-      clearTimeout(playTimer);
-      if (videoProgressInterval.current) {
-        clearInterval(videoProgressInterval.current);
-      }
     };
   }, []);
 
@@ -230,17 +190,28 @@ const Oferta: React.FC = () => {
             🔊 Ative o som e aumente o volume para uma melhor experiência
           </p>
 
-          {/* Video */}
-          <div className="relative w-full max-w-3xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-primary/30 mb-8">
-            <iframe
-              src="https://player.vimeo.com/video/1162200822?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1"
-              className="w-full h-full"
-              frameBorder="0"
-              allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-              title="Apresentação Compuse - Oferta Especial"
-              loading="lazy"
-              allowFullScreen
-            />
+          {/* Video - Custom player ou fallback para Vimeo */}
+          <div className="mb-8">
+            {customVideoUrl ? (
+              <CustomVideoPlayer
+                videoUrl={customVideoUrl}
+                onPlay={() => trackVideoPlay()}
+                onProgress={(watchTime, percent) => trackVideoProgress(watchTime, percent)}
+                onComplete={() => trackVideoComplete()}
+              />
+            ) : (
+              <div className="relative w-full max-w-3xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-primary/30">
+                <iframe
+                  src="https://player.vimeo.com/video/1162200822?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1"
+                  className="w-full h-full"
+                  frameBorder="0"
+                  allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+                  title="Apresentação Compuse - Oferta Especial"
+                  loading="lazy"
+                  allowFullScreen
+                />
+              </div>
+            )}
           </div>
 
           {/* CTA Buttons */}
