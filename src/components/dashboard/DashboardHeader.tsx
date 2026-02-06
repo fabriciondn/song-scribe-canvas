@@ -48,7 +48,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userName }) =>
       <div className="flex items-center gap-2 sm:gap-3">
         <Badge variant="secondary" className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full">
           <CreditCard className="h-4 w-4" />
-          {credits || 0} créditos
+          {credits !== null ? credits : '...'} créditos
         </Badge>
 
         {nextObjective && (

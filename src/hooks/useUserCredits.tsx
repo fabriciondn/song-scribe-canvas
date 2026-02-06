@@ -33,7 +33,7 @@ export const useUserCredits = () => {
 
   const fetchCredits = useCallback(async () => {
     if (!currentUserId) {
-      setCredits(0);
+      // Não definir como 0 aqui - deixar null até termos o userId
       setIsLoading(false);
       return;
     }
@@ -104,7 +104,7 @@ export const useUserCredits = () => {
     }
     
     if (!currentUserId) {
-      setCredits(0);
+      // Não definir como 0 - deixar null até autenticação carregar
       setIsLoading(false);
       return;
     }

@@ -55,7 +55,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({ toggleSidebar }) => 
       <div className="flex items-center gap-2 flex-shrink-0">
         {/* Credits */}
         <Badge variant="secondary" className="text-xs px-2 py-1 hidden xs:flex">
-          {credits || 0}
+          {credits !== null ? credits : '...'}
         </Badge>
 
         {/* Abandoned Cart Indicator */}
