@@ -135,6 +135,20 @@ export const AdminOfferVideo: React.FC = () => {
       const details = status ? `(${status}) ${message}` : message;
 
       console.error('Upload error (offer video):', error);
+
+      // Dica específica para o erro mais comum: limite imposto pelo gateway/limite de gastos do Storage
+      const isPayloadTooLarge =
+        status === 413 ||
+        (typeof message === 'string' &&
+          message.toLowerCase().includes('exceeded the maximum allowed size'));
+
+      if (isPayloadTooLarge) {
+        toast.error(
+          'Upload bloqueado pelo limite do Storage (413). No Supabase, desative o “limite de gastos”/spend cap ou aumente o limite global de upload e tente novamente.'
+        );
+        return;
+      }
+
       toast.error(`Erro ao enviar vídeo: ${details}`);
     } finally {
       setIsUploading(false);
