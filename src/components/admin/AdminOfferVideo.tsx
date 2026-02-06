@@ -352,14 +352,15 @@ export const AdminOfferVideo: React.FC = () => {
                 </span>
               </div>
               <Slider
-                value={[playerSettings?.progressBarHeight ?? 6]}
-                onValueCommit={(value) => 
-                  updatePlayerSetting.mutate({ key: 'progress_bar_height', value: String(value[0]) })
-                }
+                defaultValue={[playerSettings?.progressBarHeight ?? 6]}
+                onValueChange={(value) => {
+                  // Salvar imediatamente ao mover
+                  updatePlayerSetting.mutate({ key: 'progress_bar_height', value: String(value[0]) });
+                }}
                 min={2}
                 max={16}
                 step={1}
-                className="w-full"
+                className="w-full cursor-pointer"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Fina (2px)</span>
