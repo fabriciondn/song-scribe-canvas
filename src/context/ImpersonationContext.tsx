@@ -204,6 +204,7 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
   };
 
   // Sync from localStorage - only run once when user changes
+  // IMPORTANT: Clear impersonation if the logged-in user is different from the original impersonator
   useEffect(() => {
     if (!user) return;
 
@@ -212,6 +213,16 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
         const storedData = localStorage.getItem('impersonation_data');
         if (storedData && !isImpersonating) {
           const parsedData = JSON.parse(storedData);
+          
+          // Verificar se o usuário logado é o mesmo que iniciou a impersonação
+          const originalUserId = parsedData.originalUser?.id;
+          if (originalUserId && originalUserId !== user.id) {
+            // Usuário diferente logou - limpar dados de impersonação antigos
+            console.log('🧹 Limpando dados de impersonação de outro usuário');
+            localStorage.removeItem('impersonation_data');
+            return;
+          }
+          
           if (parsedData.targetUser) {
             setImpersonatedUser(parsedData.targetUser);
             setIsImpersonating(true);

@@ -1,21 +1,30 @@
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useAuth } from './useAuth';
-import { useImpersonation } from '@/context/ImpersonationContext';
+import { useState, useEffect, useCallback, useMemo, useRef, useContext } from 'react';
+import { AuthContext } from '@/context/AuthContext';
+import { ImpersonationContext } from '@/context/ImpersonationContext';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useUserCredits = () => {
-  const { user } = useAuth();
-  const { isImpersonating, impersonatedUser } = useImpersonation();
+  // Usar os contextos diretamente para evitar conflitos
+  const authContext = useContext(AuthContext);
+  const impersonationContext = useContext(ImpersonationContext);
+  
+  // Pegar o usuário real do auth (não o modificado por impersonação)
+  const realUser = authContext?.user;
+  const isImpersonating = impersonationContext?.isImpersonating || false;
+  const impersonatedUser = impersonationContext?.impersonatedUser;
+  
   const [credits, setCredits] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Memoizar o user ID para evitar re-renders desnecessários
-  const currentUserId = useMemo(() => 
-    isImpersonating && impersonatedUser ? impersonatedUser.id : user?.id,
-    [isImpersonating, impersonatedUser?.id, user?.id]
-  );
+  // Determinar o userId correto: se impersonando, usar o impersonado; senão, usar o real
+  const currentUserId = useMemo(() => {
+    if (isImpersonating && impersonatedUser) {
+      return impersonatedUser.id;
+    }
+    return realUser?.id;
+  }, [isImpersonating, impersonatedUser?.id, realUser?.id]);
 
   // Usar ref para rastrear o último userId para evitar requests desnecessários
   const lastUserIdRef = useRef<string | undefined>();
