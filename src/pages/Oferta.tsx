@@ -47,6 +47,36 @@ const Oferta: React.FC = () => {
     staleTime: 1000 * 60 * 5,
   });
 
+  // Fetch player settings
+  const { data: playerSettings } = useQuery({
+    queryKey: ['offer-player-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('offer_page_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', ['use_sound_overlay', 'progress_bar_height']);
+      
+      if (error) throw error;
+      
+      const settings: { useSoundOverlay: boolean; progressBarHeight: number } = {
+        useSoundOverlay: true,
+        progressBarHeight: 6
+      };
+      
+      data?.forEach(item => {
+        if (item.setting_key === 'use_sound_overlay') {
+          settings.useSoundOverlay = item.setting_value === 'true';
+        }
+        if (item.setting_key === 'progress_bar_height') {
+          settings.progressBarHeight = parseInt(item.setting_value || '6', 10);
+        }
+      });
+      
+      return settings;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
   // Inject Meta Pixel into head
   useEffect(() => {
     if (pixelCode && !pixelInjected.current) {
@@ -198,6 +228,8 @@ const Oferta: React.FC = () => {
                 onPlay={() => trackVideoPlay()}
                 onProgress={(watchTime, percent) => trackVideoProgress(watchTime, percent)}
                 onComplete={() => trackVideoComplete()}
+                useSoundOverlay={playerSettings?.useSoundOverlay ?? true}
+                progressBarHeight={playerSettings?.progressBarHeight ?? 6}
               />
             ) : (
               <div className="relative w-full max-w-3xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-primary/30">

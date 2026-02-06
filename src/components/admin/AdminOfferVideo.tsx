@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, Video, Trash2, Loader2, ExternalLink } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { Upload, Video, Trash2, Loader2, ExternalLink, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -29,6 +31,35 @@ export const AdminOfferVideo: React.FC = () => {
     }
   });
 
+  // Fetch player settings
+  const { data: playerSettings } = useQuery({
+    queryKey: ['offer-player-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('offer_page_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', ['use_sound_overlay', 'progress_bar_height']);
+      
+      if (error) throw error;
+      
+      const settings: { useSoundOverlay: boolean; progressBarHeight: number } = {
+        useSoundOverlay: true,
+        progressBarHeight: 6
+      };
+      
+      data?.forEach(item => {
+        if (item.setting_key === 'use_sound_overlay') {
+          settings.useSoundOverlay = item.setting_value === 'true';
+        }
+        if (item.setting_key === 'progress_bar_height') {
+          settings.progressBarHeight = parseInt(item.setting_value || '6', 10);
+        }
+      });
+      
+      return settings;
+    }
+  });
+
   // Update video URL mutation
   const updateVideoUrl = useMutation({
     mutationFn: async (url: string | null) => {
@@ -49,6 +80,29 @@ export const AdminOfferVideo: React.FC = () => {
     onError: (error) => {
       console.error('Error updating video URL:', error);
       toast.error('Erro ao atualizar URL do vídeo');
+    }
+  });
+
+  // Update player settings mutation
+  const updatePlayerSetting = useMutation({
+    mutationFn: async ({ key, value }: { key: string; value: string }) => {
+      const { error } = await supabase
+        .from('offer_page_settings')
+        .upsert({
+          setting_key: key,
+          setting_value: value,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'setting_key' });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['offer-player-settings'] });
+      toast.success('Configuração salva!');
+    },
+    onError: (error) => {
+      console.error('Error updating player setting:', error);
+      toast.error('Erro ao salvar configuração');
     }
   });
 
@@ -254,14 +308,75 @@ export const AdminOfferVideo: React.FC = () => {
           </div>
         </div>
 
+        {/* Player Customization */}
+        {videoUrl && (
+          <div className="space-y-6 border-t border-gray-700 pt-6">
+            <Label className="text-base font-semibold">Personalização do Player</Label>
+            
+            {/* Sound Overlay Toggle */}
+            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  {playerSettings?.useSoundOverlay ? (
+                    <VolumeX className="h-5 w-5 text-primary" />
+                  ) : (
+                    <Volume2 className="h-5 w-5 text-primary" />
+                  )}
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Overlay "Clique para ativar som"</p>
+                  <p className="text-sm text-muted-foreground">
+                    Exibe tela amarela pedindo para o usuário clicar e ativar o som
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={playerSettings?.useSoundOverlay ?? true}
+                onCheckedChange={(checked) => 
+                  updatePlayerSetting.mutate({ key: 'use_sound_overlay', value: String(checked) })
+                }
+              />
+            </div>
+            
+            {/* Progress Bar Height */}
+            <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-foreground">Altura da Barra de Progresso</p>
+                  <p className="text-sm text-muted-foreground">
+                    Barra decorativa na parte inferior do player
+                  </p>
+                </div>
+                <span className="text-sm font-mono bg-background px-2 py-1 rounded">
+                  {playerSettings?.progressBarHeight ?? 6}px
+                </span>
+              </div>
+              <Slider
+                value={[playerSettings?.progressBarHeight ?? 6]}
+                onValueCommit={(value) => 
+                  updatePlayerSetting.mutate({ key: 'progress_bar_height', value: String(value[0]) })
+                }
+                min={2}
+                max={16}
+                step={1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Fina (2px)</span>
+                <span>Grossa (16px)</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Info */}
-        <div className="bg-gray-800/50 rounded-lg p-4 text-sm text-gray-400">
-          <p className="font-medium text-gray-300 mb-2">Sobre o Player Customizado:</p>
+        <div className="bg-muted/30 rounded-lg p-4 text-sm text-muted-foreground">
+          <p className="font-medium text-foreground mb-2">Sobre o Player Customizado:</p>
           <ul className="list-disc list-inside space-y-1">
-            <li>Autoplay com som (requer interação do usuário para ativar)</li>
-            <li>Barra de progresso visual animada (apenas decorativa)</li>
-            <li>Vídeo em loop contínuo</li>
-            <li>Controles de play/pause ao clicar</li>
+            <li>Autoplay mutado ao carregar (navegadores exigem)</li>
+            <li>Com overlay: usuário clica para ativar som e reiniciar vídeo</li>
+            <li>Sem overlay: vídeo toca direto mutado, usuário ativa som manualmente</li>
+            <li>Barra de progresso decorativa em loop contínuo</li>
           </ul>
         </div>
       </CardContent>
