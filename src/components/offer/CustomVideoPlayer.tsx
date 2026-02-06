@@ -6,18 +6,24 @@ interface CustomVideoPlayerProps {
   onPlay?: () => void;
   onProgress?: (watchTime: number, percentComplete: number) => void;
   onComplete?: () => void;
+  /** Se true, mostra overlay de "clique para ativar som" antes de liberar o áudio */
+  useSoundOverlay?: boolean;
+  /** Altura da barra de progresso fake em pixels */
+  progressBarHeight?: number;
 }
 
 export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   videoUrl,
   onPlay,
   onProgress,
-  onComplete
+  onComplete,
+  useSoundOverlay = true,
+  progressBarHeight = 6
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [showPlayButton, setShowPlayButton] = useState(true);
+  const [showSoundOverlay, setShowSoundOverlay] = useState(useSoundOverlay);
   const [fakeProgress, setFakeProgress] = useState(0);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const watchTimeRef = useRef(0);
@@ -72,31 +78,35 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
     };
   }, [isPlaying, onProgress, onComplete]);
 
-  const handlePlayClick = () => {
+  const handleOverlayClick = () => {
     const video = videoRef.current;
     if (!video) return;
 
-    if (showPlayButton) {
-      // First click - unmute and play
-      video.muted = false;
-      setIsMuted(false);
+    // Ativar som e reiniciar do início
+    video.currentTime = 0;
+    video.muted = false;
+    setIsMuted(false);
+    video.play();
+    setIsPlaying(true);
+    setShowSoundOverlay(false);
+
+    if (!hasTrackedPlay.current) {
+      onPlay?.();
+      hasTrackedPlay.current = true;
+    }
+  };
+
+  const handleVideoClick = () => {
+    const video = videoRef.current;
+    if (!video || showSoundOverlay) return;
+
+    // Toggle play/pause
+    if (video.paused) {
       video.play();
       setIsPlaying(true);
-      setShowPlayButton(false);
-
-      if (!hasTrackedPlay.current) {
-        onPlay?.();
-        hasTrackedPlay.current = true;
-      }
     } else {
-      // Toggle play/pause
-      if (video.paused) {
-        video.play();
-        setIsPlaying(true);
-      } else {
-        video.pause();
-        setIsPlaying(false);
-      }
+      video.pause();
+      setIsPlaying(false);
     }
   };
 
@@ -109,21 +119,29 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
     setIsMuted(video.muted);
   };
 
-  // Start video muted on load
+  // Start video muted on load (autoplay)
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
       video.muted = true;
-      video.play().catch(() => {
-        // Autoplay blocked, that's fine
+      setIsMuted(true);
+      video.play().then(() => {
+        setIsPlaying(true);
+      }).catch(() => {
+        // Autoplay blocked
       });
     }
-  }, []);
+  }, [videoUrl]);
+
+  // Sync overlay state with prop
+  useEffect(() => {
+    setShowSoundOverlay(useSoundOverlay);
+  }, [useSoundOverlay]);
 
   return (
     <div 
       className="relative w-full max-w-3xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-primary/30 cursor-pointer group"
-      onClick={handlePlayClick}
+      onClick={showSoundOverlay ? handleOverlayClick : handleVideoClick}
     >
       {/* Video Element */}
       <video
@@ -136,66 +154,66 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
         onPause={() => setIsPlaying(false)}
       />
 
-      {/* Overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-
-      {/* Play button overlay */}
-      {showPlayButton && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity">
-          <div className="relative">
-            {/* Pulse animation */}
-            <div className="absolute inset-0 bg-primary/30 rounded-full animate-ping" />
-            <div className="relative bg-primary hover:bg-primary/90 rounded-full p-6 transition-transform group-hover:scale-110">
-              <Play className="h-12 w-12 text-black fill-current" />
+      {/* Overlay de "clique para ativar som" - estilo amarelo/preto */}
+      {showSoundOverlay && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 transition-opacity z-10">
+          <div className="border-4 border-yellow-400 rounded-lg p-8 flex flex-col items-center gap-4">
+            <p className="text-yellow-400 text-xl font-bold">Clique aqui</p>
+            <div className="relative">
+              <VolumeX className="h-16 w-16 text-yellow-400" />
+              {/* Linha diagonal riscando o ícone */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-20 h-1 bg-yellow-400 rotate-45 origin-center" />
+              </div>
             </div>
+            <p className="text-yellow-400 text-xl font-bold">para ativar o som</p>
           </div>
-          <p className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white text-sm bg-black/60 px-4 py-2 rounded-full">
-            Clique para assistir com som 🔊
-          </p>
         </div>
       )}
 
-      {/* Controls bar */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-        {/* Fake progress bar */}
-        <div className="relative h-1 bg-white/20 rounded-full mb-3 overflow-hidden">
-          <div 
-            className="absolute h-full bg-gradient-to-r from-primary to-green-400 rounded-full transition-all duration-100 ease-linear"
-            style={{ width: `${fakeProgress}%` }}
-          />
-          {/* Glowing dot */}
-          <div 
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow-lg shadow-primary/50 transition-all duration-100 ease-linear"
-            style={{ left: `calc(${fakeProgress}% - 6px)` }}
-          />
-        </div>
-
-        {/* Bottom controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-white/80 text-sm">
-            {isPlaying ? (
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                Ao vivo
-              </span>
-            ) : (
-              <span>Pausado</span>
-            )}
-          </div>
-
-          {/* Mute button */}
-          <button
-            onClick={handleMuteToggle}
-            className="p-2 hover:bg-white/20 rounded-full transition-colors"
-          >
-            {isMuted ? (
-              <VolumeX className="h-5 w-5 text-white" />
-            ) : (
-              <Volume2 className="h-5 w-5 text-white" />
-            )}
-          </button>
-        </div>
+      {/* Fake progress bar - colada na parte inferior, mais grossa */}
+      <div 
+        className="absolute bottom-0 left-0 right-0 bg-white/20 overflow-hidden z-20"
+        style={{ height: `${progressBarHeight}px` }}
+      >
+        <div 
+          className="h-full bg-gradient-to-r from-primary to-green-400 transition-all duration-100 ease-linear"
+          style={{ width: `${fakeProgress}%` }}
+        />
       </div>
+
+      {/* Controls overlay (bottom) - acima da barra de progresso */}
+      {!showSoundOverlay && (
+        <div 
+          className="absolute left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent"
+          style={{ bottom: `${progressBarHeight}px` }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-white/80 text-sm">
+              {isPlaying ? (
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  Ao vivo
+                </span>
+              ) : (
+                <span>Pausado</span>
+              )}
+            </div>
+
+            {/* Mute button */}
+            <button
+              onClick={handleMuteToggle}
+              className="p-2 hover:bg-white/20 rounded-full transition-colors"
+            >
+              {isMuted ? (
+                <VolumeX className="h-5 w-5 text-white" />
+              ) : (
+                <Volume2 className="h-5 w-5 text-white" />
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
