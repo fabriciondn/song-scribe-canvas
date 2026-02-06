@@ -25,11 +25,14 @@ const profileSchema = z.object({
 
 type ProfileForm = z.infer<typeof profileSchema>;
 
+const PROFILE_DRAFT_KEY = 'profile-form-draft';
+
 export default function Profile() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   const form = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -43,6 +46,19 @@ export default function Profile() {
     },
   });
 
+  // Salvar rascunho no sessionStorage quando os dados mudarem
+  const formValues = form.watch();
+  
+  useEffect(() => {
+    if (profileLoaded && user) {
+      const draft = {
+        ...formValues,
+        avatarUrl,
+      };
+      sessionStorage.setItem(`${PROFILE_DRAFT_KEY}-${user.id}`, JSON.stringify(draft));
+    }
+  }, [formValues, avatarUrl, profileLoaded, user]);
+
   useEffect(() => {
     if (user) {
       loadProfile();
@@ -53,6 +69,9 @@ export default function Profile() {
     if (!user) return;
 
     try {
+      // Primeiro, verificar se há rascunho salvo
+      const savedDraft = sessionStorage.getItem(`${PROFILE_DRAFT_KEY}-${user.id}`);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -63,7 +82,19 @@ export default function Profile() {
         throw error;
       }
 
-      if (data) {
+      if (savedDraft) {
+        // Se há rascunho, usar os dados do rascunho
+        const draft = JSON.parse(savedDraft);
+        form.reset({
+          name: draft.name || data?.name || '',
+          username: draft.username || data?.username || '',
+          email: draft.email || data?.email || user.email || '',
+          cpf: draft.cpf || data?.cpf || '',
+          cellphone: draft.cellphone || (data as any)?.cellphone || '',
+          address: draft.address || data?.address || '',
+        });
+        setAvatarUrl(draft.avatarUrl || data?.avatar_url || '');
+      } else if (data) {
         form.reset({
           name: data.name || '',
           username: data.username || '',
@@ -79,9 +110,12 @@ export default function Profile() {
           email: user.email || '',
         });
       }
+      
+      setProfileLoaded(true);
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
       toast.error('Erro ao carregar perfil');
+      setProfileLoaded(true);
     }
   };
 
@@ -141,6 +175,9 @@ export default function Profile() {
 
       if (error) throw error;
 
+      // Limpar rascunho após salvar com sucesso
+      sessionStorage.removeItem(`${PROFILE_DRAFT_KEY}-${user.id}`);
+      
       toast.success('Perfil atualizado com sucesso!');
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
