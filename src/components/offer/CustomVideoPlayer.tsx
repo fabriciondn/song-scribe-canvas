@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Play, Volume2, VolumeX } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Volume2, VolumeX } from 'lucide-react';
 
 interface CustomVideoPlayerProps {
   videoUrl: string;
@@ -8,9 +8,33 @@ interface CustomVideoPlayerProps {
   onComplete?: () => void;
   /** Se true, mostra overlay de "clique para ativar som" antes de liberar o áudio */
   useSoundOverlay?: boolean;
-  /** Altura da barra de progresso fake em pixels */
+  /** Altura da barra de progresso em pixels */
   progressBarHeight?: number;
 }
+
+/**
+ * Calcula o progresso visual "inteligente":
+ * - Começa rápido (parece que vai acabar logo)
+ * - Desacelera quando chega perto de 50%
+ * - Vai devagar até o final do vídeo
+ */
+const calculateSmartProgress = (realPercent: number): number => {
+  if (realPercent <= 0) return 0;
+  if (realPercent >= 100) return 100;
+
+  // Fase 1: 0-30% do vídeo real → mostra 0-60% visual (rápido)
+  if (realPercent <= 30) {
+    return (realPercent / 30) * 60;
+  }
+  
+  // Fase 2: 30-60% do vídeo real → mostra 60-80% visual (médio)
+  if (realPercent <= 60) {
+    return 60 + ((realPercent - 30) / 30) * 20;
+  }
+  
+  // Fase 3: 60-100% do vídeo real → mostra 80-100% visual (lento)
+  return 80 + ((realPercent - 60) / 40) * 20;
+};
 
 export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   videoUrl,
@@ -22,35 +46,57 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const [showSoundOverlay, setShowSoundOverlay] = useState(useSoundOverlay);
-  const [fakeProgress, setFakeProgress] = useState(0);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isMuted, setIsMuted] = useState(false); // Começa com som ligado
+  const [showSoundOverlay, setShowSoundOverlay] = useState(false);
+  const [visualProgress, setVisualProgress] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
   const watchTimeRef = useRef(0);
   const hasTrackedPlay = useRef(false);
   const hasTrackedComplete = useRef(false);
 
-  // Fake progress animation - purely visual
+  // Atualiza o progresso visual baseado no tempo real do vídeo
+  const updateProgress = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || !videoDuration) return;
+
+    const realPercent = (video.currentTime / videoDuration) * 100;
+    const smartPercent = calculateSmartProgress(realPercent);
+    setVisualProgress(smartPercent);
+  }, [videoDuration]);
+
+  // Listener para timeupdate do vídeo
   useEffect(() => {
-    if (isPlaying && !progressIntervalRef.current) {
-      progressIntervalRef.current = setInterval(() => {
-        setFakeProgress(prev => {
-          // Slow, natural-looking progress that loops
-          const newProgress = prev + 0.15;
-          return newProgress >= 100 ? 0 : newProgress;
-        });
-      }, 100);
-    } else if (!isPlaying && progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-      progressIntervalRef.current = null;
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleTimeUpdate = () => {
+      updateProgress();
+    };
+
+    const handleLoadedMetadata = () => {
+      setVideoDuration(video.duration);
+    };
+
+    const handleEnded = () => {
+      // Quando o vídeo termina (antes do loop), marca 100%
+      setVisualProgress(100);
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('ended', handleEnded);
+
+    // Se já tiver duração disponível
+    if (video.duration) {
+      setVideoDuration(video.duration);
     }
 
     return () => {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('ended', handleEnded);
     };
-  }, [isPlaying]);
+  }, [updateProgress]);
 
   // Track actual watch time for analytics
   useEffect(() => {
@@ -89,6 +135,7 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
     video.play();
     setIsPlaying(true);
     setShowSoundOverlay(false);
+    setVisualProgress(0);
 
     if (!hasTrackedPlay.current) {
       onPlay?.();
@@ -119,24 +166,45 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
     setIsMuted(video.muted);
   };
 
-  // Start video muted on load (autoplay)
+  // Tenta autoplay COM SOM - se falhar, mostra overlay
   useEffect(() => {
     const video = videoRef.current;
-    if (video) {
-      video.muted = true;
-      setIsMuted(true);
-      video.play().then(() => {
-        setIsPlaying(true);
-      }).catch(() => {
-        // Autoplay blocked
-      });
-    }
-  }, [videoUrl]);
+    if (!video) return;
 
-  // Sync overlay state with prop
-  useEffect(() => {
-    setShowSoundOverlay(useSoundOverlay);
-  }, [useSoundOverlay]);
+    const attemptAutoplay = async () => {
+      // Primeiro tenta com som
+      video.muted = false;
+      setIsMuted(false);
+      
+      try {
+        await video.play();
+        setIsPlaying(true);
+        // Sucesso! Não precisa de overlay
+        setShowSoundOverlay(false);
+        
+        if (!hasTrackedPlay.current) {
+          onPlay?.();
+          hasTrackedPlay.current = true;
+        }
+      } catch {
+        // Autoplay com som bloqueado - tenta mutado e mostra overlay se configurado
+        video.muted = true;
+        setIsMuted(true);
+        
+        try {
+          await video.play();
+          setIsPlaying(true);
+          // Mostra overlay apenas se useSoundOverlay estiver ativado
+          setShowSoundOverlay(useSoundOverlay);
+        } catch {
+          // Autoplay totalmente bloqueado
+          setShowSoundOverlay(true);
+        }
+      }
+    };
+
+    attemptAutoplay();
+  }, [videoUrl, useSoundOverlay, onPlay]);
 
   return (
     <div 
@@ -171,14 +239,14 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
         </div>
       )}
 
-      {/* Fake progress bar - colada na parte inferior, mais grossa */}
+      {/* Smart progress bar - baseada no tempo real do vídeo */}
       <div 
         className="absolute bottom-0 left-0 right-0 bg-white/20 overflow-hidden z-20"
         style={{ height: `${progressBarHeight}px` }}
       >
         <div 
-          className="h-full bg-gradient-to-r from-primary to-green-400 transition-all duration-100 ease-linear"
-          style={{ width: `${fakeProgress}%` }}
+          className="h-full bg-gradient-to-r from-primary to-green-400 transition-all duration-300 ease-out"
+          style={{ width: `${visualProgress}%` }}
         />
       </div>
 
