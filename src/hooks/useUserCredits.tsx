@@ -19,6 +19,7 @@ export const useUserCredits = () => {
 
   // Usar ref para rastrear o último userId para evitar requests desnecessários
   const lastUserIdRef = useRef<string | undefined>();
+  const lastImpersonatingRef = useRef<boolean>(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout>();
 
   const fetchCredits = useCallback(async () => {
@@ -70,25 +71,28 @@ export const useUserCredits = () => {
   }, [currentUserId, isImpersonating, credits]);
 
   useEffect(() => {
-    // Evitar requisições desnecessárias se o userId não mudou
-    if (lastUserIdRef.current === currentUserId && currentUserId) {
-      return;
-    }
-
-    console.log('🔄 useUserCredits: currentUserId changed:', currentUserId, 'isImpersonating:', isImpersonating);
+    // Detectar mudança no userId OU no estado de impersonação
+    const userChanged = lastUserIdRef.current !== currentUserId;
+    const impersonationChanged = lastImpersonatingRef.current !== isImpersonating;
+    const shouldRefresh = userChanged || impersonationChanged;
+    
+    console.log('🔄 useUserCredits: currentUserId:', currentUserId, 'isImpersonating:', isImpersonating, 'changed:', shouldRefresh);
     
     // Limpar intervalo anterior se existir
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
     }
 
-    // Atualizar ref com novo userId
+    // Atualizar refs
     lastUserIdRef.current = currentUserId;
+    lastImpersonatingRef.current = isImpersonating;
     
-    // Reset credits when switching users
-    setCredits(null);
-    setIsLoading(true);
-    setError(null);
+    // Reset credits when switching users or impersonation state
+    if (shouldRefresh) {
+      setCredits(null);
+      setIsLoading(true);
+      setError(null);
+    }
     
     if (!currentUserId) {
       setCredits(0);
