@@ -70,6 +70,93 @@ export const getModeratorDashboardStats = async (): Promise<ModeratorDashboardSt
   }
 };
 
+// Buscar estatísticas do dashboard para um moderador específico (usado em impersonação)
+export const getModeratorDashboardStatsForUser = async (moderatorId?: string): Promise<ModeratorDashboardStats> => {
+  const defaultStats: ModeratorDashboardStats = {
+    total_managed_users: 0,
+    total_managed_songs: 0,
+    total_managed_drafts: 0,
+    total_managed_registered_works: 0,
+    total_credits_distributed: 0,
+    total_current_credits: 0
+  };
+
+  if (!moderatorId) return defaultStats;
+
+  try {
+    console.log('📊 Fetching moderator dashboard stats for user:', moderatorId);
+    
+    // Buscar usuários gerenciados
+    const { data: managedUsers, error: usersError } = await supabase
+      .from('moderator_users')
+      .select('user_id')
+      .eq('moderator_id', moderatorId);
+
+    if (usersError) {
+      console.error('❌ Error fetching managed users:', usersError);
+      return defaultStats;
+    }
+
+    const userIds = managedUsers?.map(u => u.user_id) || [];
+    const total_managed_users = userIds.length;
+
+    if (total_managed_users === 0) {
+      return defaultStats;
+    }
+
+    // Buscar músicas dos usuários gerenciados
+    const { count: songsCount } = await supabase
+      .from('songs')
+      .select('*', { count: 'exact', head: true })
+      .in('user_id', userIds)
+      .is('deleted_at', null);
+
+    // Buscar drafts dos usuários gerenciados
+    const { count: draftsCount } = await supabase
+      .from('drafts')
+      .select('*', { count: 'exact', head: true })
+      .in('user_id', userIds)
+      .is('deleted_at', null);
+
+    // Buscar obras registradas dos usuários gerenciados
+    const { count: worksCount } = await supabase
+      .from('author_registrations')
+      .select('*', { count: 'exact', head: true })
+      .in('user_id', userIds);
+
+    // Buscar total de créditos distribuídos (histórico de transações)
+    const { data: transactions } = await supabase
+      .from('moderator_transactions')
+      .select('amount')
+      .eq('moderator_id', moderatorId);
+
+    const total_credits_distributed = transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+
+    // Buscar créditos atuais dos usuários gerenciados
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('credits')
+      .in('id', userIds);
+
+    const total_current_credits = profiles?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0;
+
+    const stats: ModeratorDashboardStats = {
+      total_managed_users,
+      total_managed_songs: songsCount || 0,
+      total_managed_drafts: draftsCount || 0,
+      total_managed_registered_works: worksCount || 0,
+      total_credits_distributed,
+      total_current_credits
+    };
+
+    console.log('✅ Moderator dashboard stats fetched for user:', stats);
+    return stats;
+  } catch (error) {
+    console.error('❌ Unexpected error fetching moderator dashboard stats:', error);
+    return defaultStats;
+  }
+};
+
 // Buscar usuários gerenciados pelo moderador (filtrar usuários excluídos)
 export const getManagedUsers = async (): Promise<ManagedUserData[]> => {
   try {

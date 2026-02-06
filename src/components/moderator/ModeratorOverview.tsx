@@ -3,10 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Award, Coins, RefreshCw, DollarSign, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getModeratorDashboardStats } from '@/services/moderatorService';
+import { getModeratorDashboardStatsForUser } from '@/services/moderatorService';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useImpersonation } from '@/context/ImpersonationContext';
+import { useAuth } from '@/hooks/useAuth';
 
 const PRICE_PER_CREDIT = 30;
 const PRICE_PER_REGISTRATION = 30;
@@ -15,10 +17,16 @@ type PeriodFilter = 'day' | 'week' | 'month' | 'year';
 
 export const ModeratorOverview = () => {
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('month');
+  const { isImpersonating, impersonatedUser } = useImpersonation();
+  const { user } = useAuth();
+  
+  // Determinar o ID do moderador: se impersonando, usar o impersonado; senão, usar o real
+  const moderatorId = isImpersonating && impersonatedUser ? impersonatedUser.id : user?.id;
 
   const { data: stats, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ['moderator-dashboard-stats'],
-    queryFn: getModeratorDashboardStats,
+    queryKey: ['moderator-dashboard-stats', moderatorId],
+    queryFn: () => getModeratorDashboardStatsForUser(moderatorId),
+    enabled: !!moderatorId,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 30 * 1000,
@@ -27,33 +35,32 @@ export const ModeratorOverview = () => {
 
   // Buscar transações para contagem e gráfico
   const { data: transactions } = useQuery({
-    queryKey: ['moderator-transactions-overview'],
+    queryKey: ['moderator-transactions-overview', moderatorId],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      if (!moderatorId) return [];
       
       const { data, error } = await supabase
         .from('moderator_transactions')
         .select('*')
-        .eq('moderator_id', user.id)
+        .eq('moderator_id', moderatorId)
         .order('created_at', { ascending: true });
       
       if (error) throw error;
       return data || [];
     },
+    enabled: !!moderatorId,
   });
 
   // Buscar registros dos usuários gerenciados
   const { data: registrations } = useQuery({
-    queryKey: ['moderator-registrations-overview'],
+    queryKey: ['moderator-registrations-overview', moderatorId],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      if (!moderatorId) return [];
       
       const { data: managedUsers } = await supabase
         .from('moderator_users')
         .select('user_id')
-        .eq('moderator_id', user.id);
+        .eq('moderator_id', moderatorId);
       
       if (!managedUsers || managedUsers.length === 0) return [];
       
@@ -68,6 +75,7 @@ export const ModeratorOverview = () => {
       if (error) throw error;
       return data || [];
     },
+    enabled: !!moderatorId,
   });
 
   console.log('📊 ModeratorOverview - Stats:', { stats, isLoading, error });
