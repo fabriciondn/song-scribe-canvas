@@ -209,8 +209,10 @@ const Oferta: React.FC = () => {
         {/* Hero Section */}
         <section className="max-w-4xl mx-auto px-6 py-12 text-center">
           {/* Headline */}
-          <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
-            <span className="text-white">Sua música protegida por apenas</span>{' '}
+          <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+            <span className="text-white">Evite problemas e dor de cabeça</span>
+            <br />
+            <span className="text-white">proteja sua música por apenas</span>{' '}
             <span className="bg-gradient-to-r from-primary to-green-300 bg-clip-text text-transparent">
               R$19,99
             </span>

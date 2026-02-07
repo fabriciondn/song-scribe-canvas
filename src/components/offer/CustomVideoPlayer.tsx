@@ -256,17 +256,7 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
           className="absolute left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent"
           style={{ bottom: `${progressBarHeight}px` }}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-white/80 text-sm">
-              {isPlaying ? (
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  Ao vivo
-                </span>
-              ) : (
-                <span>Pausado</span>
-              )}
-            </div>
+          <div className="flex items-center justify-end">
 
             {/* Mute button */}
             <button
