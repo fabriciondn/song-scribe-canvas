@@ -216,10 +216,6 @@ const Oferta: React.FC = () => {
             </span>
           </h1>
           
-          <p className="text-sm text-gray-400 mb-6 flex items-center justify-center gap-2">
-            🔊 Ative o som e aumente o volume para uma melhor experiência
-          </p>
-
           {/* Video - Custom player ou fallback para Vimeo */}
           <div className="mb-8">
             {customVideoUrl ? (
@@ -246,22 +242,12 @@ const Oferta: React.FC = () => {
             )}
           </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <Button 
-              onClick={handleRegisterClick}
-              size="lg"
-              className="group px-8 py-6 text-lg font-semibold bg-gradient-to-r from-primary to-green-400 hover:from-green-400 hover:to-primary text-black shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300 hover:scale-105"
-            >
-              <Music className="mr-2 h-5 w-5" />
-              Registrar música agora
-            </Button>
-            
+          {/* CTA Button */}
+          <div className="flex justify-center mb-8">
             <Button 
               onClick={handleWhatsAppClick}
               size="lg"
-              variant="outline"
-              className="px-8 py-6 text-lg font-semibold border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all duration-300"
+              className="px-8 py-6 text-lg font-semibold bg-[#25D366] hover:bg-[#20BA5A] text-white shadow-lg shadow-[#25D366]/25 hover:shadow-[#25D366]/40 transition-all duration-300 hover:scale-105"
             >
               <MessageCircle className="mr-2 h-5 w-5" />
               Registrar pelo WhatsApp
@@ -397,24 +383,14 @@ const Oferta: React.FC = () => {
             Não deixe sua obra desprotegida. Registre agora por apenas R$19,99.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              onClick={handleRegisterClick}
-              size="lg"
-              className="group px-8 py-6 text-lg font-semibold bg-gradient-to-r from-primary to-green-400 hover:from-green-400 hover:to-primary text-black shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300 hover:scale-105"
-            >
-              <Music className="mr-2 h-5 w-5" />
-              Registrar música agora
-            </Button>
-            
+          <div className="flex justify-center">
             <Button 
               onClick={handleWhatsAppClick}
               size="lg"
-              variant="outline"
-              className="px-8 py-6 text-lg font-semibold border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all duration-300"
+              className="px-8 py-6 text-lg font-semibold bg-[#25D366] hover:bg-[#20BA5A] text-white shadow-lg shadow-[#25D366]/25 hover:shadow-[#25D366]/40 transition-all duration-300 hover:scale-105"
             >
               <MessageCircle className="mr-2 h-5 w-5" />
-              Falar no WhatsApp
+              Registrar pelo WhatsApp
             </Button>
           </div>
         </section>
