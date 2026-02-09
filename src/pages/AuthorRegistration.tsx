@@ -30,7 +30,7 @@ export interface AuthorRegistrationData {
   audioFile: File | null;
   additionalInfo: string;
   termsAccepted: boolean;
-  registrationType: 'lyrics_only' | 'complete';
+  registrationType: 'lyrics_only' | 'complete' | 'melody_only';
 }
 
 // Interface para dados do Step 1 mobile
@@ -42,7 +42,7 @@ interface MobileStep1Data {
 
 // Interface para dados do Step 2 mobile
 interface MobileStep2Data {
-  registrationType: 'lyrics_only' | 'complete';
+  registrationType: 'lyrics_only' | 'complete' | 'melody_only';
   genre: string;
   version: string;
   lyrics: string;
