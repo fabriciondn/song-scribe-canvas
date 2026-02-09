@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 // Componente para Material Icons
 const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: string }> = ({ 
@@ -150,6 +151,7 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
   const [additionalInfo, setAdditionalInfo] = useState(() => {
     return savedData?.additionalInfo || initialData?.additionalInfo || '';
   });
+  const [isTranscribing, setIsTranscribing] = useState(false);
   
   // Persistir dados localmente sempre que houver mudanças (exceto audioFile que não é serializável)
   useEffect(() => {
@@ -200,6 +202,37 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
     setAudioFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleTranscribeAudio = async () => {
+    if (!audioFile) {
+      toast.error('Envie um arquivo de áudio primeiro');
+      return;
+    }
+
+    setIsTranscribing(true);
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioFile);
+
+      const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+        body: formData,
+      });
+
+      if (error) throw error;
+
+      if (data?.text) {
+        setLyrics(data.text);
+        toast.success('Áudio transcrito com sucesso!');
+      } else {
+        toast.error('Não foi possível transcrever o áudio');
+      }
+    } catch (error: any) {
+      console.error('Erro na transcrição:', error);
+      toast.error('Erro ao transcrever o áudio. Tente novamente.');
+    } finally {
+      setIsTranscribing(false);
     }
   };
 
@@ -464,6 +497,29 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
                 <MaterialIcon name="content_paste" className="text-base" />
                 Colar
               </button>
+              {audioFile && (
+                <button 
+                  type="button"
+                  onClick={handleTranscribeAudio}
+                  disabled={isTranscribing}
+                  className={cn(
+                    "text-xs font-semibold flex items-center gap-1",
+                    isTranscribing ? "text-gray-500" : "text-[#00C853]"
+                  )}
+                >
+                  {isTranscribing ? (
+                    <>
+                      <MaterialIcon name="hourglass_top" className="text-base animate-spin" />
+                      Transcrevendo...
+                    </>
+                  ) : (
+                    <>
+                      <MaterialIcon name="mic" className="text-base" />
+                      Transcrever
+                    </>
+                  )}
+                </button>
+              )}
             </div>
             <Textarea
               placeholder="Cole ou digite a letra da sua composição aqui..."
