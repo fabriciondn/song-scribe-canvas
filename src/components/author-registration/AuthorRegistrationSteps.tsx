@@ -17,7 +17,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Upload, FileAudio, ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
+import { Upload, FileAudio, ChevronLeft, ChevronRight, Play, Pause, Mic, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { AuthorRegistrationData } from '@/pages/AuthorRegistration';
 import { useProfile } from '@/hooks/useProfile';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -91,6 +93,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [lyrics, setLyrics] = useState<string>('');
   const [isCurrentUser, setIsCurrentUser] = useState<boolean>(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const { profile } = useProfile();
 
   // Cleanup do áudio quando o componente é desmontado
@@ -317,6 +320,37 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
       setAudioError('Erro ao processar o arquivo de áudio');
       setIsPlaying(false);
       setAudioElement(null);
+    }
+  };
+
+  const handleTranscribeAudio = async () => {
+    if (!audioFile) {
+      toast.error('Envie um arquivo de áudio primeiro');
+      return;
+    }
+
+    setIsTranscribing(true);
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioFile);
+
+      const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+        body: formData,
+      });
+
+      if (error) throw error;
+
+      if (data?.text) {
+        setLyrics(data.text);
+        toast.success('Áudio transcrito com sucesso!');
+      } else {
+        toast.error('Não foi possível transcrever o áudio');
+      }
+    } catch (error: any) {
+      console.error('Erro na transcrição:', error);
+      toast.error('Erro ao transcrever o áudio. Tente novamente.');
+    } finally {
+      setIsTranscribing(false);
     }
   };
 
@@ -597,7 +631,31 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
 
               {/* Letra */}
               <div className="space-y-2">
-                <Label>Letra da Música {currentRegistrationType !== 'melody_only' ? '*' : '(opcional)'}</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Letra da Música {currentRegistrationType !== 'melody_only' ? '*' : '(opcional)'}</Label>
+                  {audioFile && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleTranscribeAudio}
+                      disabled={isTranscribing}
+                      className="flex items-center gap-1.5"
+                    >
+                      {isTranscribing ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Transcrevendo...
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="h-3.5 w-3.5" />
+                          Transcrever Áudio
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
                 <Textarea 
                   placeholder="Digite a letra completa da música"
                   className={isMobile ? "min-h-24 text-sm" : "min-h-32"}
@@ -605,7 +663,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                   onChange={(e) => setLyrics(e.target.value)}
                 />
                 {currentRegistrationType !== 'melody_only' && !lyrics.trim() && (
-                  <p className="text-sm text-red-500">Letra é obrigatória</p>
+                  <p className="text-sm text-destructive">Letra é obrigatória</p>
                 )}
               </div>
 
