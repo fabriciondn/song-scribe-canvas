@@ -73,7 +73,7 @@ interface MobileRegistrationStep3Props {
     lyrics: string;
     audioFile: File | null;
     additionalInfo: string;
-    registrationType: 'lyrics_only' | 'complete';
+    registrationType: 'lyrics_only' | 'complete' | 'melody_only';
   };
   authors: Author[];
 }
@@ -379,7 +379,7 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
               <div className="flex items-center gap-1">
                 <MaterialIcon name="queue_music" className="text-sm text-[#00C853]" />
                 <span className="text-sm font-medium text-gray-200">
-                  {formData.registrationType === 'complete' ? 'Melodia + Letra' : 'Apenas Letra'}
+                  {formData.registrationType === 'complete' ? 'Melodia + Letra' : formData.registrationType === 'melody_only' ? 'Apenas Melodia' : 'Apenas Letra'}
                 </span>
               </div>
             </div>

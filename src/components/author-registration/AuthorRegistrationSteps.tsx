@@ -51,7 +51,7 @@ const step2Schema = z.object({
   genre: z.string().min(1, 'Gênero é obrigatório'),
   styleVariation: z.string().optional(),
   songVersion: z.string().optional(),
-  registrationType: z.enum(['lyrics_only', 'complete'], {
+  registrationType: z.enum(['lyrics_only', 'complete', 'melody_only'], {
     required_error: 'Selecione o tipo de registro',
   }),
   additionalInfo: z.string().optional(),
@@ -180,12 +180,13 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
 
   const handleStep2Submit = (data: Step2Data) => {
     // Validação condicional do áudio baseada no tipo de registro
-    if (data.registrationType === 'complete' && !audioFile) {
-      setAudioError('Arquivo de áudio é obrigatório para registro completo');
+    if ((data.registrationType === 'complete' || data.registrationType === 'melody_only') && !audioFile) {
+      setAudioError('Arquivo de áudio é obrigatório para este tipo de registro');
       return;
     }
 
-    if (!lyrics.trim()) {
+    // Letra é obrigatória para complete e lyrics_only, opcional para melody_only
+    if (data.registrationType !== 'melody_only' && !lyrics.trim()) {
       return;
     }
 
@@ -596,14 +597,14 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
 
               {/* Letra */}
               <div className="space-y-2">
-                <Label>Letra da Música *</Label>
+                <Label>Letra da Música {currentRegistrationType !== 'melody_only' ? '*' : '(opcional)'}</Label>
                 <Textarea 
                   placeholder="Digite a letra completa da música"
                   className={isMobile ? "min-h-24 text-sm" : "min-h-32"}
                   value={lyrics}
                   onChange={(e) => setLyrics(e.target.value)}
                 />
-                {!lyrics.trim() && (
+                {currentRegistrationType !== 'melody_only' && !lyrics.trim() && (
                   <p className="text-sm text-red-500">Letra é obrigatória</p>
                 )}
               </div>
@@ -664,11 +665,36 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                       </p>
                     </div>
                   </div>
+
+                  <div 
+                    className={`flex items-start space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
+                      currentRegistrationType === 'melody_only' ? 'border-primary bg-primary/5' : ''
+                    }`}
+                    onClick={() => {
+                      console.log('Setting registration type to melody_only');
+                      step2Form.setValue('registrationType', 'melody_only');
+                      step2Form.trigger('registrationType');
+                    }}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 border-primary mt-1 flex items-center justify-center ${
+                      currentRegistrationType === 'melody_only' ? 'bg-primary' : 'bg-background'
+                    }`}>
+                      {currentRegistrationType === 'melody_only' && (
+                        <div className="w-2 h-2 rounded-full bg-primary-foreground"></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">Registro apenas da melodia</div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Registra apenas a melodia da música. É obrigatório anexar arquivo de áudio. A letra é opcional.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Upload de áudio - Condicional baseado no tipo */}
-              {currentRegistrationType === 'complete' && (
+              {(currentRegistrationType === 'complete' || currentRegistrationType === 'melody_only') && (
               <div className="space-y-2">
                 <Label className={isMobile ? "text-sm" : ""}>Upload do áudio (MP3) *</Label>
                 <div className={`border-2 border-dashed border-muted-foreground/25 rounded-lg relative ${isMobile ? 'p-4' : 'p-6'}`}>
@@ -781,9 +807,9 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
                   type="submit" 
                   disabled={
                     userCredits <= 0 || 
-                    !lyrics.trim() || 
-                    (currentRegistrationType === 'complete' && !audioFile)
-                  } 
+                    (currentRegistrationType !== 'melody_only' && !lyrics.trim()) || 
+                    ((currentRegistrationType === 'complete' || currentRegistrationType === 'melody_only') && !audioFile)
+                  }
                   className="flex items-center gap-2"
                 >
                   {userCredits <= 0 ? 'Créditos Insuficientes' : 'Registrar Obra'}

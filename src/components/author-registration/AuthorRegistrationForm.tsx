@@ -43,7 +43,7 @@ const formSchema = z.object({
   songVersion: z.string().optional(),
   lyrics: z.string().min(1, 'Letra é obrigatória'),
   additionalInfo: z.string().optional(),
-  registrationType: z.enum(['lyrics_only', 'complete'], {
+  registrationType: z.enum(['lyrics_only', 'complete', 'melody_only'], {
     required_error: 'Selecione o tipo de registro',
   }),
   termsAccepted: z.boolean().refine((val) => val === true, {
