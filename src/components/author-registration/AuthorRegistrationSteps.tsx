@@ -70,6 +70,7 @@ interface AuthorRegistrationStepsProps {
   onSubmit: (data: AuthorRegistrationData) => void;
   userCredits: number;
   initialStep?: 1 | 2;
+  onChange?: (data: Partial<AuthorRegistrationData>) => void;
 }
 
 export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = ({
@@ -77,6 +78,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   onSubmit,
   userCredits,
   initialStep,
+  onChange,
 }) => {
   const { isMobile } = useMobileDetection();
   const [currentStep, setCurrentStep] = useState<1 | 2>(initialStep ?? 1);
@@ -91,7 +93,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   const [audioError, setAudioError] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
-  const [lyrics, setLyrics] = useState<string>('');
+  const [lyrics, setLyrics] = useState<string>(initialData.lyrics || '');
   const [isCurrentUser, setIsCurrentUser] = useState<boolean>(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const { profile } = useProfile();
@@ -115,14 +117,35 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   const step2Form = useForm<Step2Data>({
     resolver: zodResolver(step2Schema),
     defaultValues: {
-      genre: '',
-      styleVariation: '',
-      songVersion: '',
-      registrationType: 'complete',
-      additionalInfo: '',
-      termsAccepted: false,
+      genre: initialData.genre || '',
+      styleVariation: initialData.styleVariation || '',
+      songVersion: initialData.songVersion || '',
+      registrationType: initialData.registrationType || 'complete',
+      additionalInfo: initialData.additionalInfo || '',
+      termsAccepted: initialData.termsAccepted || false,
     },
   });
+
+  // Notificar o parent sobre mudanças em tempo real para persistência
+  const step2Values = step2Form.watch();
+  useEffect(() => {
+    if (onChange) {
+      onChange({
+        title: step1Data.title,
+        author: step1Data.author,
+        authorCpf: step1Data.authorCpf,
+        hasOtherAuthors: step1Data.hasOtherAuthors,
+        otherAuthors: (step1Data.otherAuthors || []).map(a => ({ name: a.name || '', cpf: a.cpf || '' })),
+        lyrics,
+        genre: step2Values.genre,
+        styleVariation: step2Values.styleVariation,
+        songVersion: step2Values.songVersion,
+        registrationType: step2Values.registrationType,
+        additionalInfo: step2Values.additionalInfo,
+        termsAccepted: step2Values.termsAccepted,
+      });
+    }
+  }, [step1Data, lyrics, step2Values.genre, step2Values.styleVariation, step2Values.songVersion, step2Values.registrationType, step2Values.additionalInfo, step2Values.termsAccepted]);
 
   console.log('Current registration type:', step2Form.watch('registrationType'));
 
