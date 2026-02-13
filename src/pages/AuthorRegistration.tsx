@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -113,10 +113,25 @@ const AuthorRegistration: React.FC = () => {
   const { isMobile } = useMobileDetection();
   const { isComplete: isProfileComplete } = useProfileValidation();
   const { profile } = useProfile();
+
+  // Refs para estabilizar créditos e evitar remontagem do formulário
+  const creditsRef = useRef<number | null>(null);
+  const hasLoadedOnce = useRef(false);
+
+  useEffect(() => {
+    if (!creditsLoading && credits !== null) {
+      creditsRef.current = credits;
+      hasLoadedOnce.current = true;
+    }
+  }, [credits, creditsLoading]);
+
+  const effectiveCredits = credits ?? creditsRef.current;
+  const showLoading = creditsLoading && !hasLoadedOnce.current;
+  const showNoCredits = !showLoading && (effectiveCredits === null || effectiveCredits === 0);
   
   // Carregar dados salvos do storage
   const savedData = loadFromStorage();
-  
+
   const [step, setStep] = useState<'form' | 'review'>(savedData?.step || 'form');
   const [desktopStep, setDesktopStep] = useState<1 | 2>(savedData?.desktopStep || 1);
   const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(savedData?.mobileStep || 1);
@@ -171,7 +186,7 @@ const AuthorRegistration: React.FC = () => {
     }
   }, [searchParams]);
 
-  if (creditsLoading) {
+  if (showLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
@@ -180,9 +195,9 @@ const AuthorRegistration: React.FC = () => {
   }
 
   // Log para debug
-  console.log('💳 Estado dos créditos:', { credits, creditsLoading, currentUser: user?.id });
+  console.log('💳 Estado dos créditos:', { credits, effectiveCredits, creditsLoading, currentUser: user?.id });
 
-  if (credits === null || credits === 0) {
+  if (showNoCredits) {
     return (
       <ResponsiveContainer
         mobileClassName="px-4 py-2"
@@ -207,7 +222,7 @@ const AuthorRegistration: React.FC = () => {
                 O registro autoral protege seus direitos autorais. Cada registro consome 1 crédito.
               </p>
               <div className="text-sm text-muted-foreground">
-                <p>Seus créditos atuais: <span className="font-semibold">{credits || 0}</span></p>
+                <p>Seus créditos atuais: <span className="font-semibold">{effectiveCredits || 0}</span></p>
               </div>
             </div>
 
@@ -383,7 +398,7 @@ const AuthorRegistration: React.FC = () => {
           <AuthorRegistrationSteps
             initialData={formData}
             onSubmit={handleFormSubmit}
-            userCredits={credits}
+            userCredits={effectiveCredits}
             initialStep={desktopStep}
             onStepChange={setDesktopStep}
             onChange={handleFormChange}
