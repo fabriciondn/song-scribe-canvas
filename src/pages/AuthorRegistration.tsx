@@ -56,6 +56,7 @@ const STORAGE_KEY = 'author_registration_draft';
 const saveToStorage = (data: {
   formData: AuthorRegistrationData;
   step: 'form' | 'review';
+  desktopStep: 1 | 2;
   mobileStep: 1 | 2 | 3;
   mobileStep1Data: MobileStep1Data | null;
   mobileStep2Data: MobileStep2Data | null;
@@ -77,6 +78,7 @@ const saveToStorage = (data: {
 const loadFromStorage = (): {
   formData: AuthorRegistrationData;
   step: 'form' | 'review';
+  desktopStep: 1 | 2;
   mobileStep: 1 | 2 | 3;
   mobileStep1Data: MobileStep1Data | null;
   mobileStep2Data: MobileStep2Data | null;
@@ -116,6 +118,7 @@ const AuthorRegistration: React.FC = () => {
   const savedData = loadFromStorage();
   
   const [step, setStep] = useState<'form' | 'review'>(savedData?.step || 'form');
+  const [desktopStep, setDesktopStep] = useState<1 | 2>(savedData?.desktopStep || 1);
   const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(savedData?.mobileStep || 1);
   const [mobileStep1Data, setMobileStep1Data] = useState<MobileStep1Data | null>(savedData?.mobileStep1Data || null);
   const [mobileStep2Data, setMobileStep2Data] = useState<MobileStep2Data | null>(savedData?.mobileStep2Data || null);
@@ -140,11 +143,12 @@ const AuthorRegistration: React.FC = () => {
     saveToStorage({
       formData,
       step,
+      desktopStep,
       mobileStep,
       mobileStep1Data,
       mobileStep2Data,
     });
-  }, [formData, step, mobileStep, mobileStep1Data, mobileStep2Data]);
+  }, [formData, step, desktopStep, mobileStep, mobileStep1Data, mobileStep2Data]);
 
   // Capturar código de afiliado da URL
   useEffect(() => {
@@ -256,6 +260,7 @@ const AuthorRegistration: React.FC = () => {
       registrationType: 'complete',
     });
     setStep('form');
+    setDesktopStep(1);
     setMobileStep(1);
     setMobileStep1Data(null);
     setMobileStep2Data(null);
@@ -379,6 +384,8 @@ const AuthorRegistration: React.FC = () => {
             initialData={formData}
             onSubmit={handleFormSubmit}
             userCredits={credits}
+            initialStep={desktopStep}
+            onStepChange={setDesktopStep}
             onChange={handleFormChange}
           />
         )}
