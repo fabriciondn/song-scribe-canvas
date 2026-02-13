@@ -1,138 +1,41 @@
 
-# Plano: Implementar Layout Mobile Completo para Admin Dashboard
+# Correção: Dados do formulário de registro limpando ao trocar de aba
 
-## Objetivo
-Substituir completamente o layout mobile do painel administrativo pelo design enviado, incluindo header próprio, navegação inferior glass-effect e conteúdo 100% fiel ao HTML/CSS fornecido.
+## Problema identificado
 
-## Arquivos a Criar/Modificar
+O componente `AuthorRegistrationSteps` (desktop) possui dois problemas de persistência:
 
-### 1. Criar `src/components/admin/MobileAdminDashboard.tsx` (NOVO)
-Layout shell completo para mobile com:
+1. **`lyrics` inicia vazio**: Na linha 94, `useState<string>('')` ignora completamente o valor de `initialData.lyrics` que vem do sessionStorage.
 
-**Header (sticky top)**
-- Fundo: `bg-black/80 backdrop-blur-md border-b border-white/5`
-- Ícone escudo verde: `size-10 bg-primary rounded-lg` com ícone shield
-- Título: "Compuse" (bold) + "ADMIN CONSOLE" (verde, uppercase, tracking)
-- Notificação com badge verde
-- Avatar com borda verde
+2. **`step2Form` ignora `initialData`**: Os valores padrão do formulário da etapa 2 (gênero, versão, tipo de registro, etc.) são hardcoded como strings vazias, ignorando os valores salvos em `initialData`.
 
-**Navegação Inferior (fixed bottom)**
-- Classe: `glass-nav` (rgba(10,10,10,0.85) + blur 20px)
-- 4 botões: Formulários, Registros, Usuários, Menu
-- Ícones Material Symbols (simulados com Lucide)
-- Linha indicadora na parte inferior
+3. **Dados intermediários não são salvos**: O parent (`AuthorRegistration`) só atualiza `formData` quando o formulário é submetido (`handleFormSubmit`), mas não captura os dados enquanto o usuário digita. Ao trocar de aba, o componente remonta e perde tudo.
 
-**Roteamento interno**
-- Estado para controlar a aba ativa
-- Renderização condicional do conteúdo
+## Solução
 
-### 2. Atualizar `src/components/admin/MobileAdminOverview.tsx`
-Remover qualquer estrutura de layout e manter apenas o conteúdo:
+### 1. Corrigir `AuthorRegistrationSteps.tsx`
 
-**Cards Horizontais**
-- `min-w-[280px]`, scroll horizontal com `hide-scrollbar`
-- 3 cards: Compositores, Obras, Faturado
-- Ícones, badges percentuais, números grandes
+- Inicializar `lyrics` a partir de `initialData.lyrics`
+- Inicializar `step2Form` com os valores de `initialData` (genre, styleVariation, songVersion, registrationType, additionalInfo, termsAccepted)
+- Adicionar uma prop `onChange` que notifica o parent sempre que os dados mudarem (para que sejam salvos no sessionStorage em tempo real)
 
-**Grid Status dos Planos**
-- 2x2 grid
-- Indicadores coloridos com glow
-- Clicáveis para abrir modais
+### 2. Corrigir `AuthorRegistration.tsx` (desktop)
 
-**Seção Origem dos Usuários**
-- Progress bars
-- Percentuais calculados
+- Passar uma callback `onChange` para `AuthorRegistrationSteps` que atualiza `formData` em tempo real
+- Isso garante que o sessionStorage sempre tenha os dados mais recentes
 
-### 3. Atualizar `src/pages/AdminDashboard.tsx`
-Adicionar detecção mobile e renderizar `MobileAdminDashboard` quando em celular:
+## Detalhes técnicos
 
-```typescript
-const isMobile = useIsMobile();
+**`AuthorRegistrationSteps.tsx`** - Mudanças:
 
-if (isMobile) {
-  return <MobileAdminDashboard />;
-}
+- Linha 94: `useState<string>('')` vira `useState<string>(initialData.lyrics || '')`
+- Linhas 117-125: `step2Form defaultValues` passa a usar valores de `initialData`
+- Nova prop `onChange?: (data: Partial<AuthorRegistrationData>) => void`
+- Adicionar `useEffect` que chama `onChange` quando `lyrics`, `step1Data` ou `step2Form` mudam
 
-// ... layout desktop existente
-```
+**`AuthorRegistration.tsx`** - Mudanças:
 
-## Design Exato (do HTML fornecido)
+- Adicionar handler `handleFormChange` que faz `setFormData(prev => ({...prev, ...partialData}))`
+- Passar `onChange={handleFormChange}` para `AuthorRegistrationSteps`
 
-### Header
-```html
-<header class="sticky top-0 z-50 flex items-center justify-between px-6 py-5 bg-black/80 backdrop-blur-md border-b border-white/5">
-  <div class="flex items-center gap-3">
-    <div class="size-10 bg-primary rounded-lg flex items-center justify-center">
-      <span class="material-symbols-outlined text-black font-bold">shield_person</span>
-    </div>
-    <div>
-      <h1 class="text-lg font-bold leading-none">Compuse</h1>
-      <p class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Admin Console</p>
-    </div>
-  </div>
-  <!-- Notificação + Avatar -->
-</header>
-```
-
-### Navegação Inferior
-```html
-<nav class="fixed bottom-0 left-0 right-0 glass-nav h-20 px-4 flex items-center justify-around pb-6">
-  <button class="flex flex-col items-center gap-1.5 text-primary">
-    <span>description</span>
-    <span class="text-[10px] font-bold">Formulários</span>
-  </button>
-  <!-- Registros, Usuários, Menu -->
-</nav>
-<div class="fixed bottom-1 left-1/2 -translate-x-1/2 w-36 h-1 bg-white/20 rounded-full z-[60]"></div>
-```
-
-### Estilos Glass-Nav
-```css
-.glass-nav {
-  background: rgba(10, 10, 10, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-```
-
-## Fluxo de Navegação Mobile
-
-| Botão | Componente Renderizado |
-|-------|------------------------|
-| Formulários (default) | `AdminForms` ou Overview |
-| Registros | `AdminRegistrations` |
-| Usuários | `AdminUsers` |
-| Menu | Sheet lateral com todas opções |
-
-## Detalhes Técnicos
-
-### Ícones (Lucide equivalentes)
-- `description` → `FileText`
-- `inventory` → `Package`
-- `person` → `User`
-- `menu` → `Menu`
-- `groups` → `Users`
-- `payments` → `Wallet`
-- `notifications` → `Bell`
-- `shield_person` → `ShieldCheck`
-
-### Cores Exatas
-- Background: `#000000`
-- Cards: `#0A0A0A`
-- Primary: `#22C55E`
-- Bordas: `rgba(255, 255, 255, 0.1)`
-
-### Safe Areas
-- Top: `calc(env(safe-area-inset-top, 0px) + 20px)`
-- Bottom: `calc(env(safe-area-inset-bottom, 0px) + 24px)`
-
-## Resultado Esperado
-
-Um painel admin mobile que funciona como app nativo com:
-- Header fixo com branding
-- Conteúdo scrollável
-- Navegação inferior fixa com blur glass
-- Linha indicadora de home
-- Transições suaves entre abas
-- Modais funcionais para detalhes
+Os componentes mobile (Step1, Step2) ja possuem persistência independente e nao serao alterados.
