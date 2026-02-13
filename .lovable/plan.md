@@ -1,41 +1,58 @@
 
-# Correção: Dados do formulário de registro limpando ao trocar de aba
+# Correção: Página de registro voltando ao início ao minimizar
 
-## Problema identificado
+## Problema raiz identificado
 
-O componente `AuthorRegistrationSteps` (desktop) possui dois problemas de persistência:
+Quando o usuário minimiza a página e volta, o hook `useUserCredits` recebe um evento de mudança de autenticação (via `onAuthStateChange`) que dispara `shouldRefresh = true`, fazendo:
 
-1. **`lyrics` inicia vazio**: Na linha 94, `useState<string>('')` ignora completamente o valor de `initialData.lyrics` que vem do sessionStorage.
+1. `setCredits(null)` e `setIsLoading(true)`
+2. O componente `AuthorRegistration` renderiza o spinner de loading (linha 174)
+3. Isso **desmonta** o `AuthorRegistrationSteps`, perdendo todo estado interno dos formulários
+4. Depois, `credits` brevemente fica `null`, mostrando a tela de "créditos necessários"
+5. Quando os créditos carregam de volta, `AuthorRegistrationSteps` é remontado do zero
 
-2. **`step2Form` ignora `initialData`**: Os valores padrão do formulário da etapa 2 (gênero, versão, tipo de registro, etc.) são hardcoded como strings vazias, ignorando os valores salvos em `initialData`.
+Embora o `desktopStep` e `formData` estejam no sessionStorage, a **remontagem** causa perda de estado interno do react-hook-form (como validações, dirty state, etc).
 
-3. **Dados intermediários não são salvos**: O parent (`AuthorRegistration`) só atualiza `formData` quando o formulário é submetido (`handleFormSubmit`), mas não captura os dados enquanto o usuário digita. Ao trocar de aba, o componente remonta e perde tudo.
+## Solucao
 
-## Solução
+Evitar que o `AuthorRegistrationSteps` seja desmontado/remontado durante recarregamentos de créditos. Em vez de usar retornos antecipados (early returns) que substituem toda a renderização, usar visibilidade condicional (`display: none` / CSS) ou, mais simplesmente, tratar o caso de loading/null credits de forma que nao desmonte o formulário.
 
-### 1. Corrigir `AuthorRegistrationSteps.tsx`
+### Mudanca em `AuthorRegistration.tsx`
 
-- Inicializar `lyrics` a partir de `initialData.lyrics`
-- Inicializar `step2Form` com os valores de `initialData` (genre, styleVariation, songVersion, registrationType, additionalInfo, termsAccepted)
-- Adicionar uma prop `onChange` que notifica o parent sempre que os dados mudarem (para que sejam salvos no sessionStorage em tempo real)
+1. **Remover o early return do `creditsLoading`** - Em vez de retornar um spinner que substitui todo o componente, renderizar o spinner como overlay ou simplesmente ignorar o estado de loading intermediário se o usuário já tinha créditos carregados anteriormente.
 
-### 2. Corrigir `AuthorRegistration.tsx` (desktop)
+2. **Usar ref para "travar" os créditos**: Armazenar o último valor válido de créditos em um `useRef`. Se `credits` voltar a `null` durante um refresh, usar o valor do ref em vez de mostrar a tela de "sem créditos". Isso evita que a tela pisque.
 
-- Passar uma callback `onChange` para `AuthorRegistrationSteps` que atualiza `formData` em tempo real
-- Isso garante que o sessionStorage sempre tenha os dados mais recentes
+3. **Proteger contra remontagem**: Adicionar um `useRef` para `hasLoadedCredits` que, uma vez `true`, nunca mais mostra o spinner ou a tela de "sem créditos" durante recarregamentos.
 
-## Detalhes técnicos
+### Detalhes tecnicos
 
-**`AuthorRegistrationSteps.tsx`** - Mudanças:
+```
+// Novo estado para "travar" créditos
+const creditsRef = useRef<number | null>(null);
+const hasLoadedOnce = useRef(false);
 
-- Linha 94: `useState<string>('')` vira `useState<string>(initialData.lyrics || '')`
-- Linhas 117-125: `step2Form defaultValues` passa a usar valores de `initialData`
-- Nova prop `onChange?: (data: Partial<AuthorRegistrationData>) => void`
-- Adicionar `useEffect` que chama `onChange` quando `lyrics`, `step1Data` ou `step2Form` mudam
+// Atualizar ref quando créditos carregam
+useEffect(() => {
+  if (!creditsLoading && credits !== null) {
+    creditsRef.current = credits;
+    hasLoadedOnce.current = true;
+  }
+}, [credits, creditsLoading]);
 
-**`AuthorRegistration.tsx`** - Mudanças:
+// Usar creditsRef.current para as verificações
+// em vez de credits diretamente
+const effectiveCredits = credits ?? creditsRef.current;
+const showLoading = creditsLoading && !hasLoadedOnce.current;
+const showNoCredits = !showLoading && (effectiveCredits === null || effectiveCredits === 0);
+```
 
-- Adicionar handler `handleFormChange` que faz `setFormData(prev => ({...prev, ...partialData}))`
-- Passar `onChange={handleFormChange}` para `AuthorRegistrationSteps`
+Isso garante que:
+- O spinner so aparece no primeiro carregamento (nunca mais depois)
+- A tela de "sem créditos" nunca aparece durante um refresh intermediário
+- O `AuthorRegistrationSteps` nunca é desmontado por causa de loading de créditos
+- Nenhuma funcionalidade existente é alterada
 
-Os componentes mobile (Step1, Step2) ja possuem persistência independente e nao serao alterados.
+### Arquivo modificado
+
+- `src/pages/AuthorRegistration.tsx` - Apenas adicionar logica de ref para estabilizar créditos
