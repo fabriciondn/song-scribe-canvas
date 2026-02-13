@@ -127,15 +127,23 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   });
 
   // Notificar o parent sobre mudanças em tempo real para persistência
+  const step1Values = step1Form.watch();
   const step2Values = step2Form.watch();
   useEffect(() => {
     if (onChange) {
+      // Usar valores live do form (step1Form.watch) quando no step 1, ou step1Data quando já passou pro step 2
+      const currentTitle = currentStep === 1 ? step1Values.title : step1Data.title;
+      const currentAuthor = currentStep === 1 ? step1Values.author : step1Data.author;
+      const currentAuthorCpf = currentStep === 1 ? step1Values.authorCpf : step1Data.authorCpf;
+      const currentHasOtherAuthors = currentStep === 1 ? step1Values.hasOtherAuthors : step1Data.hasOtherAuthors;
+      const currentOtherAuthors = currentStep === 1 ? step1Values.otherAuthors : step1Data.otherAuthors;
+
       onChange({
-        title: step1Data.title,
-        author: step1Data.author,
-        authorCpf: step1Data.authorCpf,
-        hasOtherAuthors: step1Data.hasOtherAuthors,
-        otherAuthors: (step1Data.otherAuthors || []).map(a => ({ name: a.name || '', cpf: a.cpf || '' })),
+        title: currentTitle,
+        author: currentAuthor,
+        authorCpf: currentAuthorCpf,
+        hasOtherAuthors: currentHasOtherAuthors,
+        otherAuthors: (currentOtherAuthors || []).map(a => ({ name: a.name || '', cpf: a.cpf || '' })),
         lyrics,
         genre: step2Values.genre,
         styleVariation: step2Values.styleVariation,
@@ -145,7 +153,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
         termsAccepted: step2Values.termsAccepted,
       });
     }
-  }, [step1Data, lyrics, step2Values.genre, step2Values.styleVariation, step2Values.songVersion, step2Values.registrationType, step2Values.additionalInfo, step2Values.termsAccepted]);
+  }, [currentStep, step1Values.title, step1Values.author, step1Values.authorCpf, step1Values.hasOtherAuthors, step1Data, lyrics, step2Values.genre, step2Values.styleVariation, step2Values.songVersion, step2Values.registrationType, step2Values.additionalInfo, step2Values.termsAccepted]);
 
   console.log('Current registration type:', step2Form.watch('registrationType'));
 
