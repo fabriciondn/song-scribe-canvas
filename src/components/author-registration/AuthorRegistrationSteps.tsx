@@ -70,6 +70,7 @@ interface AuthorRegistrationStepsProps {
   onSubmit: (data: AuthorRegistrationData) => void;
   userCredits: number;
   initialStep?: 1 | 2;
+  onStepChange?: (step: 1 | 2) => void;
   onChange?: (data: Partial<AuthorRegistrationData>) => void;
 }
 
@@ -78,6 +79,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   onSubmit,
   userCredits,
   initialStep,
+  onStepChange,
   onChange,
 }) => {
   const { isMobile } = useMobileDetection();
@@ -97,6 +99,13 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   const [isCurrentUser, setIsCurrentUser] = useState<boolean>(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const { profile } = useProfile();
+
+  // Notificar parent sobre mudança de step para persistência
+  useEffect(() => {
+    if (onStepChange) {
+      onStepChange(currentStep);
+    }
+  }, [currentStep, onStepChange]);
 
   // Cleanup do áudio quando o componente é desmontado
   useEffect(() => {
