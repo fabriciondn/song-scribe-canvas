@@ -231,6 +231,10 @@ const AuthorRegistration: React.FC = () => {
     setStep('review');
   };
 
+  const handleFormChange = (partialData: Partial<AuthorRegistrationData>) => {
+    setFormData(prev => ({ ...prev, ...partialData }));
+  };
+
   const handleRegisterComplete = () => {
     // Limpar o storage ao completar o registro
     clearStorage();
@@ -375,6 +379,7 @@ const AuthorRegistration: React.FC = () => {
             initialData={formData}
             onSubmit={handleFormSubmit}
             userCredits={credits}
+            onChange={handleFormChange}
           />
         )}
 
