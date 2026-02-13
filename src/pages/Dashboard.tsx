@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileLayout } from '@/components/layout/MobileLayout';
@@ -25,6 +25,17 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // Ref para estabilizar o loading - evitar desmontar Outlet ao minimizar/voltar
+  const hasAuthLoaded = useRef(false);
+  
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      hasAuthLoaded.current = true;
+    }
+  }, [isLoading, isAuthenticated]);
+  
+  const showLoading = isLoading && !hasAuthLoaded.current;
+
   // Usar o hook para sincronizar impersonação entre abas
   useImpersonationSync();
 
@@ -55,7 +66,7 @@ const Dashboard: React.FC = () => {
     setIsSidebarCollapsed(prev => !prev);
   };
 
-  if (isLoading) {
+  if (showLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
