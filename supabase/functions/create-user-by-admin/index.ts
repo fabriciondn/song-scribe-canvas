@@ -99,16 +99,20 @@ serve(async (req) => {
 
     // If user already exists, get their ID
     if (createUserError?.message?.includes('already been registered')) {
-      console.log('User already exists, fetching existing user...');
+      console.log('User already exists, fetching existing user by email...');
       userExists = true;
       
-      // Get the existing user by email
-      const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+      // Get the existing user by email using filter instead of listing all users
+      const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+        filter: body.email,
+        page: 1,
+        perPage: 1,
+      });
       
       if (listError) {
-        console.error('Error listing users:', listError);
+        console.error('Error fetching existing user:', listError);
         return new Response(
-          JSON.stringify({ error: 'Failed to fetch existing user' }),
+          JSON.stringify({ error: 'Falha ao buscar usuário existente' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -117,7 +121,7 @@ serve(async (req) => {
       
       if (!existingUser) {
         return new Response(
-          JSON.stringify({ error: 'User exists but could not be found' }),
+          JSON.stringify({ error: 'Este email já está registrado mas não foi possível localizar o usuário. Tente com outro email.' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
