@@ -99,14 +99,14 @@ serve(async (req) => {
 
     // If user already exists, get their ID
     if (createUserError?.message?.includes('already been registered')) {
-      console.log('User already exists, fetching existing user by email...');
+      console.log('User already exists, fetching existing user by email:', body.email);
       userExists = true;
       
-      // Get the existing user by email using filter instead of listing all users
+      // Use filter with higher perPage to ensure we find the user
       const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers({
         filter: body.email,
         page: 1,
-        perPage: 1,
+        perPage: 50,
       });
       
       if (listError) {
@@ -116,17 +116,46 @@ serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+
+      console.log('Users found with filter:', existingUsers.users.length);
       
-      const existingUser = existingUsers.users.find(u => u.email === body.email);
+      // Find exact email match
+      const existingUser = existingUsers.users.find(u => u.email?.toLowerCase() === body.email.toLowerCase());
       
       if (!existingUser) {
-        return new Response(
-          JSON.stringify({ error: 'Este email já está registrado mas não foi possível localizar o usuário. Tente com outro email.' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        // Fallback: try without filter, paginating
+        console.log('Exact match not found with filter, trying direct lookup...');
+        
+        let found = null;
+        let page = 1;
+        const perPage = 100;
+        
+        while (!found) {
+          const { data: pageData, error: pageError } = await supabaseAdmin.auth.admin.listUsers({
+            page,
+            perPage,
+          });
+          
+          if (pageError || !pageData.users.length) break;
+          
+          found = pageData.users.find(u => u.email?.toLowerCase() === body.email.toLowerCase());
+          
+          if (pageData.users.length < perPage) break;
+          page++;
+          if (page > 20) break; // Safety limit
+        }
+        
+        if (!found) {
+          return new Response(
+            JSON.stringify({ error: 'Este email já está registrado mas não foi possível localizar o usuário. Tente com outro email.' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        userId = found.id;
+      } else {
+        userId = existingUser.id;
       }
-      
-      userId = existingUser.id;
     } else if (createUserError || !newUser.user) {
       console.error('Error creating user:', createUserError);
       return new Response(
