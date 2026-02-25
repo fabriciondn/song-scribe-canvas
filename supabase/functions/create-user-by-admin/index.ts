@@ -169,50 +169,49 @@ serve(async (req) => {
     }
 
     try {
-      // Create or update user profile (only if user was just created)
+      // Create or update user profile - ALWAYS upsert with form data
+      const profileData: Record<string, unknown> = {
+        id: userId,
+        name: body.name,
+        email: body.email,
+      };
+
+      // Only set credits for new users
       if (!userExists) {
-        const profileData: Record<string, unknown> = {
-          id: userId,
-          name: body.name,
-          email: body.email,
-          credits: body.credits ?? 0
-        };
-
-        // Adicionar campos opcionais do formulário se fornecidos
-        if (body.artistic_name) profileData.artistic_name = body.artistic_name;
-        if (body.cpf) profileData.cpf = body.cpf;
-        if (body.birth_date) profileData.birth_date = body.birth_date;
-        if (body.phone) profileData.cellphone = body.phone;
-        if (body.cep) profileData.cep = body.cep;
-        if (body.street) profileData.street = body.street;
-        if (body.number) profileData.number = body.number;
-        if (body.neighborhood) profileData.neighborhood = body.neighborhood;
-        if (body.city) profileData.city = body.city;
-        if (body.state) profileData.state = body.state;
-
-        const { error: profileError } = await supabaseAdmin
-          .from('profiles')
-          .upsert(profileData);
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-          // Try to delete the user if profile creation fails
-          await supabaseAdmin.auth.admin.deleteUser(userId);
-          throw profileError;
-        }
-      } else {
-        // User exists, no credits update needed unless explicitly provided
-        if (body.credits !== undefined && body.credits > 0) {
-          const { error: updateError } = await supabaseAdmin
-            .from('profiles')
-            .update({ credits: body.credits })
-            .eq('id', userId);
-            
-          if (updateError) {
-            console.error('Error updating profile credits:', updateError);
-          }
-        }
+        profileData.credits = body.credits ?? 0;
+      } else if (body.credits !== undefined && body.credits > 0) {
+        profileData.credits = body.credits;
       }
+
+      // Adicionar campos opcionais do formulário se fornecidos
+      if (body.artistic_name) profileData.artistic_name = body.artistic_name;
+      if (body.cpf) profileData.cpf = body.cpf;
+      if (body.birth_date) profileData.birth_date = body.birth_date;
+      if (body.phone) profileData.cellphone = body.phone;
+      if (body.cep) profileData.cep = body.cep;
+      if (body.street) profileData.street = body.street;
+      if (body.number) profileData.number = body.number;
+      if (body.neighborhood) profileData.neighborhood = body.neighborhood;
+      if (body.city) profileData.city = body.city;
+      if (body.state) profileData.state = body.state;
+
+      console.log('Upserting profile for user:', userId, 'with data:', JSON.stringify(profileData));
+
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .upsert(profileData);
+
+      if (profileError) {
+        console.error('Error upserting profile:', profileError);
+        if (!userExists) {
+          await supabaseAdmin.auth.admin.deleteUser(userId);
+        }
+        throw profileError;
+      }
+
+      console.log('Profile upserted successfully');
+
+
 
       // If creating a moderator, add to admin_users table
       if (body.role === 'moderator') {
