@@ -30,3 +30,6 @@ verify_jwt = true
 
 [functions.transcribe-audio]
 verify_jwt = false
+
+[functions.create-user-by-admin]
+verify_jwt = false
