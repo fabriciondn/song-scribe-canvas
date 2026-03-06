@@ -203,24 +203,29 @@ serve(async (req) => {
     // Processar créditos (fluxo existente)
     console.log('💰 Processing credits payment');
     
-    const { data: transaction, error: transactionError } = await supabaseService
+    // ATOMICAMENTE marcar como 'processing' para evitar duplicação por race condition
+    // (Mercado Pago envia 2 notificações simultâneas: formato antigo e novo)
+    const { data: claimedTransaction, error: claimError } = await supabaseService
       .from('credit_transactions')
-      .select('*')
+      .update({ status: 'processing' })
       .eq('payment_id', paymentId.toString())
       .eq('status', 'pending')
-      .single();
+      .select('*')
+      .maybeSingle();
 
-    if (transactionError) {
-      console.error('❌ Error finding transaction:', transactionError);
-      return new Response('Transaction not found', { status: 200, headers: corsHeaders });
+    if (claimError) {
+      console.error('❌ Error claiming transaction:', claimError);
+      return new Response('Error claiming transaction', { status: 200, headers: corsHeaders });
     }
 
-    if (!transaction) {
-      console.log('⚠️ Transaction not found or already processed:', paymentId);
-      return new Response('Transaction not found or already processed', { status: 200, headers: corsHeaders });
+    if (!claimedTransaction) {
+      console.log('⚠️ Transaction not found or already being processed:', paymentId);
+      return new Response('Transaction already processed', { status: 200, headers: corsHeaders });
     }
 
-    console.log('📋 Found transaction:', {
+    const transaction = claimedTransaction;
+
+    console.log('📋 Claimed transaction:', {
       id: transaction.id,
       user_id: transaction.user_id,
       credits_purchased: transaction.credits_purchased,
@@ -238,6 +243,8 @@ serve(async (req) => {
 
     if (profileError) {
       console.error('❌ Error finding user profile:', profileError);
+      // Reverter status para pending em caso de erro
+      await supabaseService.from('credit_transactions').update({ status: 'pending' }).eq('id', transaction.id);
       return new Response('User profile not found', { status: 500, headers: corsHeaders });
     }
 
@@ -258,10 +265,11 @@ serve(async (req) => {
 
     if (creditsError) {
       console.error('❌ Error updating credits:', creditsError);
+      await supabaseService.from('credit_transactions').update({ status: 'pending' }).eq('id', transaction.id);
       return new Response('Error updating credits', { status: 500, headers: corsHeaders });
     }
 
-    // Atualizar status da transação
+    // Finalizar transação como completed
     const { error: transactionUpdateError } = await supabaseService
       .from('credit_transactions')
       .update({
@@ -272,7 +280,6 @@ serve(async (req) => {
 
     if (transactionUpdateError) {
       console.error('❌ Error updating transaction:', transactionUpdateError);
-      return new Response('Error updating transaction', { status: 500, headers: corsHeaders });
     }
 
     console.log('🎉 Credits successfully added!', {
