@@ -85,6 +85,43 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
     }
   }, [userRole]);
 
+  // Buscar lista de moderadores
+  const { data: moderatorsList } = useQuery({
+    queryKey: ['moderators-for-transfer'],
+    queryFn: async () => {
+      const { data: mods, error } = await supabase
+        .from('admin_users')
+        .select('user_id')
+        .eq('role', 'moderator');
+      if (error) throw error;
+      if (!mods || mods.length === 0) return [];
+      const userIds = mods.map((m: any) => m.user_id);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .in('id', userIds)
+        .not('name', 'like', '%[USUÁRIO EXCLUÍDO]%');
+      return profiles || [];
+    },
+    enabled: isOpen,
+  });
+
+  // Verificar se usuário já está vinculado a um moderador
+  const { data: currentModeratorLink, refetch: refetchModeratorLink } = useQuery({
+    queryKey: ['user-moderator-link', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('moderator_users')
+        .select('moderator_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: isOpen && !!user?.id,
+  });
+
   // Buscar estatísticas do usuário
   const { data: userStats } = useQuery({
     queryKey: ['user-stats', user?.id],
