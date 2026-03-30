@@ -32,6 +32,8 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
   const [credits, setCredits] = useState(user?.credits || 0);
   const [moderatorNotes, setModeratorNotes] = useState(user?.moderator_notes || '');
   const [selectedRole, setSelectedRole] = useState<string>('user');
+  const [selectedModeratorId, setSelectedModeratorId] = useState<string>('');
+  const [isTransferring, setIsTransferring] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
