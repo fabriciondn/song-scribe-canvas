@@ -1373,6 +1373,124 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
               </CardContent>
             </Card>
 
+            {/* Transferir para Moderador */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ArrowRightLeft className="h-5 w-5" />
+                  Transferir para Moderador
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {currentModeratorLink ? (
+                  <div className="space-y-3">
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-sm font-medium">Moderador atual:</p>
+                      <p className="text-sm text-muted-foreground">
+                        {moderatorsList?.find((m: any) => m.id === currentModeratorLink.moderator_id)?.name || 'Moderador desconhecido'}
+                        {' '}
+                        ({moderatorsList?.find((m: any) => m.id === currentModeratorLink.moderator_id)?.email || ''})
+                      </p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={isTransferring}
+                      onClick={async () => {
+                        setIsTransferring(true);
+                        try {
+                          const { error } = await supabase
+                            .from('moderator_users')
+                            .delete()
+                            .eq('user_id', user.id);
+                          if (error) throw error;
+                          toast({ title: 'Sucesso', description: 'Vínculo com moderador removido' });
+                          refetchModeratorLink();
+                          setSelectedModeratorId('');
+                        } catch (err: any) {
+                          toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+                        } finally {
+                          setIsTransferring(false);
+                        }
+                      }}
+                    >
+                      Remover vínculo
+                    </Button>
+                  </div>
+                ) : null}
+                <div className="flex gap-4 items-end">
+                  <div className="flex-1">
+                    <Label>Moderador</Label>
+                    <Select value={selectedModeratorId} onValueChange={setSelectedModeratorId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um moderador" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {moderatorsList?.map((mod: any) => (
+                          <SelectItem key={mod.id} value={mod.id}>
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4" />
+                              {mod.name || mod.email}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      O usuário será adicionado à lista de clientes do moderador selecionado
+                    </p>
+                  </div>
+                  <Button
+                    disabled={isTransferring || !selectedModeratorId}
+                    onClick={async () => {
+                      if (!user?.id || !selectedModeratorId) return;
+                      setIsTransferring(true);
+                      try {
+                        // Remover vínculo anterior se existir
+                        await supabase
+                          .from('moderator_users')
+                          .delete()
+                          .eq('user_id', user.id);
+
+                        // Criar novo vínculo
+                        const { error } = await supabase
+                          .from('moderator_users')
+                          .insert({
+                            user_id: user.id,
+                            moderator_id: selectedModeratorId,
+                          });
+                        if (error) throw error;
+
+                        // Log
+                        await supabase.from('user_activity_logs').insert({
+                          user_id: user.id,
+                          action: 'user_transferred_to_moderator',
+                          metadata: {
+                            admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+                            moderator_id: selectedModeratorId,
+                            moderator_name: moderatorsList?.find((m: any) => m.id === selectedModeratorId)?.name,
+                          },
+                        });
+
+                        toast({ title: 'Sucesso', description: 'Usuário transferido para o moderador com sucesso' });
+                        refetchModeratorLink();
+                        setSelectedModeratorId('');
+                        onUserUpdate();
+                      } catch (err: any) {
+                        toast({ title: 'Erro', description: err.message || 'Erro ao transferir usuário', variant: 'destructive' });
+                      } finally {
+                        setIsTransferring(false);
+                      }
+                    }}
+                    className="gap-2"
+                  >
+                    <ArrowRightLeft className="h-4 w-4" />
+                    {currentModeratorLink ? 'Transferir' : 'Vincular'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Notas do moderador */}
             <Card>
               <CardHeader>
