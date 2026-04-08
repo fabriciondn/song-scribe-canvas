@@ -73,7 +73,7 @@ serve(async (req) => {
     // Consultar detalhes do pagamento no Mercado Pago
     console.log('📡 Consulting Mercado Pago API for payment:', paymentId);
     
-    const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+    let paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${mercadoPagoAccessToken}`,
@@ -81,8 +81,51 @@ serve(async (req) => {
       }
     });
 
+    // Se falhou com token da plataforma, tentar com tokens de moderadores
     if (!paymentResponse.ok) {
-      console.error('❌ Error consulting payment:', paymentResponse.status, paymentResponse.statusText);
+      console.log('⚠️ Platform token failed, trying moderator tokens...');
+      
+      // Buscar todos os tokens de moderadores ativos
+      const { data: moderatorSettings } = await supabaseService
+        .from('moderator_payment_settings')
+        .select('moderator_id, mercadopago_access_token')
+        .eq('is_active', true);
+      
+      // Também tentar o token do moderador via secret
+      const moderatorSecretToken = Deno.env.get("MODERATOR_ACORDEON_MP_TOKEN");
+      
+      const tokensToTry: string[] = [];
+      if (moderatorSettings) {
+        for (const setting of moderatorSettings) {
+          if (setting.mercadopago_access_token) {
+            tokensToTry.push(setting.mercadopago_access_token);
+          }
+        }
+      }
+      if (moderatorSecretToken) {
+        tokensToTry.push(moderatorSecretToken);
+      }
+      
+      for (const token of tokensToTry) {
+        const modResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (modResponse.ok) {
+          console.log('✅ Payment found with moderator token');
+          paymentResponse = modResponse;
+          mercadoPagoAccessToken = token;
+          break;
+        }
+      }
+    }
+
+    if (!paymentResponse.ok) {
+      console.error('❌ Error consulting payment with all tokens:', paymentResponse.status);
       const errorText = await paymentResponse.text();
       console.error('❌ Error details:', errorText);
       return new Response(`Payment query failed: ${paymentResponse.status}`, { status: 500, headers: corsHeaders });
