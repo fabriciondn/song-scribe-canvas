@@ -56,11 +56,14 @@ serve(async (req) => {
 
     console.log('🔍 Processing payment:', paymentId);
 
-    // Buscar token do Mercado Pago
-    let mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
-    if (!mercadoPagoAccessToken) {
-      mercadoPagoAccessToken = Deno.env.get("Access Token mercado pago");
+    // Buscar token do Mercado Pago (plataforma)
+    let platformToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
+    if (!platformToken) {
+      platformToken = Deno.env.get("Access Token mercado pago");
     }
+
+    // Tentar com o token da plataforma primeiro
+    let mercadoPagoAccessToken = platformToken;
     
     if (!mercadoPagoAccessToken) {
       console.error('❌ Mercado Pago token not configured');
