@@ -59,16 +59,19 @@ serve(async (req) => {
       );
     }
 
-    // Check if the user has admin privileges
+    // Check if the user has admin or moderator privileges
     const { data: adminUser, error: adminError } = await supabaseAdmin
       .from('admin_users')
       .select('role')
       .eq('user_id', user.id)
       .single();
 
-    if (adminError || !adminUser || !['admin', 'super_admin'].includes(adminUser.role)) {
+    const isAuthorized = adminUser && (['admin', 'super_admin', 'moderator'].includes(adminUser.role));
+
+    if (adminError || !isAuthorized) {
+      console.error('Authorization check failed:', adminError || 'Not authorized');
       return new Response(
-        JSON.stringify({ error: 'Admin privileges required' }),
+        JSON.stringify({ error: 'Permissões insuficientes para realizar esta ação' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -212,6 +215,27 @@ serve(async (req) => {
       console.log('Profile upserted successfully');
 
 
+
+      // If the requester is a moderator or an admin creating a user, link them in moderator_users
+      if (body.role === 'user') {
+        const creatorId = user.id;
+        const { data: creatorRole } = await supabaseAdmin
+          .from('admin_users')
+          .select('role')
+          .eq('user_id', creatorId)
+          .single();
+
+        // If the creator is a moderator, link the new user to them
+        if (creatorRole?.role === 'moderator') {
+          console.log('Linking new user', userId, 'to moderator', creatorId);
+          await supabaseAdmin
+            .from('moderator_users')
+            .upsert({
+              moderator_id: creatorId,
+              user_id: userId
+            });
+        }
+      }
 
       // If creating a moderator, add to admin_users table
       if (body.role === 'moderator') {
