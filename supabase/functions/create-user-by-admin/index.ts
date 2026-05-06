@@ -232,8 +232,7 @@ serve(async (req) => {
             .from('moderator_users')
             .upsert({
               moderator_id: creatorId,
-              user_id: userId,
-              created_by_admin: creatorId
+              user_id: userId
             });
         }
       }
