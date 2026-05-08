@@ -170,33 +170,28 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
     setIsSearchingToken(true);
     setFoundCoAuthor(null);
     try {
-      // Buscar o token de parceiro na tabela composer_tokens
-      const { data: tokenData, error: tokenError } = await supabase
-        .from('composer_tokens')
-        .select('user_id, is_active, expires_at')
-        .eq('token', partnerToken.trim())
-        .eq('is_active', true)
-        .maybeSingle();
+      // Validar token via função segura (não expõe outros tokens)
+      const { data: tokenRows, error: tokenError } = await supabase.rpc(
+        'validate_composer_token',
+        { p_token: partnerToken.trim() }
+      );
 
       if (tokenError) throw tokenError;
+
+      const tokenData = Array.isArray(tokenRows) ? tokenRows[0] : tokenRows;
 
       if (!tokenData) {
         toast.error('Token inválido ou expirado');
         return;
       }
 
-      // Verificar se o token não expirou
-      if (new Date(tokenData.expires_at) < new Date()) {
-        toast.error('Este token já expirou');
-        return;
-      }
-
-      // Buscar os dados do perfil do usuário
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, name, cpf, avatar_url')
-        .eq('id', tokenData.user_id)
-        .single();
+      const profileData = {
+        id: tokenData.user_id,
+        name: tokenData.name,
+        cpf: tokenData.cpf,
+        avatar_url: tokenData.avatar_url,
+      };
+      const profileError = null;
 
       if (profileError) throw profileError;
 
