@@ -44,12 +44,7 @@ export const ComposersCarousel: React.FC = () => {
       const {
         data: allProfiles,
         error
-      } = await supabase
-        .from('profiles')
-        .select('id, name, artistic_name, avatar_url')
-        .not('name', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(50);
+      } = await supabase.rpc('get_public_composers', { p_limit: 50 });
       if (error) {
         console.error('Erro ao buscar compositores:', error);
       }
