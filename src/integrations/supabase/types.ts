@@ -308,6 +308,13 @@ export type Database = {
             foreignKeyName: "affiliate_clicks_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "public_composers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_clicks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
@@ -546,6 +553,13 @@ export type Database = {
             columns: ["approved_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_withdrawal_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "public_composers"
             referencedColumns: ["id"]
           },
           {
@@ -2004,6 +2018,13 @@ export type Database = {
             foreignKeyName: "subscription_credits_bonus_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "public_composers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_credits_bonus_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
@@ -2340,6 +2361,30 @@ export type Database = {
       }
     }
     Views: {
+      public_composers: {
+        Row: {
+          artistic_name: string | null
+          avatar_url: string | null
+          created_at: string | null
+          id: string | null
+          name: string | null
+        }
+        Insert: {
+          artistic_name?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Update: {
+          artistic_name?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
       public_profiles: {
         Row: {
           artistic_name: string | null
@@ -2641,6 +2686,15 @@ export type Database = {
         Returns: Json
       }
       validate_affiliate_commissions: { Args: never; Returns: Json }
+      validate_composer_token: {
+        Args: { p_token: string }
+        Returns: {
+          avatar_url: string
+          cpf: string
+          name: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       affiliate_level: "bronze" | "silver" | "gold"
