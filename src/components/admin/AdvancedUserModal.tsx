@@ -12,8 +12,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Music, FileText, FolderOpen, Calendar, CreditCard, Download, Coins, User, Activity, Award, Crown, Clock, CheckCircle, UserCog, Shield, X, Users, ArrowRightLeft } from 'lucide-react';
+import { Music, FileText, FolderOpen, Calendar, CreditCard, Download, Coins, User, Activity, Award, Crown, Clock, CheckCircle, UserCog, Shield, X, Users, ArrowRightLeft, UserCheck } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useImpersonation } from '@/context/ImpersonationContext';
+import { useNavigate } from 'react-router-dom';
 
 interface AdvancedUserModalProps {
   user: any;
@@ -34,6 +36,8 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
   const [selectedRole, setSelectedRole] = useState<string>('user');
   const [selectedModeratorId, setSelectedModeratorId] = useState<string>('');
   const [isTransferring, setIsTransferring] = useState(false);
+  const { startImpersonation } = useImpersonation();
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -642,6 +646,37 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
     }
   };
 
+  const handleImpersonateAndRegister = async () => {
+    if (!user?.id) return;
+
+    try {
+      await startImpersonation({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        artistic_name: user.artistic_name,
+        role: 'user'
+      });
+      
+      toast({
+        title: "Iniciando operação",
+        description: `Operando como ${user.name || user.email}. Redirecionando para registro...`,
+      });
+
+      // Aguarda um momento para o contexto atualizar
+      setTimeout(() => {
+        navigate('/dashboard/author-registration');
+      }, 500);
+    } catch (error) {
+      console.error('Erro ao impersonar para registro:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível iniciar a operação como este usuário",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (!user) return null;
 
   const stats = userStats;
@@ -714,6 +749,42 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                 </CardContent>
               </Card>
             </div>
+
+            {/* Ações Rápidas */}
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Ações Rápidas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-3">
+                <Button 
+                  onClick={handleImpersonateAndRegister}
+                  className="gap-2"
+                >
+                  <UserCheck className="h-4 w-4" />
+                  Registrar Música para este Usuário
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    startImpersonation({
+                      id: user.id,
+                      name: user.name,
+                      email: user.email,
+                      artistic_name: user.artistic_name,
+                      role: 'user'
+                    });
+                    setTimeout(() => navigate('/dashboard'), 500);
+                  }}
+                  className="gap-2"
+                >
+                  <ArrowRightLeft className="h-4 w-4" />
+                  Operar como Usuário (Dashboard)
+                </Button>
+              </CardContent>
+            </Card>
 
             {/* Informações do perfil */}
             <Card>
