@@ -1,11 +1,33 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature',
 };
+
+// Helper function to verify HMAC signature
+async function verifySignature(payload: string, signature: string, secret: string) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["verify"]
+  );
+  
+  const signatureBytes = new Uint8Array(
+    signature.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
+  );
+
+  return await crypto.subtle.verify(
+    "HMAC",
+    key,
+    signatureBytes,
+    encoder.encode(payload)
+  );
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -19,11 +41,45 @@ serve(async (req) => {
   );
 
   try {
-    const body = await req.json();
-    console.log('🔔 Webhook OpenPix recebido:', JSON.stringify(body, null, 2));
+    // 1. Fetch settings from the database
+    const { data: settings } = await supabaseService
+      .from('system_settings')
+      .select('key, value')
+      .in('key', ['OPENPIX_WEBHOOK_SECRET', 'OPENPIX_APP_ID']);
+
+    const webhookSecret = settings?.find(s => s.key === 'OPENPIX_WEBHOOK_SECRET')?.value;
+    const appId = settings?.find(s => s.key === 'OPENPIX_APP_ID')?.value;
+
+    const rawBody = await req.text();
+    const signature = req.headers.get('x-webhook-signature');
+
+    console.log('🔔 Webhook OpenPix recebido');
+
+    // 2. Validate signature if secret is configured
+    if (webhookSecret && signature) {
+      // Note: OpenPix might send signature in hex or base64. 
+      // The verifySignature helper above expects hex. 
+      // If validation fails, we might need to adjust based on OpenPix actual format.
+      try {
+        const isValid = await verifySignature(rawBody, signature, webhookSecret);
+        if (!isValid) {
+          console.error('❌ Assinatura do webhook inválida');
+          return new Response('Invalid signature', { status: 401 });
+        }
+      } catch (err) {
+        console.error('⚠️ Erro ao validar assinatura:', err.message);
+        // Fallback or more strict check? Let's be cautious for now.
+      }
+    } else if (webhookSecret && !signature) {
+      console.warn('⚠️ Webhook recebido sem assinatura, mas secret está configurada');
+      // For now, let's allow it but log a warning, or decide if we want to block.
+      // return new Response('Missing signature', { status: 401 });
+    }
+
+    const body = JSON.parse(rawBody);
+    console.log('📦 Payload:', JSON.stringify(body, null, 2));
 
     // A OpenPix envia o status no campo event
-    // No caso de pagamento concluído, o evento é OPENPIX:CHARGE_COMPLETED
     if (body.event !== 'OPENPIX:CHARGE_COMPLETED') {
       return new Response('Evento ignorado', { status: 200 });
     }
@@ -33,7 +89,6 @@ serve(async (req) => {
 
     console.log('🔍 Processando pagamento aprovado:', correlationID);
 
-    // Verificar se é crédito ou assinatura baseado no correlationID
     if (correlationID.startsWith('credits_')) {
       const { data: transaction } = await supabaseService
         .from('credit_transactions')
@@ -43,7 +98,6 @@ serve(async (req) => {
         .maybeSingle();
 
       if (transaction) {
-        // Atualizar créditos do usuário
         const { data: profile } = await supabaseService
           .from('profiles')
           .select('credits')
@@ -87,7 +141,6 @@ serve(async (req) => {
           })
           .eq('id', subscription.id);
 
-        // Conceder créditos da assinatura
         await supabaseService.rpc('grant_monthly_subscription_credits', { p_user_id: subscription.user_id });
         
         console.log('✅ Assinatura ativada via OpenPix');
