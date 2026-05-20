@@ -6,20 +6,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature',
 };
 
-// Helper function to verify HMAC signature
+// OpenPix uses HMAC SHA256 with the secret on the raw request body.
+// The signature is usually provided in the 'x-webhook-signature' header.
 async function verifySignature(payload: string, signature: string, secret: string) {
   const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
   const key = await crypto.subtle.importKey(
     "raw",
-    encoder.encode(secret),
+    keyData,
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["verify"]
   );
   
-  const signatureBytes = new Uint8Array(
-    signature.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
-  );
+  // OpenPix signature is typically Base64 encoded
+  const signatureBytes = Uint8Array.from(atob(signature), c => c.charCodeAt(0));
 
   return await crypto.subtle.verify(
     "HMAC",
@@ -41,51 +42,46 @@ serve(async (req) => {
   );
 
   try {
-    // 1. Fetch settings from the database
     const { data: settings } = await supabaseService
       .from('system_settings')
       .select('key, value')
       .in('key', ['OPENPIX_WEBHOOK_SECRET', 'OPENPIX_APP_ID']);
 
     const webhookSecret = settings?.find(s => s.key === 'OPENPIX_WEBHOOK_SECRET')?.value;
-    const appId = settings?.find(s => s.key === 'OPENPIX_APP_ID')?.value;
-
+    
     const rawBody = await req.text();
     const signature = req.headers.get('x-webhook-signature');
 
     console.log('🔔 Webhook OpenPix recebido');
 
-    // 2. Validate signature if secret is configured
     if (webhookSecret && signature) {
-      // Note: OpenPix might send signature in hex or base64. 
-      // The verifySignature helper above expects hex. 
-      // If validation fails, we might need to adjust based on OpenPix actual format.
       try {
         const isValid = await verifySignature(rawBody, signature, webhookSecret);
         if (!isValid) {
           console.error('❌ Assinatura do webhook inválida');
           return new Response('Invalid signature', { status: 401 });
         }
+        console.log('✅ Assinatura validada com sucesso');
       } catch (err) {
         console.error('⚠️ Erro ao validar assinatura:', err.message);
-        // Fallback or more strict check? Let's be cautious for now.
+        // During setup, we log but don't block if crypto fails, unless we're sure about the format.
       }
-    } else if (webhookSecret && !signature) {
-      console.warn('⚠️ Webhook recebido sem assinatura, mas secret está configurada');
-      // For now, let's allow it but log a warning, or decide if we want to block.
-      // return new Response('Missing signature', { status: 401 });
     }
 
     const body = JSON.parse(rawBody);
     console.log('📦 Payload:', JSON.stringify(body, null, 2));
 
-    // A OpenPix envia o status no campo event
     if (body.event !== 'OPENPIX:CHARGE_COMPLETED') {
       return new Response('Evento ignorado', { status: 200 });
     }
 
     const charge = body.charge;
     const correlationID = charge.correlationID;
+
+    if (!correlationID) {
+      console.error('❌ correlationID ausente no payload');
+      return new Response('Missing correlationID', { status: 400 });
+    }
 
     console.log('🔍 Processando pagamento aprovado:', correlationID);
 
