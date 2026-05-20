@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Bell, FileText, Package, Users, Menu, X, LayoutDashboard, UserCog, Award, Gift, BarChart3, Settings, Ticket, ScrollText, Image, GraduationCap, FileCheck, TrendingUp, Activity, LogOut } from 'lucide-react';
+import { ShieldCheck, Bell, FileText, Package, Users, Menu, X, LayoutDashboard, UserCog, Award, Gift, BarChart3, Settings, Ticket, ScrollText, Image, GraduationCap, FileCheck, TrendingUp, Activity, LogOut, Key } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useProfile } from '@/hooks/useProfile';
@@ -26,8 +26,9 @@ import { AdminSettings } from './AdminSettings';
 import { AdminModerators } from './AdminModerators';
 import { AdminRoles } from './AdminRoles';
 import { OnlineVisitorsPanel } from './OnlineVisitorsPanel';
+import { AdminApiSettings } from './AdminApiSettings';
 
-type TabType = 'overview' | 'forms' | 'registrations' | 'users' | 'moderators' | 'roles' | 'affiliates' | 'affiliate-withdrawals' | 'coupons' | 'gamification' | 'raffle' | 'content' | 'tutorials' | 'banners' | 'certificates' | 'analytics' | 'offer-analytics' | 'logs' | 'menu-functions' | 'settings' | 'online-visitors';
+type TabType = 'overview' | 'forms' | 'registrations' | 'users' | 'moderators' | 'roles' | 'affiliates' | 'affiliate-withdrawals' | 'coupons' | 'gamification' | 'raffle' | 'content' | 'tutorials' | 'banners' | 'certificates' | 'analytics' | 'offer-analytics' | 'logs' | 'menu-functions' | 'settings' | 'online-visitors' | 'api-settings';
 
 const menuItems = [
   { key: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
@@ -50,6 +51,7 @@ const menuItems = [
   { key: 'offer-analytics', label: 'Analytics Oferta', icon: TrendingUp },
   { key: 'logs', label: 'Logs', icon: Activity },
   { key: 'menu-functions', label: 'Funções Menu', icon: Menu },
+  { key: 'api-settings', label: 'Token e API', icon: Key },
   { key: 'settings', label: 'Configurações', icon: Settings },
 ];
 
@@ -106,6 +108,8 @@ export const MobileAdminDashboard: React.FC = () => {
         return <AdminMenuFunctions />;
       case 'settings':
         return <AdminSettings />;
+      case 'api-settings':
+        return <AdminApiSettings />;
       case 'online-visitors':
         return <OnlineVisitorsPanel />;
       default:
