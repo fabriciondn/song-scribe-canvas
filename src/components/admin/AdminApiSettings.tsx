@@ -52,7 +52,7 @@ export const AdminApiSettings: React.FC = () => {
             Tokens e APIs
           </CardTitle>
           <CardDescription>
-            Gerencie as credenciais e chaves de acesso para integrações externas como OpenPix.
+            Configure as credenciais da OpenPix (AppID) e outras chaves de integração.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
