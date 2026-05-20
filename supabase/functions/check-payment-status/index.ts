@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -6,6 +5,47 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+async function processSuccessfulPayment(supabase: any, paymentId: string) {
+  console.log(`[CHECK-PAYMENT-STATUS] 🔄 Redundant processing for payment: ${paymentId}`);
+  
+  const { data: transaction } = await supabase
+    .from('credit_transactions')
+    .select('*')
+    .eq('payment_id', paymentId)
+    .eq('status', 'pending')
+    .maybeSingle();
+
+  if (transaction) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('credits')
+      .eq('id', transaction.user_id)
+      .single();
+
+    const totalCredits = (transaction.credits_purchased || 0) + (transaction.bonus_credits || 0);
+    
+    // Atualizar créditos
+    await supabase
+      .from('profiles')
+      .update({ credits: (profile?.credits || 0) + totalCredits })
+      .eq('id', transaction.user_id);
+
+    // Marcar como completo
+    await supabase
+      .from('credit_transactions')
+      .update({ 
+        status: 'completed', 
+        completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', transaction.id);
+      
+    console.log(`[CHECK-PAYMENT-STATUS] ✅ Redundant processing complete. Added ${totalCredits} credits.`);
+    return totalCredits;
+  }
+  return 0;
+}
 
 serve(async (req) => {
   console.log('[CHECK-PAYMENT-STATUS] 🚀 Function started');
@@ -15,47 +55,26 @@ serve(async (req) => {
   }
 
   try {
-    // Verificar autenticação
-    let userId: string | null = null;
-    const authHeader = req.headers.get("Authorization");
-    
-    if (authHeader) {
-      try {
-        const supabaseClient = createClient(
-          Deno.env.get("SUPABASE_URL") ?? "",
-          Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-        );
-        
-        const token = authHeader.replace("Bearer ", "");
-        const { data } = await supabaseClient.auth.getUser(token);
-        userId = data.user?.id || null;
-        console.log('[CHECK-PAYMENT-STATUS] ✅ User authenticated:', userId);
-      } catch (authError) {
-        console.log('[CHECK-PAYMENT-STATUS] ⚠️ Auth failed, continuing without user:', authError instanceof Error ? authError.message : 'Unknown error');
-      }
-    }
-
-    const body = await req.json();
-    const { paymentId, simulate } = body;
-
-    console.log('[CHECK-PAYMENT-STATUS] 📋 Checking payment:', { paymentId, simulate, userId });
-
-    if (!paymentId) {
-      return new Response(
-        JSON.stringify({ error: "Payment ID is required", isPaid: false, paid: false }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Primeiro verificar no banco se já foi processado (PRIORIDADE MÁXIMA)
     const supabaseService = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
-    // Usar maybeSingle para evitar erros se não encontrar
-    const { data: transaction, error: transactionError } = await supabaseService
+    const body = await req.json();
+    const { paymentId, simulate } = body;
+
+    console.log('[CHECK-PAYMENT-STATUS] 📋 Checking payment:', { paymentId, simulate });
+
+    if (!paymentId) {
+      return new Response(
+        JSON.stringify({ error: "Payment ID is required", isPaid: false }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 1. Verificar no banco de dados primeiro
+    const { data: transaction } = await supabaseService
       .from('credit_transactions')
       .select('status, credits_purchased, bonus_credits')
       .eq('payment_id', paymentId.toString())
@@ -63,15 +82,11 @@ serve(async (req) => {
 
     console.log('[CHECK-PAYMENT-STATUS] 🔍 Database check:', { 
       found: !!transaction, 
-      status: transaction?.status,
-      error: transactionError?.message 
+      status: transaction?.status 
     });
 
-    // Se a transação já foi completada no banco, retornar imediatamente
-    // Não precisamos checar a API do Mercado Pago pois o webhook já processou
     if (transaction?.status === 'completed') {
       const creditsAdded = (transaction.credits_purchased || 0) + (transaction.bonus_credits || 0);
-      console.log('[CHECK-PAYMENT-STATUS] ✅ Payment already processed in database, credits:', creditsAdded);
       return new Response(
         JSON.stringify({ 
           isPaid: true, 
@@ -84,70 +99,63 @@ serve(async (req) => {
       );
     }
 
-    // Se for simulação, retornar pagamento como pago
-    if (simulate === true) {
-      console.log('[CHECK-PAYMENT-STATUS] 🧪 Simulation mode - returning paid status');
+    // 2. Checar API do Provedor
+    const paymentIdStr = paymentId.toString();
+    const isOpenPix = paymentIdStr.includes('_');
+
+    const { data: settings } = await supabaseService
+      .from('system_settings')
+      .select('key, value')
+      .in('key', ['OPENPIX_APP_ID']);
+
+    const openPixAppId = settings?.find(s => s.key === 'OPENPIX_APP_ID')?.value || Deno.env.get("OPENPIX_APP_ID");
+
+    if (isOpenPix) {
+      console.log('[CHECK-PAYMENT-STATUS] 💎 Checking OpenPix status API');
+      if (!openPixAppId) {
+        return new Response(JSON.stringify({ error: "OpenPix App ID não configurado", isPaid: false }), { status: 503, headers: corsHeaders });
+      }
+
+      const opResp = await fetch(`https://api.openpix.com.br/api/v1/charge/${paymentIdStr}`, {
+        headers: { 'Authorization': openPixAppId }
+      });
+
+      if (!opResp.ok) {
+        const errorData = await opResp.text();
+        console.error('[CHECK-PAYMENT-STATUS] ❌ OpenPix API error:', errorData);
+        return new Response(JSON.stringify({ error: "Erro ao consultar OpenPix", isPaid: false }), { status: 502, headers: corsHeaders });
+      }
+
+      const opData = await opResp.json();
+      const status = opData.charge?.status;
+      const isPaid = status === 'COMPLETED';
+
+      console.log('[CHECK-PAYMENT-STATUS] OpenPix status:', status);
+      
+      let creditsAdded = 0;
+      if (isPaid && transaction?.status === 'pending') {
+        // Se a API diz que está pago mas o banco ainda está pendente, processamos aqui
+        creditsAdded = await processSuccessfulPayment(supabaseService, paymentIdStr);
+      }
+      
       return new Response(
-        JSON.stringify({ isPaid: true, paid: true, status: 'approved' }),
+        JSON.stringify({ 
+          isPaid, 
+          paid: isPaid, 
+          status,
+          creditsAdded: creditsAdded || (isPaid ? (transaction?.credits_purchased || 0) + (transaction?.bonus_credits || 0) : 0)
+        }), 
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Verificar se é um payment ID do Mercado Pago (apenas números)
-    const isMercadoPagoPayment = /^\d+$/.test(paymentId.toString());
-    const isOpenPixPayment = paymentId.toString().includes('_'); // correlationID da OpenPix tem '_'
-    
-    if (isMercadoPagoPayment) {
-      console.log('[CHECK-PAYMENT-STATUS] 💳 Checking Mercado Pago payment');
-      // ... keep existing Mercado Pago logic
-      let mercadoPagoToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN") || Deno.env.get("Access Token mercado pago");
-      if (!mercadoPagoToken) {
-        return new Response(JSON.stringify({ error: "Token Mercado Pago não configurado", isPaid: false }), { status: 503, headers: corsHeaders });
-      }
-      const mpResp = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-        headers: { 'Authorization': `Bearer ${mercadoPagoToken}` }
-      });
-      const mpData = await mpResp.json();
-      const isPaid = mpData.status === 'approved';
-      return new Response(JSON.stringify({ isPaid, paid: isPaid, status: mpData.status }), { status: 200, headers: corsHeaders });
-    } else if (isOpenPixPayment) {
-      console.log('[CHECK-PAYMENT-STATUS] 💎 Checking OpenPix payment');
-      const openPixAppId = Deno.env.get("OPENPIX_APP_ID");
-      if (!openPixAppId) {
-        return new Response(JSON.stringify({ error: "OpenPix App ID não configurado", isPaid: false }), { status: 503, headers: corsHeaders });
-      }
-      const opResp = await fetch(`https://api.openpix.com.br/api/v1/charge/${paymentId}`, {
-        headers: { 'Authorization': openPixAppId }
-      });
-      const opData = await opResp.json();
-      const isPaid = opData.charge?.status === 'COMPLETED';
-      return new Response(JSON.stringify({ isPaid, paid: isPaid, status: opData.charge?.status }), { status: 200, headers: corsHeaders });
-    } else {
-      // Assumir que é Abacate Pay
-      console.log('[CHECK-PAYMENT-STATUS] 🥑 Checking Abacate Pay payment');
-      // ... keep existing Abacate Pay logic
-      const abacatePayApiToken = Deno.env.get("ABACATE_API_KEY");
-      if (!abacatePayApiToken) {
-        return new Response(JSON.stringify({ error: "Token Abacate Pay não configurado", isPaid: false }), { status: 503, headers: corsHeaders });
-      }
-      const abResp = await fetch(`https://api.abacatepay.com/billing/${paymentId}`, {
-        headers: { 'Authorization': `Bearer ${abacatePayApiToken}` }
-      });
-      const abData = await abResp.json();
-      const isPaid = abData.status === 'PAID';
-      return new Response(JSON.stringify({ isPaid, paid: isPaid, status: abData.status }), { status: 200, headers: corsHeaders });
-    }
-
+    // Fallback/Default
+    return new Response(JSON.stringify({ isPaid: false, status: 'pending' }), { status: 200, headers: corsHeaders });
 
   } catch (error) {
-    console.error('[CHECK-PAYMENT-STATUS] ❌ Unexpected error:', error);
+    console.error('[CHECK-PAYMENT-STATUS] ❌ Error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: 'Erro interno do servidor',
-        isPaid: false,
-        paid: false,
-        details: error instanceof Error ? error.message : 'Unknown error' 
-      }),
+      JSON.stringify({ error: 'Erro interno', details: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
