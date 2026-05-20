@@ -39,10 +39,24 @@ serve(async (req) => {
     const body: PaymentRequest = await req.json();
     const { type, totalAmount, user_id, user_email, user_name, customerData } = body;
 
-    const openPixAppId = Deno.env.get("OPENPIX_APP_ID");
+    let openPixAppId = Deno.env.get("OPENPIX_APP_ID");
+    
+    // Tentar buscar do banco de dados se não estiver no env
+    if (!openPixAppId) {
+      const { data: dbSetting } = await supabaseService
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'OPENPIX_APP_ID')
+        .maybeSingle();
+      
+      if (dbSetting?.value) {
+        openPixAppId = dbSetting.value;
+      }
+    }
+
     if (!openPixAppId) {
       return new Response(
-        JSON.stringify({ error: "OpenPix App ID not configured" }),
+        JSON.stringify({ error: "OpenPix App ID not configured in environment or database settings" }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
