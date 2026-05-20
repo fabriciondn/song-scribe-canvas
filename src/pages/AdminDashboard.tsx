@@ -25,6 +25,7 @@ import { AdminGamification } from '@/components/admin/AdminGamification';
 import { AdminRaffle } from '@/components/admin/AdminRaffle';
 import { OnlineVisitorsPanel } from '@/components/admin/OnlineVisitorsPanel';
 import { AdminRegistrations } from '@/components/admin/AdminRegistrations';
+import { AdminApiSettings } from '@/components/admin/AdminApiSettings';
 import { MobileAdminDashboard } from '@/components/admin/MobileAdminDashboard';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -204,6 +205,8 @@ const AdminDashboard: React.FC = () => {
         return <AdminLogs />;
       case 'menu-functions':
         return <AdminMenuFunctions />;
+      case 'api-settings':
+        return <AdminApiSettings />;
       case 'settings':
         return <AdminSettings />;
       default:
