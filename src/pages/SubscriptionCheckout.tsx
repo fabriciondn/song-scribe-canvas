@@ -55,20 +55,23 @@ export default function SubscriptionCheckout() {
     try {
       setIsProcessing(true);
       
-      const { data, error } = await supabase.functions.invoke('create-pro-subscription-mercadopago', {
+      const { data, error } = await supabase.functions.invoke('create-openpix-payment', {
         body: {
+          type: 'subscription',
+          totalAmount: 29.99,
           user_id: user.id,
           user_email: user.email,
           user_name: profile?.name || 'Usuário'
         }
       });
 
+
       if (error) throw error;
 
       if (data?.qr_code) {
         setPixData({
           qr_code: data.qr_code,
-          qr_code_url: `data:image/png;base64,${data.qr_code_base64}`,
+          qr_code_url: data.qr_code_url,
           payment_id: data.payment_id
         });
         setShowQR(true);

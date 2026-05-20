@@ -1,18 +1,21 @@
-A funcionalidade de "Operar como" (impersonation) já existe no sistema, mas atualmente ela redireciona o administrador para o Dashboard do usuário selecionado. Para permitir que o administrador registre uma música para o usuário, o processo ideal é que, após clicar em "Operar como", ele possa navegar até a página de registro autoral e realizar o procedimento, que será atribuído ao usuário impersonado graças ao hook `useCurrentUser`.
+Com base na documentação da OpenPix e na estrutura atual do seu projeto (que utiliza Mercado Pago), o plano de migração consiste em:
 
-Vou aprimorar o `AdvancedUserModal` para incluir um atalho direto de registro de música para o usuário selecionado, facilitando o fluxo solicitado.
+1. **Substituição das Edge Functions**:
+   - Criar `create-openpix-payment` para lidar com a geração de cobranças (Pix) para créditos e assinaturas.
+   - Criar `openpix-webhook` para processar as notificações de pagamento da OpenPix.
+   - Atualizar `check-payment-status` para também consultar a API da OpenPix quando necessário.
 
-### Alterações propostas:
+2. **Atualização do Frontend**:
+   - Modificar os componentes de Checkout (`CreditsCheckout`, `SubscriptionCheckout`, `ModeratorRecharge`) para chamar as novas funções da OpenPix em vez das do Mercado Pago.
+   - Atualizar as mensagens de interface de "Mercado Pago" para "OpenPix" ou simplesmente "Pix".
 
-1.  **Modificar `AdvancedUserModal.tsx`**:
-    *   Adicionar um novo botão de ação na aba "Gerenciar" ou "Visão Geral" chamado "Registrar Música para este Usuário".
-    *   Este botão irá disparar a impersonação e redirecionar o administrador diretamente para a página `/dashboard/author-registration`.
-    *   Isso economiza cliques e torna o fluxo explícito, como solicitado pelo usuário.
+3. **Configuração de Segredos**:
+   - Será necessário configurar a `OPENPIX_APP_ID` (App ID da OpenPix) nos segredos do Supabase.
 
-2.  **Garantir a consistência no `ImpersonateButton.tsx`**:
-    *   Confirmar que o redirecionamento padrão continua funcionando, mas permitindo que outros componentes (como o modal de detalhes) usem a lógica de impersonação para fluxos específicos.
+### Detalhes Técnicos
 
-### Detalhes técnicos:
-*   Usarei a função `startImpersonation` do `useImpersonation` hook dentro do `AdvancedUserModal`.
-*   Após a impersonação bem-sucedida, usarei o `useNavigate` para ir para `/dashboard/author-registration`.
-*   O sistema de registro autoral já utiliza `useCurrentUser`, portanto, ao chegar na página, o formulário identificará o usuário impersonado como o autor, permitindo que o administrador preencha e finalize o registro em nome dele.
+- **Criação de Cobrança**: Utilizaremos o endpoint `POST /v1/charge` da OpenPix.
+- **Webhook**: O webhook da OpenPix envia um JSON com o status do pagamento. Precisaremos validar a assinatura (opcional mas recomendado) e atualizar o banco de dados (tabelas `credit_transactions` e `subscriptions`).
+- **Segurança**: As novas Edge Functions seguirão o padrão de segurança atual, validando o usuário via token JWT do Supabase.
+
+Vou começar criando as novas Edge Functions e depois atualizarei o frontend.

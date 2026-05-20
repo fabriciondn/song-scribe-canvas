@@ -256,7 +256,7 @@ export default function CreditsCheckout() {
       return;
     }
 
-    console.log('🔄 Iniciando processamento de pagamento com Mercado Pago...', {
+    console.log('🔄 Iniciando processamento de pagamento com OpenPix...', {
       credits: credits,
       bonusCredits: pricing.bonusCredits,
       unitPrice: pricing.unitPrice,
@@ -268,12 +268,16 @@ export default function CreditsCheckout() {
       const {
         data,
         error
-      } = await supabase.functions.invoke('create-mercadopago-payment', {
+      } = await supabase.functions.invoke('create-openpix-payment', {
         body: {
+          type: 'credits',
           credits: credits,
           bonusCredits: pricing.bonusCredits,
           unitPrice: pricing.unitPrice,
           totalAmount: pricing.totalAmount,
+          user_id: user.id,
+          user_email: user.email,
+          user_name: profile.name,
           customerData: {
             name: profile.name,
             email: user.email,
@@ -282,6 +286,7 @@ export default function CreditsCheckout() {
           }
         }
       });
+
       console.log('📡 Resposta da Edge Function (Mercado Pago):', {
         data,
         error
@@ -333,7 +338,7 @@ export default function CreditsCheckout() {
         
         toast({
           title: "PIX Gerado!",
-          description: "Use o QR Code para realizar o pagamento via Mercado Pago."
+          description: "Use o QR Code para realizar o pagamento via Pix (OpenPix)."
         });
       } else {
         console.error('❌ Resposta inválida:', data);
@@ -395,7 +400,7 @@ export default function CreditsCheckout() {
 
           <Card className="w-full">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-foreground">Pagamento PIX - Mercado Pago</CardTitle>
+              <CardTitle className="text-2xl text-foreground">Pagamento PIX - OpenPix</CardTitle>
               <p className="text-muted-foreground">
                 Escaneie o QR Code ou copie o código PIX para realizar o pagamento
               </p>
