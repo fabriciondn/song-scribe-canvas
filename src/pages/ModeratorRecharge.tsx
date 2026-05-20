@@ -91,12 +91,16 @@ export default function ModeratorRecharge() {
 
     setIsProcessing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-mercadopago-payment', {
+      const { data, error } = await supabase.functions.invoke('create-openpix-payment', {
         body: {
+          type: 'credits',
           credits: credits,
           bonusCredits: 0,
           unitPrice: UNIT_PRICE,
           totalAmount: totalAmount,
+          user_id: user.id,
+          user_email: user.email,
+          user_name: profile.name,
           customerData: {
             name: profile.name,
             email: user.email,
@@ -105,6 +109,7 @@ export default function ModeratorRecharge() {
           }
         }
       });
+
 
       console.log('📡 Resposta da Edge Function:', { data, error });
 

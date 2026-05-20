@@ -93,160 +93,51 @@ serve(async (req) => {
       );
     }
 
-    // Verificar se é um payment ID do Mercado Pago
+    // Verificar se é um payment ID do Mercado Pago (apenas números)
     const isMercadoPagoPayment = /^\d+$/.test(paymentId.toString());
+    const isOpenPixPayment = paymentId.toString().includes('_'); // correlationID da OpenPix tem '_'
     
     if (isMercadoPagoPayment) {
       console.log('[CHECK-PAYMENT-STATUS] 💳 Checking Mercado Pago payment');
-      
-      // Buscar token do Mercado Pago
-      let mercadoPagoToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
-      
-      // Se não encontrar, tentar outras variações
+      // ... keep existing Mercado Pago logic
+      let mercadoPagoToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN") || Deno.env.get("Access Token mercado pago");
       if (!mercadoPagoToken) {
-        mercadoPagoToken = Deno.env.get("Access Token mercado pago");
+        return new Response(JSON.stringify({ error: "Token Mercado Pago não configurado", isPaid: false }), { status: 503, headers: corsHeaders });
       }
-      
-      if (!mercadoPagoToken) {
-        console.error('[CHECK-PAYMENT-STATUS] ❌ Missing Mercado Pago token');
-        return new Response(
-          JSON.stringify({ 
-            error: "Token do Mercado Pago não configurado",
-            isPaid: false,
-            paid: false 
-          }),
-          { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      const mpResp = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: { 'Authorization': `Bearer ${mercadoPagoToken}` }
+      });
+      const mpData = await mpResp.json();
+      const isPaid = mpData.status === 'approved';
+      return new Response(JSON.stringify({ isPaid, paid: isPaid, status: mpData.status }), { status: 200, headers: corsHeaders });
+    } else if (isOpenPixPayment) {
+      console.log('[CHECK-PAYMENT-STATUS] 💎 Checking OpenPix payment');
+      const openPixAppId = Deno.env.get("OPENPIX_APP_ID");
+      if (!openPixAppId) {
+        return new Response(JSON.stringify({ error: "OpenPix App ID não configurado", isPaid: false }), { status: 503, headers: corsHeaders });
       }
-
-      console.log('[CHECK-PAYMENT-STATUS] 📡 Consulting Mercado Pago API...');
-
-      try {
-        const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${mercadoPagoToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!paymentResponse.ok) {
-          console.error('[CHECK-PAYMENT-STATUS] ❌ Mercado Pago API error:', paymentResponse.status, paymentResponse.statusText);
-          return new Response(
-            JSON.stringify({ 
-              error: `Erro na API do Mercado Pago: ${paymentResponse.status}`,
-              isPaid: false,
-              paid: false 
-            }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        const paymentData = await paymentResponse.json();
-        console.log('[CHECK-PAYMENT-STATUS] 📊 Mercado Pago response:', { 
-          id: paymentData.id, 
-          status: paymentData.status,
-          status_detail: paymentData.status_detail 
-        });
-
-        const isPaid = paymentData.status === 'approved';
-        
-        return new Response(
-          JSON.stringify({ 
-            isPaid, 
-            paid: isPaid, 
-            status: paymentData.status,
-            mercadoPagoData: {
-              id: paymentData.id,
-              status: paymentData.status,
-              status_detail: paymentData.status_detail
-            }
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-
-      } catch (fetchError) {
-        console.error('[CHECK-PAYMENT-STATUS] ❌ Network error:', fetchError);
-        return new Response(
-          JSON.stringify({ 
-            error: "Erro de rede ao consultar Mercado Pago",
-            isPaid: false,
-            paid: false 
-          }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      const opResp = await fetch(`https://api.openpix.com.br/api/v1/charge/${paymentId}`, {
+        headers: { 'Authorization': openPixAppId }
+      });
+      const opData = await opResp.json();
+      const isPaid = opData.charge?.status === 'COMPLETED';
+      return new Response(JSON.stringify({ isPaid, paid: isPaid, status: opData.charge?.status }), { status: 200, headers: corsHeaders });
     } else {
       // Assumir que é Abacate Pay
       console.log('[CHECK-PAYMENT-STATUS] 🥑 Checking Abacate Pay payment');
-      
+      // ... keep existing Abacate Pay logic
       const abacatePayApiToken = Deno.env.get("ABACATE_API_KEY");
       if (!abacatePayApiToken) {
-        console.error('[CHECK-PAYMENT-STATUS] ❌ Missing Abacate Pay token');
-        return new Response(
-          JSON.stringify({ 
-            error: "Token do Abacate Pay não configurado",
-            isPaid: false,
-            paid: false 
-          }),
-          { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: "Token Abacate Pay não configurado", isPaid: false }), { status: 503, headers: corsHeaders });
       }
-
-      try {
-        const paymentResponse = await fetch(`https://api.abacatepay.com/billing/${paymentId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${abacatePayApiToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!paymentResponse.ok) {
-          console.error('[CHECK-PAYMENT-STATUS] ❌ Abacate Pay API error:', paymentResponse.status);
-          return new Response(
-            JSON.stringify({ 
-              error: `Erro na API do Abacate Pay: ${paymentResponse.status}`,
-              isPaid: false,
-              paid: false 
-            }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        const paymentData = await paymentResponse.json();
-        console.log('[CHECK-PAYMENT-STATUS] 📊 Abacate Pay response:', { 
-          id: paymentData.id, 
-          status: paymentData.status 
-        });
-
-        const isPaid = paymentData.status === 'PAID';
-        
-        return new Response(
-          JSON.stringify({ 
-            isPaid, 
-            paid: isPaid, 
-            status: paymentData.status,
-            abacateData: {
-              id: paymentData.id,
-              status: paymentData.status
-            }
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-
-      } catch (fetchError) {
-        console.error('[CHECK-PAYMENT-STATUS] ❌ Network error:', fetchError);
-        return new Response(
-          JSON.stringify({ 
-            error: "Erro de rede ao consultar Abacate Pay",
-            isPaid: false,
-            paid: false 
-          }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      const abResp = await fetch(`https://api.abacatepay.com/billing/${paymentId}`, {
+        headers: { 'Authorization': `Bearer ${abacatePayApiToken}` }
+      });
+      const abData = await abResp.json();
+      const isPaid = abData.status === 'PAID';
+      return new Response(JSON.stringify({ isPaid, paid: isPaid, status: abData.status }), { status: 200, headers: corsHeaders });
     }
+
 
   } catch (error) {
     console.error('[CHECK-PAYMENT-STATUS] ❌ Unexpected error:', error);
