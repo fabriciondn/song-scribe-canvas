@@ -118,7 +118,7 @@ export const AdminApiSettings: React.FC = () => {
         <CardContent className="text-sm space-y-3">
           <p>Para configurar a OpenPix, você precisará de:</p>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-            <li><strong>OPENPIX_APP_ID:</strong> O AppID gerado no painel da OpenPix em API/Plugins > Nova Chave.</li>
+            <li><strong>OPENPIX_APP_ID:</strong> O AppID gerado no painel da OpenPix em API/Plugins &gt; Nova Chave.</li>
             <li><strong>OPENPIX_WEBHOOK_SECRET:</strong> O segredo configurado no Webhook para validar as notificações (opcional, mas recomendado).</li>
           </ul>
           <p className="pt-2">A URL de Webhook para configurar na OpenPix é:</p>
