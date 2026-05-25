@@ -177,6 +177,19 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
       return;
     }
 
+    // Check credits before starting
+    const { data: creditCheck, error: checkError } = await supabase
+      .from('profiles')
+      .select('credits')
+      .eq('id', targetUserId)
+      .single();
+    
+    if (checkError || !creditCheck || (creditCheck.credits || 0) <= 0) {
+      toast.error('Você precisa de créditos para realizar o registro.');
+      navigate('/dashboard/credits-checkout');
+      return;
+    }
+
     setIsRegistering(true);
 
     try {

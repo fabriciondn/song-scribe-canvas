@@ -127,7 +127,7 @@ const AuthorRegistration: React.FC = () => {
 
   const effectiveCredits = credits ?? creditsRef.current;
   const showLoading = creditsLoading && !hasLoadedOnce.current;
-  const showNoCredits = !showLoading && (effectiveCredits === null || effectiveCredits === 0);
+  const hasNoCredits = !showLoading && (effectiveCredits === null || effectiveCredits === 0);
   
   // Carregar dados salvos do storage
   const savedData = loadFromStorage();
@@ -197,53 +197,9 @@ const AuthorRegistration: React.FC = () => {
   // Log para debug
   console.log('💳 Estado dos créditos:', { credits, effectiveCredits, creditsLoading, currentUser: user?.id });
 
-  if (showNoCredits) {
-    return (
-      <ResponsiveContainer
-        mobileClassName="px-4 py-2"
-        desktopClassName="container mx-auto px-4 py-8"
-      >
-        <Card className={isMobile ? "mx-auto" : "max-w-2xl mx-auto"}>
-          <CardHeader className="text-center">
-            <CardTitle className={`flex items-center justify-center gap-2 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
-              <CreditCard className="h-6 w-6" />
-              Créditos necessários
-            </CardTitle>
-            <CardDescription>
-              Você precisa ter créditos para registrar suas músicas
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center space-y-6">
-            <div className="bg-muted p-4 md:p-6 rounded-lg">
-              <h3 className={`font-semibold mb-2 ${isMobile ? 'text-base' : 'text-lg'}`}>
-                Por que preciso de créditos?
-              </h3>
-              <p className="text-muted-foreground mb-4 text-sm">
-                O registro autoral protege seus direitos autorais. Cada registro consome 1 crédito.
-              </p>
-              <div className="text-sm text-muted-foreground">
-                <p>Seus créditos atuais: <span className="font-semibold">{effectiveCredits || 0}</span></p>
-              </div>
-            </div>
+  // Remove the blocking credit check at the start
+  // The credit check will now happen only at the final confirmation step
 
-            <div className="space-y-4">
-              <Button
-                size={isMobile ? "default" : "lg"}
-                className="w-full"
-                onClick={() => navigate('/dashboard/credits-checkout')}
-              >
-                <CreditCard className="mr-2 h-4 w-4" />
-                Adicionar Créditos via Pix
-              </Button>
-              <p className="text-xs md:text-sm text-muted-foreground">
-                Escolha a quantidade ideal de créditos e pague com PIX de forma segura
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </ResponsiveContainer>
-    );
-  }
 
   const handleFormSubmit = (data: AuthorRegistrationData) => {
     setFormData(data);
