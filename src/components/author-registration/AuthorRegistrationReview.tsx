@@ -173,26 +173,28 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
   const handleRegister = async () => {
     console.log('🚀 Iniciando processo de registro...');
     
+    // Check credits before starting
+    const { data: creditCheck, error: checkError } = await supabase
+      .from('profiles')
+      .select('credits')
+      .eq('id', currentUser?.id)
+      .single();
+    
+    if (checkError || !creditCheck || (creditCheck.credits || 0) <= 0) {
+      toast({
+        title: 'Créditos insuficientes',
+        description: 'Você precisa de pelo menos 1 crédito para realizar o registro.',
+        variant: 'destructive',
+      });
+      navigate('/dashboard/credits-checkout');
+      return;
+    }
+
     // Validação robusta de autenticação
     console.log('🔍 Debug de autenticação:', {
       user: user ? { id: user.id, email: user.email } : null,
       currentUser: currentUser ? { id: currentUser.id, email: currentUser.email } : null
     });
-
-    // Usar o hook useCurrentUser que já resolve corretamente a impersonação
-    const targetUserId = currentUser?.id;
-    
-    console.log('👤 Target User ID:', targetUserId);
-    
-    if (!targetUserId || !user) {
-      console.error('❌ ERRO CRÍTICO: Usuário não autenticado ou target user não encontrado');
-      toast({
-        title: 'Erro de Autenticação',
-        description: 'Usuário não está autenticado. Faça login novamente.',
-        variant: 'destructive',
-      });
-      return;
-    }
 
     // Verificar sessão ativa no Supabase
     try {
