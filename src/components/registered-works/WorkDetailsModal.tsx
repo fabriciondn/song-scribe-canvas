@@ -358,6 +358,7 @@ export const WorkDetailsModal: React.FC<WorkDetailsModalProps> = ({
             <div className="space-y-3">
               {/* Certificado */}
               <Button 
+                type="button"
                 onClick={handleDownloadCertificate}
                 disabled={downloadingCertificate}
                 className="w-full"
@@ -378,8 +379,13 @@ export const WorkDetailsModal: React.FC<WorkDetailsModalProps> = ({
               {/* Controle de Áudio */}
               {work.audio_file_path && (
                 <Button 
+                  type="button"
                   variant="outline"
-                  onClick={handlePlayAudio}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handlePlayAudio();
+                  }}
                   className="w-full"
                 >
                   {playingAudio && !currentAudio?.paused ? (
