@@ -190,6 +190,21 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       return;
     }
 
+    // Usar o hook useCurrentUser que já resolve corretamente a impersonação
+    const targetUserId = currentUser?.id;
+    
+    console.log('👤 Target User ID:', targetUserId);
+    
+    if (!targetUserId || !user) {
+      console.error('❌ ERRO CRÍTICO: Usuário não autenticado ou target user não encontrado');
+      toast({
+        title: 'Erro de Autenticação',
+        description: 'Usuário não está autenticado. Faça login novamente.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // Validação robusta de autenticação
     console.log('🔍 Debug de autenticação:', {
       user: user ? { id: user.id, email: user.email } : null,
