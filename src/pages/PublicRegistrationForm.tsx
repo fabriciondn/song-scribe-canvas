@@ -352,7 +352,7 @@ export default function PublicRegistrationForm() {
           <img 
             src={compuseLogo}
             alt="Compuse Logo" 
-            className="h-12 mx-auto mb-6"
+            className="h-16 mx-auto mb-6 object-contain"
           />
           <h1 className="text-3xl font-bold tracking-tight">Registro de Autor e Obra</h1>
           <p className="text-muted-foreground">Complete as 3 etapas para garantir sua proteção autoral</p>
