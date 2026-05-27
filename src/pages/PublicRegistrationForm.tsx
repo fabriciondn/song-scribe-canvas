@@ -18,6 +18,7 @@ const workSchema = z.object({
   genre: z.string().min(1, 'Gênero é obrigatório'),
   lyrics: z.string().min(1, 'Letra é obrigatória'),
   audioFile: z.any().optional(),
+  previewUrl: z.string().optional(),
 });
 
 const formSchema = z.object({
@@ -51,7 +52,7 @@ export default function PublicRegistrationForm() {
   const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState<number | null>(null);
-  const [works, setWorks] = useState<z.infer<typeof workSchema>[]>([{ title: '', genre: '', lyrics: '', audioFile: null }]);
+  const [works, setWorks] = useState<z.infer<typeof workSchema>[]>([{ title: '', genre: '', lyrics: '', audioFile: null, previewUrl: '' }]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -107,7 +108,7 @@ export default function PublicRegistrationForm() {
   };
 
   const addWork = () => {
-    setWorks([...works, { title: '', genre: '', lyrics: '', audioFile: null }]);
+    setWorks([...works, { title: '', genre: '', lyrics: '', audioFile: null, previewUrl: '' }]);
   };
 
   const removeWork = (index: number) => {
@@ -125,7 +126,10 @@ export default function PublicRegistrationForm() {
   };
 
   const handleAudioUpload = async (index: number, file: File) => {
-    updateWork(index, 'audioFile', file);
+    const previewUrl = URL.createObjectURL(file);
+    const newWorks = [...works];
+    newWorks[index] = { ...newWorks[index], audioFile: file, previewUrl };
+    setWorks(newWorks);
     
     // Auto-transcribe
     setIsTranscribing(index);
@@ -236,7 +240,7 @@ export default function PublicRegistrationForm() {
       toast.success('Registro enviado com sucesso!');
       setIsSubmitted(true);
       form.reset();
-      setWorks([{ title: '', genre: '', lyrics: '', audioFile: null }]);
+      setWorks([{ title: '', genre: '', lyrics: '', audioFile: null, previewUrl: '' }]);
     } catch (error: any) {
       console.error('Erro ao enviar formulário:', error);
       toast.error('Erro ao enviar formulário. Tente novamente.');
@@ -618,6 +622,25 @@ export default function PublicRegistrationForm() {
                               </Button>
                             )}
                           </div>
+                          </div>
+                          
+                          {work.previewUrl && (
+                            <div className="mt-4 p-4 bg-background rounded-xl border border-primary/20 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="bg-primary/10 p-2 rounded-lg text-primary">
+                                  <Music className="h-4 w-4" />
+                                </div>
+                                <span className="text-sm font-medium">Ouvir áudio selecionado</span>
+                              </div>
+                              <audio 
+                                controls 
+                                className="w-full h-10"
+                                src={work.previewUrl}
+                              >
+                                Seu navegador não suporta o elemento de áudio.
+                              </audio>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
