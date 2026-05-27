@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Plus, Trash2, Upload, CheckCircle2, Music, User, MapPin, FileText, ChevronRight, ChevronLeft, Mic } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import compuseLogo from '@/assets/compuse-logo-form.png';
+import compuseLogo from '@/assets/logo-splash.png';
 
 const workSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -352,7 +352,7 @@ export default function PublicRegistrationForm() {
           <img 
             src={compuseLogo}
             alt="Compuse Logo" 
-            className="h-12 mx-auto mb-6"
+            className="h-16 mx-auto mb-6 object-contain"
           />
           <h1 className="text-3xl font-bold tracking-tight">Registro de Autor e Obra</h1>
           <p className="text-muted-foreground">Complete as 3 etapas para garantir sua proteção autoral</p>
