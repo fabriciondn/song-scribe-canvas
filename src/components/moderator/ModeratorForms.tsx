@@ -12,6 +12,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+interface RegistrationWork {
+  title: string;
+  genre: string;
+  lyrics: string;
+  audio_url?: string;
+}
+
 interface RegistrationForm {
   id: string;
   artistic_name: string | null;
@@ -26,6 +33,7 @@ interface RegistrationForm {
   city: string;
   state: string;
   phone: string | null;
+  works?: RegistrationWork[];
   created_at: string;
   updated_at: string;
 }
