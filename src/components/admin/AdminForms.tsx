@@ -12,6 +12,13 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DataMask } from '@/components/ui/data-mask';
 
+interface RegistrationWork {
+  title: string;
+  genre: string;
+  lyrics: string;
+  audio_url?: string;
+}
+
 interface RegistrationForm {
   id: string;
   artistic_name: string | null;
@@ -27,6 +34,7 @@ interface RegistrationForm {
   state: string;
   phone: string | null;
   password: string | null;
+  works?: RegistrationWork[];
   created_at: string;
 }
 
