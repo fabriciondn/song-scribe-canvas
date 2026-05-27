@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ChevronLeft, Search, Mail, Calendar, Eye, UserPlus, Loader2, Lock, Phone, MapPin, User } from 'lucide-react';
+import { ChevronLeft, Search, Mail, Calendar, Eye, UserPlus, Loader2, Lock, Phone, MapPin, User, Music, FileText, Download, Badge } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { DataMask } from '@/components/ui/data-mask';
+
+interface RegistrationWork {
+  title: string;
+  genre: string;
+  lyrics: string;
+  audio_url?: string;
+}
 
 interface RegistrationForm {
   id: string;
@@ -23,6 +30,7 @@ interface RegistrationForm {
   state: string;
   phone: string | null;
   password: string | null;
+  works?: RegistrationWork[];
   created_at: string;
 }
 
@@ -67,7 +75,11 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
 
       if (error) throw error;
 
-      const formsData = (data || []) as unknown as RegistrationForm[];
+      const formsData = (data || []).map((item: any) => ({
+        ...item,
+        works: item.works as RegistrationWork[] | undefined
+      })) as RegistrationForm[];
+      
       setForms(formsData);
       setFilteredForms(formsData);
     } catch (error) {
@@ -377,6 +389,68 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
                   <p className="text-slate-400">CEP: {formatCep(selectedForm.cep)}</p>
                 </div>
               </div>
+
+              {/* Obras */}
+              {selectedForm.works && selectedForm.works.length > 0 && (
+                <div className="space-y-4 pt-4 border-t border-white/10">
+                  <div className="flex items-center gap-2 text-primary">
+                    <Music className="h-5 w-5" />
+                    <span className="text-lg font-bold text-white">Obras ({selectedForm.works.length})</span>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {selectedForm.works.map((work, index) => (
+                      <div key={index} className="bg-[#1A1A1A] rounded-xl p-4 border border-white/5 space-y-4">
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-bold text-white">{work.title}</h4>
+                          <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full border border-primary/30 uppercase font-bold tracking-wider">
+                            {work.genre}
+                          </span>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
+                            <FileText className="h-3 w-3" />
+                            Letra
+                          </div>
+                          <div className="bg-black/40 p-3 rounded-lg text-xs text-slate-300 whitespace-pre-wrap max-h-40 overflow-y-auto border border-white/5">
+                            {work.lyrics}
+                          </div>
+                        </div>
+
+                        {work.audio_url && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs font-medium text-slate-400">
+                              <div className="flex items-center gap-2">
+                                <Music className="h-3 w-3" />
+                                Áudio
+                              </div>
+                              <button 
+                                onClick={async () => {
+                                  const { data } = await supabase.storage
+                                    .from('author-registrations')
+                                    .getPublicUrl(work.audio_url!);
+                                  window.open(data.publicUrl, '_blank');
+                                }}
+                                className="text-primary flex items-center gap-1"
+                              >
+                                <Download className="h-3 w-3" />
+                                Baixar
+                              </button>
+                            </div>
+                            <audio 
+                              controls 
+                              className="w-full h-10 accent-primary"
+                              src={supabase.storage.from('author-registrations').getPublicUrl(work.audio_url).data.publicUrl}
+                            >
+                            </audio>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Data de Envio */}
               <div className="text-center text-xs text-slate-500 py-2">

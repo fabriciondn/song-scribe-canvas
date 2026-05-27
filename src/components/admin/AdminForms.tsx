@@ -7,10 +7,17 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Eye, Calendar, User, Mail, Phone, MapPin, Lock, UserPlus, Loader2 } from 'lucide-react';
+import { Search, Eye, Calendar, User, Mail, Phone, MapPin, Lock, UserPlus, Loader2, Music, FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DataMask } from '@/components/ui/data-mask';
+
+interface RegistrationWork {
+  title: string;
+  genre: string;
+  lyrics: string;
+  audio_url?: string;
+}
 
 interface RegistrationForm {
   id: string;
@@ -27,6 +34,7 @@ interface RegistrationForm {
   state: string;
   phone: string | null;
   password: string | null;
+  works?: RegistrationWork[];
   created_at: string;
 }
 
@@ -66,8 +74,12 @@ export const AdminForms: React.FC = () => {
 
       if (error) throw error;
 
-      // Cast para incluir campo password que pode não estar nos types ainda
-      const formsData = (data || []) as unknown as RegistrationForm[];
+      // Type cast to handle JSONB column 'works'
+      const formsData = (data || []).map((item: any) => ({
+        ...item,
+        works: item.works as RegistrationWork[] | undefined
+      })) as RegistrationForm[];
+      
       setForms(formsData);
       setFilteredForms(formsData);
     } catch (error) {
@@ -332,6 +344,70 @@ export const AdminForms: React.FC = () => {
                   <p>CEP: {formatCep(selectedForm.cep)}</p>
                 </div>
               </div>
+
+              {selectedForm.works && selectedForm.works.length > 0 && (
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center space-x-2">
+                    <Music className="h-5 w-5 text-primary" />
+                    <span className="text-lg font-bold">Obras Registradas ({selectedForm.works.length})</span>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    {selectedForm.works.map((work, index) => (
+                      <Card key={index} className="bg-muted/30">
+                        <CardContent className="p-4 space-y-4">
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-bold text-lg">{work.title}</h4>
+                            <Badge>{work.genre}</Badge>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                              <FileText className="h-4 w-4" />
+                              Letra da Música
+                            </div>
+                            <div className="bg-background p-3 rounded-md text-sm whitespace-pre-wrap max-h-40 overflow-y-auto border">
+                              {work.lyrics}
+                            </div>
+                          </div>
+
+                          {work.audio_url && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between text-sm font-medium text-muted-foreground">
+                                <div className="flex items-center gap-2">
+                                  <Music className="h-4 w-4" />
+                                  Áudio da Música
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-7 gap-1"
+                                  onClick={async () => {
+                                    const { data } = await supabase.storage
+                                      .from('author-registrations')
+                                      .getPublicUrl(work.audio_url!);
+                                    window.open(data.publicUrl, '_blank');
+                                  }}
+                                >
+                                  <Download className="h-3 w-3" />
+                                  Baixar
+                                </Button>
+                              </div>
+                              <audio 
+                                controls 
+                                className="w-full h-10"
+                                src={supabase.storage.from('author-registrations').getPublicUrl(work.audio_url).data.publicUrl}
+                              >
+                                Seu navegador não suporta áudio.
+                              </audio>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="pt-4 border-t flex items-center justify-between">
                 <div className="text-xs text-muted-foreground">
