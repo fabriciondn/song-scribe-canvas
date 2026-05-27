@@ -857,7 +857,15 @@ export default function PublicRegistrationForm() {
                       <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button type="submit" disabled={isLoading || isTranscribing !== null} className="px-8 bg-primary hover:bg-primary/90 text-white font-bold">
+                    <Button 
+                      type="button" 
+                      onClick={() => {
+                        console.log('Final submit triggered');
+                        form.handleSubmit(onSubmit)();
+                      }}
+                      disabled={isLoading || isTranscribing !== null} 
+                      className="px-8 bg-primary hover:bg-primary/90 text-white font-bold"
+                    >
                       {isLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
