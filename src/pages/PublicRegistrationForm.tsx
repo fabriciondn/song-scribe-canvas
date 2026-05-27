@@ -375,7 +375,8 @@ export default function PublicRegistrationForm() {
             {[
               { step: 1, icon: User, label: "Pessoal" },
               { step: 2, icon: MapPin, label: "Endereço" },
-              { step: 3, icon: Music, label: "Obras" }
+              { step: 3, icon: Music, label: "Obras" },
+              { step: 4, icon: Search, label: "Revisão" }
             ].map((item) => (
               <div key={item.step} className="flex flex-col items-center">
                 <div 
