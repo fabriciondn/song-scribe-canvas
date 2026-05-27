@@ -730,6 +730,7 @@ export default function PublicRegistrationForm() {
                       variant="outline" 
                       className="w-full border-dashed border-2 py-8 flex flex-col gap-2 hover:bg-primary/5 hover:border-primary/50"
                       onClick={addWork}
+                      disabled={isTranscribing !== null}
                     >
                       <Plus className="h-6 w-6" />
                       Adicionar outra música para registro
