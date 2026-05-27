@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Plus, Trash2, Upload, CheckCircle2, Music, User, MapPin, FileText, ChevronRight, ChevronLeft, Mic, Search } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 const compuseLogo = "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png";
 
 const workSchema = z.object({
