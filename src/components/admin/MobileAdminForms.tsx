@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ChevronLeft, Search, Mail, Calendar, Eye, UserPlus, Loader2, Lock, Phone, MapPin, User } from 'lucide-react';
+import { ChevronLeft, Search, Mail, Calendar, Eye, UserPlus, Loader2, Lock, Phone, MapPin, User, Music, FileText, Download, Badge } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
