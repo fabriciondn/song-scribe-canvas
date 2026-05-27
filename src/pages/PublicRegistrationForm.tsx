@@ -642,8 +642,7 @@ export default function PublicRegistrationForm() {
                             </div>
                           )}
                         </div>
-                      </div>
-                    ))}
+                      ))}
 
                     <Button 
                       type="button" 
