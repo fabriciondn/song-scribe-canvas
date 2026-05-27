@@ -8,6 +8,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { DataMask } from '@/components/ui/data-mask';
 
+interface RegistrationWork {
+  title: string;
+  genre: string;
+  lyrics: string;
+  audio_url?: string;
+}
+
 interface RegistrationForm {
   id: string;
   artistic_name: string | null;
@@ -23,6 +30,7 @@ interface RegistrationForm {
   state: string;
   phone: string | null;
   password: string | null;
+  works?: RegistrationWork[];
   created_at: string;
 }
 
