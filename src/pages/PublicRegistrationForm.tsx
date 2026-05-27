@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, Upload, CheckCircle2, Music, User, MapPin, FileText, ChevronRight, ChevronLeft, Mic } from 'lucide-react';
+import { Loader2, Plus, Trash2, Upload, CheckCircle2, Music, User, MapPin, FileText, ChevronRight, ChevronLeft, Mic, Search } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 const compuseLogo = "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png";
 
