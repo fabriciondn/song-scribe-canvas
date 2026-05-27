@@ -324,6 +324,69 @@ export const ModeratorForms = () => {
                   {format(new Date(selectedForm.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                 </p>
               </div>
+
+              {selectedForm.works && selectedForm.works.length > 0 && (
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center gap-2">
+                    <Music className="h-5 w-5 text-primary" />
+                    <span className="font-bold text-lg">Obras ({selectedForm.works.length})</span>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {selectedForm.works.map((work, index) => (
+                      <Card key={index} className="bg-muted/30">
+                        <CardContent className="p-4 space-y-4">
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-bold">{work.title}</h4>
+                            <Badge variant="secondary">{work.genre}</Badge>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                              <FileText className="h-3 w-3" />
+                              Letra
+                            </label>
+                            <div className="bg-background p-3 rounded-md text-sm whitespace-pre-wrap max-h-32 overflow-y-auto border">
+                              {work.lyrics}
+                            </div>
+                          </div>
+
+                          {work.audio_url && (
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                                  <Music className="h-3 w-3" />
+                                  Áudio
+                                </label>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-6 gap-1 text-[10px]"
+                                  onClick={async () => {
+                                    const { data } = await supabase.storage
+                                      .from('author-registrations')
+                                      .getPublicUrl(work.audio_url!);
+                                    window.open(data.publicUrl, '_blank');
+                                  }}
+                                >
+                                  <DownloadIcon className="h-3 w-3" />
+                                  Baixar
+                                </Button>
+                              </div>
+                              <audio 
+                                controls 
+                                className="w-full h-8"
+                                src={supabase.storage.from('author-registrations').getPublicUrl(work.audio_url).data.publicUrl}
+                              >
+                              </audio>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
