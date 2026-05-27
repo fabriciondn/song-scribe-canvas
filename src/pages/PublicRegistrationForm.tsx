@@ -643,23 +643,33 @@ export default function PublicRegistrationForm() {
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <FormLabel>Letra *</FormLabel>
-                            {isTranscribing === index && (
-                              <div className="flex items-center gap-2 text-xs text-primary animate-pulse">
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                                Transcrevendo...
-                              </div>
-                            )}
+                          <div className="space-y-2 relative">
+                            <div className="flex items-center justify-between">
+                              <FormLabel>Letra *</FormLabel>
+                              {isTranscribing === index && (
+                                <div className="flex items-center gap-2 text-xs text-primary font-medium">
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                  Transcrevendo áudio ({transcriptionProgress}%)
+                                </div>
+                              )}
+                            </div>
+                            <div className="relative">
+                              <Textarea 
+                                placeholder="A letra será preenchida automaticamente ao subir o áudio, ou você pode digitar aqui." 
+                                className={`min-h-[120px] transition-all duration-300 ${isTranscribing === index ? 'opacity-50 grayscale-[50%]' : ''}`}
+                                value={work.lyrics}
+                                onChange={(e) => updateWork(index, 'lyrics', e.target.value)}
+                              />
+                              {isTranscribing === index && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 space-y-4">
+                                  <div className="w-full max-w-[200px] space-y-2">
+                                    <Progress value={transcriptionProgress} className="h-2" />
+                                    <p className="text-[10px] text-center text-muted-foreground uppercase tracking-wider font-semibold">Processando inteligência artificial</p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <Textarea 
-                            placeholder="A letra será preenchida automaticamente ao subir o áudio, ou você pode digitar aqui." 
-                            className="min-h-[120px]"
-                            value={work.lyrics}
-                            onChange={(e) => updateWork(index, 'lyrics', e.target.value)}
-                          />
-                        </div>
 
                         <div className="space-y-2">
                           <FormLabel>Upload do Áudio</FormLabel>
