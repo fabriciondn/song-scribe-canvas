@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Eye, Calendar, User, Mail, Phone, MapPin, Lock, UserPlus, Loader2 } from 'lucide-react';
+import { Search, Eye, Calendar, User, Mail, Phone, MapPin, Lock, UserPlus, Loader2, Music, FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DataMask } from '@/components/ui/data-mask';
