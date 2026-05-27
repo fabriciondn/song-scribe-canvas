@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Plus, Trash2, Upload, CheckCircle2, Music, User, MapPin, FileText, ChevronRight, ChevronLeft, Mic } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import compuseLogo from '@/assets/compuse-logo-form.png';
+import compuseLogo from '@/assets/logo-splash.png';
 
 const workSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
