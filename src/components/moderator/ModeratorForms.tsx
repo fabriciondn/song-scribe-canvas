@@ -56,7 +56,10 @@ export const ModeratorForms = () => {
         throw error;
       }
 
-      return data || [];
+      return (data || []).map((item: any) => ({
+        ...item,
+        works: item.works as RegistrationWork[] | undefined
+      })) as RegistrationForm[];
     },
   });
 
