@@ -75,6 +75,50 @@ export default function PublicRegistrationForm() {
     },
   });
 
+  // Load saved data from localStorage on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('compuse_registration_form');
+    if (savedData) {
+      try {
+        const { step, formData, worksData } = JSON.parse(savedData);
+        if (step) setCurrentStep(step);
+        if (formData) {
+          // Use reset with a small delay to ensure the form is ready
+          setTimeout(() => {
+            form.reset(formData);
+          }, 100);
+        }
+        if (worksData && worksData.length > 0) {
+          // Clear file references as they can't be restored from string
+          const cleanedWorks = worksData.map((w: any) => ({
+            ...w,
+            audioFile: null,
+            previewUrl: ''
+          }));
+          setWorks(cleanedWorks);
+        }
+      } catch (e) {
+        console.error('Error parsing saved form data', e);
+      }
+    }
+  }, []);
+
+  // Save data to localStorage whenever something changes
+  useEffect(() => {
+    const formData = form.getValues();
+    const dataToSave = {
+      step: currentStep,
+      formData,
+      worksData: works.map(w => ({
+        title: w.title,
+        genre: w.genre,
+        lyrics: w.lyrics
+      }))
+    };
+    localStorage.setItem('compuse_registration_form', JSON.stringify(dataToSave));
+  }, [currentStep, works, form.watch()]); // watch() ensures it triggers on form changes
+
+
   const fetchAddressByCep = async (cep: string) => {
     const cleanCep = cep.replace(/\D/g, '');
     if (cleanCep.length !== 8) return;
@@ -250,6 +294,8 @@ export default function PublicRegistrationForm() {
       setIsSubmitted(true);
       form.reset();
       setWorks([{ title: '', genre: '', lyrics: '', audioFile: null, previewUrl: '' }]);
+      localStorage.removeItem('compuse_registration_form');
+
     } catch (error: any) {
       console.error('Erro ao enviar formulário:', error);
       toast.error('Erro ao enviar formulário. Tente novamente.');
