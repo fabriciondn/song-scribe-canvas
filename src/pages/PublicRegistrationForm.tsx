@@ -127,9 +127,13 @@ export default function PublicRegistrationForm() {
 
   const handleAudioUpload = async (index: number, file: File) => {
     const previewUrl = URL.createObjectURL(file);
-    const newWorks = [...works];
-    newWorks[index] = { ...newWorks[index], audioFile: file, previewUrl };
-    setWorks(newWorks);
+    
+    // Update both audio file and preview URL
+    setWorks(prev => {
+      const newWorks = [...prev];
+      newWorks[index] = { ...newWorks[index], audioFile: file, previewUrl };
+      return newWorks;
+    });
     
     // Auto-transcribe
     setIsTranscribing(index);
@@ -144,7 +148,11 @@ export default function PublicRegistrationForm() {
       if (error) throw error;
 
       if (data?.text) {
-        updateWork(index, 'lyrics', data.text);
+        setWorks(prev => {
+          const newWorks = [...prev];
+          newWorks[index] = { ...newWorks[index], lyrics: data.text };
+          return newWorks;
+        });
         toast.success(`Áudio da música "${works[index].title || index + 1}" transcrito com sucesso!`);
       }
     } catch (error: any) {
