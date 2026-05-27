@@ -395,7 +395,7 @@ export default function PublicRegistrationForm() {
           <div className="absolute top-9 left-0 w-full h-0.5 bg-muted -z-0">
             <div 
               className="h-full bg-primary transition-all duration-300 ease-in-out" 
-              style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
+              style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
             />
           </div>
         </div>
