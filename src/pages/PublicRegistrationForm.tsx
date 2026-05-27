@@ -749,6 +749,95 @@ export default function PublicRegistrationForm() {
                     </Button>
                   </div>
                 )}
+                
+                {/* STEP 4: Review */}
+                {currentStep === 4 && (
+                  <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-2 pb-2 border-b">
+                        <User className="h-5 w-5 text-primary" />
+                        <h3 className="font-bold text-lg">Dados Pessoais</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Nome Completo</p>
+                          <p className="font-semibold">{form.getValues('fullName')}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Nome Artístico</p>
+                          <p className="font-semibold">{form.getValues('artisticName') || 'Não informado'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">E-mail</p>
+                          <p className="font-semibold">{form.getValues('email')}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">CPF</p>
+                          <p className="font-semibold">{form.getValues('cpf')}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Telefone</p>
+                          <p className="font-semibold">{form.getValues('phone') || 'Não informado'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pb-2 border-b pt-4">
+                        <MapPin className="h-5 w-5 text-primary" />
+                        <h3 className="font-bold text-lg">Endereço</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">CEP</p>
+                          <p className="font-semibold">{form.getValues('cep')}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Rua e Número</p>
+                          <p className="font-semibold">{form.getValues('street')}, {form.getValues('number')}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Bairro</p>
+                          <p className="font-semibold">{form.getValues('neighborhood')}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Cidade/UF</p>
+                          <p className="font-semibold">{form.getValues('city')} - {form.getValues('state')}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pb-2 border-b pt-4">
+                        <Music className="h-5 w-5 text-primary" />
+                        <h3 className="font-bold text-lg">Obras para Registro</h3>
+                      </div>
+                      <div className="space-y-4">
+                        {works.map((work, index) => (
+                          <div key={index} className="p-4 bg-muted/50 rounded-lg border flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="space-y-1">
+                              <h4 className="font-bold">{work.title}</h4>
+                              <p className="text-xs text-muted-foreground uppercase tracking-widest">{work.genre}</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Badge variant="outline" className="bg-background">
+                                {work.lyrics.substring(0, 30)}...
+                              </Badge>
+                              {work.audioFile && (
+                                <Badge variant="secondary" className="gap-1">
+                                  <Music className="h-3 w-3" />
+                                  Áudio Anexo
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="p-4 bg-primary/5 rounded-lg border border-primary/20 mt-8">
+                        <p className="text-sm text-center italic text-muted-foreground">
+                          Ao clicar em enviar, você confirma que todos os dados acima estão corretos e que você é o autor legítimo das obras enviadas.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* NAVIGATION BUTTONS */}
                 <div className="flex justify-between pt-6 border-t">
@@ -761,7 +850,7 @@ export default function PublicRegistrationForm() {
                     <div />
                   )}
 
-                  {currentStep < 3 ? (
+                  {currentStep < 4 ? (
                     <Button type="button" onClick={nextStep} disabled={isTranscribing !== null}>
                       Próxima Etapa
                       <ChevronRight className="ml-2 h-4 w-4" />
