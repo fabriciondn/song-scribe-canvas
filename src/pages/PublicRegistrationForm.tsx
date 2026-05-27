@@ -294,6 +294,8 @@ export default function PublicRegistrationForm() {
       setIsSubmitted(true);
       form.reset();
       setWorks([{ title: '', genre: '', lyrics: '', audioFile: null, previewUrl: '' }]);
+      localStorage.removeItem('compuse_registration_form');
+
     } catch (error: any) {
       console.error('Erro ao enviar formulário:', error);
       toast.error('Erro ao enviar formulário. Tente novamente.');
