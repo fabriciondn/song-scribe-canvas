@@ -233,12 +233,23 @@ export default function PublicRegistrationForm() {
       fieldsToValidate = ['cep', 'street', 'number', 'neighborhood', 'city', 'state'];
     }
 
-    const isValid = await form.trigger(fieldsToValidate);
-    if (isValid) {
-      setCurrentStep(currentStep + 1);
+    if (currentStep < 3) {
+      const isValid = await form.trigger(fieldsToValidate);
+      if (isValid) {
+        setCurrentStep(currentStep + 1);
+        window.scrollTo(0, 0);
+      } else {
+        toast.error('Por favor, preencha todos os campos obrigatórios corretamente.');
+      }
+    } else if (currentStep === 3) {
+      // Validate works
+      const invalidWorks = works.filter(w => !w.title || !w.genre || !w.lyrics);
+      if (invalidWorks.length > 0) {
+        toast.error('Por favor, preencha todos os dados de todas as músicas.');
+        return;
+      }
+      setCurrentStep(4);
       window.scrollTo(0, 0);
-    } else {
-      toast.error('Por favor, preencha todos os campos obrigatórios corretamente.');
     }
   };
 
