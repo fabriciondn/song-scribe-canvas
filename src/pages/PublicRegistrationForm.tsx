@@ -53,6 +53,7 @@ export default function PublicRegistrationForm() {
   const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState<number | null>(null);
+  const [transcriptionProgress, setTranscriptionProgress] = useState(0);
   const [works, setWorks] = useState<z.infer<typeof workSchema>[]>([{ title: '', genre: '', lyrics: '', audioFile: null, previewUrl: '' }]);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -182,6 +183,16 @@ export default function PublicRegistrationForm() {
     
     // Auto-transcribe
     setIsTranscribing(index);
+    setTranscriptionProgress(0);
+    
+    // Simulate progress while waiting for the API
+    const progressInterval = setInterval(() => {
+      setTranscriptionProgress(prev => {
+        if (prev >= 95) return prev;
+        return prev + 5;
+      });
+    }, 800);
+
     try {
       const formData = new FormData();
       formData.append('audio', file);
@@ -193,6 +204,7 @@ export default function PublicRegistrationForm() {
       if (error) throw error;
 
       if (data?.text) {
+        setTranscriptionProgress(100);
         setWorks(prev => {
           const newWorks = [...prev];
           newWorks[index] = { ...newWorks[index], lyrics: data.text };
@@ -204,7 +216,11 @@ export default function PublicRegistrationForm() {
       console.error('Erro na transcrição:', error);
       toast.error('Erro ao transcrever o áudio automaticamente.');
     } finally {
-      setIsTranscribing(null);
+      clearInterval(progressInterval);
+      setTimeout(() => {
+        setIsTranscribing(null);
+        setTranscriptionProgress(0);
+      }, 500);
     }
   };
 
@@ -627,23 +643,33 @@ export default function PublicRegistrationForm() {
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <FormLabel>Letra *</FormLabel>
-                            {isTranscribing === index && (
-                              <div className="flex items-center gap-2 text-xs text-primary animate-pulse">
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                                Transcrevendo...
-                              </div>
-                            )}
+                          <div className="space-y-2 relative">
+                            <div className="flex items-center justify-between">
+                              <FormLabel>Letra *</FormLabel>
+                              {isTranscribing === index && (
+                                <div className="flex items-center gap-2 text-xs text-primary font-medium">
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                  Transcrevendo áudio ({transcriptionProgress}%)
+                                </div>
+                              )}
+                            </div>
+                            <div className="relative">
+                              <Textarea 
+                                placeholder="A letra será preenchida automaticamente ao subir o áudio, ou você pode digitar aqui." 
+                                className={`min-h-[120px] transition-all duration-300 ${isTranscribing === index ? 'opacity-50 grayscale-[50%]' : ''}`}
+                                value={work.lyrics}
+                                onChange={(e) => updateWork(index, 'lyrics', e.target.value)}
+                              />
+                              {isTranscribing === index && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 space-y-4">
+                                  <div className="w-full max-w-[200px] space-y-2">
+                                    <Progress value={transcriptionProgress} className="h-2" />
+                                    <p className="text-[10px] text-center text-muted-foreground uppercase tracking-wider font-semibold">Processando inteligência artificial</p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <Textarea 
-                            placeholder="A letra será preenchida automaticamente ao subir o áudio, ou você pode digitar aqui." 
-                            className="min-h-[120px]"
-                            value={work.lyrics}
-                            onChange={(e) => updateWork(index, 'lyrics', e.target.value)}
-                          />
-                        </div>
 
                         <div className="space-y-2">
                           <FormLabel>Upload do Áudio</FormLabel>
@@ -704,6 +730,7 @@ export default function PublicRegistrationForm() {
                       variant="outline" 
                       className="w-full border-dashed border-2 py-8 flex flex-col gap-2 hover:bg-primary/5 hover:border-primary/50"
                       onClick={addWork}
+                      disabled={isTranscribing !== null}
                     >
                       <Plus className="h-6 w-6" />
                       Adicionar outra música para registro
@@ -723,12 +750,12 @@ export default function PublicRegistrationForm() {
                   )}
 
                   {currentStep < 3 ? (
-                    <Button type="button" onClick={nextStep}>
+                    <Button type="button" onClick={nextStep} disabled={isTranscribing !== null}>
                       Próxima Etapa
                       <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button type="submit" disabled={isLoading} className="px-8 bg-primary hover:bg-primary/90 text-white font-bold">
+                    <Button type="submit" disabled={isLoading || isTranscribing !== null} className="px-8 bg-primary hover:bg-primary/90 text-white font-bold">
                       {isLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
