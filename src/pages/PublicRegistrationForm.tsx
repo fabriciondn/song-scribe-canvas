@@ -53,6 +53,7 @@ export default function PublicRegistrationForm() {
   const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState<number | null>(null);
+  const [transcriptionProgress, setTranscriptionProgress] = useState(0);
   const [works, setWorks] = useState<z.infer<typeof workSchema>[]>([{ title: '', genre: '', lyrics: '', audioFile: null, previewUrl: '' }]);
 
   const form = useForm<z.infer<typeof formSchema>>({
