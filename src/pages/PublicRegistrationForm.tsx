@@ -183,6 +183,16 @@ export default function PublicRegistrationForm() {
     
     // Auto-transcribe
     setIsTranscribing(index);
+    setTranscriptionProgress(0);
+    
+    // Simulate progress while waiting for the API
+    const progressInterval = setInterval(() => {
+      setTranscriptionProgress(prev => {
+        if (prev >= 95) return prev;
+        return prev + 5;
+      });
+    }, 800);
+
     try {
       const formData = new FormData();
       formData.append('audio', file);
@@ -194,6 +204,7 @@ export default function PublicRegistrationForm() {
       if (error) throw error;
 
       if (data?.text) {
+        setTranscriptionProgress(100);
         setWorks(prev => {
           const newWorks = [...prev];
           newWorks[index] = { ...newWorks[index], lyrics: data.text };
@@ -205,7 +216,11 @@ export default function PublicRegistrationForm() {
       console.error('Erro na transcrição:', error);
       toast.error('Erro ao transcrever o áudio automaticamente.');
     } finally {
-      setIsTranscribing(null);
+      clearInterval(progressInterval);
+      setTimeout(() => {
+        setIsTranscribing(null);
+        setTranscriptionProgress(0);
+      }, 500);
     }
   };
 
