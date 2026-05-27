@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, Upload, CheckCircle2, Music, User, MapPin, FileText, ChevronRight, ChevronLeft, Mic } from 'lucide-react';
+import { Loader2, Plus, Trash2, Upload, CheckCircle2, Music, User, MapPin, FileText, ChevronRight, ChevronLeft, Mic, Search } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 const compuseLogo = "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png";
 
 const workSchema = z.object({
@@ -233,12 +234,23 @@ export default function PublicRegistrationForm() {
       fieldsToValidate = ['cep', 'street', 'number', 'neighborhood', 'city', 'state'];
     }
 
-    const isValid = await form.trigger(fieldsToValidate);
-    if (isValid) {
-      setCurrentStep(currentStep + 1);
+    if (currentStep < 3) {
+      const isValid = await form.trigger(fieldsToValidate);
+      if (isValid) {
+        setCurrentStep(currentStep + 1);
+        window.scrollTo(0, 0);
+      } else {
+        toast.error('Por favor, preencha todos os campos obrigatórios corretamente.');
+      }
+    } else if (currentStep === 3) {
+      // Validate works
+      const invalidWorks = works.filter(w => !w.title || !w.genre || !w.lyrics);
+      if (invalidWorks.length > 0) {
+        toast.error('Por favor, preencha todos os dados de todas as músicas.');
+        return;
+      }
+      setCurrentStep(4);
       window.scrollTo(0, 0);
-    } else {
-      toast.error('Por favor, preencha todos os campos obrigatórios corretamente.');
     }
   };
 
@@ -355,7 +367,7 @@ export default function PublicRegistrationForm() {
             className="h-16 mx-auto mb-6 object-contain"
           />
           <h1 className="text-3xl font-bold tracking-tight">Registro de Autor e Obra</h1>
-          <p className="text-muted-foreground">Complete as 3 etapas para garantir sua proteção autoral</p>
+          <p className="text-muted-foreground">Complete as 4 etapas para garantir sua proteção autoral</p>
         </div>
 
         {/* Custom Stepper */}
@@ -364,7 +376,8 @@ export default function PublicRegistrationForm() {
             {[
               { step: 1, icon: User, label: "Pessoal" },
               { step: 2, icon: MapPin, label: "Endereço" },
-              { step: 3, icon: Music, label: "Obras" }
+              { step: 3, icon: Music, label: "Obras" },
+              { step: 4, icon: Search, label: "Revisão" }
             ].map((item) => (
               <div key={item.step} className="flex flex-col items-center">
                 <div 
@@ -383,7 +396,7 @@ export default function PublicRegistrationForm() {
           <div className="absolute top-9 left-0 w-full h-0.5 bg-muted -z-0">
             <div 
               className="h-full bg-primary transition-all duration-300 ease-in-out" 
-              style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
+              style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
             />
           </div>
         </div>
@@ -737,6 +750,95 @@ export default function PublicRegistrationForm() {
                     </Button>
                   </div>
                 )}
+                
+                {/* STEP 4: Review */}
+                {currentStep === 4 && (
+                  <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-2 pb-2 border-b">
+                        <User className="h-5 w-5 text-primary" />
+                        <h3 className="font-bold text-lg">Dados Pessoais</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Nome Completo</p>
+                          <p className="font-semibold">{form.getValues('fullName')}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Nome Artístico</p>
+                          <p className="font-semibold">{form.getValues('artisticName') || 'Não informado'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">E-mail</p>
+                          <p className="font-semibold">{form.getValues('email')}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">CPF</p>
+                          <p className="font-semibold">{form.getValues('cpf')}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Telefone</p>
+                          <p className="font-semibold">{form.getValues('phone') || 'Não informado'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pb-2 border-b pt-4">
+                        <MapPin className="h-5 w-5 text-primary" />
+                        <h3 className="font-bold text-lg">Endereço</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">CEP</p>
+                          <p className="font-semibold">{form.getValues('cep')}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Rua e Número</p>
+                          <p className="font-semibold">{form.getValues('street')}, {form.getValues('number')}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Bairro</p>
+                          <p className="font-semibold">{form.getValues('neighborhood')}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Cidade/UF</p>
+                          <p className="font-semibold">{form.getValues('city')} - {form.getValues('state')}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pb-2 border-b pt-4">
+                        <Music className="h-5 w-5 text-primary" />
+                        <h3 className="font-bold text-lg">Obras para Registro</h3>
+                      </div>
+                      <div className="space-y-4">
+                        {works.map((work, index) => (
+                          <div key={index} className="p-4 bg-muted/50 rounded-lg border flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="space-y-1">
+                              <h4 className="font-bold">{work.title}</h4>
+                              <p className="text-xs text-muted-foreground uppercase tracking-widest">{work.genre}</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Badge variant="outline" className="bg-background">
+                                {work.lyrics.substring(0, 30)}...
+                              </Badge>
+                              {work.audioFile && (
+                                <Badge variant="secondary" className="gap-1">
+                                  <Music className="h-3 w-3" />
+                                  Áudio Anexo
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="p-4 bg-primary/5 rounded-lg border border-primary/20 mt-8">
+                        <p className="text-sm text-center italic text-muted-foreground">
+                          Ao clicar em enviar, você confirma que todos os dados acima estão corretos e que você é o autor legítimo das obras enviadas.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* NAVIGATION BUTTONS */}
                 <div className="flex justify-between pt-6 border-t">
@@ -749,7 +851,7 @@ export default function PublicRegistrationForm() {
                     <div />
                   )}
 
-                  {currentStep < 3 ? (
+                  {currentStep < 4 ? (
                     <Button type="button" onClick={nextStep} disabled={isTranscribing !== null}>
                       Próxima Etapa
                       <ChevronRight className="ml-2 h-4 w-4" />
