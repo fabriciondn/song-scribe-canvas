@@ -74,8 +74,12 @@ export const AdminForms: React.FC = () => {
 
       if (error) throw error;
 
-      // Cast para incluir campo password que pode não estar nos types ainda
-      const formsData = (data || []) as unknown as RegistrationForm[];
+      // Type cast to handle JSONB column 'works'
+      const formsData = (data || []).map((item: any) => ({
+        ...item,
+        works: item.works as RegistrationWork[] | undefined
+      })) as RegistrationForm[];
+      
       setForms(formsData);
       setFilteredForms(formsData);
     } catch (error) {
