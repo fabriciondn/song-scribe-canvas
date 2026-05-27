@@ -1696,6 +1696,7 @@ export type Database = {
           state: string
           street: string
           updated_at: string
+          works: Json | null
         }
         Insert: {
           artistic_name?: string | null
@@ -1714,6 +1715,7 @@ export type Database = {
           state: string
           street: string
           updated_at?: string
+          works?: Json | null
         }
         Update: {
           artistic_name?: string | null
@@ -1732,6 +1734,7 @@ export type Database = {
           state?: string
           street?: string
           updated_at?: string
+          works?: Json | null
         }
         Relationships: []
       }
