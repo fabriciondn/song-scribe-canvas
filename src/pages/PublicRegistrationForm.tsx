@@ -749,12 +749,12 @@ export default function PublicRegistrationForm() {
                   )}
 
                   {currentStep < 3 ? (
-                    <Button type="button" onClick={nextStep}>
+                    <Button type="button" onClick={nextStep} disabled={isTranscribing !== null}>
                       Próxima Etapa
                       <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button type="submit" disabled={isLoading} className="px-8 bg-primary hover:bg-primary/90 text-white font-bold">
+                    <Button type="submit" disabled={isLoading || isTranscribing !== null} className="px-8 bg-primary hover:bg-primary/90 text-white font-bold">
                       {isLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
