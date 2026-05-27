@@ -75,7 +75,11 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
 
       if (error) throw error;
 
-      const formsData = (data || []) as unknown as RegistrationForm[];
+      const formsData = (data || []).map((item: any) => ({
+        ...item,
+        works: item.works as RegistrationWork[] | undefined
+      })) as RegistrationForm[];
+      
       setForms(formsData);
       setFilteredForms(formsData);
     } catch (error) {
