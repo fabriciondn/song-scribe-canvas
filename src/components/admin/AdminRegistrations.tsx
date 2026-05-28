@@ -327,8 +327,8 @@ export const AdminRegistrations: React.FC = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDownloadCertificate(registration)}
-                        disabled={downloadingId === registration.id}
-                        title="Baixar Certificado"
+                        disabled={downloadingId === registration.id || (registration.status !== 'registered' && registration.status !== 'completed')}
+                        title={registration.status === 'registered' || registration.status === 'completed' ? "Baixar Certificado" : "Certificado indisponível (Em Análise)"}
                       >
                         {downloadingId === registration.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />

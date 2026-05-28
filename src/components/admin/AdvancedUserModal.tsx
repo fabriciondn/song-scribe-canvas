@@ -1182,7 +1182,7 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleDownloadCertificate(registration)}
-                                disabled={downloadingId === registration.id}
+                                disabled={downloadingId === registration.id || (registration.status !== 'registered' && registration.status !== 'completed')}
                               >
                                 {downloadingId === registration.id ? (
                                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
