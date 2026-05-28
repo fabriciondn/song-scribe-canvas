@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Eye, Calendar, User, Mail, Phone, MapPin, Lock, UserPlus, Loader2, Music, FileText, Download } from 'lucide-react';
+import { Search, Eye, Calendar, User, Mail, Phone, MapPin, Lock, UserPlus, Loader2, Music, FileText, Download, Edit2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DataMask } from '@/components/ui/data-mask';
@@ -396,7 +397,7 @@ export const AdminForms: React.FC = () => {
                                         const newWorks = [...(selectedForm.works || [])];
                                         const { error } = await supabase
                                           .from('public_registration_forms')
-                                          .update({ works: newWorks })
+                                          .update({ works: newWorks as any })
                                           .eq('id', selectedForm.id);
                                         
                                         if (error) throw error;
