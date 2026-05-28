@@ -46,7 +46,11 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Erro Groq API [${response.status}]: ${errorText}`);
-      throw new Error(`Falha na transcrição: ${response.status}`);
+      
+      return new Response(
+        JSON.stringify({ error: `Falha na transcrição: ${response.status}`, details: errorText }),
+        { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const result = await response.json();
