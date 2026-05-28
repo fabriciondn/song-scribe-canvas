@@ -12,7 +12,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Music, FileText, FolderOpen, Calendar, CreditCard, Download, Coins, User, Activity, Award, Crown, Clock, CheckCircle, UserCog, Shield, X, Users, ArrowRightLeft, UserCheck } from 'lucide-react';
+import { Music, FileText, FolderOpen, Calendar, CreditCard, Download, Coins, User, Activity, Award, Crown, Clock, CheckCircle, UserCog, Shield, X, Users, ArrowRightLeft, UserCheck, Edit, Loader2 } from 'lucide-react';
+import { generateCertificatePDF } from '@/services/certificateService';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useImpersonation } from '@/context/ImpersonationContext';
 import { useNavigate } from 'react-router-dom';
@@ -36,6 +37,10 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
   const [selectedRole, setSelectedRole] = useState<string>('user');
   const [selectedModeratorId, setSelectedModeratorId] = useState<string>('');
   const [isTransferring, setIsTransferring] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [editingRegistration, setEditingRegistration] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ title: '', lyrics: '', genre: '', rhythm: '', song_version: '', other_authors: '', additional_info: '' });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const { startImpersonation } = useImpersonation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -341,20 +346,68 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
     }
   };
 
-  const handleDownloadCertificate = async (registrationId: string) => {
+  const handleDownloadCertificate = async (registration: any) => {
     try {
-      // Aqui você implementaria a lógica para gerar/baixar o certificado
-      toast({
-        title: 'Certificado',
-        description: 'Funcionalidade de download do certificado será implementada',
-      });
+      setDownloadingId(registration.id);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', registration.user_id)
+        .single();
+
+      const enrichedWork = {
+        ...registration,
+        author_cpf: profile?.cpf,
+        author_address: profile ? [profile.street, profile.number, profile.neighborhood, profile.city, profile.state, profile.cep].filter(Boolean).join(', ') : undefined,
+      };
+      await generateCertificatePDF(enrichedWork as any);
+      toast({ title: 'Certificado baixado', description: `"${registration.title}" baixado com sucesso.` });
     } catch (error) {
       console.error('Erro ao baixar certificado:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao baixar certificado',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro', description: 'Erro ao baixar certificado', variant: 'destructive' });
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleOpenEdit = (registration: any) => {
+    setEditingRegistration(registration);
+    setEditForm({
+      title: registration.title || '',
+      lyrics: registration.lyrics || '',
+      genre: registration.genre || '',
+      rhythm: registration.rhythm || '',
+      song_version: registration.song_version || '',
+      other_authors: registration.other_authors || '',
+      additional_info: registration.additional_info || '',
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingRegistration) return;
+    try {
+      setIsSavingEdit(true);
+      const { error } = await supabase
+        .from('author_registrations')
+        .update({
+          title: editForm.title,
+          lyrics: editForm.lyrics,
+          genre: editForm.genre,
+          rhythm: editForm.rhythm,
+          song_version: editForm.song_version,
+          other_authors: editForm.other_authors || null,
+          additional_info: editForm.additional_info || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingRegistration.id);
+      if (error) throw error;
+      toast({ title: 'Sucesso', description: 'Registro atualizado.' });
+      setEditingRegistration(null);
+      onUserUpdate();
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message || 'Erro ao salvar', variant: 'destructive' });
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
@@ -1124,14 +1177,29 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                             {new Date(registration.created_at).toLocaleDateString('pt-BR')}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDownloadCertificate(registration.id)}
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              Certificado
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDownloadCertificate(registration)}
+                                disabled={downloadingId === registration.id}
+                              >
+                                {downloadingId === registration.id ? (
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                  <Download className="h-4 w-4 mr-2" />
+                                )}
+                                Certificado
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenEdit(registration)}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Editar
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1582,6 +1650,53 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      {/* Modal de Edição de Registro */}
+      <Dialog open={!!editingRegistration} onOpenChange={(open) => !open && setEditingRegistration(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Certificado: {editingRegistration?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Título</Label>
+                <Input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>Gênero</Label>
+                <Input value={editForm.genre} onChange={(e) => setEditForm({ ...editForm, genre: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>Ritmo</Label>
+                <Input value={editForm.rhythm} onChange={(e) => setEditForm({ ...editForm, rhythm: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>Versão</Label>
+                <Input value={editForm.song_version} onChange={(e) => setEditForm({ ...editForm, song_version: e.target.value })} />
+              </div>
+              <div className="space-y-1 col-span-2">
+                <Label>Outros Autores</Label>
+                <Input value={editForm.other_authors} onChange={(e) => setEditForm({ ...editForm, other_authors: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Letra</Label>
+              <Textarea rows={10} value={editForm.lyrics} onChange={(e) => setEditForm({ ...editForm, lyrics: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label>Informações Adicionais</Label>
+              <Textarea rows={3} value={editForm.additional_info} onChange={(e) => setEditForm({ ...editForm, additional_info: e.target.value })} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditingRegistration(null)}>Cancelar</Button>
+              <Button onClick={handleSaveEdit} disabled={isSavingEdit}>
+                {isSavingEdit ? 'Salvando...' : 'Salvar Alterações'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
