@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Edit, Trash2, Music, RefreshCw, Eye, Download } from 'lucide-react';
+import { Search, Edit, Trash2, Music, RefreshCw, Eye, Download, FileText, Loader2 } from 'lucide-react';
+import { generateCertificatePDF } from '@/services/certificateService';
 
 interface Registration {
   id: string;
@@ -41,6 +42,7 @@ export const AdminRegistrations: React.FC = () => {
   const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     title: '',
     author: '',
@@ -170,6 +172,47 @@ export const AdminRegistrations: React.FC = () => {
     setIsViewModalOpen(true);
   };
 
+  const handleDownloadCertificate = async (registration: Registration) => {
+    try {
+      setDownloadingId(registration.id);
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', registration.user_id)
+        .single();
+
+      const enrichedWork = {
+        ...registration,
+        author_cpf: profile?.cpf,
+        author_address: profile ? [
+          profile.street,
+          profile.number,
+          profile.neighborhood,
+          profile.city,
+          profile.state,
+          profile.cep
+        ].filter(Boolean).join(', ') : undefined,
+      };
+
+      await generateCertificatePDF(enrichedWork as any);
+      
+      toast({
+        title: "Certificado baixado",
+        description: `Certificado de "${registration.title}" foi baixado com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao gerar certificado:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar o certificado. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   const handleSaveEdit = () => {
     if (!selectedRegistration) return;
     editMutation.mutate({
@@ -283,6 +326,19 @@ export const AdminRegistrations: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => handleDownloadCertificate(registration)}
+                        disabled={downloadingId === registration.id}
+                        title="Baixar Certificado"
+                      >
+                        {downloadingId === registration.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <FileText className="h-4 w-4 text-blue-500" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleView(registration)}
                         title="Visualizar"
                       >
@@ -373,7 +429,21 @@ export const AdminRegistrations: React.FC = () => {
                 </div>
               </div>
               <div>
-                <Label className="text-muted-foreground">Letra</Label>
+                <div className="flex justify-between items-center mb-1">
+                  <Label className="text-muted-foreground">Letra</Label>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      setIsViewModalOpen(false);
+                      handleEdit(selectedRegistration);
+                    }}
+                    className="h-8 gap-1"
+                  >
+                    <Edit className="h-3 w-3" />
+                    Editar Letra
+                  </Button>
+                </div>
                 <div className="mt-1 p-3 bg-muted rounded-lg whitespace-pre-wrap max-h-60 overflow-y-auto text-sm">
                   {selectedRegistration.lyrics}
                 </div>
