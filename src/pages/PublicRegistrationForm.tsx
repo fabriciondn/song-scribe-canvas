@@ -185,6 +185,14 @@ export default function PublicRegistrationForm() {
     // Auto-transcribe
     setIsTranscribing(index);
     setTranscriptionProgress(0);
+
+    // 25MB limit for Groq Whisper API
+    const MAX_FILE_SIZE = 25 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      toast.warning('Arquivo muito grande para transcrição automática. Por favor, digite a letra manualmente ou use um arquivo menor (máx 25MB).');
+      setIsTranscribing(null);
+      return;
+    }
     
     // Simulate progress while waiting for the API
     const progressInterval = setInterval(() => {
@@ -202,7 +210,15 @@ export default function PublicRegistrationForm() {
         body: formData,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check for 413 error (Entity Too Large)
+        if (error.message?.includes('413') || (error as any).status === 413) {
+          toast.error('O arquivo de áudio é muito grande para o processador de IA. Tente um arquivo MP3 comprimido.');
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       if (data?.text) {
         setTranscriptionProgress(100);
@@ -215,7 +231,7 @@ export default function PublicRegistrationForm() {
       }
     } catch (error: any) {
       console.error('Erro na transcrição:', error);
-      toast.error('Erro ao transcrever o áudio automaticamente.');
+      toast.error('Não foi possível transcrever o áudio automaticamente. Por favor, digite a letra abaixo.');
     } finally {
       clearInterval(progressInterval);
       setTimeout(() => {
