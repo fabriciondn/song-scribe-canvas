@@ -373,7 +373,21 @@ export const AdminRegistrations: React.FC = () => {
                 </div>
               </div>
               <div>
-                <Label className="text-muted-foreground">Letra</Label>
+                <div className="flex justify-between items-center mb-1">
+                  <Label className="text-muted-foreground">Letra</Label>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      setIsViewModalOpen(false);
+                      handleEdit(selectedRegistration);
+                    }}
+                    className="h-8 gap-1"
+                  >
+                    <Edit className="h-3 w-3" />
+                    Editar Letra
+                  </Button>
+                </div>
                 <div className="mt-1 p-3 bg-muted rounded-lg whitespace-pre-wrap max-h-60 overflow-y-auto text-sm">
                   {selectedRegistration.lyrics}
                 </div>
