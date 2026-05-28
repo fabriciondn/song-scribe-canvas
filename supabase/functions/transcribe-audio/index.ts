@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, x-customer-auth',
 };
 
 serve(async (req) => {
@@ -16,21 +16,27 @@ serve(async (req) => {
       throw new Error("GROQ_API_KEY não configurada");
     }
 
-    const formData = await req.formData();
-    const audioFile = formData.get("audio") as File;
-
-    if (!audioFile) {
+    // Get the audio data from the request body
+    // We expect the file to be sent directly as the body
+    const audioData = await req.arrayBuffer();
+    
+    if (!audioData || audioData.byteLength === 0) {
       return new Response(
-        JSON.stringify({ error: "Nenhum arquivo de áudio enviado" }),
+        JSON.stringify({ error: "Nenhum dado de áudio enviado" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Transcrevendo áudio: ${audioFile.name}, tamanho: ${audioFile.size} bytes`);
+    console.log(`Transcrevendo áudio, tamanho: ${audioData.byteLength} bytes`);
 
-    // Send to Groq Whisper API
+    // Determine content type from headers or default to audio/mpeg
+    const contentType = req.headers.get("content-type") || "audio/mpeg";
+    const filename = "audio.mp3"; // Groq needs a filename with extension
+
+    // Prepare request to Groq Whisper API
     const groqFormData = new FormData();
-    groqFormData.append("file", audioFile);
+    const blob = new Blob([audioData], { type: contentType });
+    groqFormData.append("file", blob, filename);
     groqFormData.append("model", "whisper-large-v3");
     groqFormData.append("language", "pt");
     groqFormData.append("response_format", "json");

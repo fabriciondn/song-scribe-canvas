@@ -203,22 +203,28 @@ export default function PublicRegistrationForm() {
     }, 800);
 
     try {
-      const formData = new FormData();
-      formData.append('audio', file);
-
-      const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-        body: formData,
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe-audio`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          ...(session ? { 'X-Customer-Auth': session.access_token } : {}),
+        },
+        body: file, // Send file directly to avoid FormData overhead
       });
 
-      if (error) {
-        // Check for 413 error (Entity Too Large)
-        if (error.message?.includes('413') || (error as any).status === 413) {
-          toast.error('O arquivo de áudio é muito grande para o processador de IA. Tente um arquivo MP3 comprimido.');
+      if (!response.ok) {
+        if (response.status === 413) {
+          toast.error('O arquivo de áudio é muito grande para o processador de IA (limite 25MB). Tente um arquivo MP3 comprimido.');
         } else {
-          throw error;
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Erro ${response.status}`);
         }
         return;
       }
+
+      const data = await response.json();
 
       if (data?.text) {
         setTranscriptionProgress(100);
