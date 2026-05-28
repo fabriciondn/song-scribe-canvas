@@ -94,13 +94,15 @@ export default function PublicRegistrationForm() {
           }, 100);
         }
         if (worksData && worksData.length > 0) {
-          // Clear file references as they can't be restored from string
-          const cleanedWorks = worksData.map((w: any) => ({
-            ...w,
-            audioFile: null,
-            previewUrl: ''
-          }));
-          setWorks(cleanedWorks);
+          // Merge saved data with current works to preserve files if they were just added
+          setWorks(prev => {
+            return worksData.map((w: any, index: number) => ({
+              ...w,
+              // If we already have a file in memory for this index, keep it
+              audioFile: prev[index]?.audioFile || null,
+              previewUrl: prev[index]?.previewUrl || ''
+            }));
+          });
         }
       } catch (e) {
         console.error('Error parsing saved form data', e);
@@ -295,17 +297,26 @@ export default function PublicRegistrationForm() {
     setIsLoading(true);
     try {
       // 1. Upload audio files if any
-      const worksWithUrls = await Promise.all(works.map(async (work) => {
+      const worksWithUrls = await Promise.all(works.map(async (work, index) => {
         if (work.audioFile) {
+          console.log(`Uploading audio for work ${index + 1}:`, work.audioFile.name);
           const fileExt = work.audioFile.name.split('.').pop();
-          const fileName = `${Math.random()}.${fileExt}`;
+          const fileName = `${crypto.randomUUID()}.${fileExt}`;
           const filePath = `public-registrations/${fileName}`;
 
           const { error: uploadError } = await supabase.storage
             .from('author-registrations')
-            .upload(filePath, work.audioFile);
+            .upload(filePath, work.audioFile, {
+              cacheControl: '3600',
+              upsert: false
+            });
 
-          if (uploadError) throw uploadError;
+          if (uploadError) {
+            console.error(`Error uploading work ${index + 1}:`, uploadError);
+            throw new Error(`Erro ao enviar o áudio da música ${index + 1}: ${uploadError.message}`);
+          }
+
+          console.log(`Upload successful for work ${index + 1}. Path:`, filePath);
 
           return {
             title: work.title,
@@ -314,6 +325,8 @@ export default function PublicRegistrationForm() {
             audio_url: filePath
           };
         }
+        
+        console.log(`No audio file for work ${index + 1}`);
         return {
           title: work.title,
           genre: work.genre,
@@ -869,13 +882,18 @@ export default function PublicRegistrationForm() {
                               <p className="text-xs text-muted-foreground uppercase tracking-widest">{work.genre}</p>
                             </div>
                             <div className="flex items-center gap-3">
-                              <Badge variant="outline" className="bg-background">
+                              <Badge variant="outline" className="bg-background max-w-[150px] truncate">
                                 {work.lyrics.substring(0, 30)}...
                               </Badge>
-                              {work.audioFile && (
-                                <Badge variant="secondary" className="gap-1">
+                              {work.audioFile ? (
+                                <Badge variant="secondary" className="gap-1 bg-green-500/10 text-green-600 border-green-500/20">
                                   <Music className="h-3 w-3" />
-                                  Áudio Anexo
+                                  Áudio Pronto
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="gap-1 text-amber-600 border-amber-500/20">
+                                  <Music className="h-3 w-3" />
+                                  Sem Áudio
                                 </Badge>
                               )}
                             </div>

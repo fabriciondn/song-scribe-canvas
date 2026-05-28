@@ -400,6 +400,7 @@ export const AdminForms: React.FC = () => {
                                 controls 
                                 className="w-full h-10"
                                 src={supabase.storage.from('author-registrations').getPublicUrl(work.audio_url).data.publicUrl}
+                                preload="none"
                               >
                                 Seu navegador não suporta áudio.
                               </audio>

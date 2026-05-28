@@ -441,8 +441,10 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
                             <audio 
                               controls 
                               className="w-full h-10 accent-primary"
+                              preload="none"
                               src={supabase.storage.from('author-registrations').getPublicUrl(work.audio_url).data.publicUrl}
                             >
+                              Seu navegador não suporta áudio.
                             </audio>
                           </div>
                         )}
