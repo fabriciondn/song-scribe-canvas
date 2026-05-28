@@ -17,6 +17,7 @@ const OptimizedSettings = () => {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cpfError, setCpfError] = useState<string | null>(null);
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
   
   const [formData, setFormData] = useState({
     name: profile?.name || '',
@@ -53,6 +54,36 @@ const OptimizedSettings = () => {
     }
   }, [profile]);
 
+  const fetchAddressByCep = useCallback(async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+
+    setIsLoadingCep(true);
+    try {
+      console.log('🔍 Buscando CEP:', cleanCep);
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        toast.error('CEP não encontrado');
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          street: data.logradouro || prev.street,
+          neighborhood: data.bairro || prev.neighborhood,
+          city: data.localidade || prev.city,
+          state: data.uf || prev.state,
+        }));
+        toast.success('Endereço preenchido automaticamente');
+      }
+    } catch (error) {
+      console.error('❌ Erro ao buscar CEP:', error);
+      toast.error('Erro ao buscar CEP');
+    } finally {
+      setIsLoadingCep(false);
+    }
+  }, []);
+
   const handleInputChange = useCallback((field: string, value: string) => {
     // Aplicar formatação automática para CPF
     if (field === 'cpf') {
@@ -64,13 +95,29 @@ const OptimizedSettings = () => {
       // Validar CPF em tempo real
       const errorMsg = getCpfErrorMessage(formattedCpf);
       setCpfError(errorMsg);
+    } else if (field === 'cep') {
+      // Limitar e formatar CEP
+      const cleanCep = value.replace(/\D/g, '').slice(0, 8);
+      let formattedCep = cleanCep;
+      if (cleanCep.length > 5) {
+        formattedCep = `${cleanCep.slice(0, 5)}-${cleanCep.slice(5)}`;
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        [field]: formattedCep
+      }));
+
+      if (cleanCep.length === 8) {
+        fetchAddressByCep(cleanCep);
+      }
     } else {
       setFormData(prev => ({
         ...prev,
         [field]: value
       }));
     }
-  }, []);
+  }, [fetchAddressByCep]);
 
   const handleSaveSettings = useCallback(async () => {
     if (!profile) return;
@@ -335,13 +382,21 @@ const OptimizedSettings = () => {
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="cep">CEP</Label>
-              <Input
-                id="cep"
-                value={formData.cep}
-                onChange={(e) => handleInputChange('cep', e.target.value)}
-                placeholder="00000-000"
-                className="h-11"
-              />
+              <div className="relative">
+                <Input
+                  id="cep"
+                  value={formData.cep}
+                  onChange={(e) => handleInputChange('cep', e.target.value)}
+                  placeholder="00000-000"
+                  className="h-11 pr-10"
+                  maxLength={9}
+                />
+                {isLoadingCep && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+              </div>
             </div>
             <div className="lg:col-span-2 space-y-2">
               <Label htmlFor="street">Rua</Label>
