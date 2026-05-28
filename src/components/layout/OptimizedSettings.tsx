@@ -54,6 +54,36 @@ const OptimizedSettings = () => {
     }
   }, [profile]);
 
+  const fetchAddressByCep = useCallback(async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+
+    setIsLoadingCep(true);
+    try {
+      console.log('🔍 Buscando CEP:', cleanCep);
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        toast.error('CEP não encontrado');
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          street: data.logradouro || prev.street,
+          neighborhood: data.bairro || prev.neighborhood,
+          city: data.localidade || prev.city,
+          state: data.uf || prev.state,
+        }));
+        toast.success('Endereço preenchido automaticamente');
+      }
+    } catch (error) {
+      console.error('❌ Erro ao buscar CEP:', error);
+      toast.error('Erro ao buscar CEP');
+    } finally {
+      setIsLoadingCep(false);
+    }
+  }, []);
+
   const handleInputChange = useCallback((field: string, value: string) => {
     // Aplicar formatação automática para CPF
     if (field === 'cpf') {
@@ -65,13 +95,29 @@ const OptimizedSettings = () => {
       // Validar CPF em tempo real
       const errorMsg = getCpfErrorMessage(formattedCpf);
       setCpfError(errorMsg);
+    } else if (field === 'cep') {
+      // Limitar e formatar CEP
+      const cleanCep = value.replace(/\D/g, '').slice(0, 8);
+      let formattedCep = cleanCep;
+      if (cleanCep.length > 5) {
+        formattedCep = `${cleanCep.slice(0, 5)}-${cleanCep.slice(5)}`;
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        [field]: formattedCep
+      }));
+
+      if (cleanCep.length === 8) {
+        fetchAddressByCep(cleanCep);
+      }
     } else {
       setFormData(prev => ({
         ...prev,
         [field]: value
       }));
     }
-  }, []);
+  }, [fetchAddressByCep]);
 
   const handleSaveSettings = useCallback(async () => {
     if (!profile) return;
