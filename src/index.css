@@ -136,10 +136,10 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Overscroll behavior only for touch devices (iOS/mobile) - keeps desktop scroll normal */
+  /* Relaxed overscroll for better form experience on mobile */
   @media (hover: none) {
     html, body {
-      overscroll-behavior: none;
+      overscroll-behavior: auto;
     }
   }
 
