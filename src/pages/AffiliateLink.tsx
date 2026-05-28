@@ -10,7 +10,7 @@ export default function AffiliateLink() {
   useEffect(() => {
     const processAffiliateLink = async () => {
       if (!code) {
-        window.location.replace('/');
+        navigate('/', { replace: true });
         return;
       }
 
@@ -40,11 +40,11 @@ export default function AffiliateLink() {
       }
       
       // Redirecionar APENAS APÓS registrar o clique
-      window.location.replace(`/?ref=${fullCode}`);
+      navigate(`/?ref=${fullCode}`, { replace: true });
     };
 
     processAffiliateLink();
-  }, [code]);
+  }, [code, navigate]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">

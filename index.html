@@ -24,7 +24,24 @@
     <meta name="mobile-web-app-capable" content="yes" />
     
     <!-- Web App Manifest -->
-    <link rel="manifest" href="/manifest.json" />
+    <script>
+      (function () {
+        var manifestHref = '/manifest.json';
+        try {
+          var search = new URLSearchParams(window.location.search);
+          var lovableToken = search.get('__lovable_token');
+          if (lovableToken) {
+            manifestHref += '?__lovable_token=' + encodeURIComponent(lovableToken);
+          }
+        } catch (e) {
+        }
+
+        var link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = manifestHref;
+        document.head.appendChild(link);
+      })();
+    </script>
     
     <!-- Icons -->
     <link rel="icon" type="image/png" href="/app-icon.png" />

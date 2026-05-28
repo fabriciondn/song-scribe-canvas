@@ -13,6 +13,7 @@ import { useMobileDetection } from '@/hooks/use-mobile';
 import { useImpersonationSync } from '@/hooks/useImpersonationSync';
 import { useRegionalAuth } from '@/hooks/useRegionalAuth';
 import { cn } from '@/lib/utils';
+import { buildPreviewSafePath } from '@/utils/previewToken';
 
 const Dashboard: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -44,7 +45,7 @@ const Dashboard: React.FC = () => {
   // Redirecionar moderador para /moderator após login
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate('/', { replace: true });
+      navigate(buildPreviewSafePath('/'), { replace: true });
       toast({
         title: 'Acesso restrito',
         description: 'Você precisa estar logado para acessar esta área.',
@@ -54,7 +55,7 @@ const Dashboard: React.FC = () => {
     }
     // Só redireciona moderador se NÃO estiver impersonando
     if (!isRoleLoading && userRole?.role === 'moderator' && !isImpersonating) {
-      navigate('/moderator', { replace: true });
+      navigate(buildPreviewSafePath('/moderator'), { replace: true });
     }
   }, [isAuthenticated, isLoading, userRole, isRoleLoading, isImpersonating, navigate, toast]);
 

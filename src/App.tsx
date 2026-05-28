@@ -15,6 +15,7 @@ import { GlobalNotifications } from "@/components/GlobalNotifications";
 import { PageFunctionStatusWrapper } from "@/components/layout/FunctionStatusWrapper";
 import { MobileSplashScreen } from "@/components/mobile/MobileSplashScreen";
 import { useMobileDetection } from "@/hooks/use-mobile";
+import { primePreviewTokenCache } from "@/utils/previewToken";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import DashboardHome from "./pages/DashboardHome";
@@ -67,6 +68,7 @@ const queryClient = new QueryClient({
 const AppContent = () => {
   useImpersonationSync();
   useVisitorPresence(); // Track visitor presence in real-time
+  primePreviewTokenCache();
   const [showSplash, setShowSplash] = useState(true);
   const { isMobile } = useMobileDetection();
 
