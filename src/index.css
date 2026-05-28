@@ -136,10 +136,10 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Overscroll behavior only for touch devices (iOS/mobile) - keeps desktop scroll normal */
+  /* Relaxed overscroll for better form experience on mobile */
   @media (hover: none) {
     html, body {
-      overscroll-behavior: none;
+      overscroll-behavior: auto;
     }
   }
 
@@ -330,6 +330,11 @@
   
   /* Mobile optimizations - Native app feel */
   @media (max-width: 768px) {
+    /* Prevent iOS auto-zoom on focus by ensuring font-size is at least 16px */
+    input, textarea, select {
+      font-size: 16px !important;
+    }
+
     .container-editor {
       @apply flex flex-col gap-4;
       grid-template-columns: none;
