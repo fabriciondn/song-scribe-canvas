@@ -29,7 +29,10 @@ const formSchema = z.object({
   fullName: z.string().min(1, 'Nome completo é obrigatório'),
   email: z.string().email('E-mail inválido'),
   cpf: z.string().min(11, 'CPF inválido'),
-  birthDate: z.string().optional().or(z.literal('')),
+  birthDate: z.string().optional().or(z.literal('')).refine(val => {
+    if (!val) return true;
+    return /^\d{2}\/\d{2}\/\d{4}$/.test(val);
+  }, { message: 'Formato inválido (DD/MM/AAAA)' }),
   phone: z.string().optional().or(z.literal('')),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   
@@ -518,6 +521,32 @@ export default function PublicRegistrationForm() {
                             <FormLabel>Telefone</FormLabel>
                             <FormControl>
                               <Input placeholder="(00) 00000-0000" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="birthDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Data de Nascimento (Opcional)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="DD/MM/AAAA" 
+                                {...field} 
+                                onChange={(e) => {
+                                  let value = e.target.value.replace(/\D/g, '');
+                                  if (value.length > 8) value = value.substring(0, 8);
+                                  if (value.length > 4) value = `${value.substring(0, 2)}/${value.substring(2, 4)}/${value.substring(4)}`;
+                                  else if (value.length > 2) value = `${value.substring(0, 2)}/${value.substring(2)}`;
+                                  field.onChange(value);
+                                }}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

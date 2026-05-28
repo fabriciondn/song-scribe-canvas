@@ -1681,7 +1681,7 @@ export type Database = {
       public_registration_forms: {
         Row: {
           artistic_name: string | null
-          birth_date: string
+          birth_date: string | null
           cep: string
           city: string
           cpf: string
@@ -1700,7 +1700,7 @@ export type Database = {
         }
         Insert: {
           artistic_name?: string | null
-          birth_date: string
+          birth_date?: string | null
           cep: string
           city: string
           cpf: string
@@ -1719,7 +1719,7 @@ export type Database = {
         }
         Update: {
           artistic_name?: string | null
-          birth_date?: string
+          birth_date?: string | null
           cep?: string
           city?: string
           cpf?: string
