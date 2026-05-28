@@ -238,7 +238,7 @@ export default function PublicRegistrationForm() {
       const isValid = await form.trigger(fieldsToValidate);
       if (isValid) {
         setCurrentStep(currentStep + 1);
-        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         toast.error('Por favor, preencha todos os campos obrigatórios corretamente.');
       }
@@ -250,13 +250,13 @@ export default function PublicRegistrationForm() {
         return;
       }
       setCurrentStep(4);
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const prevStep = () => {
     setCurrentStep(currentStep - 1);
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
