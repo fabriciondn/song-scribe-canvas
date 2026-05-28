@@ -382,13 +382,21 @@ const OptimizedSettings = () => {
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="cep">CEP</Label>
-              <Input
-                id="cep"
-                value={formData.cep}
-                onChange={(e) => handleInputChange('cep', e.target.value)}
-                placeholder="00000-000"
-                className="h-11"
-              />
+              <div className="relative">
+                <Input
+                  id="cep"
+                  value={formData.cep}
+                  onChange={(e) => handleInputChange('cep', e.target.value)}
+                  placeholder="00000-000"
+                  className="h-11 pr-10"
+                  maxLength={9}
+                />
+                {isLoadingCep && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+              </div>
             </div>
             <div className="lg:col-span-2 space-y-2">
               <Label htmlFor="street">Rua</Label>
