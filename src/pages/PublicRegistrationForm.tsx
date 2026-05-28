@@ -29,8 +29,8 @@ const formSchema = z.object({
   fullName: z.string().min(1, 'Nome completo é obrigatório'),
   email: z.string().email('E-mail inválido'),
   cpf: z.string().min(11, 'CPF inválido'),
-  birthDate: z.string().min(10, 'Data inválida').optional(),
-  phone: z.string().min(10, 'Telefone inválido').optional(),
+  birthDate: z.string().optional().or(z.literal('')),
+  phone: z.string().optional().or(z.literal('')),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   
   // Step 2: Address
@@ -884,7 +884,24 @@ export default function PublicRegistrationForm() {
                       type="button" 
                       onClick={() => {
                         console.log('Final submit triggered');
-                        form.handleSubmit(onSubmit)();
+                        form.handleSubmit(
+                          (data) => {
+                            console.log('Form is valid, submitting:', data);
+                            onSubmit(data);
+                          },
+                          (errors) => {
+                            console.log('Form validation errors:', errors);
+                            toast.error('Existem erros no formulário. Verifique os dados preenchidos.');
+                            
+                            // Find the first step with an error and go to it
+                            const fieldNames = Object.keys(errors);
+                            if (fieldNames.some(f => ['fullName', 'email', 'cpf', 'password'].includes(f))) {
+                              setCurrentStep(1);
+                            } else if (fieldNames.some(f => ['cep', 'street', 'number', 'neighborhood', 'city', 'state'].includes(f))) {
+                              setCurrentStep(2);
+                            }
+                          }
+                        )();
                       }}
                       disabled={isLoading || isTranscribing !== null} 
                       className="px-8 bg-primary hover:bg-primary/90 text-white font-bold"
