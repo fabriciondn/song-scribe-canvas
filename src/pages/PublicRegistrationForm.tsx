@@ -719,6 +719,7 @@ export default function PublicRegistrationForm() {
                                   }}
                                 />
                               </div>
+                              <p className="text-[10px] text-center text-muted-foreground mt-1">Limite de 25MB para transcrição automática</p>
                             </label>
                             {work.audioFile && !isTranscribing && (
                               <Button 
