@@ -346,10 +346,6 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
     }
   };
 
-  const handleDownloadCertificate = async (registrationId: string) => {
-    try {
-      // Aqui você implementaria a lógica para gerar/baixar o certificado
-      toast({
   const handleDownloadCertificate = async (registration: any) => {
     try {
       setDownloadingId(registration.id);
