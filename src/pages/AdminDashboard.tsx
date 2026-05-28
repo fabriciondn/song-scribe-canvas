@@ -41,6 +41,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Shield, Users, BarChart3, AlertTriangle, CheckCircle, Clock, Activity } from 'lucide-react';
+import { buildPreviewSafePath } from '@/utils/previewToken';
 
 const AdminDashboard: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -128,12 +129,12 @@ const AdminDashboard: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={buildPreviewSafePath('/dashboard')} replace />;
   }
 
   if (!effectiveIsAdmin) {
     console.log('❌ AdminDashboard: Usuário não é admin, redirecionando...');
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={buildPreviewSafePath('/dashboard')} replace />;
   }
 
   // Renderizar layout mobile
