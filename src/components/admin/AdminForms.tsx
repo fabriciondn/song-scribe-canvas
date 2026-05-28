@@ -98,9 +98,12 @@ export const AdminForms: React.FC = () => {
     return cep.replace(/(\d{5})(\d{3})/, '$1-$2');
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Não informado';
     try {
-      return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
+      // Postgres returns YYYY-MM-DD, we need to handle it carefully to avoid timezone shifts
+      const [year, month, day] = dateString.split('-').map(Number);
+      return format(new Date(year, month - 1, day), 'dd/MM/yyyy', { locale: ptBR });
     } catch {
       return dateString;
     }
