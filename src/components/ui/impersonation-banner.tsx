@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,7 @@ import { useImpersonationSync } from '@/hooks/useImpersonationSync';
 export const ImpersonationBanner = () => {
   const { isImpersonating, impersonatedUser, originalUser } = useImpersonation();
   const { stopImpersonationGlobally } = useImpersonationSync();
+  const navigate = useNavigate();
 
   // Definir altura do banner via CSS custom property - SEMPRE executar os hooks
   const bannerHeight = '60px';
@@ -103,9 +105,9 @@ export const ImpersonationBanner = () => {
               // Verificar se o usuário original é admin ou moderador
               const currentUrl = window.location.pathname;
               if (originalUser?.role === 'admin' || currentUrl.includes('/admin')) {
-                window.location.href = '/admin';
+                navigate('/admin', { replace: true });
               } else {
-                window.location.href = '/moderator';
+                navigate('/moderator', { replace: true });
               }
             }}
             className="flex items-center space-x-2 border-warning-foreground/30 text-warning-foreground hover:bg-warning-foreground/10 flex-shrink-0"
