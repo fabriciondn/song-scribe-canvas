@@ -440,7 +440,10 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
                             </div>
                             <audio 
                               controls 
-                              className="w-full h-10 accent-primary"
+                                className="w-full h-10 accent-primary"
+                                preload="none"
+                                src={supabase.storage.from('author-registrations').getPublicUrl(work.audio_url).data.publicUrl}
+                              >
                               src={supabase.storage.from('author-registrations').getPublicUrl(work.audio_url).data.publicUrl}
                             >
                             </audio>
