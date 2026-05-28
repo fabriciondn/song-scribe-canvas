@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Edit, Trash2, Music, RefreshCw, Eye, Download } from 'lucide-react';
+import { Search, Edit, Trash2, Music, RefreshCw, Eye, Download, FileText, Loader2 } from 'lucide-react';
+import { generateCertificatePDF } from '@/services/certificateService';
 
 interface Registration {
   id: string;
