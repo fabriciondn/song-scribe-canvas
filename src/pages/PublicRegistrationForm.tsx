@@ -358,7 +358,7 @@ export default function PublicRegistrationForm() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center p-4 py-8 md:py-12">
+    <div className="min-h-[100dvh] bg-background flex flex-col items-center p-4 py-8 md:py-12">
       <div className="w-full max-w-3xl space-y-8">
         <div className="text-center space-y-4">
           <img 
@@ -401,7 +401,7 @@ export default function PublicRegistrationForm() {
           </div>
         </div>
 
-        <Card className="border-primary/20 shadow-xl overflow-hidden">
+        <Card className="border-primary/20 shadow-xl">
           <CardContent className="p-6 md:p-8">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -695,7 +695,7 @@ export default function PublicRegistrationForm() {
                                 </span>
                                 <input 
                                   type="file" 
-                                  accept="audio/*" 
+                                  accept="audio/*,.mp3,.wav,.m4a,.ogg,.aac,.flac" 
                                   className="hidden" 
                                   onChange={(e) => {
                                     const file = e.target.files?.[0];
