@@ -360,8 +360,9 @@ export const WorkDetailsModal: React.FC<WorkDetailsModalProps> = ({
               <Button 
                 type="button"
                 onClick={handleDownloadCertificate}
-                disabled={downloadingCertificate}
+                disabled={downloadingCertificate || (work.status !== 'registered' && work.status !== 'completed')}
                 className="w-full"
+                title={work.status === 'registered' || work.status === 'completed' ? "" : "Certificado disponível apenas após o registro ser concluído"}
               >
                 {downloadingCertificate ? (
                   <>

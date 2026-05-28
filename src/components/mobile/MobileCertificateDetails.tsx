@@ -369,9 +369,9 @@ export const MobileCertificateDetails: React.FC = () => {
       <div className="fixed bottom-24 left-0 right-0 p-6 bg-gradient-to-t from-black via-black to-transparent z-[60]">
         <button
           onClick={handleDownloadCertificate}
-          disabled={downloadingPdf || work.status !== 'registered'}
+          disabled={downloadingPdf || (work.status !== 'registered' && work.status !== 'completed')}
           className={`w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 transition-all ${
-            work.status === 'registered'
+            work.status === 'registered' || work.status === 'completed'
               ? 'bg-[#00C853] text-white shadow-lg shadow-[#00C853]/30 active:scale-[0.98]'
               : 'bg-slate-700 text-slate-400 cursor-not-allowed'
           }`}
