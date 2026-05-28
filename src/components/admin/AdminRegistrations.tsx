@@ -441,7 +441,7 @@ export const AdminRegistrations: React.FC = () => {
                     className="h-8 gap-1"
                   >
                     <Edit className="h-3 w-3" />
-                    Editar Letra
+                    Editar Letra e Detalhes
                   </Button>
                 </div>
                 <div className="mt-1 p-3 bg-muted rounded-lg whitespace-pre-wrap max-h-60 overflow-y-auto text-sm">
