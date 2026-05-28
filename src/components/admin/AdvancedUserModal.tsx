@@ -1650,6 +1650,53 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      {/* Modal de Edição de Registro */}
+      <Dialog open={!!editingRegistration} onOpenChange={(open) => !open && setEditingRegistration(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Certificado: {editingRegistration?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Título</Label>
+                <Input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>Gênero</Label>
+                <Input value={editForm.genre} onChange={(e) => setEditForm({ ...editForm, genre: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>Ritmo</Label>
+                <Input value={editForm.rhythm} onChange={(e) => setEditForm({ ...editForm, rhythm: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>Versão</Label>
+                <Input value={editForm.song_version} onChange={(e) => setEditForm({ ...editForm, song_version: e.target.value })} />
+              </div>
+              <div className="space-y-1 col-span-2">
+                <Label>Outros Autores</Label>
+                <Input value={editForm.other_authors} onChange={(e) => setEditForm({ ...editForm, other_authors: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Letra</Label>
+              <Textarea rows={10} value={editForm.lyrics} onChange={(e) => setEditForm({ ...editForm, lyrics: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label>Informações Adicionais</Label>
+              <Textarea rows={3} value={editForm.additional_info} onChange={(e) => setEditForm({ ...editForm, additional_info: e.target.value })} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditingRegistration(null)}>Cancelar</Button>
+              <Button onClick={handleSaveEdit} disabled={isSavingEdit}>
+                {isSavingEdit ? 'Salvando...' : 'Salvar Alterações'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
