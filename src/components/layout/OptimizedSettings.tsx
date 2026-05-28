@@ -17,6 +17,7 @@ const OptimizedSettings = () => {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cpfError, setCpfError] = useState<string | null>(null);
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
   
   const [formData, setFormData] = useState({
     name: profile?.name || '',
