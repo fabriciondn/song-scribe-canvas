@@ -24,6 +24,12 @@ interface CreateUserRequest {
   neighborhood?: string;
   city?: string;
   state?: string;
+  works?: Array<{
+    title: string;
+    genre: string;
+    lyrics: string;
+    audio_url?: string;
+  }>;
 }
 
 serve(async (req) => {
@@ -269,13 +275,38 @@ serve(async (req) => {
         }
       }
 
+      // If works are provided, register them
+      if (body.works && body.works.length > 0) {
+        console.log(`Registering ${body.works.length} works for user ${userId}`);
+        const worksToInsert = body.works.map(work => ({
+          user_id: userId,
+          title: work.title,
+          genre: work.genre,
+          lyrics: work.lyrics,
+          audio_file_path: work.audio_url,
+          author: body.artistic_name || body.name,
+          status: 'pending',
+          terms_accepted: true,
+        }));
+
+        const { error: worksError } = await supabaseAdmin
+          .from('author_registrations')
+          .insert(worksToInsert);
+
+        if (worksError) {
+          console.error('Error inserting works:', worksError);
+        } else {
+          console.log('Works registered successfully');
+        }
+      }
+
       return new Response(
         JSON.stringify({ 
           success: true, 
           user_id: userId,
           message: userExists 
-            ? `Usuário existente promovido a ${body.role} com sucesso`
-            : `${body.role} criado com sucesso`
+            ? `Usuário existente promovido a ${body.role} e obras registradas com sucesso`
+            : `${body.role} criado e obras registradas com sucesso`
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

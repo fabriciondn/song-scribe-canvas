@@ -157,6 +157,7 @@ export const AdminForms: React.FC = () => {
           neighborhood: selectedForm.neighborhood,
           city: selectedForm.city,
           state: selectedForm.state,
+          works: selectedForm.works,
         },
       });
 
