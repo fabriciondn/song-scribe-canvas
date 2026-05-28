@@ -92,7 +92,9 @@ export const useProfile = () => {
       
       allowedFields.forEach(field => {
         if (updates.hasOwnProperty(field)) {
-          profileUpdates[field] = updates[field as keyof UserProfile];
+          const value = updates[field as keyof UserProfile];
+          // Converter strings vazias para null para evitar erros de sintaxe no banco (especialmente para datas como birth_date)
+          profileUpdates[field] = value === '' ? null : value;
         }
       });
 
