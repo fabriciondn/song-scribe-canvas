@@ -12,7 +12,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Music, FileText, FolderOpen, Calendar, CreditCard, Download, Coins, User, Activity, Award, Crown, Clock, CheckCircle, UserCog, Shield, X, Users, ArrowRightLeft, UserCheck } from 'lucide-react';
+import { Music, FileText, FolderOpen, Calendar, CreditCard, Download, Coins, User, Activity, Award, Crown, Clock, CheckCircle, UserCog, Shield, X, Users, ArrowRightLeft, UserCheck, Edit, Loader2 } from 'lucide-react';
+import { generateCertificatePDF } from '@/services/certificateService';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useImpersonation } from '@/context/ImpersonationContext';
 import { useNavigate } from 'react-router-dom';
@@ -36,6 +37,10 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
   const [selectedRole, setSelectedRole] = useState<string>('user');
   const [selectedModeratorId, setSelectedModeratorId] = useState<string>('');
   const [isTransferring, setIsTransferring] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [editingRegistration, setEditingRegistration] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ title: '', lyrics: '', genre: '', rhythm: '', song_version: '', other_authors: '', additional_info: '' });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const { startImpersonation } = useImpersonation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -345,21 +350,70 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
     try {
       // Aqui você implementaria a lógica para gerar/baixar o certificado
       toast({
-        title: 'Certificado',
-        description: 'Funcionalidade de download do certificado será implementada',
-      });
+  const handleDownloadCertificate = async (registration: any) => {
+    try {
+      setDownloadingId(registration.id);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', registration.user_id)
+        .single();
+
+      const enrichedWork = {
+        ...registration,
+        author_cpf: profile?.cpf,
+        author_address: profile ? [profile.street, profile.number, profile.neighborhood, profile.city, profile.state, profile.cep].filter(Boolean).join(', ') : undefined,
+      };
+      await generateCertificatePDF(enrichedWork as any);
+      toast({ title: 'Certificado baixado', description: `"${registration.title}" baixado com sucesso.` });
     } catch (error) {
       console.error('Erro ao baixar certificado:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao baixar certificado',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro', description: 'Erro ao baixar certificado', variant: 'destructive' });
+    } finally {
+      setDownloadingId(null);
     }
   };
 
-  const handleActivatePro = async () => {
-    if (!user?.id) return;
+  const handleOpenEdit = (registration: any) => {
+    setEditingRegistration(registration);
+    setEditForm({
+      title: registration.title || '',
+      lyrics: registration.lyrics || '',
+      genre: registration.genre || '',
+      rhythm: registration.rhythm || '',
+      song_version: registration.song_version || '',
+      other_authors: registration.other_authors || '',
+      additional_info: registration.additional_info || '',
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingRegistration) return;
+    try {
+      setIsSavingEdit(true);
+      const { error } = await supabase
+        .from('author_registrations')
+        .update({
+          title: editForm.title,
+          lyrics: editForm.lyrics,
+          genre: editForm.genre,
+          rhythm: editForm.rhythm,
+          song_version: editForm.song_version,
+          other_authors: editForm.other_authors || null,
+          additional_info: editForm.additional_info || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingRegistration.id);
+      if (error) throw error;
+      toast({ title: 'Sucesso', description: 'Registro atualizado.' });
+      setEditingRegistration(null);
+      onUserUpdate();
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message || 'Erro ao salvar', variant: 'destructive' });
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
 
     setIsLoading(true);
     try {
@@ -1124,14 +1178,29 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                             {new Date(registration.created_at).toLocaleDateString('pt-BR')}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDownloadCertificate(registration.id)}
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              Certificado
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDownloadCertificate(registration)}
+                                disabled={downloadingId === registration.id}
+                              >
+                                {downloadingId === registration.id ? (
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                  <Download className="h-4 w-4 mr-2" />
+                                )}
+                                Certificado
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenEdit(registration)}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Editar
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
