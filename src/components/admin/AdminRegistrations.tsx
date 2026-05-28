@@ -41,6 +41,7 @@ export const AdminRegistrations: React.FC = () => {
   const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     title: '',
     author: '',
@@ -170,6 +171,47 @@ export const AdminRegistrations: React.FC = () => {
     setIsViewModalOpen(true);
   };
 
+  const handleDownloadCertificate = async (registration: Registration) => {
+    try {
+      setDownloadingId(registration.id);
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', registration.user_id)
+        .single();
+
+      const enrichedWork = {
+        ...registration,
+        author_cpf: profile?.cpf,
+        author_address: profile ? [
+          profile.street,
+          profile.number,
+          profile.neighborhood,
+          profile.city,
+          profile.state,
+          profile.cep
+        ].filter(Boolean).join(', ') : undefined,
+      };
+
+      await generateCertificatePDF(enrichedWork as any);
+      
+      toast({
+        title: "Certificado baixado",
+        description: `Certificado de "${registration.title}" foi baixado com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao gerar certificado:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar o certificado. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   const handleSaveEdit = () => {
     if (!selectedRegistration) return;
     editMutation.mutate({
@@ -280,6 +322,19 @@ export const AdminRegistrations: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1 justify-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDownloadCertificate(registration)}
+                        disabled={downloadingId === registration.id}
+                        title="Baixar Certificado"
+                      >
+                        {downloadingId === registration.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <FileText className="h-4 w-4 text-blue-500" />
+                        )}
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
