@@ -24,6 +24,12 @@ interface CreateUserRequest {
   neighborhood?: string;
   city?: string;
   state?: string;
+  works?: Array<{
+    title: string;
+    genre: string;
+    lyrics: string;
+    audio_url?: string;
+  }>;
 }
 
 serve(async (req) => {
