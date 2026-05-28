@@ -361,8 +361,58 @@ export const AdminForms: React.FC = () => {
                       <Card key={index} className="bg-muted/30">
                         <CardContent className="p-4 space-y-4">
                           <div className="flex justify-between items-start">
-                            <h4 className="font-bold text-lg">{work.title}</h4>
-                            <Badge>{work.genre}</Badge>
+                            <div className="flex-1 mr-4">
+                              <h4 className="font-bold text-lg">{work.title}</h4>
+                              <Badge>{work.genre}</Badge>
+                            </div>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="gap-1">
+                                  <Edit2 className="h-3 w-3" />
+                                  Editar Letra
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Editar Letra - {work.title}</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium">Letra da Música</label>
+                                    <Textarea 
+                                      value={work.lyrics}
+                                      onChange={(e) => {
+                                        const newWorks = [...(selectedForm.works || [])];
+                                        newWorks[index] = { ...work, lyrics: e.target.value };
+                                        setSelectedForm({ ...selectedForm, works: newWorks });
+                                      }}
+                                      className="min-h-[300px]"
+                                    />
+                                  </div>
+                                  <Button 
+                                    className="w-full"
+                                    onClick={async () => {
+                                      try {
+                                        const newWorks = [...(selectedForm.works || [])];
+                                        const { error } = await supabase
+                                          .from('public_registration_forms')
+                                          .update({ works: newWorks })
+                                          .eq('id', selectedForm.id);
+                                        
+                                        if (error) throw error;
+                                        toast.success('Letra atualizada com sucesso!');
+                                        fetchForms();
+                                      } catch (error) {
+                                        console.error('Erro ao salvar letra:', error);
+                                        toast.error('Erro ao salvar letra');
+                                      }
+                                    }}
+                                  >
+                                    Salvar Alteração
+                                  </Button>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
                           </div>
                           
                           <div className="space-y-2">
