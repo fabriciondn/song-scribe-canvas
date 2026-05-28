@@ -170,6 +170,7 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
           neighborhood: selectedForm.neighborhood,
           city: selectedForm.city,
           state: selectedForm.state,
+          works: selectedForm.works,
         },
       });
 
