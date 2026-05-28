@@ -411,6 +411,9 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
     }
   };
 
+  const handleActivatePro = async () => {
+    if (!user?.id) return;
+
     setIsLoading(true);
     try {
       // Verificar se já existe uma subscription ativa
