@@ -130,3 +130,21 @@ export const useDraftsRealtimeUpdates = (onDraftUpdate?: (draft: any) => void) =
     }
   ]);
 };
+
+// Hook específico para atualizações de registros (dashboard stats)
+export const useAuthorRegistrationsRealtimeUpdates = (onUpdate?: (payload: any) => void) => {
+  const { user } = useAuth();
+  
+  return useRealtimeUpdates([
+    {
+      table: 'author_registrations',
+      event: '*',
+      filter: user ? `user_id=eq.${user.id}` : undefined,
+      onUpdate: (payload) => {
+        if (onUpdate) {
+          onUpdate(payload);
+        }
+      }
+    }
+  ]);
+};
