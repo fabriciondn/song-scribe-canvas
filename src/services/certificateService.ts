@@ -1,6 +1,8 @@
 import jsPDF from 'jspdf';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
-interface RegisteredWork {
+export interface RegisteredWork {
   id: string;
   title: string;
   author: string;
@@ -17,7 +19,8 @@ interface RegisteredWork {
   user_id?: string;
 }
 
-export const generateCertificatePDF = async (work: RegisteredWork) => {
+// Internal function to generate PDF object
+const createCertificatePDF = async (work: RegisteredWork): Promise<jsPDF> => {
   const pdf = new jsPDF();
   
   // Configurações de cores
@@ -287,7 +290,6 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   const columnWidth = 80; // 80mm each column
   const leftColumnX = 20;
   const rightColumnX = 110;
-  const gapBetweenColumns = 10;
   
   // Quebrar a letra em linhas que cabem na largura da coluna
   const fullLyricsLines = pdf.splitTextToSize(work.lyrics, columnWidth);
@@ -326,7 +328,28 @@ export const generateCertificatePDF = async (work: RegisteredWork) => {
   pdf.setFont('helvetica', 'normal');
   pdf.text('COMPUSE - Plataforma de Registro Musical', 105, 286, { align: 'center' });
   
-  // Download do PDF
+  return pdf;
+};
+
+export const generateCertificatePDF = async (work: RegisteredWork) => {
+  const pdf = await createCertificatePDF(work);
   const fileName = `certificado_${work.title.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getTime()}.pdf`;
   pdf.save(fileName);
+};
+
+export const downloadAllCertificatesAsZip = async (works: RegisteredWork[]) => {
+  const zip = new JSZip();
+  
+  // Generate all PDFs in parallel
+  const pdfPromises = works.map(async (work) => {
+    const pdf = await createCertificatePDF(work);
+    const pdfBlob = pdf.output('blob');
+    const fileName = `certificado_${work.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+    zip.file(fileName, pdfBlob);
+  });
+  
+  await Promise.all(pdfPromises);
+  
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  saveAs(zipBlob, `certificados_compuse_${new Date().getTime()}.zip`);
 };
