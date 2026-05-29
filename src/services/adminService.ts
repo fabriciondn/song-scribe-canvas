@@ -70,12 +70,12 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
 
     const stats = data as any;
     
-    // Calcular faturamento de créditos via Mercado Pago
+    // Calcular faturamento de créditos (Mercado Pago + OpenPix)
     const { data: creditTransactions, error: transError } = await supabase
       .from('credit_transactions')
       .select('total_amount')
       .eq('status', 'completed')
-      .eq('payment_provider', 'mercadopago');
+      .in('payment_provider', ['mercadopago', 'openpix']);
     
     if (transError) {
       console.error('Erro ao buscar transações:', transError);
@@ -83,11 +83,11 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
     
     const creditRevenue = creditTransactions?.reduce((sum, t) => sum + Number(t.total_amount), 0) || 0;
     
-    // Calcular faturamento de assinaturas via Mercado Pago
+    // Calcular faturamento de assinaturas (Mercado Pago + OpenPix)
     const { data: paidSubscriptions, error: paidSubsError } = await supabase
       .from('subscriptions')
       .select('amount, started_at')
-      .eq('payment_provider', 'mercadopago')
+      .in('payment_provider', ['mercadopago', 'openpix'])
       .in('status', ['active', 'expired'])
       .not('started_at', 'is', null);
     
