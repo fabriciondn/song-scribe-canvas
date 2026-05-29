@@ -178,12 +178,12 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
         completed_at
       `)
       .eq('status', 'completed')
-      .eq('payment_provider', 'mercadopago')
+      .in('payment_provider', ['mercadopago', 'openpix'])
       .order('completed_at', { ascending: false });
 
     if (creditsError) throw creditsError;
 
-    // Buscar assinaturas pagas via Mercado Pago
+    // Buscar assinaturas pagas (Mercado Pago + OpenPix)
     const { data: subscriptions, error: subsError } = await supabase
       .from('subscriptions')
       .select(`
@@ -194,7 +194,7 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
         payment_provider_subscription_id,
         started_at
       `)
-      .eq('payment_provider', 'mercadopago')
+      .in('payment_provider', ['mercadopago', 'openpix'])
       .in('status', ['active', 'expired'])
       .not('started_at', 'is', null)
       .order('started_at', { ascending: false });
