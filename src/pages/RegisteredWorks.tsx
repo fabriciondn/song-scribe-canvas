@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { WorkCard } from '@/components/registered-works/WorkCard';
@@ -9,6 +9,9 @@ import { WorkDetailsModal } from '@/components/registered-works/WorkDetailsModal
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { MobileRegisteredWorks } from '@/components/mobile/MobileRegisteredWorks';
+import { downloadAllCertificatesAsZip } from '@/services/certificateService';
+import { useProfile } from '@/hooks/useProfile';
+import { toast } from '@/hooks/use-toast';
 
 interface RegisteredWork {
   id: string;
@@ -32,6 +35,8 @@ const RegisteredWorks: React.FC = () => {
   const currentUser = useCurrentUser();
   const [selectedWork, setSelectedWork] = useState<RegisteredWork | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
+  const { profile } = useProfile();
 
   const { data: works, isLoading, error } = useQuery({
     queryKey: ['registered-works', currentUser?.id],
@@ -54,6 +59,52 @@ const RegisteredWorks: React.FC = () => {
   const handleViewDetails = (work: RegisteredWork) => {
     setSelectedWork(work);
     setIsModalOpen(true);
+  };
+
+  const handleDownloadAll = async () => {
+    const registeredOnly = works?.filter(w => w.status === 'registered' || w.status === 'completed') || [];
+    
+    if (registeredOnly.length === 0) {
+      toast({
+        title: "Aviso",
+        description: "Não há obras com status 'Registrado' para baixar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsDownloadingAll(true);
+      
+      const enrichedWorks = registeredOnly.map(work => ({
+        ...work,
+        author_cpf: profile?.cpf,
+        author_address: profile ? [
+          profile.street,
+          profile.number,
+          profile.neighborhood,
+          profile.city,
+          profile.state,
+          profile.cep
+        ].filter(Boolean).join(', ') : undefined,
+      }));
+
+      await downloadAllCertificatesAsZip(enrichedWorks);
+      
+      toast({
+        title: "Sucesso",
+        description: "Todos os certificados foram compilados em um arquivo ZIP.",
+      });
+    } catch (error) {
+      console.error('Erro ao baixar todos os certificados:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar o arquivo ZIP. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDownloadingAll(false);
+    }
   };
 
   // Renderizar versão mobile
@@ -92,10 +143,30 @@ const RegisteredWorks: React.FC = () => {
             <span className="sm:hidden">Voltar</span>
           </Link>
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-xl sm:text-3xl font-bold text-foreground">Obras Registradas</h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-1">Visualize e baixe certificados das suas obras</p>
         </div>
+        
+        {works && works.filter(w => w.status === 'registered' || w.status === 'completed').length >= 3 && (
+          <Button 
+            onClick={handleDownloadAll} 
+            disabled={isDownloadingAll}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            {isDownloadingAll ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Gerando ZIP...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-2" />
+                Baixar Todos os Certificados
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       {works && works.length > 0 ? (
