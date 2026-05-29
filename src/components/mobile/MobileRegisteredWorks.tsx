@@ -6,8 +6,10 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useTheme } from '@/hooks/useTheme';
 import { useWeeklyRegistrations } from '@/hooks/useWeeklyRegistrations';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { useProfile } from '@/hooks/useProfile';
 import { MobileNotificationCenter } from '@/components/mobile/MobileNotificationCenter';
 import { MobileCertificateDetails } from '@/components/mobile/MobileCertificateDetails';
+import { downloadAllCertificatesAsZip } from '@/services/certificateService';
 import { toast } from 'sonner';
 
 // Componente para Material Symbols
@@ -59,7 +61,9 @@ export const MobileRegisteredWorks: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { weeklyData } = useWeeklyRegistrations();
   const { stats } = useDashboardStats();
+  const { profile } = useProfile();
   const [filter, setFilter] = useState<FilterType>('all');
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   
   const totalRegistrations = stats?.registeredWorks?.total || 0;
 
@@ -143,6 +147,40 @@ export const MobileRegisteredWorks: React.FC = () => {
     navigate(`/dashboard/registered-works?id=${work.id}`);
   };
 
+  const handleDownloadAll = async () => {
+    const registeredOnly = works?.filter(w => w.status === 'registered' || w.status === 'completed') || [];
+    
+    if (registeredOnly.length === 0) {
+      toast.error("Não há obras registradas para baixar.");
+      return;
+    }
+
+    try {
+      setIsDownloadingAll(true);
+      
+      const enrichedWorks = registeredOnly.map(work => ({
+        ...work,
+        author_cpf: profile?.cpf,
+        author_address: profile ? [
+          profile.street,
+          profile.number,
+          profile.neighborhood,
+          profile.city,
+          profile.state,
+          profile.cep
+        ].filter(Boolean).join(', ') : undefined,
+      }));
+
+      await downloadAllCertificatesAsZip(enrichedWorks);
+      toast.success("Certificados compilados em um arquivo ZIP.");
+    } catch (error) {
+      console.error('Erro ao baixar todos os certificados:', error);
+      toast.error("Erro ao gerar o arquivo ZIP.");
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-['Outfit',sans-serif]">
       {/* Header */}
@@ -165,10 +203,30 @@ export const MobileRegisteredWorks: React.FC = () => {
           </div>
         </div>
         
-        <div>
+        <div className="flex flex-col">
           <h1 className="text-3xl font-bold">Meus Certificados</h1>
           <p className="text-muted-foreground mt-1 text-sm">Gerencie suas obras e direitos autorais</p>
         </div>
+
+        {works && works.filter(w => w.status === 'registered' || w.status === 'completed').length >= 3 && (
+          <button 
+            onClick={handleDownloadAll}
+            disabled={isDownloadingAll}
+            className="flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary p-4 rounded-xl border border-primary/20 transition-all active:scale-[0.98] mt-2"
+          >
+            {isDownloadingAll ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary" />
+                <span className="font-bold text-sm uppercase tracking-wide">Gerando ZIP...</span>
+              </>
+            ) : (
+              <>
+                <MaterialIcon name="download" className="text-xl" />
+                <span className="font-bold text-sm uppercase tracking-wide">Baixar todos os certificados</span>
+              </>
+            )}
+          </button>
+        )}
 
         {/* Resumo Mensal Card */}
         <div className="bg-card rounded-2xl p-5 border border-border mt-4">
