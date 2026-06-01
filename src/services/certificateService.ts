@@ -19,9 +19,12 @@ export interface RegisteredWork {
   user_id?: string;
 }
 
+// Cache de imagens convertidas para evitar reprocessar em cada certificado (essencial no ZIP)
+const imageCache: Record<string, string> = {};
+
 // Internal function to generate PDF object
 const createCertificatePDF = async (work: RegisteredWork): Promise<jsPDF> => {
-  const pdf = new jsPDF();
+  const pdf = new jsPDF({ compress: true });
   
   // Configurações de cores
   const blackColor: [number, number, number] = [0, 0, 0];
@@ -30,18 +33,36 @@ const createCertificatePDF = async (work: RegisteredWork): Promise<jsPDF> => {
   const lightGrayColor: [number, number, number] = [128, 128, 128];
   const accentColor: [number, number, number] = [0, 100, 200];
   
-  // Função para carregar imagem como base64
-  const loadImageAsBase64 = (imagePath: string): Promise<string> => {
+  // Função para carregar imagem comprimida (JPEG/PNG) - reduz drasticamente o tamanho do PDF
+  const loadImageCompressed = (
+    imagePath: string,
+    opts: { maxWidth: number; format: 'JPEG' | 'PNG'; quality?: number; transparent?: boolean }
+  ): Promise<string> => {
+    const cacheKey = `${imagePath}|${opts.maxWidth}|${opts.format}|${opts.quality ?? ''}`;
+    if (imageCache[cacheKey]) return Promise.resolve(imageCache[cacheKey]);
+
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
+        const scale = Math.min(1, opts.maxWidth / img.width);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
         const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
         const ctx = canvas.getContext('2d');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx?.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
+        if (ctx) {
+          if (opts.format === 'JPEG' && !opts.transparent) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, w, h);
+          }
+          ctx.drawImage(img, 0, 0, w, h);
+        }
+        const mime = opts.format === 'JPEG' ? 'image/jpeg' : 'image/png';
+        const dataUrl = canvas.toDataURL(mime, opts.quality ?? 0.75);
+        imageCache[cacheKey] = dataUrl;
+        resolve(dataUrl);
       };
       img.onerror = reject;
       img.src = imagePath;
@@ -49,17 +70,26 @@ const createCertificatePDF = async (work: RegisteredWork): Promise<jsPDF> => {
   };
 
   try {
-    // Carregar o template de fundo
-    const templateImage = await loadImageAsBase64('/lovable-uploads/76c16cc8-275f-41f4-b678-ce3151f744bc.png');
-    pdf.addImage(templateImage, 'PNG', 0, 0, 210, 297);
+    // Template de fundo como JPEG comprimido (era PNG cru = vários MB)
+    const templateImage = await loadImageCompressed(
+      '/lovable-uploads/76c16cc8-275f-41f4-b678-ce3151f744bc.png',
+      { maxWidth: 1240, format: 'JPEG', quality: 0.72 }
+    );
+    pdf.addImage(templateImage, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
 
-    // Carregar e adicionar o selo da Compuse (centralizado, 1,5cm da barra cinza)
-    const compuseSeal = await loadImageAsBase64('/lovable-uploads/b2e99156-0e7f-46c8-8b49-eafea58416f9.png');
-    pdf.addImage(compuseSeal, 'PNG', 80, 15, 50, 50); // 1,5cm = ~15mm de afastamento
+    // Selo Compuse - mantém PNG (precisa de transparência), mas reduzido
+    const compuseSeal = await loadImageCompressed(
+      '/lovable-uploads/b2e99156-0e7f-46c8-8b49-eafea58416f9.png',
+      { maxWidth: 300, format: 'PNG', transparent: true }
+    );
+    pdf.addImage(compuseSeal, 'PNG', 80, 15, 50, 50, undefined, 'FAST');
 
-    // Carregar e adicionar a nova waveform (1cm de espaçamento do selo)
-    const waveform = await loadImageAsBase64('/lovable-uploads/0302ac51-1c0b-4276-8fa8-6411e9a18597.png');
-    pdf.addImage(waveform, 'PNG', 20, 75, 170, 15); // 1cm = ~10mm + altura do selo
+    // Waveform - PNG reduzido
+    const waveform = await loadImageCompressed(
+      '/lovable-uploads/0302ac51-1c0b-4276-8fa8-6411e9a18597.png',
+      { maxWidth: 900, format: 'PNG', transparent: true }
+    );
+    pdf.addImage(waveform, 'PNG', 20, 75, 170, 15, undefined, 'FAST');
   } catch (error) {
     console.error('Erro ao carregar imagens:', error);
     // Fallback para o método original se as imagens não carregarem
