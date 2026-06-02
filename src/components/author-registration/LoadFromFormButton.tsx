@@ -137,7 +137,19 @@ export const LoadFromFormButton: React.FC<Props> = ({ variant = 'mobile', classN
       sessionStorage.removeItem('mobile_registration_step2_draft');
     } catch {}
     const base = location.pathname || '/dashboard/author-registration';
-    navigate(`${base}?formWorkId=${item.formId}:${item.workIndex}`, { replace: false });
+    navigate(base, {
+      replace: false,
+      state: {
+        prefillWork: {
+          formId: item.formId,
+          workIndex: item.workIndex,
+          title: item.title,
+          genre: item.genre || '',
+          lyrics: item.lyrics || '',
+          audio_url: item.audio_url || '',
+        },
+      },
+    });
   };
 
   return (
