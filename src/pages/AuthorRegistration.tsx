@@ -288,7 +288,8 @@ const AuthorRegistration: React.FC = () => {
     };
   }, [searchParams, draftPrefillApplied, profile, navigate]);
 
-  // Pré-preencher formulário a partir de uma obra pendente do formulário (?formWorkId=...)
+  // Pré-preencher formulário a partir de uma obra do formulário público
+  // (?formWorkId=<publicRegistrationFormId>:<workIndex>)
   const [formPrefillApplied, setFormPrefillApplied] = useState(false);
   useEffect(() => {
     const formWorkId = searchParams.get('formWorkId');
@@ -297,24 +298,35 @@ const AuthorRegistration: React.FC = () => {
     let cancelled = false;
     (async () => {
       try {
-        const { data: work, error } = await supabase
-          .from('author_registrations')
-          .select('id, title, lyrics, audio_file_path, genre, song_version, additional_info')
-          .eq('id', formWorkId)
+        const [formId, idxStr] = formWorkId.split(':');
+        const workIndex = Number.parseInt(idxStr ?? '0', 10) || 0;
+        if (!formId) return;
+
+        const { data: form, error } = await supabase
+          .from('public_registration_forms')
+          .select('id, works')
+          .eq('id', formId)
           .maybeSingle();
-        if (error || !work || cancelled) return;
+        if (error || !form || cancelled) return;
+
+        const works = Array.isArray((form as any).works) ? ((form as any).works as any[]) : [];
+        const work = works[workIndex];
+        if (!work) {
+          toast.error('Obra do formulário não encontrada.');
+          return;
+        }
 
         let audioFile: File | null = null;
-        if (work.audio_file_path) {
+        if (work.audio_url) {
           try {
             const { data: pub } = supabase.storage
               .from('author-registrations')
-              .getPublicUrl(work.audio_file_path);
+              .getPublicUrl(work.audio_url);
             const res = await fetch(pub.publicUrl);
             if (res.ok) {
               const blob = await res.blob();
               const type = blob.type || 'audio/mpeg';
-              const name = work.audio_file_path.split('/').pop() || 'formulario-audio.mp3';
+              const name = String(work.audio_url).split('/').pop() || 'formulario-audio.mp3';
               audioFile = new File([blob], name, { type });
             }
           } catch (err) {
@@ -330,18 +342,20 @@ const AuthorRegistration: React.FC = () => {
           sessionStorage.removeItem('mobile_registration_step2_draft');
         } catch {}
 
+        const title: string = work.title || '';
+        const lyrics: string = work.lyrics || '';
+        const genre: string = work.genre || '';
+
         setFormData((prev) => ({
           ...prev,
-          title: work.title || prev.title,
-          lyrics: work.lyrics || prev.lyrics,
-          genre: work.genre || prev.genre,
-          songVersion: work.song_version || prev.songVersion,
-          additionalInfo: work.additional_info || prev.additionalInfo,
+          title: title || prev.title,
+          lyrics: lyrics || prev.lyrics,
+          genre: genre || prev.genre,
           audioFile: audioFile || prev.audioFile,
         }));
 
         setMobileStep1Data({
-          title: work.title || '',
+          title,
           authors: [
             {
               id: 'titular',
@@ -356,16 +370,16 @@ const AuthorRegistration: React.FC = () => {
 
         setMobileStep2Data({
           registrationType: audioFile ? 'complete' : 'lyrics_only',
-          genre: work.genre || '',
-          version: work.song_version || '',
-          lyrics: work.lyrics || '',
+          genre,
+          version: '',
+          lyrics,
           audioFile,
-          additionalInfo: work.additional_info || '',
+          additionalInfo: '',
         });
 
         setPrefilledFromDraft({
-          title: !!work.title,
-          lyrics: !!work.lyrics,
+          title: !!title,
+          lyrics: !!lyrics,
           audio: !!audioFile,
         });
         setFormPrefillApplied(true);
