@@ -348,10 +348,10 @@ const AuthorRegistration: React.FC = () => {
 
         setFormData((prev) => ({
           ...prev,
-          title: title || prev.title,
-          lyrics: lyrics || prev.lyrics,
-          genre: genre || prev.genre,
-          audioFile: audioFile || prev.audioFile,
+          title,
+          lyrics,
+          genre,
+          audioFile,
         }));
 
         setMobileStep1Data({
@@ -378,13 +378,13 @@ const AuthorRegistration: React.FC = () => {
         });
 
         setPrefilledFromDraft({
-          title: !!title,
-          lyrics: !!lyrics,
+          title: title.trim().length > 0,
+          lyrics: lyrics.trim().length > 0,
           audio: !!audioFile,
         });
         setFormPrefillApplied(true);
 
-        toast.success('Dados do formulário carregados — revise antes de continuar.');
+        toast.success(title || lyrics || audioFile ? 'Dados do formulário carregados — revise antes de continuar.' : 'Formulário encontrado, mas a obra selecionada veio sem dados preenchíveis.');
 
         const next = new URLSearchParams(searchParams);
         next.delete('formWorkId');
