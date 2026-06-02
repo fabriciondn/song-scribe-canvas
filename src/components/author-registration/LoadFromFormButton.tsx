@@ -13,55 +13,116 @@ interface Props {
   className?: string;
 }
 
-interface PendingWork {
-  id: string;
-  title: string | null;
-  lyrics: string | null;
-  audio_file_path: string | null;
-  genre: string | null;
-  song_version: string | null;
+interface FormWorkItem {
+  formId: string;
+  workIndex: number;
+  title: string;
+  genre?: string;
+  lyrics?: string;
+  audio_url?: string;
   created_at: string;
 }
 
+const onlyDigits = (s?: string | null) => (s || '').replace(/\D+/g, '');
+
 /**
- * Botão "Carregar do formulário" — lista obras enviadas pelo usuário
- * através do formulário público (status='pending' em author_registrations).
- * Ao escolher, navega com ?formWorkId=<id>, que aciona o pré-preenchimento
- * em AuthorRegistration.
+ * Botão "Carregar do formulário" — lista obras enviadas pelo compositor
+ * através do formulário público de cadastro (tabela public_registration_forms),
+ * vinculadas ao usuário atual via CPF ou e-mail do perfil.
  */
 export const LoadFromFormButton: React.FC<Props> = ({ variant = 'mobile', className }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = useCurrentUser();
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<PendingWork[]>([]);
+  const [items, setItems] = useState<FormWorkItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!open || !currentUser?.id) return;
     let mounted = true;
     setLoading(true);
-    supabase
-      .from('author_registrations')
-      .select('id, title, lyrics, audio_file_path, genre, song_version, created_at')
-      .eq('user_id', currentUser.id)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        if (mounted) setItems((data as PendingWork[]) || []);
-      })
-      .then(undefined, () => {
+
+    (async () => {
+      try {
+        // 1) Buscar perfil do usuário atual (cpf/email) para casar com o formulário público
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('cpf, email')
+          .eq('id', currentUser.id)
+          .maybeSingle();
+
+        const cpfDigits = onlyDigits(profile?.cpf);
+        const email = (profile?.email || '').trim().toLowerCase();
+
+        if (!cpfDigits && !email) {
+          if (mounted) setItems([]);
+          return;
+        }
+
+        // 2) Buscar formulários do compositor (admins têm RLS de SELECT)
+        // Traz por email ou por CPF (normalização feita no client)
+        const orFilters: string[] = [];
+        if (email) orFilters.push(`email.ilike.${email}`);
+        // CPF pode estar armazenado com máscara — buscamos por igualdade textual e por dígitos
+        if (profile?.cpf) {
+          orFilters.push(`cpf.eq.${profile.cpf}`);
+          if (cpfDigits && cpfDigits !== profile.cpf) {
+            orFilters.push(`cpf.eq.${cpfDigits}`);
+          }
+        }
+
+        const { data: forms, error } = await supabase
+          .from('public_registration_forms')
+          .select('id, created_at, cpf, email, works')
+          .or(orFilters.join(','))
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.warn('Falha ao buscar formulários públicos:', error);
+          if (mounted) setItems([]);
+          return;
+        }
+
+        // 3) Filtragem extra no client (CPF com/sem máscara, email case-insensitive)
+        const filtered = (forms || []).filter((f: any) => {
+          const fEmail = (f.email || '').trim().toLowerCase();
+          const fCpf = onlyDigits(f.cpf);
+          return (email && fEmail === email) || (cpfDigits && fCpf === cpfDigits);
+        });
+
+        // 4) Achatar lista de obras
+        const list: FormWorkItem[] = [];
+        for (const f of filtered) {
+          const works = Array.isArray((f as any).works) ? ((f as any).works as any[]) : [];
+          works.forEach((w, idx) => {
+            list.push({
+              formId: f.id,
+              workIndex: idx,
+              title: w?.title || 'Sem título',
+              genre: w?.genre,
+              lyrics: w?.lyrics,
+              audio_url: w?.audio_url,
+              created_at: f.created_at,
+            });
+          });
+        }
+
+        if (mounted) setItems(list);
+      } catch (err) {
+        console.error('Erro ao carregar obras do formulário:', err);
         if (mounted) setItems([]);
-      })
-      .then(() => {
+      } finally {
         if (mounted) setLoading(false);
-      });
+      }
+    })();
+
     return () => {
       mounted = false;
     };
   }, [open, currentUser?.id]);
 
-  const handleSelect = (item: PendingWork) => {
+  const handleSelect = (item: FormWorkItem) => {
     setOpen(false);
     try {
       sessionStorage.removeItem('author_registration_draft');
@@ -69,7 +130,7 @@ export const LoadFromFormButton: React.FC<Props> = ({ variant = 'mobile', classN
       sessionStorage.removeItem('mobile_registration_step2_draft');
     } catch {}
     const base = location.pathname || '/dashboard/author-registration';
-    navigate(`${base}?formWorkId=${item.id}`, { replace: false });
+    navigate(`${base}?formWorkId=${item.formId}:${item.workIndex}`, { replace: false });
   };
 
   return (
@@ -100,16 +161,20 @@ export const LoadFromFormButton: React.FC<Props> = ({ variant = 'mobile', classN
 
             {!loading && items.length === 0 && (
               <div className="text-center py-10 text-muted-foreground text-sm px-4">
-                Nenhuma obra pendente vinda do formulário foi encontrada para este usuário.
+                Nenhuma obra vinda do formulário foi encontrada para este compositor.
+                <br />
+                <span className="text-xs">
+                  Verifique se o CPF/e-mail do perfil é o mesmo informado no formulário público.
+                </span>
               </div>
             )}
 
             {!loading &&
               items.map((item) => {
-                const hasAudio = !!item.audio_file_path;
+                const hasAudio = !!item.audio_url;
                 return (
                   <button
-                    key={item.id}
+                    key={`${item.formId}:${item.workIndex}`}
                     type="button"
                     onClick={() => handleSelect(item)}
                     className="w-full text-left flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-accent transition-colors"
@@ -118,9 +183,10 @@ export const LoadFromFormButton: React.FC<Props> = ({ variant = 'mobile', classN
                       {hasAudio ? <Mic className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{item.title || 'Sem título'}</p>
+                      <p className="font-semibold truncate">{item.title}</p>
                       <p className="text-xs text-muted-foreground truncate">
                         {hasAudio ? 'Com áudio • ' : ''}
+                        {item.genre ? `${item.genre} • ` : ''}
                         Enviado {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: ptBR })}
                       </p>
                     </div>
