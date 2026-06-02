@@ -38,6 +38,29 @@ const RegisteredWorks: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const { profile } = useProfile();
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const publicUrl = buildComposerPublicUrl(profile?.name, profile?.cpf);
+
+  const handleCopyPublicLink = async () => {
+    if (!publicUrl) {
+      toast({
+        title: 'Cadastro incompleto',
+        description: 'Complete seu nome e CPF no perfil para gerar o link público.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setLinkCopied(true);
+      toast({ title: 'Link copiado!', description: publicUrl });
+      setTimeout(() => setLinkCopied(false), 2500);
+    } catch {
+      toast({ title: 'Erro', description: 'Não foi possível copiar o link.', variant: 'destructive' });
+    }
+  };
+
 
   const { data: works, isLoading, error } = useQuery({
     queryKey: ['registered-works', currentUser?.id],
