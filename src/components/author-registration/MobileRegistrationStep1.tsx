@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -102,6 +102,25 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
       }
     ];
   });
+
+  useEffect(() => {
+    if (!initialData) return;
+    setTitle(initialData.title || '');
+    setHasSamples(initialData.hasSamples ?? false);
+    setAuthors(
+      initialData.authors?.length
+        ? initialData.authors
+        : [
+            {
+              id: 'titular',
+              name: profile?.name || 'Você',
+              initials: getInitials(profile?.name || 'VC'),
+              percentage: 100,
+              isTitular: true,
+            },
+          ]
+    );
+  }, [initialData, profile?.name]);
   
   // Persistir dados localmente sempre que houver mudanças
   React.useEffect(() => {
