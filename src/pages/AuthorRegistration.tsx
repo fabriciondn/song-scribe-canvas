@@ -19,6 +19,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { getDraftById } from '@/services/drafts/draftService';
 import { toast } from 'sonner';
 import { LoadFromFormButton } from '@/components/author-registration/LoadFromFormButton';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface AuthorRegistrationData {
   title: string;
