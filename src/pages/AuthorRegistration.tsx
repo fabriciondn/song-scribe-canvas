@@ -342,15 +342,20 @@ const AuthorRegistration: React.FC = () => {
           sessionStorage.removeItem('mobile_registration_step2_draft');
         } catch {}
 
-        const title: string = work.title || '';
-        const lyrics: string = work.lyrics || '';
-        const genre: string = work.genre || '';
+        const title: string = String(work.title || work.name || '').trim();
+        const lyrics: string = String(work.lyrics || work.letra || work.content || '').trim();
+        const genre: string = String(work.genre || work.genero || '').trim();
+        const version: string = String(work.song_version || work.version || work.versao || '').trim();
+        const additionalInfo: string = String(work.additional_info || work.observations || work.notes || '').trim();
 
         setFormData((prev) => ({
           ...prev,
           title,
           lyrics,
           genre,
+          styleVariation: version,
+          songVersion: version,
+          additionalInfo,
           audioFile,
         }));
 
@@ -371,10 +376,10 @@ const AuthorRegistration: React.FC = () => {
         setMobileStep2Data({
           registrationType: audioFile ? 'complete' : 'lyrics_only',
           genre,
-          version: '',
+          version,
           lyrics,
           audioFile,
-          additionalInfo: '',
+          additionalInfo,
         });
 
         setPrefilledFromDraft({
