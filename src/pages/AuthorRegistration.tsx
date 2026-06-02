@@ -18,7 +18,7 @@ import { MobileRegistrationStep3 } from '@/components/author-registration/Mobile
 import { useProfile } from '@/hooks/useProfile';
 import { getDraftById } from '@/services/drafts/draftService';
 import { toast } from 'sonner';
-import { LoadFromDraftButton } from '@/components/author-registration/LoadFromDraftButton';
+import { LoadFromFormButton } from '@/components/author-registration/LoadFromFormButton';
 
 export interface AuthorRegistrationData {
   title: string;
