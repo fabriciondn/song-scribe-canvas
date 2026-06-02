@@ -441,12 +441,33 @@ const AuthorRegistration: React.FC = () => {
     >
       <div className={isMobile ? "w-full" : "max-w-4xl mx-auto"}>
         <div className={isMobile ? "mb-4" : "mb-6"}>
-          <h1 className={`font-bold mb-2 ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
-            Registro Autoral
-          </h1>
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h1 className={`font-bold ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
+              Registro Autoral
+            </h1>
+            {!isMobile && isProfileComplete && step === 'form' && (
+              <LoadFromDraftButton variant="desktop" />
+            )}
+          </div>
           <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>
             Registre suas músicas e proteja seus direitos autorais
           </p>
+          {(prefilledFromDraft.title || prefilledFromDraft.lyrics || prefilledFromDraft.audio) && step === 'form' && (
+            <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 text-primary px-3 py-2 text-sm flex items-start gap-2">
+              <Gift className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>
+                <strong>Dados carregados do rascunho:</strong>{' '}
+                {[
+                  prefilledFromDraft.title && 'título',
+                  prefilledFromDraft.lyrics && 'letra',
+                  prefilledFromDraft.audio && 'áudio',
+                ]
+                  .filter(Boolean)
+                  .join(', ')}
+                . Você pode editar livremente antes de finalizar.
+              </span>
+            </div>
+          )}
         </div>
 
         <ProfileCompletionCheck />
