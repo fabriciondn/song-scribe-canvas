@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Save, Loader2, Folder, FolderOpen, ChevronDown, ChevronRight, FolderInput, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, Loader2, Folder, FolderOpen, ChevronDown, ChevronRight, FolderInput, Users, FileCheck2 } from 'lucide-react';
 import { AudioRecorder } from '../components/drafts/AudioRecorder';
 import { BasesSelector } from '../components/drafts/BasesSelector';
 import { useToast } from '@/components/ui/use-toast';
@@ -953,7 +953,17 @@ const DraftCard: React.FC<DraftCardProps> = ({ draft, onEdit, onDelete, folders 
           </div>
         ) : null}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-2">
+        <Button
+          variant="default"
+          className="w-full"
+          onClick={() => {
+            window.location.href = `/dashboard/author-registration?draftId=${draft.id}`;
+          }}
+        >
+          <FileCheck2 className="h-4 w-4 mr-2" />
+          Registrar como obra
+        </Button>
         <Button 
           variant="outline" 
           className="w-full"
