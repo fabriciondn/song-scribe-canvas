@@ -12,6 +12,7 @@ import { MobileRegisteredWorks } from '@/components/mobile/MobileRegisteredWorks
 import { downloadAllCertificatesAsZip } from '@/services/certificateService';
 import { useProfile } from '@/hooks/useProfile';
 import { toast } from '@/hooks/use-toast';
+import { buildComposerPublicUrl } from '@/lib/composerSlug';
 
 interface RegisteredWork {
   id: string;
