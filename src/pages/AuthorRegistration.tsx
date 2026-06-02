@@ -16,6 +16,8 @@ import { MobileRegistrationStep1 } from '@/components/author-registration/Mobile
 import { MobileRegistrationStep2 } from '@/components/author-registration/MobileRegistrationStep2';
 import { MobileRegistrationStep3 } from '@/components/author-registration/MobileRegistrationStep3';
 import { useProfile } from '@/hooks/useProfile';
+import { getDraftById } from '@/services/drafts/draftService';
+import { toast } from 'sonner';
 
 export interface AuthorRegistrationData {
   title: string;
