@@ -113,6 +113,7 @@ const AuthorRegistration: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { credits, isLoading: creditsLoading } = useUserCredits();
   const { isMobile } = useMobileDetection();
   const { isComplete: isProfileComplete } = useProfileValidation();
