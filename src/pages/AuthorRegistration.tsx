@@ -523,7 +523,7 @@ const AuthorRegistration: React.FC = () => {
   if (isMobile && isProfileComplete && mobileStep === 1) {
     return (
       <MobileRegistrationStep1
-        key={draftPrefillApplied ? 'prefilled' : 'fresh'}
+        key={draftPrefillApplied || formPrefillApplied ? 'prefilled' : 'fresh'}
         onContinue={handleMobileStep1Continue}
         initialData={mobileStep1Data || undefined}
       />
@@ -534,7 +534,7 @@ const AuthorRegistration: React.FC = () => {
   if (isMobile && isProfileComplete && mobileStep === 2) {
     return (
       <MobileRegistrationStep2
-        key={draftPrefillApplied ? 'prefilled' : 'fresh'}
+        key={draftPrefillApplied || formPrefillApplied ? 'prefilled' : 'fresh'}
         onContinue={handleMobileStep2Continue}
         onBack={handleMobileStep2Back}
         initialData={mobileStep2Data || undefined}
@@ -578,7 +578,7 @@ const AuthorRegistration: React.FC = () => {
             <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 text-primary px-3 py-2 text-sm flex items-start gap-2">
               <Gift className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
-                <strong>Dados carregados do rascunho:</strong>{' '}
+                <strong>Dados carregados:</strong>{' '}
                 {[
                   prefilledFromDraft.title && 'título',
                   prefilledFromDraft.lyrics && 'letra',
