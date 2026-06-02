@@ -10,6 +10,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { MobileNotificationCenter } from '@/components/mobile/MobileNotificationCenter';
 import { MobileCertificateDetails } from '@/components/mobile/MobileCertificateDetails';
 import { downloadAllCertificatesAsZip } from '@/services/certificateService';
+import { buildComposerPublicUrl } from '@/lib/composerSlug';
 import { toast } from 'sonner';
 
 // Componente para Material Symbols
