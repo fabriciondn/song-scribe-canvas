@@ -63,6 +63,19 @@ export const MobileRegisteredWorks: React.FC = () => {
   const { weeklyData } = useWeeklyRegistrations();
   const { stats } = useDashboardStats();
   const { profile } = useProfile();
+  const publicUrl = buildComposerPublicUrl(profile?.name, profile?.cpf);
+  const handleCopyPublicLink = async () => {
+    if (!publicUrl) {
+      toast.error('Complete seu nome e CPF no perfil para gerar o link público.');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      toast.success('Link copiado!', { description: publicUrl });
+    } catch {
+      toast.error('Não foi possível copiar o link.');
+    }
+  };
   const [filter, setFilter] = useState<FilterType>('all');
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   
