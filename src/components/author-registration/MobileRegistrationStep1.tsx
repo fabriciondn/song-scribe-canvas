@@ -7,7 +7,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { LoadFromDraftButton } from '@/components/author-registration/LoadFromDraftButton';
+import { LoadFromFormButton } from '@/components/author-registration/LoadFromFormButton';
 
 // Componente para Material Icons
 const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: string }> = ({ 
