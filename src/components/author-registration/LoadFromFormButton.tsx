@@ -24,6 +24,13 @@ interface FormWorkItem {
 }
 
 const onlyDigits = (s?: string | null) => (s || '').replace(/\D+/g, '');
+const readWorkString = (work: any, keys: string[]) => {
+  for (const key of keys) {
+    const value = work?.[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return '';
+};
 
 /**
  * Botão "Carregar do formulário" — lista obras enviadas pelo compositor
@@ -99,10 +106,10 @@ export const LoadFromFormButton: React.FC<Props> = ({ variant = 'mobile', classN
             list.push({
               formId: f.id,
               workIndex: idx,
-              title: w?.title || 'Sem título',
-              genre: w?.genre,
-              lyrics: w?.lyrics,
-              audio_url: w?.audio_url,
+              title: readWorkString(w, ['title', 'name']) || 'Sem título',
+              genre: readWorkString(w, ['genre', 'genero']) || undefined,
+              lyrics: readWorkString(w, ['lyrics', 'letra', 'content']) || undefined,
+              audio_url: readWorkString(w, ['audio_url', 'audio_file_path', 'audioPath']) || undefined,
               created_at: f.created_at,
             });
           });

@@ -316,17 +316,19 @@ const AuthorRegistration: React.FC = () => {
           return;
         }
 
+        const audioPath = String(work.audio_url || work.audio_file_path || work.audioPath || '').trim();
+
         let audioFile: File | null = null;
-        if (work.audio_url) {
+        if (audioPath) {
           try {
             const { data: pub } = supabase.storage
               .from('author-registrations')
-              .getPublicUrl(work.audio_url);
+              .getPublicUrl(audioPath);
             const res = await fetch(pub.publicUrl);
             if (res.ok) {
               const blob = await res.blob();
               const type = blob.type || 'audio/mpeg';
-              const name = String(work.audio_url).split('/').pop() || 'formulario-audio.mp3';
+              const name = audioPath.split('/').pop() || 'formulario-audio.mp3';
               audioFile = new File([blob], name, { type });
             }
           } catch (err) {
@@ -342,16 +344,21 @@ const AuthorRegistration: React.FC = () => {
           sessionStorage.removeItem('mobile_registration_step2_draft');
         } catch {}
 
-        const title: string = work.title || '';
-        const lyrics: string = work.lyrics || '';
-        const genre: string = work.genre || '';
+        const title: string = String(work.title || work.name || '').trim();
+        const lyrics: string = String(work.lyrics || work.letra || work.content || '').trim();
+        const genre: string = String(work.genre || work.genero || '').trim();
+        const version: string = String(work.song_version || work.version || work.versao || '').trim();
+        const additionalInfo: string = String(work.additional_info || work.observations || work.notes || '').trim();
 
         setFormData((prev) => ({
           ...prev,
-          title: title || prev.title,
-          lyrics: lyrics || prev.lyrics,
-          genre: genre || prev.genre,
-          audioFile: audioFile || prev.audioFile,
+          title,
+          lyrics,
+          genre,
+          styleVariation: version,
+          songVersion: version,
+          additionalInfo,
+          audioFile,
         }));
 
         setMobileStep1Data({
@@ -371,20 +378,20 @@ const AuthorRegistration: React.FC = () => {
         setMobileStep2Data({
           registrationType: audioFile ? 'complete' : 'lyrics_only',
           genre,
-          version: '',
+          version,
           lyrics,
           audioFile,
-          additionalInfo: '',
+          additionalInfo,
         });
 
         setPrefilledFromDraft({
-          title: !!title,
-          lyrics: !!lyrics,
+          title: title.trim().length > 0,
+          lyrics: lyrics.trim().length > 0,
           audio: !!audioFile,
         });
         setFormPrefillApplied(true);
 
-        toast.success('Dados do formulário carregados — revise antes de continuar.');
+        toast.success(title || lyrics || audioFile ? 'Dados do formulário carregados — revise antes de continuar.' : 'Formulário encontrado, mas a obra selecionada veio sem dados preenchíveis.');
 
         const next = new URLSearchParams(searchParams);
         next.delete('formWorkId');
@@ -518,7 +525,7 @@ const AuthorRegistration: React.FC = () => {
   if (isMobile && isProfileComplete && mobileStep === 1) {
     return (
       <MobileRegistrationStep1
-        key={draftPrefillApplied ? 'prefilled' : 'fresh'}
+        key={draftPrefillApplied || formPrefillApplied ? 'prefilled' : 'fresh'}
         onContinue={handleMobileStep1Continue}
         initialData={mobileStep1Data || undefined}
       />
@@ -529,7 +536,7 @@ const AuthorRegistration: React.FC = () => {
   if (isMobile && isProfileComplete && mobileStep === 2) {
     return (
       <MobileRegistrationStep2
-        key={draftPrefillApplied ? 'prefilled' : 'fresh'}
+        key={draftPrefillApplied || formPrefillApplied ? 'prefilled' : 'fresh'}
         onContinue={handleMobileStep2Continue}
         onBack={handleMobileStep2Back}
         initialData={mobileStep2Data || undefined}
@@ -573,7 +580,7 @@ const AuthorRegistration: React.FC = () => {
             <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 text-primary px-3 py-2 text-sm flex items-start gap-2">
               <Gift className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
-                <strong>Dados carregados do rascunho:</strong>{' '}
+                <strong>Dados carregados:</strong>{' '}
                 {[
                   prefilledFromDraft.title && 'título',
                   prefilledFromDraft.lyrics && 'letra',
