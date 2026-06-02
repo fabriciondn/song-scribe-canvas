@@ -383,7 +383,7 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
             Comece definindo o nome da sua obra e quem participou da criação dela.
           </p>
           <div className="mt-4">
-            <LoadFromDraftButton variant="mobile" className="w-full bg-[#1C1C1E] hover:bg-[#2C2C2E] text-white border border-[#2C2C2E]" />
+            <LoadFromFormButton variant="mobile" className="w-full bg-[#1C1C1E] hover:bg-[#2C2C2E] text-white border border-[#2C2C2E]" />
           </div>
         </div>
 
