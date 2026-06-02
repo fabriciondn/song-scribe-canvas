@@ -335,8 +335,8 @@ const AuthorRegistration: React.FC = () => {
           title: work.title || prev.title,
           lyrics: work.lyrics || prev.lyrics,
           genre: work.genre || prev.genre,
-          song_version: work.song_version || prev.song_version,
-          additional_info: work.additional_info || prev.additional_info,
+          songVersion: work.song_version || prev.songVersion,
+          additionalInfo: work.additional_info || prev.additionalInfo,
           audioFile: audioFile || prev.audioFile,
         }));
 
