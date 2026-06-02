@@ -7,6 +7,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { LoadFromDraftButton } from '@/components/author-registration/LoadFromDraftButton';
 
 // Componente para Material Icons
 const MaterialIcon: React.FC<{ name: string; filled?: boolean; className?: string }> = ({ 
@@ -376,12 +377,16 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
         </div>
 
         {/* Section Title */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-[28px] font-bold mb-3 text-white">Título e Autores</h1>
           <p className="text-[15px] text-gray-400 leading-relaxed">
             Comece definindo o nome da sua obra e quem participou da criação dela.
           </p>
+          <div className="mt-4">
+            <LoadFromDraftButton variant="mobile" className="w-full bg-[#1C1C1E] hover:bg-[#2C2C2E] text-white border border-[#2C2C2E]" />
+          </div>
         </div>
+
 
         {/* Form */}
         <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
