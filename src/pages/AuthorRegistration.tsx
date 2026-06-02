@@ -316,17 +316,19 @@ const AuthorRegistration: React.FC = () => {
           return;
         }
 
+        const audioPath = String(work.audio_url || work.audio_file_path || work.audioPath || '').trim();
+
         let audioFile: File | null = null;
-        if (work.audio_url) {
+        if (audioPath) {
           try {
             const { data: pub } = supabase.storage
               .from('author-registrations')
-              .getPublicUrl(work.audio_url);
+              .getPublicUrl(audioPath);
             const res = await fetch(pub.publicUrl);
             if (res.ok) {
               const blob = await res.blob();
               const type = blob.type || 'audio/mpeg';
-              const name = String(work.audio_url).split('/').pop() || 'formulario-audio.mp3';
+              const name = audioPath.split('/').pop() || 'formulario-audio.mp3';
               audioFile = new File([blob], name, { type });
             }
           } catch (err) {
