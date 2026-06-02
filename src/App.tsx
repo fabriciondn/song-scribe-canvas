@@ -151,6 +151,7 @@ const AppContent = () => {
             <Route path="/ref/:code" element={<AffiliateLink />} />
             <Route path="/formulario" element={<PublicRegistrationForm />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/:slug" element={<PublicComposerProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </PageFunctionStatusWrapper>
