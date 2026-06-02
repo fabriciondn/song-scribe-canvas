@@ -404,6 +404,7 @@ const AuthorRegistration: React.FC = () => {
   if (isMobile && isProfileComplete && mobileStep === 1) {
     return (
       <MobileRegistrationStep1
+        key={draftPrefillApplied ? 'prefilled' : 'fresh'}
         onContinue={handleMobileStep1Continue}
         initialData={mobileStep1Data || undefined}
       />
@@ -414,6 +415,7 @@ const AuthorRegistration: React.FC = () => {
   if (isMobile && isProfileComplete && mobileStep === 2) {
     return (
       <MobileRegistrationStep2
+        key={draftPrefillApplied ? 'prefilled' : 'fresh'}
         onContinue={handleMobileStep2Continue}
         onBack={handleMobileStep2Back}
         initialData={mobileStep2Data || undefined}
