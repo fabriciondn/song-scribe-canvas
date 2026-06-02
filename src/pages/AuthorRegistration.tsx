@@ -287,6 +287,105 @@ const AuthorRegistration: React.FC = () => {
     };
   }, [searchParams, draftPrefillApplied, profile, navigate]);
 
+  // Pré-preencher formulário a partir de uma obra pendente do formulário (?formWorkId=...)
+  const [formPrefillApplied, setFormPrefillApplied] = useState(false);
+  useEffect(() => {
+    const formWorkId = searchParams.get('formWorkId');
+    if (!formWorkId || formPrefillApplied) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: work, error } = await supabase
+          .from('author_registrations')
+          .select('id, title, lyrics, audio_file_path, genre, song_version, additional_info')
+          .eq('id', formWorkId)
+          .maybeSingle();
+        if (error || !work || cancelled) return;
+
+        let audioFile: File | null = null;
+        if (work.audio_file_path) {
+          try {
+            const { data: pub } = supabase.storage
+              .from('author-registrations')
+              .getPublicUrl(work.audio_file_path);
+            const res = await fetch(pub.publicUrl);
+            if (res.ok) {
+              const blob = await res.blob();
+              const type = blob.type || 'audio/mpeg';
+              const name = work.audio_file_path.split('/').pop() || 'formulario-audio.mp3';
+              audioFile = new File([blob], name, { type });
+            }
+          } catch (err) {
+            console.warn('Não foi possível carregar áudio do formulário:', err);
+          }
+        }
+
+        if (cancelled) return;
+
+        try {
+          sessionStorage.removeItem('author_registration_draft');
+          sessionStorage.removeItem('mobile_registration_step1_draft');
+          sessionStorage.removeItem('mobile_registration_step2_draft');
+        } catch {}
+
+        setFormData((prev) => ({
+          ...prev,
+          title: work.title || prev.title,
+          lyrics: work.lyrics || prev.lyrics,
+          genre: work.genre || prev.genre,
+          song_version: work.song_version || prev.song_version,
+          additional_info: work.additional_info || prev.additional_info,
+          audioFile: audioFile || prev.audioFile,
+        }));
+
+        setMobileStep1Data({
+          title: work.title || '',
+          authors: [
+            {
+              id: 'titular',
+              name: profile?.name || 'Você',
+              initials: (profile?.name || 'VC').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase(),
+              percentage: 100,
+              isTitular: true,
+            },
+          ],
+          hasSamples: false,
+        });
+
+        setMobileStep2Data({
+          registrationType: audioFile ? 'complete' : 'lyrics_only',
+          genre: work.genre || '',
+          version: work.song_version || '',
+          lyrics: work.lyrics || '',
+          audioFile,
+          additionalInfo: work.additional_info || '',
+        });
+
+        setPrefilledFromDraft({
+          title: !!work.title,
+          lyrics: !!work.lyrics,
+          audio: !!audioFile,
+        });
+        setFormPrefillApplied(true);
+
+        toast.success('Dados do formulário carregados — revise antes de continuar.');
+
+        const next = new URLSearchParams(searchParams);
+        next.delete('formWorkId');
+        const qs = next.toString();
+        navigate(`${window.location.pathname}${qs ? `?${qs}` : ''}`, { replace: true });
+      } catch (err) {
+        console.error('Erro ao pré-preencher do formulário:', err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, formPrefillApplied, profile, navigate]);
+
+
 
   if (showLoading) {
     return (
