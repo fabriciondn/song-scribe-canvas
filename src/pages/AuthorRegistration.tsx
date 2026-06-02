@@ -188,6 +188,105 @@ const AuthorRegistration: React.FC = () => {
     }
   }, [searchParams]);
 
+  // Pré-preencher formulário a partir de um rascunho (?draftId=...)
+  const [draftPrefillApplied, setDraftPrefillApplied] = useState(false);
+  const [prefilledFromDraft, setPrefilledFromDraft] = useState<{ title: boolean; lyrics: boolean; audio: boolean }>({
+    title: false,
+    lyrics: false,
+    audio: false,
+  });
+
+  useEffect(() => {
+    const draftId = searchParams.get('draftId');
+    if (!draftId || draftPrefillApplied) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const draft = await getDraftById(draftId);
+        if (!draft || cancelled) return;
+
+        // Tenta baixar o primeiro áudio do rascunho e converter para File
+        let audioFile: File | null = null;
+        const firstAudio = draft.audio_files?.[0]?.url || draft.audio_url;
+        const firstAudioName = draft.audio_files?.[0]?.name || 'rascunho-audio.mp3';
+        if (firstAudio) {
+          try {
+            const res = await fetch(firstAudio);
+            if (res.ok) {
+              const blob = await res.blob();
+              const type = blob.type || 'audio/mpeg';
+              audioFile = new File([blob], firstAudioName, { type });
+            }
+          } catch (err) {
+            console.warn('Não foi possível carregar áudio do rascunho:', err);
+          }
+        }
+
+        if (cancelled) return;
+
+        // Limpa storage para evitar conflito com dados antigos
+        try {
+          sessionStorage.removeItem('author_registration_draft');
+          sessionStorage.removeItem('mobile_registration_step1_draft');
+          sessionStorage.removeItem('mobile_registration_step2_draft');
+        } catch {}
+
+        setFormData((prev) => ({
+          ...prev,
+          title: draft.title || prev.title,
+          lyrics: draft.content || prev.lyrics,
+          audioFile: audioFile || prev.audioFile,
+        }));
+
+        setMobileStep1Data({
+          title: draft.title || '',
+          authors: [
+            {
+              id: 'titular',
+              name: profile?.name || 'Você',
+              initials: (profile?.name || 'VC').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase(),
+              percentage: 100,
+              isTitular: true,
+            },
+          ],
+          hasSamples: false,
+        });
+
+        setMobileStep2Data({
+          registrationType: audioFile ? 'complete' : 'lyrics_only',
+          genre: '',
+          version: '',
+          lyrics: draft.content || '',
+          audioFile,
+          additionalInfo: '',
+        });
+
+        setPrefilledFromDraft({
+          title: !!draft.title,
+          lyrics: !!draft.content,
+          audio: !!audioFile,
+        });
+        setDraftPrefillApplied(true);
+
+        toast.success('Dados do rascunho carregados — revise antes de continuar.');
+
+        // Remove o param da URL para evitar reaplicar em remontagem
+        const next = new URLSearchParams(searchParams);
+        next.delete('draftId');
+        const qs = next.toString();
+        navigate(`${window.location.pathname}${qs ? `?${qs}` : ''}`, { replace: true });
+      } catch (err) {
+        console.error('Erro ao pré-preencher a partir do rascunho:', err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, draftPrefillApplied, profile, navigate]);
+
+
   if (showLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
