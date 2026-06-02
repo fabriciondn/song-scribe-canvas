@@ -33,7 +33,7 @@ const PublicComposerProfile: React.FC = () => {
         p_slug: normalized,
       });
       if (error) throw error;
-      return (data as PublicProfileData | null) ?? null;
+      return (data as unknown as PublicProfileData | null) ?? null;
     },
   });
 
