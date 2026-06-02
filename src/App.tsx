@@ -47,6 +47,7 @@ import ModeratorAuth from "./pages/ModeratorAuth";
 import ModeratorRecharge from "./pages/ModeratorRecharge";
 import AffiliateLink from "./pages/AffiliateLink";
 import PublicRegistrationForm from "./pages/PublicRegistrationForm";
+import PublicComposerProfile from "./pages/PublicComposerProfile";
 import Ranking from "./pages/Ranking";
 import ResetPassword from "./pages/ResetPassword";
 import Pendrive from "./pages/Pendrive";
