@@ -238,7 +238,16 @@ export const MobileRegisteredWorks: React.FC = () => {
                 <MaterialIcon name="download" className="text-xl" />
                 <span className="font-bold text-sm uppercase tracking-wide">Baixar todos os certificados</span>
               </>
-            )}
+        )}
+
+        <button
+          onClick={handleCopyPublicLink}
+          className="flex items-center justify-center gap-2 bg-card hover:bg-muted text-foreground p-4 rounded-xl border border-border transition-all active:scale-[0.98] mt-2"
+        >
+          <MaterialIcon name="link" className="text-xl" />
+          <span className="font-bold text-sm uppercase tracking-wide">Copiar link público</span>
+        </button>
+
           </button>
         )}
 
