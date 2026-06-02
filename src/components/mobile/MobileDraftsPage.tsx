@@ -43,7 +43,8 @@ import {
   Play,
   ArrowDownWideNarrow,
   X,
-  MoreVertical
+  MoreVertical,
+  FileCheck2
 } from 'lucide-react';
 
 // Get folder color based on index
@@ -474,6 +475,19 @@ export const MobileDraftsPage: React.FC = () => {
                     {(draft.audio_url || (draft.audio_files && draft.audio_files.length > 0)) && (
                       <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-700 text-gray-500 transition-colors">
                         <Play size={18} />
+                      </button>
+                    )}
+
+                    {!isRegistered && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/dashboard/author-registration?draftId=${draft.id}`);
+                        }}
+                        title="Registrar como obra"
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-[#00C853]/10 hover:bg-[#00C853]/20 text-[#00C853] transition-colors"
+                      >
+                        <FileCheck2 size={16} />
                       </button>
                     )}
 

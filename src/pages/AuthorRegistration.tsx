@@ -16,6 +16,9 @@ import { MobileRegistrationStep1 } from '@/components/author-registration/Mobile
 import { MobileRegistrationStep2 } from '@/components/author-registration/MobileRegistrationStep2';
 import { MobileRegistrationStep3 } from '@/components/author-registration/MobileRegistrationStep3';
 import { useProfile } from '@/hooks/useProfile';
+import { getDraftById } from '@/services/drafts/draftService';
+import { toast } from 'sonner';
+import { LoadFromDraftButton } from '@/components/author-registration/LoadFromDraftButton';
 
 export interface AuthorRegistrationData {
   title: string;
@@ -186,6 +189,105 @@ const AuthorRegistration: React.FC = () => {
     }
   }, [searchParams]);
 
+  // Pré-preencher formulário a partir de um rascunho (?draftId=...)
+  const [draftPrefillApplied, setDraftPrefillApplied] = useState(false);
+  const [prefilledFromDraft, setPrefilledFromDraft] = useState<{ title: boolean; lyrics: boolean; audio: boolean }>({
+    title: false,
+    lyrics: false,
+    audio: false,
+  });
+
+  useEffect(() => {
+    const draftId = searchParams.get('draftId');
+    if (!draftId || draftPrefillApplied) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const draft = await getDraftById(draftId);
+        if (!draft || cancelled) return;
+
+        // Tenta baixar o primeiro áudio do rascunho e converter para File
+        let audioFile: File | null = null;
+        const firstAudio = draft.audio_files?.[0]?.url || draft.audio_url;
+        const firstAudioName = draft.audio_files?.[0]?.name || 'rascunho-audio.mp3';
+        if (firstAudio) {
+          try {
+            const res = await fetch(firstAudio);
+            if (res.ok) {
+              const blob = await res.blob();
+              const type = blob.type || 'audio/mpeg';
+              audioFile = new File([blob], firstAudioName, { type });
+            }
+          } catch (err) {
+            console.warn('Não foi possível carregar áudio do rascunho:', err);
+          }
+        }
+
+        if (cancelled) return;
+
+        // Limpa storage para evitar conflito com dados antigos
+        try {
+          sessionStorage.removeItem('author_registration_draft');
+          sessionStorage.removeItem('mobile_registration_step1_draft');
+          sessionStorage.removeItem('mobile_registration_step2_draft');
+        } catch {}
+
+        setFormData((prev) => ({
+          ...prev,
+          title: draft.title || prev.title,
+          lyrics: draft.content || prev.lyrics,
+          audioFile: audioFile || prev.audioFile,
+        }));
+
+        setMobileStep1Data({
+          title: draft.title || '',
+          authors: [
+            {
+              id: 'titular',
+              name: profile?.name || 'Você',
+              initials: (profile?.name || 'VC').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase(),
+              percentage: 100,
+              isTitular: true,
+            },
+          ],
+          hasSamples: false,
+        });
+
+        setMobileStep2Data({
+          registrationType: audioFile ? 'complete' : 'lyrics_only',
+          genre: '',
+          version: '',
+          lyrics: draft.content || '',
+          audioFile,
+          additionalInfo: '',
+        });
+
+        setPrefilledFromDraft({
+          title: !!draft.title,
+          lyrics: !!draft.content,
+          audio: !!audioFile,
+        });
+        setDraftPrefillApplied(true);
+
+        toast.success('Dados do rascunho carregados — revise antes de continuar.');
+
+        // Remove o param da URL para evitar reaplicar em remontagem
+        const next = new URLSearchParams(searchParams);
+        next.delete('draftId');
+        const qs = next.toString();
+        navigate(`${window.location.pathname}${qs ? `?${qs}` : ''}`, { replace: true });
+      } catch (err) {
+        console.error('Erro ao pré-preencher a partir do rascunho:', err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, draftPrefillApplied, profile, navigate]);
+
+
   if (showLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -302,6 +404,7 @@ const AuthorRegistration: React.FC = () => {
   if (isMobile && isProfileComplete && mobileStep === 1) {
     return (
       <MobileRegistrationStep1
+        key={draftPrefillApplied ? 'prefilled' : 'fresh'}
         onContinue={handleMobileStep1Continue}
         initialData={mobileStep1Data || undefined}
       />
@@ -312,6 +415,7 @@ const AuthorRegistration: React.FC = () => {
   if (isMobile && isProfileComplete && mobileStep === 2) {
     return (
       <MobileRegistrationStep2
+        key={draftPrefillApplied ? 'prefilled' : 'fresh'}
         onContinue={handleMobileStep2Continue}
         onBack={handleMobileStep2Back}
         initialData={mobileStep2Data || undefined}
@@ -340,12 +444,33 @@ const AuthorRegistration: React.FC = () => {
     >
       <div className={isMobile ? "w-full" : "max-w-4xl mx-auto"}>
         <div className={isMobile ? "mb-4" : "mb-6"}>
-          <h1 className={`font-bold mb-2 ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
-            Registro Autoral
-          </h1>
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h1 className={`font-bold ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
+              Registro Autoral
+            </h1>
+            {!isMobile && isProfileComplete && step === 'form' && (
+              <LoadFromDraftButton variant="desktop" />
+            )}
+          </div>
           <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>
             Registre suas músicas e proteja seus direitos autorais
           </p>
+          {(prefilledFromDraft.title || prefilledFromDraft.lyrics || prefilledFromDraft.audio) && step === 'form' && (
+            <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 text-primary px-3 py-2 text-sm flex items-start gap-2">
+              <Gift className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>
+                <strong>Dados carregados do rascunho:</strong>{' '}
+                {[
+                  prefilledFromDraft.title && 'título',
+                  prefilledFromDraft.lyrics && 'letra',
+                  prefilledFromDraft.audio && 'áudio',
+                ]
+                  .filter(Boolean)
+                  .join(', ')}
+                . Você pode editar livremente antes de finalizar.
+              </span>
+            </div>
+          )}
         </div>
 
         <ProfileCompletionCheck />
