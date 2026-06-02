@@ -135,6 +135,30 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
     },
   });
 
+  useEffect(() => {
+    const nextStep1Data: Step1Data = {
+      title: initialData.title,
+      author: initialData.author,
+      authorCpf: initialData.authorCpf,
+      hasOtherAuthors: initialData.hasOtherAuthors,
+      otherAuthors: initialData.otherAuthors,
+    };
+
+    setStep1Data(nextStep1Data);
+    setAudioFile(initialData.audioFile);
+    setLyrics(initialData.lyrics || '');
+
+    step1Form.reset(nextStep1Data);
+    step2Form.reset({
+      genre: initialData.genre || '',
+      styleVariation: initialData.styleVariation || '',
+      songVersion: initialData.songVersion || '',
+      registrationType: initialData.registrationType || 'complete',
+      additionalInfo: initialData.additionalInfo || '',
+      termsAccepted: initialData.termsAccepted || false,
+    });
+  }, [initialData, step1Form, step2Form]);
+
   // Notificar o parent sobre mudanças em tempo real para persistência
   const step1Values = step1Form.watch();
   const step2Values = step2Form.watch();
