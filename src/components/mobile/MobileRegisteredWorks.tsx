@@ -10,6 +10,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { MobileNotificationCenter } from '@/components/mobile/MobileNotificationCenter';
 import { MobileCertificateDetails } from '@/components/mobile/MobileCertificateDetails';
 import { downloadAllCertificatesAsZip } from '@/services/certificateService';
+import { buildComposerPublicUrl } from '@/lib/composerSlug';
 import { toast } from 'sonner';
 
 // Componente para Material Symbols
@@ -62,6 +63,19 @@ export const MobileRegisteredWorks: React.FC = () => {
   const { weeklyData } = useWeeklyRegistrations();
   const { stats } = useDashboardStats();
   const { profile } = useProfile();
+  const publicUrl = buildComposerPublicUrl(profile?.name, profile?.cpf);
+  const handleCopyPublicLink = async () => {
+    if (!publicUrl) {
+      toast.error('Complete seu nome e CPF no perfil para gerar o link público.');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      toast.success('Link copiado!', { description: publicUrl });
+    } catch {
+      toast.error('Não foi possível copiar o link.');
+    }
+  };
   const [filter, setFilter] = useState<FilterType>('all');
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   
@@ -224,7 +238,16 @@ export const MobileRegisteredWorks: React.FC = () => {
                 <MaterialIcon name="download" className="text-xl" />
                 <span className="font-bold text-sm uppercase tracking-wide">Baixar todos os certificados</span>
               </>
-            )}
+        )}
+
+        <button
+          onClick={handleCopyPublicLink}
+          className="flex items-center justify-center gap-2 bg-card hover:bg-muted text-foreground p-4 rounded-xl border border-border transition-all active:scale-[0.98] mt-2"
+        >
+          <MaterialIcon name="link" className="text-xl" />
+          <span className="font-bold text-sm uppercase tracking-wide">Copiar link público</span>
+        </button>
+
           </button>
         )}
 

@@ -47,6 +47,7 @@ import ModeratorAuth from "./pages/ModeratorAuth";
 import ModeratorRecharge from "./pages/ModeratorRecharge";
 import AffiliateLink from "./pages/AffiliateLink";
 import PublicRegistrationForm from "./pages/PublicRegistrationForm";
+import PublicComposerProfile from "./pages/PublicComposerProfile";
 import Ranking from "./pages/Ranking";
 import ResetPassword from "./pages/ResetPassword";
 import Pendrive from "./pages/Pendrive";
@@ -150,6 +151,7 @@ const AppContent = () => {
             <Route path="/ref/:code" element={<AffiliateLink />} />
             <Route path="/formulario" element={<PublicRegistrationForm />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/:slug" element={<PublicComposerProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </PageFunctionStatusWrapper>

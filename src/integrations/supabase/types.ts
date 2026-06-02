@@ -2409,6 +2409,7 @@ export type Database = {
       }
       cleanup_old_sessions: { Args: never; Returns: undefined }
       cleanup_trash: { Args: never; Returns: undefined }
+      composer_slugify: { Args: { input: string }; Returns: string }
       create_draft: {
         Args: {
           draft_audio_url: string
@@ -2521,6 +2522,7 @@ export type Database = {
         }[]
       }
       get_online_users_count: { Args: never; Returns: number }
+      get_public_composer_profile: { Args: { p_slug: string }; Returns: Json }
       get_public_composers: {
         Args: { p_limit?: number }
         Returns: {

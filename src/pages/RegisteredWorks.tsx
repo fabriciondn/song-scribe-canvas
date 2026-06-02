@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, Download, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Loader2, Link2, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { WorkCard } from '@/components/registered-works/WorkCard';
@@ -12,6 +12,7 @@ import { MobileRegisteredWorks } from '@/components/mobile/MobileRegisteredWorks
 import { downloadAllCertificatesAsZip } from '@/services/certificateService';
 import { useProfile } from '@/hooks/useProfile';
 import { toast } from '@/hooks/use-toast';
+import { buildComposerPublicUrl } from '@/lib/composerSlug';
 
 interface RegisteredWork {
   id: string;
@@ -37,6 +38,29 @@ const RegisteredWorks: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const { profile } = useProfile();
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const publicUrl = buildComposerPublicUrl(profile?.name, profile?.cpf);
+
+  const handleCopyPublicLink = async () => {
+    if (!publicUrl) {
+      toast({
+        title: 'Cadastro incompleto',
+        description: 'Complete seu nome e CPF no perfil para gerar o link público.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setLinkCopied(true);
+      toast({ title: 'Link copiado!', description: publicUrl });
+      setTimeout(() => setLinkCopied(false), 2500);
+    } catch {
+      toast({ title: 'Erro', description: 'Não foi possível copiar o link.', variant: 'destructive' });
+    }
+  };
+
 
   const { data: works, isLoading, error } = useQuery({
     queryKey: ['registered-works', currentUser?.id],
@@ -147,6 +171,26 @@ const RegisteredWorks: React.FC = () => {
           <h1 className="text-xl sm:text-3xl font-bold text-foreground">Obras Registradas</h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-1">Visualize e baixe certificados das suas obras</p>
         </div>
+
+        <Button
+          onClick={handleCopyPublicLink}
+          variant="outline"
+          title={publicUrl || 'Complete nome e CPF no perfil'}
+        >
+          {linkCopied ? (
+            <>
+              <Check className="h-4 w-4 mr-2" />
+              Link copiado
+            </>
+          ) : (
+            <>
+              <Link2 className="h-4 w-4 mr-2" />
+              Copiar link público
+            </>
+          )}
+        </Button>
+
+
         
         {works && works.filter(w => w.status === 'registered' || w.status === 'completed').length >= 3 && (
           <Button 
