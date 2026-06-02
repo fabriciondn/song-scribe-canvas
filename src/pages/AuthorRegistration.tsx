@@ -293,47 +293,49 @@ const AuthorRegistration: React.FC = () => {
   }, [searchParams, draftPrefillApplied, profile, navigate]);
 
   // Pré-preencher formulário a partir de uma obra do formulário público
-  // (?formWorkId=<publicRegistrationFormId>:<workIndex>)
+  // Os dados chegam via location.state.prefillWork (passado por LoadFromFormButton)
   const [formPrefillApplied, setFormPrefillApplied] = useState(false);
   useEffect(() => {
-    const formWorkId = searchParams.get('formWorkId');
-    if (!formWorkId) return;
+    const prefillWork = (location.state as any)?.prefillWork;
+    if (!prefillWork) return;
 
     let cancelled = false;
     (async () => {
       try {
-        const [formId, idxStr] = formWorkId.split(':');
-        const workIndex = Number.parseInt(idxStr ?? '0', 10) || 0;
-        if (!formId) return;
+        const title: string = String(prefillWork.title || '').trim();
+        const lyrics: string = String(prefillWork.lyrics || '').trim();
+        const genre: string = String(prefillWork.genre || '').trim();
+        const audioPath: string = String(prefillWork.audio_url || '').trim();
 
-        const { data: form, error } = await supabase
-          .from('public_registration_forms')
-          .select('id, works')
-          .eq('id', formId)
-          .maybeSingle();
-        if (error || !form || cancelled) return;
-
-        const works = Array.isArray((form as any).works) ? ((form as any).works as any[]) : [];
-        const work = works[workIndex];
-        if (!work) {
-          toast.error('Obra do formulário não encontrada.');
-          return;
-        }
-
-        const audioPath = String(work.audio_url || work.audio_file_path || work.audioPath || '').trim();
-
+        // Tentar baixar áudio (se houver) e converter para File
         let audioFile: File | null = null;
         if (audioPath) {
           try {
-            const { data: pub } = supabase.storage
-              .from('author-registrations')
-              .getPublicUrl(audioPath);
-            const res = await fetch(pub.publicUrl);
-            if (res.ok) {
-              const blob = await res.blob();
-              const type = blob.type || 'audio/mpeg';
-              const name = audioPath.split('/').pop() || 'formulario-audio.mp3';
-              audioFile = new File([blob], name, { type });
+            // audio_url pode ser caminho dentro de um bucket público
+            // Tentamos vários buckets conhecidos
+            const candidates: string[] = [];
+            if (/^https?:\/\//i.test(audioPath)) {
+              candidates.push(audioPath);
+            } else {
+              // tira "public-registrations/" prefix se houver, e tenta esse bucket
+              const path = audioPath.replace(/^public-registrations\//, '');
+              for (const bucket of ['public-registrations', 'author-registrations', 'public-assets']) {
+                const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+                if (pub?.publicUrl) candidates.push(pub.publicUrl);
+              }
+            }
+
+            for (const url of candidates) {
+              try {
+                const res = await fetch(url);
+                if (res.ok) {
+                  const blob = await res.blob();
+                  const type = blob.type || 'audio/mpeg';
+                  const name = audioPath.split('/').pop() || 'formulario-audio.mp3';
+                  audioFile = new File([blob], name, { type });
+                  break;
+                }
+              } catch {}
             }
           } catch (err) {
             console.warn('Não foi possível carregar áudio do formulário:', err);
@@ -342,26 +344,23 @@ const AuthorRegistration: React.FC = () => {
 
         if (cancelled) return;
 
+        // Limpa storage para evitar conflito com dados antigos
         try {
           sessionStorage.removeItem('author_registration_draft');
           sessionStorage.removeItem('mobile_registration_step1_draft');
           sessionStorage.removeItem('mobile_registration_step2_draft');
         } catch {}
 
-        const title: string = String(work.title || work.name || '').trim();
-        const lyrics: string = String(work.lyrics || work.letra || work.content || '').trim();
-        const genre: string = String(work.genre || work.genero || '').trim();
-        const version: string = String(work.song_version || work.version || work.versao || '').trim();
-        const additionalInfo: string = String(work.additional_info || work.observations || work.notes || '').trim();
+        const titularName = profile?.name || 'Você';
+        const titularInitials = titularName.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
 
         setFormData((prev) => ({
           ...prev,
           title,
           lyrics,
           genre,
-          styleVariation: version,
-          songVersion: version,
-          additionalInfo,
+          author: profile?.name || prev.author,
+          authorCpf: profile?.cpf || prev.authorCpf,
           audioFile,
         }));
 
@@ -370,8 +369,8 @@ const AuthorRegistration: React.FC = () => {
           authors: [
             {
               id: 'titular',
-              name: profile?.name || 'Você',
-              initials: (profile?.name || 'VC').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase(),
+              name: titularName,
+              initials: titularInitials,
               percentage: 100,
               isTitular: true,
             },
@@ -382,27 +381,33 @@ const AuthorRegistration: React.FC = () => {
         setMobileStep2Data({
           registrationType: audioFile ? 'complete' : 'lyrics_only',
           genre,
-          version,
+          version: '',
           lyrics,
           audioFile,
-          additionalInfo,
+          additionalInfo: '',
         });
 
         setPrefilledFromDraft({
-          title: title.trim().length > 0,
-          lyrics: lyrics.trim().length > 0,
+          title: title.length > 0,
+          lyrics: lyrics.length > 0,
           audio: !!audioFile,
         });
         setDraftPrefillApplied(false);
         setFormPrefillApplied(true);
         setPrefillVersion((v) => v + 1);
 
-        toast.success(title || lyrics || audioFile ? 'Dados do formulário carregados — revise antes de continuar.' : 'Formulário encontrado, mas a obra selecionada veio sem dados preenchíveis.');
+        const loadedParts: string[] = [];
+        if (title) loadedParts.push('título');
+        if (lyrics) loadedParts.push('letra');
+        if (audioFile) loadedParts.push('áudio');
+        if (loadedParts.length > 0) {
+          toast.success(`Carregado do formulário: ${loadedParts.join(', ')}.`);
+        } else {
+          toast.warning('Obra do formulário sem dados preenchíveis.');
+        }
 
-        const next = new URLSearchParams(searchParams);
-        next.delete('formWorkId');
-        const qs = next.toString();
-        navigate(`${window.location.pathname}${qs ? `?${qs}` : ''}`, { replace: true });
+        // Limpa o state da navegação para evitar reaplicar
+        navigate(location.pathname + location.search, { replace: true, state: {} });
       } catch (err) {
         console.error('Erro ao pré-preencher do formulário:', err);
       }
@@ -411,7 +416,7 @@ const AuthorRegistration: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [searchParams, profile, navigate]);
+  }, [location.state, profile, navigate, location.pathname, location.search]);
 
 
 
