@@ -171,6 +171,26 @@ const RegisteredWorks: React.FC = () => {
           <h1 className="text-xl sm:text-3xl font-bold text-foreground">Obras Registradas</h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-1">Visualize e baixe certificados das suas obras</p>
         </div>
+
+        <Button
+          onClick={handleCopyPublicLink}
+          variant="outline"
+          title={publicUrl || 'Complete nome e CPF no perfil'}
+        >
+          {linkCopied ? (
+            <>
+              <Check className="h-4 w-4 mr-2" />
+              Link copiado
+            </>
+          ) : (
+            <>
+              <Link2 className="h-4 w-4 mr-2" />
+              Copiar link público
+            </>
+          )}
+        </Button>
+
+
         
         {works && works.filter(w => w.status === 'registered' || w.status === 'completed').length >= 3 && (
           <Button 
