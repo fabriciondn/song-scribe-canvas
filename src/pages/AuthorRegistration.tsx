@@ -192,6 +192,7 @@ const AuthorRegistration: React.FC = () => {
 
   // Pré-preencher formulário a partir de um rascunho (?draftId=...)
   const [draftPrefillApplied, setDraftPrefillApplied] = useState(false);
+  const [prefillVersion, setPrefillVersion] = useState(0);
   const [prefilledFromDraft, setPrefilledFromDraft] = useState<{ title: boolean; lyrics: boolean; audio: boolean }>({
     title: false,
     lyrics: false,
@@ -270,6 +271,8 @@ const AuthorRegistration: React.FC = () => {
           audio: !!audioFile,
         });
         setDraftPrefillApplied(true);
+        setFormPrefillApplied(false);
+        setPrefillVersion((v) => v + 1);
 
         toast.success('Dados do rascunho carregados — revise antes de continuar.');
 
@@ -293,7 +296,7 @@ const AuthorRegistration: React.FC = () => {
   const [formPrefillApplied, setFormPrefillApplied] = useState(false);
   useEffect(() => {
     const formWorkId = searchParams.get('formWorkId');
-    if (!formWorkId || formPrefillApplied) return;
+    if (!formWorkId) return;
 
     let cancelled = false;
     (async () => {
@@ -389,7 +392,9 @@ const AuthorRegistration: React.FC = () => {
           lyrics: lyrics.trim().length > 0,
           audio: !!audioFile,
         });
+        setDraftPrefillApplied(false);
         setFormPrefillApplied(true);
+        setPrefillVersion((v) => v + 1);
 
         toast.success(title || lyrics || audioFile ? 'Dados do formulário carregados — revise antes de continuar.' : 'Formulário encontrado, mas a obra selecionada veio sem dados preenchíveis.');
 
@@ -405,7 +410,7 @@ const AuthorRegistration: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [searchParams, formPrefillApplied, profile, navigate]);
+  }, [searchParams, profile, navigate]);
 
 
 
@@ -525,7 +530,7 @@ const AuthorRegistration: React.FC = () => {
   if (isMobile && isProfileComplete && mobileStep === 1) {
     return (
       <MobileRegistrationStep1
-        key={draftPrefillApplied || formPrefillApplied ? 'prefilled' : 'fresh'}
+        key={`mobile-step1-${prefillVersion}`}
         onContinue={handleMobileStep1Continue}
         initialData={mobileStep1Data || undefined}
       />
@@ -536,7 +541,7 @@ const AuthorRegistration: React.FC = () => {
   if (isMobile && isProfileComplete && mobileStep === 2) {
     return (
       <MobileRegistrationStep2
-        key={draftPrefillApplied || formPrefillApplied ? 'prefilled' : 'fresh'}
+        key={`mobile-step2-${prefillVersion}`}
         onContinue={handleMobileStep2Continue}
         onBack={handleMobileStep2Back}
         initialData={mobileStep2Data || undefined}
@@ -598,6 +603,7 @@ const AuthorRegistration: React.FC = () => {
 
         {step === 'form' && isProfileComplete && (
           <AuthorRegistrationSteps
+            key={`desktop-form-${prefillVersion}`}
             initialData={formData}
             onSubmit={handleFormSubmit}
             userCredits={effectiveCredits}
