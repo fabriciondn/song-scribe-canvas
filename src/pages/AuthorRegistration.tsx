@@ -64,6 +64,8 @@ interface MobileStep2Data {
   additionalInfo: string;
 }
 
+const onlyDigits = (value?: string | null) => (value || '').replace(/\D+/g, '');
+
 const STORAGE_KEY = 'author_registration_draft';
 
 // Função para salvar dados no sessionStorage
@@ -414,20 +416,26 @@ const AuthorRegistration: React.FC = () => {
       let targetUserId = '';
       if (composerCpf || composerEmail) {
         try {
-          let profileQuery = supabase
-            .from('profiles')
-            .select('id, cpf, email')
-            .limit(20);
+          let matchingProfiles: Array<{ id: string; cpf: string | null; email: string | null }> = [];
 
-          if (composerEmail && composerCpf) {
-            profileQuery = profileQuery.or(`email.ilike.${escape(composerEmail)},cpf.eq.${composerCpf}`);
-          } else if (composerEmail) {
-            profileQuery = profileQuery.ilike('email', composerEmail);
-          } else {
-            profileQuery = profileQuery.eq('cpf', composerCpf);
+          if (composerEmail) {
+            const { data } = await supabase
+              .from('profiles')
+              .select('id, cpf, email')
+              .ilike('email', composerEmail)
+              .limit(20);
+            matchingProfiles = data || [];
           }
 
-          const { data: matchingProfiles } = await profileQuery;
+          if (matchingProfiles.length === 0 && composerCpf) {
+            const { data } = await supabase
+              .from('profiles')
+              .select('id, cpf, email')
+              .eq('cpf', composerCpf)
+              .limit(20);
+            matchingProfiles = data || [];
+          }
+
           const matchedProfile = (matchingProfiles || []).find((candidate) => {
             const candidateCpf = onlyDigits(candidate.cpf || '');
             const candidateEmail = String(candidate.email || '').trim().toLowerCase();
