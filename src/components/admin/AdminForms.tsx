@@ -8,10 +8,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Eye, Calendar, User, Mail, Phone, MapPin, Lock, UserPlus, Loader2, Music, FileText, Download, Edit2 } from 'lucide-react';
+import { Search, Eye, Calendar, User, Mail, Phone, MapPin, Lock, UserPlus, Loader2, Music, FileText, Download, Edit2, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DataMask } from '@/components/ui/data-mask';
+import { useNavigate } from 'react-router-dom';
+import { useImpersonation } from '@/context/ImpersonationContext';
 
 interface RegistrationWork {
   title: string;
@@ -47,6 +49,106 @@ export const AdminForms: React.FC = () => {
   const [selectedForm, setSelectedForm] = useState<RegistrationForm | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [registeringWorkKey, setRegisteringWorkKey] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { startImpersonation } = useImpersonation();
+
+  const handleRegisterNow = async (work: RegistrationWork, index: number) => {
+    if (!selectedForm) return;
+    const key = `${selectedForm.id}:${index}`;
+    setRegisteringWorkKey(key);
+    try {
+      // 1. Localizar usuário pelo email
+      let { data: profile } = await supabase
+        .from('profiles')
+        .select('id, name, email, artistic_name')
+        .eq('email', selectedForm.email)
+        .maybeSingle();
+
+      // 2. Se não existe, criar via edge function
+      if (!profile) {
+        if (!selectedForm.password) {
+          toast.error('Usuário ainda não tem conta e o formulário não possui senha. Crie a conta manualmente primeiro.');
+          return;
+        }
+        toast.info('Criando conta do compositor...');
+        const { data, error } = await supabase.functions.invoke('create-user-by-admin', {
+          body: {
+            name: selectedForm.full_name,
+            email: selectedForm.email,
+            password: selectedForm.password,
+            role: 'user',
+            artistic_name: selectedForm.artistic_name || undefined,
+            cpf: selectedForm.cpf,
+            birth_date: selectedForm.birth_date,
+            phone: selectedForm.phone || undefined,
+            cep: selectedForm.cep,
+            street: selectedForm.street,
+            number: selectedForm.number,
+            neighborhood: selectedForm.neighborhood,
+            city: selectedForm.city,
+            state: selectedForm.state,
+            works: selectedForm.works,
+          },
+        });
+        if (error || data?.error) {
+          toast.error(error?.message || data?.error || 'Erro ao criar conta');
+          return;
+        }
+        const refetch = await supabase
+          .from('profiles')
+          .select('id, name, email, artistic_name')
+          .eq('email', selectedForm.email)
+          .maybeSingle();
+        profile = refetch.data;
+      }
+
+      if (!profile?.id) {
+        toast.error('Não foi possível localizar o usuário criado.');
+        return;
+      }
+
+      // 3. Impersonar
+      await startImpersonation({
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        artistic_name: profile.artistic_name,
+        role: 'user',
+      });
+
+      // 4. Montar prefill e navegar
+      const prefillWork = {
+        formId: selectedForm.id,
+        workIndex: index,
+        title: work.title,
+        genre: work.genre || '',
+        lyrics: work.lyrics || '',
+        audio_url: work.audio_url || '',
+        composerName: selectedForm.full_name || '',
+        composerCpf: selectedForm.cpf || '',
+        composerEmail: selectedForm.email || '',
+      };
+      try {
+        sessionStorage.removeItem('author_registration_draft');
+        sessionStorage.removeItem('mobile_registration_step1_draft');
+        sessionStorage.removeItem('mobile_registration_step2_draft');
+      } catch {}
+      setIsDialogOpen(false);
+      // Pequeno delay para o estado de impersonação propagar antes da navegação
+      setTimeout(() => {
+        try {
+          window.dispatchEvent(new CustomEvent('author-registration:prefill', { detail: prefillWork }));
+        } catch {}
+        navigate('/dashboard/author-registration', { state: { prefillWork } });
+      }, 150);
+    } catch (err) {
+      console.error('Erro em Registrar Agora:', err);
+      toast.error('Erro ao iniciar registro. Tente novamente.');
+    } finally {
+      setRegisteringWorkKey(null);
+    }
+  };
 
   useEffect(() => {
     fetchForms();
@@ -366,7 +468,21 @@ export const AdminForms: React.FC = () => {
                               <h4 className="font-bold text-lg">{work.title}</h4>
                               <Badge>{work.genre}</Badge>
                             </div>
-                            <Dialog>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                className="gap-1"
+                                onClick={() => handleRegisterNow(work, index)}
+                                disabled={registeringWorkKey === `${selectedForm.id}:${index}`}
+                              >
+                                {registeringWorkKey === `${selectedForm.id}:${index}` ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Zap className="h-3 w-3" />
+                                )}
+                                Registrar Agora
+                              </Button>
+                              <Dialog>
                               <DialogTrigger asChild>
                                 <Button variant="outline" size="sm" className="gap-1">
                                   <Edit2 className="h-3 w-3" />
@@ -414,6 +530,7 @@ export const AdminForms: React.FC = () => {
                                 </div>
                               </DialogContent>
                             </Dialog>
+                            </div>
                           </div>
                           
                           <div className="space-y-2">
