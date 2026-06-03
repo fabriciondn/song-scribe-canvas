@@ -147,6 +147,8 @@ const AuthorRegistration: React.FC = () => {
   const fallbackLookupEmail = !isImpersonating && user?.email ? user.email : '';
   const lookupEmail = actingEmail || fallbackLookupEmail;
   const lookupCpf = actingCpf;
+  const { isAdmin } = useAdminAccess();
+  const allowAllForms = isAdmin && !isImpersonating;
 
   // Refs para estabilizar créditos e evitar remontagem do formulário
   const creditsRef = useRef<number | null>(null);
