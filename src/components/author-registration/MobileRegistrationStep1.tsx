@@ -79,6 +79,7 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
   onContinue,
   lookupCpf,
   lookupEmail,
+  allowAll,
   initialData,
 }) => {
   const navigate = useNavigate();
