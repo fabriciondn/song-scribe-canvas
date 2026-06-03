@@ -11,6 +11,8 @@ import { ptBR } from 'date-fns/locale';
 interface Props {
   variant?: 'mobile' | 'desktop';
   className?: string;
+  lookupCpf?: string;
+  lookupEmail?: string;
 }
 
 interface FormWorkItem {
@@ -37,7 +39,12 @@ const readWorkString = (work: any, keys: string[]) => {
  * através do formulário público de cadastro (tabela public_registration_forms),
  * vinculadas ao usuário atual via CPF ou e-mail do perfil.
  */
-export const LoadFromFormButton: React.FC<Props> = ({ variant = 'mobile', className }) => {
+export const LoadFromFormButton: React.FC<Props> = ({
+  variant = 'mobile',
+  className,
+  lookupCpf,
+  lookupEmail,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = useCurrentUser();
@@ -59,8 +66,9 @@ export const LoadFromFormButton: React.FC<Props> = ({ variant = 'mobile', classN
           .eq('id', currentUser.id)
           .maybeSingle();
 
-        const cpfDigits = onlyDigits(profile?.cpf);
-        const email = (profile?.email || '').trim().toLowerCase();
+        const cpfDigits = onlyDigits(lookupCpf || profile?.cpf);
+        const rawCpf = (lookupCpf || profile?.cpf || '').trim();
+        const email = (lookupEmail || profile?.email || '').trim().toLowerCase();
 
         if (!cpfDigits && !email) {
           if (mounted) setItems([]);
@@ -72,9 +80,9 @@ export const LoadFromFormButton: React.FC<Props> = ({ variant = 'mobile', classN
         const orFilters: string[] = [];
         if (email) orFilters.push(`email.ilike.${email}`);
         // CPF pode estar armazenado com máscara — buscamos por igualdade textual e por dígitos
-        if (profile?.cpf) {
-          orFilters.push(`cpf.eq.${profile.cpf}`);
-          if (cpfDigits && cpfDigits !== profile.cpf) {
+        if (rawCpf) {
+          orFilters.push(`cpf.eq.${rawCpf}`);
+          if (cpfDigits && cpfDigits !== rawCpf) {
             orFilters.push(`cpf.eq.${cpfDigits}`);
           }
         }
@@ -183,7 +191,7 @@ export const LoadFromFormButton: React.FC<Props> = ({ variant = 'mobile', classN
                 Nenhuma obra vinda do formulário foi encontrada para este compositor.
                 <br />
                 <span className="text-xs">
-                  Verifique se o CPF/e-mail do perfil é o mesmo informado no formulário público.
+                  Verifique se o CPF informado no registro ou o e-mail do compositor é o mesmo usado no formulário público.
                 </span>
               </div>
             )}
