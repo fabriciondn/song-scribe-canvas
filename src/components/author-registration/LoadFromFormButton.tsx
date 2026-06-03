@@ -167,7 +167,7 @@ export const LoadFromFormButton: React.FC<Props> = ({
               lyrics: readWorkString(w, ['lyrics', 'letra', 'content']) || undefined,
               audio_url: readWorkString(w, ['audio_url', 'audio_file_path', 'audioPath']) || undefined,
               created_at: f.created_at,
-              composerName: ((f.name || f.full_name) as string) || undefined,
+              composerName: (f.full_name as string) || undefined,
               composerCpf: (f.cpf as string) || undefined,
               composerEmail: (f.email as string) || undefined,
             });
