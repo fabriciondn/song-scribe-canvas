@@ -563,6 +563,8 @@ const AuthorRegistration: React.FC = () => {
       <MobileRegistrationStep1
         key={`mobile-step1-${prefillVersion}`}
         onContinue={handleMobileStep1Continue}
+        lookupCpf={actingCpf}
+        lookupEmail={actingEmail}
         initialData={mobileStep1Data || undefined}
       />
     );
