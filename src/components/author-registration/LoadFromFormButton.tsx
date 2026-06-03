@@ -180,7 +180,10 @@ export const LoadFromFormButton: React.FC<Props> = ({
         }
       } catch (err) {
         console.error('Erro ao carregar obras do formulário:', err);
-        if (mounted) setItems([]);
+        if (mounted) {
+          setItems([]);
+          setUsedAllMode(false);
+        }
       } finally {
         if (mounted) setLoading(false);
       }
