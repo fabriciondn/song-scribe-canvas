@@ -468,7 +468,21 @@ export const AdminForms: React.FC = () => {
                               <h4 className="font-bold text-lg">{work.title}</h4>
                               <Badge>{work.genre}</Badge>
                             </div>
-                            <Dialog>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                className="gap-1"
+                                onClick={() => handleRegisterNow(work, index)}
+                                disabled={registeringWorkKey === `${selectedForm.id}:${index}`}
+                              >
+                                {registeringWorkKey === `${selectedForm.id}:${index}` ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Zap className="h-3 w-3" />
+                                )}
+                                Registrar Agora
+                              </Button>
+                              <Dialog>
                               <DialogTrigger asChild>
                                 <Button variant="outline" size="sm" className="gap-1">
                                   <Edit2 className="h-3 w-3" />
