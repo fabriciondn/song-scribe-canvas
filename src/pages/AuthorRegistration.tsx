@@ -34,6 +34,7 @@ export interface AuthorRegistrationData {
   title: string;
   author: string;
   authorCpf: string;
+  targetUserId?: string;
   hasOtherAuthors: boolean;
   otherAuthors: Array<{ name: string; cpf: string; }>;
   genre: string;
@@ -407,6 +408,36 @@ const AuthorRegistration: React.FC = () => {
       const lyrics: string = String(prefillWork.lyrics || '').trim();
       const genre: string = String(prefillWork.genre || '').trim();
       const audioPath: string = String(prefillWork.audio_url || '').trim();
+      const composerCpf = onlyDigits(String(prefillWork.composerCpf || ''));
+      const composerEmail = String(prefillWork.composerEmail || '').trim().toLowerCase();
+
+      let targetUserId = '';
+      if (composerCpf || composerEmail) {
+        try {
+          let profileQuery = supabase
+            .from('profiles')
+            .select('id, cpf, email')
+            .limit(20);
+
+          if (composerEmail && composerCpf) {
+            profileQuery = profileQuery.or(`email.ilike.${escape(composerEmail)},cpf.eq.${composerCpf}`);
+          } else if (composerEmail) {
+            profileQuery = profileQuery.ilike('email', composerEmail);
+          } else {
+            profileQuery = profileQuery.eq('cpf', composerCpf);
+          }
+
+          const { data: matchingProfiles } = await profileQuery;
+          const matchedProfile = (matchingProfiles || []).find((candidate) => {
+            const candidateCpf = onlyDigits(candidate.cpf || '');
+            const candidateEmail = String(candidate.email || '').trim().toLowerCase();
+            return (composerCpf && candidateCpf === composerCpf) || (composerEmail && candidateEmail === composerEmail);
+          });
+          targetUserId = matchedProfile?.id || '';
+        } catch (profileLookupError) {
+          console.warn('Não foi possível identificar o compositor da obra selecionada:', profileLookupError);
+        }
+      }
 
       let audioFile: File | null = null;
       if (audioPath) {
@@ -460,6 +491,7 @@ const AuthorRegistration: React.FC = () => {
         title,
         lyrics,
         genre,
+        targetUserId: targetUserId || prev.targetUserId,
         author: actingDisplayName || prev.author,
         authorCpf: actingCpf || prev.authorCpf,
         audioFile,
@@ -576,6 +608,7 @@ const AuthorRegistration: React.FC = () => {
       title: '',
       author: '',
       authorCpf: '',
+          targetUserId: '',
       hasOtherAuthors: false,
       otherAuthors: [],
       genre: '',
