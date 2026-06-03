@@ -143,6 +143,9 @@ const AuthorRegistration: React.FC = () => {
     || (typeof actingUserMetadata?.full_name === 'string' ? actingUserMetadata.full_name : '')
     || actingEmail;
   const actingCpf = actingProfile?.cpf || '';
+  const fallbackLookupEmail = !isImpersonating && user?.email ? user.email : '';
+  const lookupEmail = actingEmail || fallbackLookupEmail;
+  const lookupCpf = actingCpf;
 
   // Refs para estabilizar créditos e evitar remontagem do formulário
   const creditsRef = useRef<number | null>(null);
@@ -563,8 +566,8 @@ const AuthorRegistration: React.FC = () => {
       <MobileRegistrationStep1
         key={`mobile-step1-${prefillVersion}`}
         onContinue={handleMobileStep1Continue}
-        lookupCpf={actingCpf}
-        lookupEmail={actingEmail}
+        lookupCpf={lookupCpf}
+        lookupEmail={lookupEmail}
         initialData={mobileStep1Data || undefined}
       />
     );
@@ -615,8 +618,8 @@ const AuthorRegistration: React.FC = () => {
              {!isMobile && isProfileComplete && step === 'form' && (
               <LoadFromFormButton
                 variant="desktop"
-                lookupCpf={actingCpf}
-                lookupEmail={actingEmail}
+                lookupCpf={lookupCpf}
+                lookupEmail={lookupEmail}
               />
             )}
           </div>
