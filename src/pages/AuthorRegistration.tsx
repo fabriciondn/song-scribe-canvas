@@ -417,78 +417,7 @@ const AuthorRegistration: React.FC = () => {
       const composerCpf = onlyDigits(String(prefillWork.composerCpf || ''));
       const composerEmail = String(prefillWork.composerEmail || '').trim().toLowerCase();
 
-      let targetUserId = '';
-      if (composerCpf || composerEmail) {
-        try {
-          let matchingProfiles: Array<{ id: string; cpf: string | null; email: string | null }> = [];
-
-          if (composerEmail) {
-            const { data } = await supabase
-              .from('profiles')
-              .select('id, cpf, email')
-              .ilike('email', composerEmail)
-              .limit(20);
-            matchingProfiles = data || [];
-          }
-
-          if (matchingProfiles.length === 0 && composerCpf) {
-            const { data } = await supabase
-              .from('profiles')
-              .select('id, cpf, email')
-              .eq('cpf', composerCpf)
-              .limit(20);
-            matchingProfiles = data || [];
-          }
-
-          const matchedProfile = (matchingProfiles || []).find((candidate) => {
-            const candidateCpf = onlyDigits(candidate.cpf || '');
-            const candidateEmail = String(candidate.email || '').trim().toLowerCase();
-            return (composerCpf && candidateCpf === composerCpf) || (composerEmail && candidateEmail === composerEmail);
-          });
-          targetUserId = matchedProfile?.id || '';
-        } catch (profileLookupError) {
-          console.warn('Não foi possível identificar o compositor da obra selecionada:', profileLookupError);
-        }
-      }
-
-      let audioFile: File | null = null;
-      if (audioPath) {
-        try {
-          const candidates: string[] = [];
-          if (/^https?:\/\//i.test(audioPath)) {
-            candidates.push(audioPath);
-          } else {
-            const normalizedPath = audioPath.replace(/^\/+/, '');
-            const trimmedPath = normalizedPath.replace(/^public-registrations\//, '');
-            const bucketPathPairs: Array<{ bucket: string; path: string }> = [
-              { bucket: 'author-registrations', path: normalizedPath },
-              { bucket: 'author-registrations', path: trimmedPath },
-              { bucket: 'public-assets', path: normalizedPath },
-              { bucket: 'public-assets', path: trimmedPath },
-            ];
-            for (const { bucket, path } of bucketPathPairs) {
-              if (!path) continue;
-              const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
-              if (pub?.publicUrl) candidates.push(pub.publicUrl);
-            }
-          }
-          for (const url of Array.from(new Set(candidates))) {
-            try {
-              const res = await fetch(url);
-              if (res.ok) {
-                const blob = await res.blob();
-                const type = blob.type || 'audio/mpeg';
-                const name = audioPath.split('/').pop() || 'formulario-audio.mp3';
-                audioFile = new File([blob], name, { type });
-                break;
-              }
-            } catch {}
-          }
-        } catch (err) {
-          console.warn('Não foi possível carregar áudio do formulário:', err);
-        }
-      }
-
+      // 1) Limpa storage e aplica imediatamente título, letra, gênero e autor
       try {
         sessionStorage.removeItem('author_registration_draft');
         sessionStorage.removeItem('mobile_registration_step1_draft');
@@ -504,11 +433,11 @@ const AuthorRegistration: React.FC = () => {
         title,
         lyrics,
         genre,
-        targetUserId: targetUserId || prev.targetUserId,
         lockedByPrefill: true,
         author: titularName || prev.author,
         authorCpf: titularCpf || prev.authorCpf,
-        audioFile,
+        audioFile: null,
+        registrationType: audioPath ? 'complete' : (lyrics ? 'lyrics_only' : 'complete'),
       }));
 
       setMobileStep1Data({
@@ -527,18 +456,18 @@ const AuthorRegistration: React.FC = () => {
       });
 
       setMobileStep2Data({
-        registrationType: audioFile ? 'complete' : 'lyrics_only',
+        registrationType: audioPath ? 'complete' : 'lyrics_only',
         genre,
         version: '',
         lyrics,
-        audioFile,
+        audioFile: null,
         additionalInfo: '',
       });
 
       setPrefilledFromDraft({
         title: title.length > 0,
         lyrics: lyrics.length > 0,
-        audio: !!audioFile,
+        audio: false,
       });
       setDraftPrefillApplied(false);
       setFormPrefillApplied(true);
@@ -550,12 +479,101 @@ const AuthorRegistration: React.FC = () => {
       const loadedParts: string[] = [];
       if (title) loadedParts.push('título');
       if (lyrics) loadedParts.push('letra');
-      if (audioFile) loadedParts.push('áudio');
+      if (audioPath) loadedParts.push('áudio (carregando...)');
       if (loadedParts.length > 0) {
         toast.success(`Carregado do formulário: ${loadedParts.join(', ')}.`);
       } else {
         toast.warning('Obra do formulário sem dados preenchíveis.');
       }
+
+      // 2) Em background: lookup do compositor (targetUserId) e download do áudio
+      (async () => {
+        if (composerCpf || composerEmail) {
+          try {
+            let matchingProfiles: Array<{ id: string; cpf: string | null; email: string | null }> = [];
+            if (composerEmail) {
+              const { data } = await supabase
+                .from('profiles')
+                .select('id, cpf, email')
+                .ilike('email', composerEmail)
+                .limit(20);
+              matchingProfiles = data || [];
+            }
+            if (matchingProfiles.length === 0 && composerCpf) {
+              const { data } = await supabase
+                .from('profiles')
+                .select('id, cpf, email')
+                .eq('cpf', composerCpf)
+                .limit(20);
+              matchingProfiles = data || [];
+            }
+            const matchedProfile = (matchingProfiles || []).find((candidate) => {
+              const candidateCpf = onlyDigits(candidate.cpf || '');
+              const candidateEmail = String(candidate.email || '').trim().toLowerCase();
+              return (composerCpf && candidateCpf === composerCpf) || (composerEmail && candidateEmail === composerEmail);
+            });
+            const targetUserId = matchedProfile?.id || '';
+            if (targetUserId) {
+              setFormData((prev) => ({ ...prev, targetUserId }));
+            }
+          } catch (profileLookupError) {
+            console.warn('Não foi possível identificar o compositor da obra selecionada:', profileLookupError);
+          }
+        }
+
+        if (!audioPath) return;
+        try {
+          const candidates: string[] = [];
+          if (/^https?:\/\//i.test(audioPath)) {
+            candidates.push(audioPath);
+          } else {
+            const normalizedPath = audioPath.replace(/^\/+/, '');
+            const trimmedPath = normalizedPath.replace(/^public-registrations\//, '');
+            const bucketPathPairs: Array<{ bucket: string; path: string }> = [
+              { bucket: 'author-registrations', path: normalizedPath },
+              { bucket: 'author-registrations', path: trimmedPath },
+              { bucket: 'public-assets', path: normalizedPath },
+              { bucket: 'public-assets', path: trimmedPath },
+            ];
+            for (const { bucket, path } of bucketPathPairs) {
+              if (!path) continue;
+              const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+              if (pub?.publicUrl) candidates.push(pub.publicUrl);
+              try {
+                const { data: signed } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60);
+                if (signed?.signedUrl) candidates.push(signed.signedUrl);
+              } catch {}
+            }
+          }
+
+          let audioFile: File | null = null;
+          for (const url of Array.from(new Set(candidates))) {
+            try {
+              const res = await fetch(url);
+              if (res.ok) {
+                const blob = await res.blob();
+                const type = blob.type || 'audio/mpeg';
+                const name = audioPath.split('/').pop() || 'formulario-audio.mp3';
+                audioFile = new File([blob], name, { type });
+                break;
+              }
+            } catch {}
+          }
+
+          if (audioFile) {
+            setFormData((prev) => ({ ...prev, audioFile, registrationType: 'complete' }));
+            setMobileStep2Data((prev) => prev ? { ...prev, audioFile, registrationType: 'complete' } : prev);
+            setPrefilledFromDraft((prev) => ({ ...prev, audio: true }));
+            setPrefillVersion((v) => v + 1);
+            toast.success('Áudio do formulário carregado.');
+          } else {
+            console.warn('Áudio do formulário não pôde ser baixado:', audioPath);
+            toast.warning('Não foi possível baixar o áudio do formulário automaticamente.');
+          }
+        } catch (err) {
+          console.warn('Erro ao baixar áudio do formulário:', err);
+        }
+      })();
     } catch (err) {
       console.error('Erro ao pré-preencher do formulário:', err);
     }
