@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -99,6 +99,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   const [isCurrentUser, setIsCurrentUser] = useState<boolean>(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const { profile } = useProfile();
+  const lastHydratedInitialDataRef = useRef<string>('');
 
   // Notificar parent sobre mudança de step para persistência
   useEffect(() => {
@@ -136,6 +137,31 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   });
 
   useEffect(() => {
+    const hydrationKey = JSON.stringify({
+      title: initialData.title,
+      author: initialData.author,
+      authorCpf: initialData.authorCpf,
+      hasOtherAuthors: initialData.hasOtherAuthors,
+      otherAuthors: initialData.otherAuthors,
+      genre: initialData.genre,
+      styleVariation: initialData.styleVariation,
+      songVersion: initialData.songVersion,
+      lyrics: initialData.lyrics,
+      additionalInfo: initialData.additionalInfo,
+      registrationType: initialData.registrationType,
+      termsAccepted: initialData.termsAccepted,
+      targetUserId: initialData.targetUserId,
+      audioName: initialData.audioFile?.name || '',
+      audioSize: initialData.audioFile?.size || 0,
+      audioLastModified: initialData.audioFile?.lastModified || 0,
+    });
+
+    if (lastHydratedInitialDataRef.current === hydrationKey) {
+      return;
+    }
+
+    lastHydratedInitialDataRef.current = hydrationKey;
+
     const nextStep1Data: Step1Data = {
       title: initialData.title,
       author: initialData.author,
@@ -157,7 +183,24 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
       additionalInfo: initialData.additionalInfo || '',
       termsAccepted: initialData.termsAccepted || false,
     });
-  }, [initialData, step1Form, step2Form]);
+  }, [
+    initialData.title,
+    initialData.author,
+    initialData.authorCpf,
+    initialData.hasOtherAuthors,
+    initialData.otherAuthors,
+    initialData.genre,
+    initialData.styleVariation,
+    initialData.songVersion,
+    initialData.lyrics,
+    initialData.additionalInfo,
+    initialData.registrationType,
+    initialData.termsAccepted,
+    initialData.targetUserId,
+    initialData.audioFile,
+    step1Form,
+    step2Form,
+  ]);
 
   // Notificar o parent sobre mudanças em tempo real para persistência
   const step1Values = step1Form.watch();
