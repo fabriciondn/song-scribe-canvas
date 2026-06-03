@@ -5,7 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { FileText, Download, Loader2, ShieldCheck, Music2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { FileText, Download, Loader2, ShieldCheck, Music2, Lock } from 'lucide-react';
 import { generateCertificatePDF, type RegisteredWork } from '@/services/certificateService';
 import { toast } from '@/hooks/use-toast';
 
@@ -24,10 +26,19 @@ const PublicComposerProfile: React.FC = () => {
   const { slug = '' } = useParams<{ slug: string }>();
   const normalized = slug.toLowerCase();
   const isValid = SLUG_RE.test(normalized);
+  const expectedDigits = isValid ? normalized.slice(-4) : '';
+
+  const storageKey = `composer-access:${normalized}`;
+  const [unlocked, setUnlocked] = React.useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return sessionStorage.getItem(storageKey) === '1';
+  });
+  const [cpfInput, setCpfInput] = React.useState('');
+  const [cpfError, setCpfError] = React.useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['public-composer', normalized],
-    enabled: isValid,
+    enabled: isValid && unlocked,
     queryFn: async (): Promise<PublicProfileData | null> => {
       const { data, error } = await supabase.rpc('get_public_composer_profile', {
         p_slug: normalized,
@@ -55,8 +66,85 @@ const PublicComposerProfile: React.FC = () => {
     }
   };
 
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    const digits = cpfInput.replace(/\D/g, '');
+    if (digits.length !== 4) {
+      setCpfError('Informe os 4 últimos dígitos do CPF.');
+      return;
+    }
+    if (digits !== expectedDigits) {
+      setCpfError('CPF não confere. Tente novamente.');
+      return;
+    }
+    setCpfError(null);
+    setUnlocked(true);
+    try {
+      sessionStorage.setItem(storageKey, '1');
+    } catch {
+      /* ignore */
+    }
+  };
+
   if (!isValid) {
     return <NotFoundState />;
+  }
+
+  if (!unlocked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+        <header className="border-b bg-background/80">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <Link to="/" className="font-bold text-lg text-foreground">
+              Compuse
+            </Link>
+            <span className="text-xs text-muted-foreground hidden sm:inline">
+              Perfil público do compositor
+            </span>
+          </div>
+        </header>
+        <main className="container mx-auto px-4 py-12 max-w-md">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center mb-6">
+                <div className="mx-auto h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                  <Lock className="h-7 w-7 text-primary" />
+                </div>
+                <h1 className="text-xl font-bold text-foreground">Acesso protegido</h1>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Para visualizar os certificados deste compositor, informe os{' '}
+                  <strong>4 últimos dígitos do CPF</strong>.
+                </p>
+              </div>
+              <form onSubmit={handleUnlock} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cpf-last4">Últimos 4 dígitos do CPF</Label>
+                  <Input
+                    id="cpf-last4"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    maxLength={4}
+                    placeholder="0000"
+                    value={cpfInput}
+                    onChange={(e) => {
+                      setCpfInput(e.target.value.replace(/\D/g, '').slice(0, 4));
+                      if (cpfError) setCpfError(null);
+                    }}
+                    className="text-center text-2xl tracking-[0.5em] font-mono"
+                  />
+                  {cpfError && (
+                    <p className="text-xs text-destructive">{cpfError}</p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full" disabled={cpfInput.length !== 4}>
+                  Acessar certificados
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
   }
 
   if (isLoading) {
