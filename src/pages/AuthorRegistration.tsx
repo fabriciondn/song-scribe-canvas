@@ -133,6 +133,7 @@ const AuthorRegistration: React.FC = () => {
   const { profile } = useProfile();
   const { isImpersonating, impersonatedUser } = useImpersonation();
   const [lookupProfile, setLookupProfile] = useState<ActingLookupProfile | null>(null);
+  const prefillSyncLockRef = useRef(false);
 
   const actingUser = useMemo(() => {
     if (isImpersonating && impersonatedUser) return impersonatedUser;
@@ -408,6 +409,7 @@ const AuthorRegistration: React.FC = () => {
   const applyPrefillWork = React.useCallback(async (prefillWork: any) => {
     if (!prefillWork) return;
     try {
+      prefillSyncLockRef.current = true;
       const title: string = String(prefillWork.title || '').trim();
       const lyrics: string = String(prefillWork.lyrics || '').trim();
       const genre: string = String(prefillWork.genre || '').trim();
@@ -472,9 +474,13 @@ const AuthorRegistration: React.FC = () => {
       setDraftPrefillApplied(false);
       setFormPrefillApplied(true);
       setPrefillVersion((v) => v + 1);
-      setMobileStep(2);
-      setDesktopStep(2);
+      setMobileStep(1);
+      setDesktopStep(1);
       setStep('form');
+
+      window.setTimeout(() => {
+        prefillSyncLockRef.current = false;
+      }, 0);
 
       const loadedParts: string[] = [];
       if (title) loadedParts.push('título');
@@ -628,6 +634,7 @@ const AuthorRegistration: React.FC = () => {
   };
 
   const handleFormChange = (partialData: Partial<AuthorRegistrationData>) => {
+    if (prefillSyncLockRef.current) return;
     setFormData(prev => ({ ...prev, ...partialData }));
   };
 
