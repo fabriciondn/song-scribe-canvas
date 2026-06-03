@@ -414,21 +414,27 @@ const AuthorRegistration: React.FC = () => {
         let audioFile: File | null = null;
         if (audioPath) {
           try {
-            // audio_url pode ser caminho dentro de um bucket público
-            // Tentamos vários buckets conhecidos
             const candidates: string[] = [];
             if (/^https?:\/\//i.test(audioPath)) {
               candidates.push(audioPath);
             } else {
-              // tira "public-registrations/" prefix se houver, e tenta esse bucket
-              const path = audioPath.replace(/^public-registrations\//, '');
-              for (const bucket of ['public-registrations', 'author-registrations', 'public-assets']) {
+              const normalizedPath = audioPath.replace(/^\/+/, '');
+              const trimmedPath = normalizedPath.replace(/^public-registrations\//, '');
+              const bucketPathPairs: Array<{ bucket: string; path: string }> = [
+                { bucket: 'author-registrations', path: normalizedPath },
+                { bucket: 'author-registrations', path: trimmedPath },
+                { bucket: 'public-assets', path: normalizedPath },
+                { bucket: 'public-assets', path: trimmedPath },
+              ];
+
+              for (const { bucket, path } of bucketPathPairs) {
+                if (!path) continue;
                 const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
                 if (pub?.publicUrl) candidates.push(pub.publicUrl);
               }
             }
 
-            for (const url of candidates) {
+            for (const url of Array.from(new Set(candidates))) {
               try {
                 const res = await fetch(url);
                 if (res.ok) {
