@@ -117,7 +117,7 @@ export const LoadFromFormButton: React.FC<Props> = ({
         const runQuery = async (useFilters: boolean) => {
           let query = supabase
             .from('public_registration_forms')
-            .select('id, created_at, cpf, email, name, works')
+            .select('id, created_at, cpf, email, full_name, works')
             .order('created_at', { ascending: false })
             .limit(useFilters ? 200 : 100);
           if (useFilters && orFilters.length > 0) {
@@ -131,7 +131,6 @@ export const LoadFromFormButton: React.FC<Props> = ({
           created_at: string;
           cpf: string | null;
           email: string | null;
-          name?: string | null;
           full_name?: string | null;
           works: Json | null;
         }> = [];
