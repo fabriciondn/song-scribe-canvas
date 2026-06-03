@@ -31,6 +31,7 @@ interface FormWorkItem {
   lyrics?: string;
   audio_url?: string;
   created_at: string;
+  composerUserId?: string;
   composerName?: string;
   composerCpf?: string;
   composerEmail?: string;
@@ -117,7 +118,7 @@ export const LoadFromFormButton: React.FC<Props> = ({
         const runQuery = async (useFilters: boolean) => {
           let query = supabase
             .from('public_registration_forms')
-            .select('id, created_at, cpf, email, full_name, works')
+            .select('id, user_id, created_at, cpf, email, full_name, works')
             .order('created_at', { ascending: false })
             .limit(useFilters ? 200 : 100);
           if (useFilters && orFilters.length > 0) {
@@ -128,6 +129,7 @@ export const LoadFromFormButton: React.FC<Props> = ({
 
         let forms: Array<{
           id: string;
+          user_id?: string | null;
           created_at: string;
           cpf: string | null;
           email: string | null;
@@ -167,6 +169,7 @@ export const LoadFromFormButton: React.FC<Props> = ({
               lyrics: readWorkString(w, ['lyrics', 'letra', 'content']) || undefined,
               audio_url: readWorkString(w, ['audio_url', 'audio_file_path', 'audioPath']) || undefined,
               created_at: f.created_at,
+              composerUserId: (f.user_id as string) || undefined,
               composerName: (f.full_name as string) || undefined,
               composerCpf: (f.cpf as string) || undefined,
               composerEmail: (f.email as string) || undefined,
@@ -222,6 +225,10 @@ export const LoadFromFormButton: React.FC<Props> = ({
       genre: item.genre || '',
       lyrics: item.lyrics || '',
       audio_url: item.audio_url || '',
+      composerUserId: item.composerUserId || '',
+      composerName: item.composerName || '',
+      composerCpf: item.composerCpf || '',
+      composerEmail: item.composerEmail || '',
     };
     // Dispara evento imediato para AuthorRegistration aplicar o prefill sem recarregar
     try {
