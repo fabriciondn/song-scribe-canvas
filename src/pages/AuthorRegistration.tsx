@@ -119,7 +119,7 @@ const AuthorRegistration: React.FC = () => {
   const { isMobile } = useMobileDetection();
   const { isComplete: isProfileComplete } = useProfileValidation();
   const { profile } = useProfile();
-  const { isImpersonating, impersonatedUser, originalUser } = useImpersonation();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
 
   const actingUser = useMemo(() => {
     if (isImpersonating && impersonatedUser) return impersonatedUser;
@@ -132,7 +132,16 @@ const AuthorRegistration: React.FC = () => {
     return profile.id === actingUser.id ? profile : null;
   }, [profile, actingUser?.id]);
 
-  const actingDisplayName = actingProfile?.name || actingUser?.user_metadata?.name || actingUser?.user_metadata?.full_name || actingUser?.email || '';
+  const actingUserMetadata = useMemo(() => {
+    const maybeUser = actingUser as { user_metadata?: Record<string, unknown> } | null;
+    return maybeUser?.user_metadata;
+  }, [actingUser]);
+
+  const actingEmail = actingProfile?.email || (typeof actingUser?.email === 'string' ? actingUser.email : '');
+  const actingDisplayName = actingProfile?.name
+    || (typeof actingUserMetadata?.name === 'string' ? actingUserMetadata.name : '')
+    || (typeof actingUserMetadata?.full_name === 'string' ? actingUserMetadata.full_name : '')
+    || actingEmail;
   const actingCpf = actingProfile?.cpf || '';
 
   // Refs para estabilizar créditos e evitar remontagem do formulário
