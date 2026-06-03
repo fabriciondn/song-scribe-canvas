@@ -191,7 +191,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
     }
 
     // Usar o hook useCurrentUser que já resolve corretamente a impersonação
-    const targetUserId = currentUser?.id;
+    const targetUserId = data.targetUserId || currentUser?.id;
     
     console.log('👤 Target User ID:', targetUserId);
     
