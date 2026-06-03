@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { FileText, Mic, Loader2, ClipboardList, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import type { Json } from '@/integrations/supabase/types';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -35,6 +36,19 @@ interface FormWorkItem {
   composerEmail?: string;
 }
 
+type PublicRegistrationWork = {
+  title?: string;
+  name?: string;
+  genre?: string;
+  genero?: string;
+  lyrics?: string;
+  letra?: string;
+  content?: string;
+  audio_url?: string;
+  audio_file_path?: string;
+  audioPath?: string;
+};
+
 const escapeOrValue = (value: string) => value.replace(/,/g, '\\,');
 
 const onlyDigits = (s?: string | null) => (s || '').replace(/\D+/g, '');
@@ -44,6 +58,10 @@ const readWorkString = (work: any, keys: string[]) => {
     if (typeof value === 'string' && value.trim()) return value.trim();
   }
   return '';
+};
+const toWorkList = (value: Json | null): PublicRegistrationWork[] => {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is PublicRegistrationWork => !!item && typeof item === 'object' && !Array.isArray(item));
 };
 
 export const LoadFromFormButton: React.FC<Props> = ({
@@ -70,15 +88,22 @@ export const LoadFromFormButton: React.FC<Props> = ({
 
     (async () => {
       try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('cpf, email')
-          .eq('id', currentUser.id)
-          .maybeSingle();
+        const explicitCpf = (lookupCpf || '').trim();
+        const explicitEmail = (lookupEmail || '').trim().toLowerCase();
 
-        const cpfDigits = onlyDigits(lookupCpf || profile?.cpf);
-        const rawCpf = (lookupCpf || profile?.cpf || '').trim();
-        const email = (lookupEmail || profile?.email || '').trim().toLowerCase();
+        let profile: { cpf?: string | null; email?: string | null } | null = null;
+        if (!explicitCpf && !explicitEmail && currentUser?.id) {
+          const { data } = await supabase
+            .from('profiles')
+            .select('cpf, email')
+            .eq('id', currentUser.id)
+            .maybeSingle();
+          profile = data;
+        }
+
+        const cpfDigits = onlyDigits(explicitCpf || profile?.cpf);
+        const rawCpf = (explicitCpf || profile?.cpf || '').trim();
+        const email = (explicitEmail || profile?.email || '').trim().toLowerCase();
 
         const orFilters: string[] = [];
         if (email) orFilters.push(`email.ilike.${escapeOrValue(email)}`);
@@ -101,7 +126,15 @@ export const LoadFromFormButton: React.FC<Props> = ({
           return await query;
         };
 
-        let forms: any[] = [];
+        let forms: Array<{
+          id: string;
+          created_at: string;
+          cpf: string | null;
+          email: string | null;
+          name?: string | null;
+          full_name?: string | null;
+          works: Json | null;
+        }> = [];
         let usedAll = false;
 
         if (orFilters.length > 0) {
@@ -125,7 +158,7 @@ export const LoadFromFormButton: React.FC<Props> = ({
 
         const list: FormWorkItem[] = [];
         for (const f of forms) {
-          const works = Array.isArray(f.works) ? (f.works as any[]) : [];
+          const works = toWorkList(f.works);
           works.forEach((w, idx) => {
             list.push({
               formId: f.id,
@@ -135,7 +168,7 @@ export const LoadFromFormButton: React.FC<Props> = ({
               lyrics: readWorkString(w, ['lyrics', 'letra', 'content']) || undefined,
               audio_url: readWorkString(w, ['audio_url', 'audio_file_path', 'audioPath']) || undefined,
               created_at: f.created_at,
-              composerName: (f.name as string) || undefined,
+              composerName: ((f.name || f.full_name) as string) || undefined,
               composerCpf: (f.cpf as string) || undefined,
               composerEmail: (f.email as string) || undefined,
             });
