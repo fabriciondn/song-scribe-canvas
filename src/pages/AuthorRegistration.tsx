@@ -626,6 +626,7 @@ const AuthorRegistration: React.FC = () => {
                 variant="desktop"
                 lookupCpf={lookupCpf}
                 lookupEmail={lookupEmail}
+                allowAll={allowAllForms}
               />
             )}
           </div>
