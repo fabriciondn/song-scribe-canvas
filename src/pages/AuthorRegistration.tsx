@@ -35,6 +35,7 @@ export interface AuthorRegistrationData {
   author: string;
   authorCpf: string;
   targetUserId?: string;
+  lockedByPrefill?: boolean;
   hasOtherAuthors: boolean;
   otherAuthors: Array<{ name: string; cpf: string; }>;
   genre: string;
@@ -251,6 +252,7 @@ const AuthorRegistration: React.FC = () => {
     title: '',
     author: '',
     authorCpf: '',
+    lockedByPrefill: false,
     hasOtherAuthors: false,
     otherAuthors: [],
     genre: '',
@@ -503,6 +505,7 @@ const AuthorRegistration: React.FC = () => {
         lyrics,
         genre,
         targetUserId: targetUserId || prev.targetUserId,
+        lockedByPrefill: true,
         author: titularName || prev.author,
         authorCpf: titularCpf || prev.authorCpf,
         audioFile,
@@ -540,8 +543,8 @@ const AuthorRegistration: React.FC = () => {
       setDraftPrefillApplied(false);
       setFormPrefillApplied(true);
       setPrefillVersion((v) => v + 1);
-      setMobileStep(1);
-      setDesktopStep(1);
+      setMobileStep(2);
+      setDesktopStep(2);
       setStep('form');
 
       const loadedParts: string[] = [];
@@ -619,7 +622,8 @@ const AuthorRegistration: React.FC = () => {
       title: '',
       author: '',
       authorCpf: '',
-          targetUserId: '',
+      targetUserId: '',
+      lockedByPrefill: false,
       hasOtherAuthors: false,
       otherAuthors: [],
       genre: '',
@@ -647,8 +651,8 @@ const AuthorRegistration: React.FC = () => {
     setMobileStep1Data(data);
 
     const titularFromStep = data.authors.find((a) => a.isTitular);
-    const authorName = actingDisplayName || titularFromStep?.name || '';
-    const authorCpf = actingCpf || titularFromStep?.cpf || '';
+    const authorName = titularFromStep?.name || actingDisplayName || '';
+    const authorCpf = titularFromStep?.cpf || actingCpf || '';
 
     // Atualizar formData com os dados do step 1
     const otherAuthors = data.authors
@@ -660,6 +664,7 @@ const AuthorRegistration: React.FC = () => {
       title: data.title,
       author: authorName,
       authorCpf,
+      lockedByPrefill: prev.lockedByPrefill,
       hasOtherAuthors: otherAuthors.length > 0,
       otherAuthors,
     }));
