@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useImpersonation } from '@/context/ImpersonationContext';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -146,6 +147,8 @@ const AuthorRegistration: React.FC = () => {
   const fallbackLookupEmail = !isImpersonating && user?.email ? user.email : '';
   const lookupEmail = actingEmail || fallbackLookupEmail;
   const lookupCpf = actingCpf;
+  const { isAdmin } = useAdminAccess();
+  const allowAllForms = isAdmin && !isImpersonating;
 
   // Refs para estabilizar créditos e evitar remontagem do formulário
   const creditsRef = useRef<number | null>(null);
@@ -570,6 +573,7 @@ const AuthorRegistration: React.FC = () => {
         onContinue={handleMobileStep1Continue}
         lookupCpf={lookupCpf}
         lookupEmail={lookupEmail}
+        allowAll={allowAllForms}
         initialData={mobileStep1Data || undefined}
       />
     );
@@ -622,6 +626,7 @@ const AuthorRegistration: React.FC = () => {
                 variant="desktop"
                 lookupCpf={lookupCpf}
                 lookupEmail={lookupEmail}
+                allowAll={allowAllForms}
               />
             )}
           </div>

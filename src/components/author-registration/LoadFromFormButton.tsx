@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { FileText, Mic, Loader2, ClipboardList } from 'lucide-react';
+import { FileText, Mic, Loader2, ClipboardList, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { formatDistanceToNow } from 'date-fns';
@@ -13,6 +14,12 @@ interface Props {
   className?: string;
   lookupCpf?: string;
   lookupEmail?: string;
+  /**
+   * Quando true, busca os formulários mais recentes sem filtrar por CPF/e-mail
+   * (útil para admins que querem carregar a obra de qualquer compositor).
+   * Um campo de busca aparece para refinar por nome/CPF/e-mail/título.
+   */
+  allowAll?: boolean;
 }
 
 interface FormWorkItem {
@@ -23,6 +30,9 @@ interface FormWorkItem {
   lyrics?: string;
   audio_url?: string;
   created_at: string;
+  composerName?: string;
+  composerCpf?: string;
+  composerEmail?: string;
 }
 
 const escapeOrValue = (value: string) => value.replace(/,/g, '\\,');
@@ -36,16 +46,12 @@ const readWorkString = (work: any, keys: string[]) => {
   return '';
 };
 
-/**
- * Botão "Carregar do formulário" — lista obras enviadas pelo compositor
- * através do formulário público de cadastro (tabela public_registration_forms),
- * vinculadas ao usuário atual via CPF ou e-mail do perfil.
- */
 export const LoadFromFormButton: React.FC<Props> = ({
   variant = 'mobile',
   className,
   lookupCpf,
   lookupEmail,
+  allowAll = false,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,15 +59,17 @@ export const LoadFromFormButton: React.FC<Props> = ({
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<FormWorkItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [usedAllMode, setUsedAllMode] = useState(false);
 
   useEffect(() => {
     if (!open || !currentUser?.id) return;
     let mounted = true;
     setLoading(true);
+    setSearchQuery('');
 
     (async () => {
       try {
-        // 1) Buscar perfil do usuário atual (cpf/email) para casar com o formulário público
         const { data: profile } = await supabase
           .from('profiles')
           .select('cpf, email')
@@ -72,16 +80,8 @@ export const LoadFromFormButton: React.FC<Props> = ({
         const rawCpf = (lookupCpf || profile?.cpf || '').trim();
         const email = (lookupEmail || profile?.email || '').trim().toLowerCase();
 
-        if (!cpfDigits && !email) {
-          if (mounted) setItems([]);
-          return;
-        }
-
-        // 2) Buscar formulários do compositor (admins têm RLS de SELECT)
-        // Traz por email ou por CPF (normalização feita no client)
         const orFilters: string[] = [];
         if (email) orFilters.push(`email.ilike.${escapeOrValue(email)}`);
-        // CPF pode estar armazenado com máscara — buscamos por igualdade textual e por dígitos
         if (rawCpf) {
           orFilters.push(`cpf.eq.${escapeOrValue(rawCpf)}`);
           if (cpfDigits && cpfDigits !== rawCpf) {
@@ -89,29 +89,43 @@ export const LoadFromFormButton: React.FC<Props> = ({
           }
         }
 
-        const { data: forms, error } = await supabase
-          .from('public_registration_forms')
-          .select('id, created_at, cpf, email, works')
-          .or(orFilters.join(','))
-          .order('created_at', { ascending: false });
+        const runQuery = async (useFilters: boolean) => {
+          let query = supabase
+            .from('public_registration_forms')
+            .select('id, created_at, cpf, email, name, works')
+            .order('created_at', { ascending: false })
+            .limit(useFilters ? 200 : 100);
+          if (useFilters && orFilters.length > 0) {
+            query = query.or(orFilters.join(','));
+          }
+          return await query;
+        };
 
-        if (error) {
-          console.warn('Falha ao buscar formulários públicos:', error);
-          if (mounted) setItems([]);
-          return;
+        let forms: any[] = [];
+        let usedAll = false;
+
+        if (orFilters.length > 0) {
+          const { data, error } = await runQuery(true);
+          if (error) console.warn('Falha ao buscar formulários públicos:', error);
+          const filtered = (data || []).filter((f: any) => {
+            const fEmail = (f.email || '').trim().toLowerCase();
+            const fCpf = onlyDigits(f.cpf);
+            return (email && fEmail === email) || (cpfDigits && fCpf === cpfDigits);
+          });
+          forms = filtered;
         }
 
-        // 3) Filtragem extra no client (CPF com/sem máscara, email case-insensitive)
-        const filtered = (forms || []).filter((f: any) => {
-          const fEmail = (f.email || '').trim().toLowerCase();
-          const fCpf = onlyDigits(f.cpf);
-          return (email && fEmail === email) || (cpfDigits && fCpf === cpfDigits);
-        });
+        // Fallback admin: se não achou nada e allowAll, busca os últimos formulários
+        if (forms.length === 0 && allowAll) {
+          const { data, error } = await runQuery(false);
+          if (error) console.warn('Falha ao buscar formulários (admin):', error);
+          forms = data || [];
+          usedAll = true;
+        }
 
-        // 4) Achatar lista de obras
         const list: FormWorkItem[] = [];
-        for (const f of filtered) {
-          const works = Array.isArray((f as any).works) ? ((f as any).works as any[]) : [];
+        for (const f of forms) {
+          const works = Array.isArray(f.works) ? (f.works as any[]) : [];
           works.forEach((w, idx) => {
             list.push({
               formId: f.id,
@@ -121,11 +135,17 @@ export const LoadFromFormButton: React.FC<Props> = ({
               lyrics: readWorkString(w, ['lyrics', 'letra', 'content']) || undefined,
               audio_url: readWorkString(w, ['audio_url', 'audio_file_path', 'audioPath']) || undefined,
               created_at: f.created_at,
+              composerName: (f.name as string) || undefined,
+              composerCpf: (f.cpf as string) || undefined,
+              composerEmail: (f.email as string) || undefined,
             });
           });
         }
 
-        if (mounted) setItems(list);
+        if (mounted) {
+          setItems(list);
+          setUsedAllMode(usedAll);
+        }
       } catch (err) {
         console.error('Erro ao carregar obras do formulário:', err);
         if (mounted) setItems([]);
@@ -137,7 +157,21 @@ export const LoadFromFormButton: React.FC<Props> = ({
     return () => {
       mounted = false;
     };
-  }, [open, currentUser?.id]);
+  }, [open, currentUser?.id, lookupCpf, lookupEmail, allowAll]);
+
+  const visibleItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return items;
+    const qDigits = onlyDigits(q);
+    return items.filter((it) => {
+      const hay = [it.title, it.composerName, it.composerEmail, it.genre]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      const cpfDigits = onlyDigits(it.composerCpf);
+      return hay.includes(q) || (qDigits && cpfDigits.includes(qDigits));
+    });
+  }, [items, searchQuery]);
 
   const handleSelect = (item: FormWorkItem) => {
     setOpen(false);
@@ -181,25 +215,43 @@ export const LoadFromFormButton: React.FC<Props> = ({
             <SheetTitle>Escolha uma obra do formulário</SheetTitle>
           </SheetHeader>
 
-          <div className="mt-4 overflow-y-auto h-[calc(80vh-90px)] space-y-2 pb-6">
+          {(allowAll || items.length > 6) && (
+            <div className="mt-3 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por nome, CPF, e-mail ou título..."
+                className="pl-9"
+              />
+            </div>
+          )}
+
+          {usedAllMode && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Modo admin: nenhuma obra vinculada ao perfil ativo, exibindo os formulários mais recentes. Use a busca para localizar o compositor.
+            </p>
+          )}
+
+          <div className="mt-3 overflow-y-auto h-[calc(80vh-150px)] space-y-2 pb-6">
             {loading && (
               <div className="flex items-center justify-center py-10 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando obras do formulário...
               </div>
             )}
 
-            {!loading && items.length === 0 && (
+            {!loading && visibleItems.length === 0 && (
               <div className="text-center py-10 text-muted-foreground text-sm px-4">
-                Nenhuma obra vinda do formulário foi encontrada para este compositor.
+                Nenhuma obra encontrada.
                 <br />
                 <span className="text-xs">
-                  Verifique se o CPF informado no registro ou o e-mail do compositor é o mesmo usado no formulário público.
+                  Verifique se o CPF/e-mail do compositor corresponde ao usado no formulário público.
                 </span>
               </div>
             )}
 
             {!loading &&
-              items.map((item) => {
+              visibleItems.map((item) => {
                 const hasAudio = !!item.audio_url;
                 return (
                   <button
@@ -214,9 +266,10 @@ export const LoadFromFormButton: React.FC<Props> = ({
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold truncate">{item.title}</p>
                       <p className="text-xs text-muted-foreground truncate">
+                        {item.composerName ? `${item.composerName} • ` : ''}
+                        {item.composerCpf ? `${item.composerCpf} • ` : ''}
                         {hasAudio ? 'Com áudio • ' : ''}
-                        {item.genre ? `${item.genre} • ` : ''}
-                        Enviado {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: ptBR })}
+                        {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: ptBR })}
                       </p>
                     </div>
                   </button>
