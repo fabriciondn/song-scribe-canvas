@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useImpersonation } from '@/context/ImpersonationContext';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -118,6 +119,33 @@ const AuthorRegistration: React.FC = () => {
   const { isMobile } = useMobileDetection();
   const { isComplete: isProfileComplete } = useProfileValidation();
   const { profile } = useProfile();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
+
+  const actingUser = useMemo(() => {
+    if (isImpersonating && impersonatedUser) return impersonatedUser;
+    return user;
+  }, [isImpersonating, impersonatedUser, user]);
+
+  const actingProfile = useMemo(() => {
+    if (!profile) return null;
+    if (!actingUser?.id) return profile;
+    return profile.id === actingUser.id ? profile : null;
+  }, [profile, actingUser?.id]);
+
+  const actingUserMetadata = useMemo(() => {
+    const maybeUser = actingUser as { user_metadata?: Record<string, unknown> } | null;
+    return maybeUser?.user_metadata;
+  }, [actingUser]);
+
+  const actingEmail = actingProfile?.email || (typeof actingUser?.email === 'string' ? actingUser.email : '');
+  const actingDisplayName = actingProfile?.name
+    || (typeof actingUserMetadata?.name === 'string' ? actingUserMetadata.name : '')
+    || (typeof actingUserMetadata?.full_name === 'string' ? actingUserMetadata.full_name : '')
+    || actingEmail;
+  const actingCpf = actingProfile?.cpf || '';
+  const fallbackLookupEmail = !isImpersonating && user?.email ? user.email : '';
+  const lookupEmail = actingEmail || fallbackLookupEmail;
+  const lookupCpf = actingCpf;
 
   // Refs para estabilizar créditos e evitar remontagem do formulário
   const creditsRef = useRef<number | null>(null);
@@ -248,10 +276,11 @@ const AuthorRegistration: React.FC = () => {
           authors: [
             {
               id: 'titular',
-              name: profile?.name || 'Você',
-              initials: (profile?.name || 'VC').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase(),
+              name: actingDisplayName || 'Você',
+              initials: (actingDisplayName || 'VC').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase(),
               percentage: 100,
               isTitular: true,
+              cpf: actingCpf || undefined,
             },
           ],
           hasSamples: false,
@@ -290,7 +319,7 @@ const AuthorRegistration: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [searchParams, draftPrefillApplied, profile, navigate]);
+  }, [searchParams, draftPrefillApplied, actingDisplayName, navigate]);
 
   // Pré-preencher formulário a partir de uma obra do formulário público
   // Os dados chegam via location.state.prefillWork (passado por LoadFromFormButton)
@@ -351,7 +380,7 @@ const AuthorRegistration: React.FC = () => {
           sessionStorage.removeItem('mobile_registration_step2_draft');
         } catch {}
 
-        const titularName = profile?.name || 'Você';
+        const titularName = actingDisplayName || 'Você';
         const titularInitials = titularName.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
 
         setFormData((prev) => ({
@@ -359,8 +388,8 @@ const AuthorRegistration: React.FC = () => {
           title,
           lyrics,
           genre,
-          author: profile?.name || prev.author,
-          authorCpf: profile?.cpf || prev.authorCpf,
+          author: actingDisplayName || prev.author,
+          authorCpf: actingCpf || prev.authorCpf,
           audioFile,
         }));
 
@@ -373,6 +402,7 @@ const AuthorRegistration: React.FC = () => {
               initials: titularInitials,
               percentage: 100,
               isTitular: true,
+              cpf: actingCpf || undefined,
             },
           ],
           hasSamples: false,
@@ -416,7 +446,7 @@ const AuthorRegistration: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [location.state, profile, navigate, location.pathname, location.search]);
+  }, [location.state, actingDisplayName, actingCpf, navigate, location.pathname, location.search]);
 
 
 
@@ -480,8 +510,8 @@ const AuthorRegistration: React.FC = () => {
     setMobileStep1Data(data);
 
     const titularFromStep = data.authors.find((a) => a.isTitular);
-    const authorName = profile?.name || titularFromStep?.name || '';
-    const authorCpf = profile?.cpf || '';
+    const authorName = actingDisplayName || titularFromStep?.name || '';
+    const authorCpf = actingCpf || titularFromStep?.cpf || '';
 
     // Atualizar formData com os dados do step 1
     const otherAuthors = data.authors
@@ -538,6 +568,8 @@ const AuthorRegistration: React.FC = () => {
       <MobileRegistrationStep1
         key={`mobile-step1-${prefillVersion}`}
         onContinue={handleMobileStep1Continue}
+        lookupCpf={lookupCpf}
+        lookupEmail={lookupEmail}
         initialData={mobileStep1Data || undefined}
       />
     );
@@ -575,13 +607,22 @@ const AuthorRegistration: React.FC = () => {
       desktopClassName="container mx-auto px-4 py-8"
     >
       <div className={isMobile ? "w-full" : "max-w-4xl mx-auto"}>
+        {isImpersonating && !actingProfile && step === 'form' && (
+          <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            Você está operando como outro usuário, mas o perfil completo desse compositor ainda não foi carregado. Aguarde alguns segundos ou reabra o registro a partir do perfil do compositor para usar o carregamento automático do formulário.
+          </div>
+        )}
         <div className={isMobile ? "mb-4" : "mb-6"}>
           <div className="flex items-start justify-between gap-3 mb-2">
             <h1 className={`font-bold ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
               Registro Autoral
             </h1>
-            {!isMobile && isProfileComplete && step === 'form' && (
-              <LoadFromFormButton variant="desktop" />
+             {!isMobile && isProfileComplete && step === 'form' && (
+              <LoadFromFormButton
+                variant="desktop"
+                lookupCpf={lookupCpf}
+                lookupEmail={lookupEmail}
+              />
             )}
           </div>
           <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>

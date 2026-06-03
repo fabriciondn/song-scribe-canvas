@@ -42,6 +42,8 @@ interface MobileRegistrationStep1Props {
     authors: Author[];
     hasSamples: boolean;
   }) => void;
+  lookupCpf?: string;
+  lookupEmail?: string;
   initialData?: {
     title: string;
     authors: Author[];
@@ -74,6 +76,8 @@ const loadStep1FromStorage = (): { title: string; authors: Author[]; hasSamples:
 
 export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = ({
   onContinue,
+  lookupCpf,
+  lookupEmail,
   initialData,
 }) => {
   const navigate = useNavigate();
@@ -402,7 +406,12 @@ export const MobileRegistrationStep1: React.FC<MobileRegistrationStep1Props> = (
             Comece definindo o nome da sua obra e quem participou da criação dela.
           </p>
           <div className="mt-4">
-            <LoadFromFormButton variant="mobile" className="w-full bg-[#1C1C1E] hover:bg-[#2C2C2E] text-white border border-[#2C2C2E]" />
+            <LoadFromFormButton
+              variant="mobile"
+              lookupCpf={lookupCpf}
+              lookupEmail={lookupEmail}
+              className="w-full bg-[#1C1C1E] hover:bg-[#2C2C2E] text-white border border-[#2C2C2E]"
+            />
           </div>
         </div>
 
