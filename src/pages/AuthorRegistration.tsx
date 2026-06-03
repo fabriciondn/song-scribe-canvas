@@ -34,6 +34,7 @@ export interface AuthorRegistrationData {
   title: string;
   author: string;
   authorCpf: string;
+  targetUserId?: string;
   hasOtherAuthors: boolean;
   otherAuthors: Array<{ name: string; cpf: string; }>;
   genre: string;
@@ -62,6 +63,8 @@ interface MobileStep2Data {
   audioFile: File | null;
   additionalInfo: string;
 }
+
+const onlyDigits = (value?: string | null) => (value || '').replace(/\D+/g, '');
 
 const STORAGE_KEY = 'author_registration_draft';
 
@@ -407,6 +410,42 @@ const AuthorRegistration: React.FC = () => {
       const lyrics: string = String(prefillWork.lyrics || '').trim();
       const genre: string = String(prefillWork.genre || '').trim();
       const audioPath: string = String(prefillWork.audio_url || '').trim();
+      const composerCpf = onlyDigits(String(prefillWork.composerCpf || ''));
+      const composerEmail = String(prefillWork.composerEmail || '').trim().toLowerCase();
+
+      let targetUserId = '';
+      if (composerCpf || composerEmail) {
+        try {
+          let matchingProfiles: Array<{ id: string; cpf: string | null; email: string | null }> = [];
+
+          if (composerEmail) {
+            const { data } = await supabase
+              .from('profiles')
+              .select('id, cpf, email')
+              .ilike('email', composerEmail)
+              .limit(20);
+            matchingProfiles = data || [];
+          }
+
+          if (matchingProfiles.length === 0 && composerCpf) {
+            const { data } = await supabase
+              .from('profiles')
+              .select('id, cpf, email')
+              .eq('cpf', composerCpf)
+              .limit(20);
+            matchingProfiles = data || [];
+          }
+
+          const matchedProfile = (matchingProfiles || []).find((candidate) => {
+            const candidateCpf = onlyDigits(candidate.cpf || '');
+            const candidateEmail = String(candidate.email || '').trim().toLowerCase();
+            return (composerCpf && candidateCpf === composerCpf) || (composerEmail && candidateEmail === composerEmail);
+          });
+          targetUserId = matchedProfile?.id || '';
+        } catch (profileLookupError) {
+          console.warn('Não foi possível identificar o compositor da obra selecionada:', profileLookupError);
+        }
+      }
 
       let audioFile: File | null = null;
       if (audioPath) {
@@ -460,6 +499,7 @@ const AuthorRegistration: React.FC = () => {
         title,
         lyrics,
         genre,
+        targetUserId: targetUserId || prev.targetUserId,
         author: actingDisplayName || prev.author,
         authorCpf: actingCpf || prev.authorCpf,
         audioFile,
@@ -576,6 +616,7 @@ const AuthorRegistration: React.FC = () => {
       title: '',
       author: '',
       authorCpf: '',
+          targetUserId: '',
       hasOtherAuthors: false,
       otherAuthors: [],
       genre: '',

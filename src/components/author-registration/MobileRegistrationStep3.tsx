@@ -65,6 +65,7 @@ interface MobileRegistrationStep3Props {
     title: string;
     author: string;
     authorCpf: string;
+    targetUserId?: string;
     hasOtherAuthors: boolean;
     otherAuthors: Array<{ name: string; cpf: string }>;
     genre: string;
@@ -171,7 +172,7 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
       return;
     }
 
-    const targetUserId = currentUser?.id;
+    const targetUserId = formData.targetUserId || currentUser?.id;
     if (!targetUserId) {
       toast.error('Usuário não autenticado. Faça login novamente.');
       return;

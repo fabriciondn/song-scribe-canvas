@@ -261,6 +261,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
       title: step1Data.title,
       author: step1Data.author,
       authorCpf: step1Data.authorCpf,
+      targetUserId: initialData.targetUserId,
       hasOtherAuthors: step1Data.hasOtherAuthors,
       otherAuthors: step1Data.otherAuthors as Array<{ name: string; cpf: string; }>,
       genre: data.genre,

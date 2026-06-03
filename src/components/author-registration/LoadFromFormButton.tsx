@@ -222,6 +222,9 @@ export const LoadFromFormButton: React.FC<Props> = ({
       genre: item.genre || '',
       lyrics: item.lyrics || '',
       audio_url: item.audio_url || '',
+      composerName: item.composerName || '',
+      composerCpf: item.composerCpf || '',
+      composerEmail: item.composerEmail || '',
     };
     // Dispara evento imediato para AuthorRegistration aplicar o prefill sem recarregar
     try {
