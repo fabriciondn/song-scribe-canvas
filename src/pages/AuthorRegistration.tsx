@@ -573,6 +573,7 @@ const AuthorRegistration: React.FC = () => {
         onContinue={handleMobileStep1Continue}
         lookupCpf={lookupCpf}
         lookupEmail={lookupEmail}
+        allowAll={allowAllForms}
         initialData={mobileStep1Data || undefined}
       />
     );
