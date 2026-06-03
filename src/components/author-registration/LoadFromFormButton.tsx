@@ -215,20 +215,21 @@ export const LoadFromFormButton: React.FC<Props> = ({
       sessionStorage.removeItem('mobile_registration_step1_draft');
       sessionStorage.removeItem('mobile_registration_step2_draft');
     } catch {}
+    const prefillWork = {
+      formId: item.formId,
+      workIndex: item.workIndex,
+      title: item.title,
+      genre: item.genre || '',
+      lyrics: item.lyrics || '',
+      audio_url: item.audio_url || '',
+    };
+    // Dispara evento imediato para AuthorRegistration aplicar o prefill sem recarregar
+    try {
+      window.dispatchEvent(new CustomEvent('author-registration:prefill', { detail: prefillWork }));
+    } catch {}
+    // Fallback via location.state (caso o listener não esteja montado)
     const base = location.pathname || '/dashboard/author-registration';
-    navigate(base, {
-      replace: false,
-      state: {
-        prefillWork: {
-          formId: item.formId,
-          workIndex: item.workIndex,
-          title: item.title,
-          genre: item.genre || '',
-          lyrics: item.lyrics || '',
-          audio_url: item.audio_url || '',
-        },
-      },
-    });
+    navigate(base, { replace: true, state: { prefillWork } });
   };
 
   return (
