@@ -610,8 +610,12 @@ const AuthorRegistration: React.FC = () => {
             <h1 className={`font-bold ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
               Registro Autoral
             </h1>
-            {!isMobile && isProfileComplete && step === 'form' && (
-              <LoadFromFormButton variant="desktop" />
+             {!isMobile && isProfileComplete && step === 'form' && (
+              <LoadFromFormButton
+                variant="desktop"
+                lookupCpf={actingCpf}
+                lookupEmail={actingEmail}
+              />
             )}
           </div>
           <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>
