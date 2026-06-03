@@ -44,6 +44,7 @@ interface MobileRegistrationStep1Props {
   }) => void;
   lookupCpf?: string;
   lookupEmail?: string;
+  allowAll?: boolean;
   initialData?: {
     title: string;
     authors: Author[];
