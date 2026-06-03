@@ -141,6 +141,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
       title: initialData.title,
       author: initialData.author,
       authorCpf: initialData.authorCpf,
+      lockedByPrefill: initialData.lockedByPrefill,
       hasOtherAuthors: initialData.hasOtherAuthors,
       otherAuthors: initialData.otherAuthors,
       genre: initialData.genre,
@@ -170,9 +171,20 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
       otherAuthors: initialData.otherAuthors,
     };
 
+    const profileCpfDigits = (profile?.cpf || '').replace(/\D/g, '');
+    const authorCpfDigits = (initialData.authorCpf || '').replace(/\D/g, '');
+    const authorMatchesProfile = Boolean(
+      profile?.name
+      && initialData.author
+      && profile.name.trim().toLowerCase() === initialData.author.trim().toLowerCase()
+      && profileCpfDigits
+      && profileCpfDigits === authorCpfDigits
+    );
+
     setStep1Data(nextStep1Data);
     setAudioFile(initialData.audioFile);
     setLyrics(initialData.lyrics || '');
+    setIsCurrentUser(Boolean(initialData.lockedByPrefill) || authorMatchesProfile);
 
     step1Form.reset(nextStep1Data);
     step2Form.reset({
@@ -187,6 +199,7 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
     initialData.title,
     initialData.author,
     initialData.authorCpf,
+    initialData.lockedByPrefill,
     initialData.hasOtherAuthors,
     initialData.otherAuthors,
     initialData.genre,
@@ -198,6 +211,8 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
     initialData.termsAccepted,
     initialData.targetUserId,
     initialData.audioFile,
+    profile?.name,
+    profile?.cpf,
     step1Form,
     step2Form,
   ]);
@@ -240,9 +255,14 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
   // Handle "Eu mesmo" checkbox change
   const handleCurrentUserChange = (checked: boolean) => {
     setIsCurrentUser(checked);
-    if (checked && profile) {
-      step1Form.setValue('author', profile.name || '');
-      step1Form.setValue('authorCpf', profile.cpf || '');
+    if (checked) {
+      if (initialData.lockedByPrefill && (initialData.author || initialData.authorCpf)) {
+        step1Form.setValue('author', initialData.author || '');
+        step1Form.setValue('authorCpf', initialData.authorCpf || '');
+      } else if (profile) {
+        step1Form.setValue('author', profile.name || '');
+        step1Form.setValue('authorCpf', profile.cpf || '');
+      }
     } else {
       step1Form.setValue('author', '');
       step1Form.setValue('authorCpf', '');
