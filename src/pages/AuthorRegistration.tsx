@@ -398,135 +398,148 @@ const AuthorRegistration: React.FC = () => {
   // Pré-preencher formulário a partir de uma obra do formulário público
   // Os dados chegam via location.state.prefillWork (passado por LoadFromFormButton)
   const [formPrefillApplied, setFormPrefillApplied] = useState(false);
+
+  // Função reutilizável: aplica prefill de uma obra do formulário público
+  const applyPrefillWork = React.useCallback(async (prefillWork: any) => {
+    if (!prefillWork) return;
+    try {
+      const title: string = String(prefillWork.title || '').trim();
+      const lyrics: string = String(prefillWork.lyrics || '').trim();
+      const genre: string = String(prefillWork.genre || '').trim();
+      const audioPath: string = String(prefillWork.audio_url || '').trim();
+
+      let audioFile: File | null = null;
+      if (audioPath) {
+        try {
+          const candidates: string[] = [];
+          if (/^https?:\/\//i.test(audioPath)) {
+            candidates.push(audioPath);
+          } else {
+            const normalizedPath = audioPath.replace(/^\/+/, '');
+            const trimmedPath = normalizedPath.replace(/^public-registrations\//, '');
+            const bucketPathPairs: Array<{ bucket: string; path: string }> = [
+              { bucket: 'author-registrations', path: normalizedPath },
+              { bucket: 'author-registrations', path: trimmedPath },
+              { bucket: 'public-assets', path: normalizedPath },
+              { bucket: 'public-assets', path: trimmedPath },
+            ];
+            for (const { bucket, path } of bucketPathPairs) {
+              if (!path) continue;
+              const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+              if (pub?.publicUrl) candidates.push(pub.publicUrl);
+            }
+          }
+          for (const url of Array.from(new Set(candidates))) {
+            try {
+              const res = await fetch(url);
+              if (res.ok) {
+                const blob = await res.blob();
+                const type = blob.type || 'audio/mpeg';
+                const name = audioPath.split('/').pop() || 'formulario-audio.mp3';
+                audioFile = new File([blob], name, { type });
+                break;
+              }
+            } catch {}
+          }
+        } catch (err) {
+          console.warn('Não foi possível carregar áudio do formulário:', err);
+        }
+      }
+
+      try {
+        sessionStorage.removeItem('author_registration_draft');
+        sessionStorage.removeItem('mobile_registration_step1_draft');
+        sessionStorage.removeItem('mobile_registration_step2_draft');
+      } catch {}
+
+      const titularName = actingDisplayName || 'Você';
+      const titularInitials = titularName.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
+
+      setFormData((prev) => ({
+        ...prev,
+        title,
+        lyrics,
+        genre,
+        author: actingDisplayName || prev.author,
+        authorCpf: actingCpf || prev.authorCpf,
+        audioFile,
+      }));
+
+      setMobileStep1Data({
+        title,
+        authors: [
+          {
+            id: 'titular',
+            name: titularName,
+            initials: titularInitials,
+            percentage: 100,
+            isTitular: true,
+            cpf: actingCpf || undefined,
+          },
+        ],
+        hasSamples: false,
+      });
+
+      setMobileStep2Data({
+        registrationType: audioFile ? 'complete' : 'lyrics_only',
+        genre,
+        version: '',
+        lyrics,
+        audioFile,
+        additionalInfo: '',
+      });
+
+      setPrefilledFromDraft({
+        title: title.length > 0,
+        lyrics: lyrics.length > 0,
+        audio: !!audioFile,
+      });
+      setDraftPrefillApplied(false);
+      setFormPrefillApplied(true);
+      setPrefillVersion((v) => v + 1);
+      setMobileStep(1);
+      setDesktopStep(1);
+      setStep('form');
+
+      const loadedParts: string[] = [];
+      if (title) loadedParts.push('título');
+      if (lyrics) loadedParts.push('letra');
+      if (audioFile) loadedParts.push('áudio');
+      if (loadedParts.length > 0) {
+        toast.success(`Carregado do formulário: ${loadedParts.join(', ')}.`);
+      } else {
+        toast.warning('Obra do formulário sem dados preenchíveis.');
+      }
+    } catch (err) {
+      console.error('Erro ao pré-preencher do formulário:', err);
+    }
+  }, [actingDisplayName, actingCpf]);
+
+  // Listener para evento imediato (sem navegação/recarregar)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail) applyPrefillWork(detail);
+    };
+    window.addEventListener('author-registration:prefill', handler);
+    return () => window.removeEventListener('author-registration:prefill', handler);
+  }, [applyPrefillWork]);
+
+  // Fallback: prefill via location.state.prefillWork
   useEffect(() => {
     const prefillWork = (location.state as any)?.prefillWork;
     if (!prefillWork) return;
-
     let cancelled = false;
     (async () => {
-      try {
-        const title: string = String(prefillWork.title || '').trim();
-        const lyrics: string = String(prefillWork.lyrics || '').trim();
-        const genre: string = String(prefillWork.genre || '').trim();
-        const audioPath: string = String(prefillWork.audio_url || '').trim();
-
-        // Tentar baixar áudio (se houver) e converter para File
-        let audioFile: File | null = null;
-        if (audioPath) {
-          try {
-            const candidates: string[] = [];
-            if (/^https?:\/\//i.test(audioPath)) {
-              candidates.push(audioPath);
-            } else {
-              const normalizedPath = audioPath.replace(/^\/+/, '');
-              const trimmedPath = normalizedPath.replace(/^public-registrations\//, '');
-              const bucketPathPairs: Array<{ bucket: string; path: string }> = [
-                { bucket: 'author-registrations', path: normalizedPath },
-                { bucket: 'author-registrations', path: trimmedPath },
-                { bucket: 'public-assets', path: normalizedPath },
-                { bucket: 'public-assets', path: trimmedPath },
-              ];
-
-              for (const { bucket, path } of bucketPathPairs) {
-                if (!path) continue;
-                const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
-                if (pub?.publicUrl) candidates.push(pub.publicUrl);
-              }
-            }
-
-            for (const url of Array.from(new Set(candidates))) {
-              try {
-                const res = await fetch(url);
-                if (res.ok) {
-                  const blob = await res.blob();
-                  const type = blob.type || 'audio/mpeg';
-                  const name = audioPath.split('/').pop() || 'formulario-audio.mp3';
-                  audioFile = new File([blob], name, { type });
-                  break;
-                }
-              } catch {}
-            }
-          } catch (err) {
-            console.warn('Não foi possível carregar áudio do formulário:', err);
-          }
-        }
-
-        if (cancelled) return;
-
-        // Limpa storage para evitar conflito com dados antigos
-        try {
-          sessionStorage.removeItem('author_registration_draft');
-          sessionStorage.removeItem('mobile_registration_step1_draft');
-          sessionStorage.removeItem('mobile_registration_step2_draft');
-        } catch {}
-
-        const titularName = actingDisplayName || 'Você';
-        const titularInitials = titularName.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
-
-        setFormData((prev) => ({
-          ...prev,
-          title,
-          lyrics,
-          genre,
-          author: actingDisplayName || prev.author,
-          authorCpf: actingCpf || prev.authorCpf,
-          audioFile,
-        }));
-
-        setMobileStep1Data({
-          title,
-          authors: [
-            {
-              id: 'titular',
-              name: titularName,
-              initials: titularInitials,
-              percentage: 100,
-              isTitular: true,
-              cpf: actingCpf || undefined,
-            },
-          ],
-          hasSamples: false,
-        });
-
-        setMobileStep2Data({
-          registrationType: audioFile ? 'complete' : 'lyrics_only',
-          genre,
-          version: '',
-          lyrics,
-          audioFile,
-          additionalInfo: '',
-        });
-
-        setPrefilledFromDraft({
-          title: title.length > 0,
-          lyrics: lyrics.length > 0,
-          audio: !!audioFile,
-        });
-        setDraftPrefillApplied(false);
-        setFormPrefillApplied(true);
-        setPrefillVersion((v) => v + 1);
-
-        const loadedParts: string[] = [];
-        if (title) loadedParts.push('título');
-        if (lyrics) loadedParts.push('letra');
-        if (audioFile) loadedParts.push('áudio');
-        if (loadedParts.length > 0) {
-          toast.success(`Carregado do formulário: ${loadedParts.join(', ')}.`);
-        } else {
-          toast.warning('Obra do formulário sem dados preenchíveis.');
-        }
-
-        // Limpa o state da navegação para evitar reaplicar
-        navigate(location.pathname + location.search, { replace: true, state: {} });
-      } catch (err) {
-        console.error('Erro ao pré-preencher do formulário:', err);
-      }
+      await applyPrefillWork(prefillWork);
+      if (cancelled) return;
+      navigate(location.pathname + location.search, { replace: true, state: {} });
     })();
-
     return () => {
       cancelled = true;
     };
-  }, [location.state, actingDisplayName, actingCpf, navigate, location.pathname, location.search]);
+  }, [location.state, applyPrefillWork, navigate, location.pathname, location.search]);
+
 
 
 
