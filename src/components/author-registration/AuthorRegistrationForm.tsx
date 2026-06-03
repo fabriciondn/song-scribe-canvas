@@ -748,9 +748,9 @@ export const AuthorRegistrationForm: React.FC<AuthorRegistrationFormProps> = ({
                 </div>
                 <input
                   type="file"
-                  accept=".mp3,audio/mpeg,audio/mp3"
+                  accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.aiff,.aac,.webm"
                   onChange={handleAudioFileChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 />
               </div>
               {audioError && (
