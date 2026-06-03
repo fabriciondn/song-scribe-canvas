@@ -25,6 +25,8 @@ interface FormWorkItem {
   created_at: string;
 }
 
+const escapeOrValue = (value: string) => value.replace(/,/g, '\\,');
+
 const onlyDigits = (s?: string | null) => (s || '').replace(/\D+/g, '');
 const readWorkString = (work: any, keys: string[]) => {
   for (const key of keys) {
@@ -78,12 +80,12 @@ export const LoadFromFormButton: React.FC<Props> = ({
         // 2) Buscar formulários do compositor (admins têm RLS de SELECT)
         // Traz por email ou por CPF (normalização feita no client)
         const orFilters: string[] = [];
-        if (email) orFilters.push(`email.ilike.${email}`);
+        if (email) orFilters.push(`email.ilike.${escapeOrValue(email)}`);
         // CPF pode estar armazenado com máscara — buscamos por igualdade textual e por dígitos
         if (rawCpf) {
-          orFilters.push(`cpf.eq.${rawCpf}`);
+          orFilters.push(`cpf.eq.${escapeOrValue(rawCpf)}`);
           if (cpfDigits && cpfDigits !== rawCpf) {
-            orFilters.push(`cpf.eq.${cpfDigits}`);
+            orFilters.push(`cpf.eq.${escapeOrValue(cpfDigits)}`);
           }
         }
 
