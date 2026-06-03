@@ -23,6 +23,13 @@ import { toast } from 'sonner';
 import { LoadFromFormButton } from '@/components/author-registration/LoadFromFormButton';
 import { supabase } from '@/integrations/supabase/client';
 
+interface ActingLookupProfile {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  cpf?: string | null;
+}
+
 export interface AuthorRegistrationData {
   title: string;
   author: string;
@@ -121,6 +128,7 @@ const AuthorRegistration: React.FC = () => {
   const { isComplete: isProfileComplete } = useProfileValidation();
   const { profile } = useProfile();
   const { isImpersonating, impersonatedUser } = useImpersonation();
+  const [lookupProfile, setLookupProfile] = useState<ActingLookupProfile | null>(null);
 
   const actingUser = useMemo(() => {
     if (isImpersonating && impersonatedUser) return impersonatedUser;
@@ -128,10 +136,13 @@ const AuthorRegistration: React.FC = () => {
   }, [isImpersonating, impersonatedUser, user]);
 
   const actingProfile = useMemo(() => {
+    if (lookupProfile?.id && actingUser?.id && lookupProfile.id === actingUser.id) {
+      return lookupProfile;
+    }
     if (!profile) return null;
     if (!actingUser?.id) return profile;
     return profile.id === actingUser.id ? profile : null;
-  }, [profile, actingUser?.id]);
+  }, [lookupProfile, profile, actingUser?.id]);
 
   const actingUserMetadata = useMemo(() => {
     const maybeUser = actingUser as { user_metadata?: Record<string, unknown> } | null;
@@ -149,6 +160,66 @@ const AuthorRegistration: React.FC = () => {
   const lookupCpf = actingCpf;
   const { isAdmin } = useAdminAccess();
   const allowAllForms = isAdmin && !isImpersonating;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadLookupProfile = async () => {
+      if (!actingUser?.id) {
+        if (!cancelled) setLookupProfile(null);
+        return;
+      }
+
+      if (!isImpersonating && profile?.id === actingUser.id) {
+        if (!cancelled) {
+          setLookupProfile({
+            id: profile.id,
+            name: profile.name || null,
+            email: profile.email || null,
+            cpf: profile.cpf || null,
+          });
+        }
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name, email, cpf')
+        .eq('id', actingUser.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (error) {
+        console.error('Erro ao carregar perfil ativo para busca do formulário:', error);
+        setLookupProfile({
+          id: actingUser.id,
+          name: impersonatedUser?.name || null,
+          email: impersonatedUser?.email || null,
+          cpf: null,
+        });
+        return;
+      }
+
+      if (data) {
+        setLookupProfile(data);
+        return;
+      }
+
+      setLookupProfile({
+        id: actingUser.id,
+        name: impersonatedUser?.name || null,
+        email: impersonatedUser?.email || null,
+        cpf: null,
+      });
+    };
+
+    loadLookupProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [actingUser?.id, isImpersonating, profile?.id, profile?.name, profile?.email, profile?.cpf, impersonatedUser?.name, impersonatedUser?.email]);
 
   // Refs para estabilizar créditos e evitar remontagem do formulário
   const creditsRef = useRef<number | null>(null);
