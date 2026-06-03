@@ -410,6 +410,8 @@ const AuthorRegistration: React.FC = () => {
       const lyrics: string = String(prefillWork.lyrics || '').trim();
       const genre: string = String(prefillWork.genre || '').trim();
       const audioPath: string = String(prefillWork.audio_url || '').trim();
+      const composerName: string = String(prefillWork.composerName || '').trim();
+      const composerCpfRaw: string = String(prefillWork.composerCpf || '').trim();
       const composerCpf = onlyDigits(String(prefillWork.composerCpf || ''));
       const composerEmail = String(prefillWork.composerEmail || '').trim().toLowerCase();
 
@@ -491,8 +493,9 @@ const AuthorRegistration: React.FC = () => {
         sessionStorage.removeItem('mobile_registration_step2_draft');
       } catch {}
 
-      const titularName = actingDisplayName || 'Você';
+      const titularName = composerName || actingDisplayName || 'Você';
       const titularInitials = titularName.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
+      const titularCpf = composerCpfRaw || actingCpf || '';
 
       setFormData((prev) => ({
         ...prev,
@@ -500,8 +503,8 @@ const AuthorRegistration: React.FC = () => {
         lyrics,
         genre,
         targetUserId: targetUserId || prev.targetUserId,
-        author: actingDisplayName || prev.author,
-        authorCpf: actingCpf || prev.authorCpf,
+        author: titularName || prev.author,
+        authorCpf: titularCpf || prev.authorCpf,
         audioFile,
       }));
 
@@ -514,7 +517,7 @@ const AuthorRegistration: React.FC = () => {
             initials: titularInitials,
             percentage: 100,
             isTitular: true,
-            cpf: actingCpf || undefined,
+            cpf: titularCpf || undefined,
           },
         ],
         hasSamples: false,
