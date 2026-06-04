@@ -91,6 +91,7 @@ const Index: React.FC = () => {
 
       <main>
         <PremiumHero onPrimary={handleGetStarted} onSecondary={handleLearnMore} />
+        <Testimonials />
         <ValueProp />
         <PainPoints />
         <Solution />
@@ -108,7 +109,6 @@ const Index: React.FC = () => {
 
         <ServiceCards onCTA={handleGetStarted} />
         <HowItWorks />
-        <Testimonials />
         <Pricing onCTA={handleGetStarted} />
         <Objections />
         <GuaranteeUrgency />
