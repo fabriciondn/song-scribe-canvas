@@ -367,7 +367,7 @@ export default function CreditsCheckout() {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 flex items-center justify-center">
         <div className="w-full max-w-md mx-auto">
           <div className="text-center mb-8">
-            <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
+            <img src={theme === 'dark' ? "/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
             <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
           </div>
           
@@ -389,7 +389,7 @@ export default function CreditsCheckout() {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
-            <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
+            <img src={theme === 'dark' ? "/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
             <p className="text-muted-foreground text-sm mt-1">Sistema de Registro Autoral</p>
           </div>
 
@@ -772,7 +772,7 @@ export default function CreditsCheckout() {
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
-            <img src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
+            <img src={theme === 'dark' ? "/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"} alt="Compuse Logo" className="h-10 mx-auto" />
             <p className="text-muted-foreground text-sm mt-1">Checkout</p>
           </div>
 

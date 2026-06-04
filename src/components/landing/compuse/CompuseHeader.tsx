@@ -34,7 +34,7 @@ export const CompuseHeader: React.FC<Props> = ({ onCTA }) => {
     >
       <div className="c-container flex items-center justify-between py-4">
         <a href="#top" className="flex items-center gap-2">
-          <img src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" alt="Compuse" className="h-7" />
+          <img src="/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png" alt="Compuse" className="h-7" />
         </a>
 
         <nav className="hidden md:flex items-center gap-8">

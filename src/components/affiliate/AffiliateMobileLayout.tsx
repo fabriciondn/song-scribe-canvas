@@ -87,7 +87,7 @@ export function AffiliateMobileLayout({
           </button>
           
           <img 
-            src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+            src="/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png"
             alt="Compuse Logo" 
             className="h-7"
           />
@@ -121,7 +121,7 @@ export function AffiliateMobileLayout({
         {/* Logo Section */}
         <div className="pt-6 pb-4 px-4 flex justify-center border-b border-white/10">
           <img 
-            src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+            src="/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png"
             alt="Compuse Logo" 
             className="h-8"
           />

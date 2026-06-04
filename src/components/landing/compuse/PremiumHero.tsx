@@ -79,7 +79,7 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
           <div className="text-center mx-auto px-6" style={{ maxWidth: 760 }}>
             <div className="flex justify-center mb-8">
               <img
-                src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+                src="/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png"
                 alt="Compuse"
                 style={{
                   height: isMobile ? 48 : 64,

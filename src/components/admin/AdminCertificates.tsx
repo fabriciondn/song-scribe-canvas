@@ -101,7 +101,7 @@ export const AdminCertificates: React.FC = () => {
       y: 400,
     },
     logo: {
-      url: '/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png',
+      url: '/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png',
       width: 100,
       height: 50,
       x: 450,
