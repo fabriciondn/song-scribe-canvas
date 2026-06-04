@@ -10,6 +10,11 @@ import { HowItWorks } from '@/components/landing/compuse/HowItWorks';
 import { Pricing } from '@/components/landing/compuse/Pricing';
 import { FAQ } from '@/components/landing/compuse/FAQ';
 import { FinalCTA } from '@/components/landing/compuse/FinalCTA';
+import { ValueProp } from '@/components/landing/compuse/ValueProp';
+import { PainPoints } from '@/components/landing/compuse/PainPoints';
+import { Solution } from '@/components/landing/compuse/Solution';
+import { Objections } from '@/components/landing/compuse/Objections';
+import { GuaranteeUrgency } from '@/components/landing/compuse/GuaranteeUrgency';
 
 const Index: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -83,9 +88,14 @@ const Index: React.FC = () => {
 
       <main>
         <OrbitSystem onPrimary={handleGetStarted} onSecondary={handleLearnMore} />
+        <ValueProp />
+        <PainPoints />
+        <Solution />
         <ServiceCards onCTA={handleGetStarted} />
         <HowItWorks />
         <Pricing onCTA={handleGetStarted} />
+        <Objections />
+        <GuaranteeUrgency />
         <FAQ />
         <FinalCTA onCTA={handleGetStarted} />
       </main>
