@@ -67,7 +67,7 @@ const ringsConfig: RingConfig[] = [
     ],
   },
   {
-    diameter: 86,
+    diameter: 62,
     baseDuration: 85,
     direction: 'cw',
     avatarSlots: 2,
