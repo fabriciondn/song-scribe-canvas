@@ -213,7 +213,7 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
     };
   }, [rings]);
 
-  const stageSize = isMobile ? 'min(150vw, 760px)' : 'min(115vmin, 1200px)';
+  const stageSize = isMobile ? 'min(180vw, 900px)' : 'min(150vmin, 1600px)';
 
   return (
     <section
