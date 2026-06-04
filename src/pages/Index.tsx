@@ -17,6 +17,7 @@ import { Solution } from '@/components/landing/compuse/Solution';
 import { Objections } from '@/components/landing/compuse/Objections';
 import { GuaranteeUrgency } from '@/components/landing/compuse/GuaranteeUrgency';
 import { Testimonials } from '@/components/landing/compuse/Testimonials';
+import { VideoPlayer } from '@/components/landing/compuse/VideoPlayer';
 
 const Index: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
