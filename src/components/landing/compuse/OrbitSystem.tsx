@@ -256,19 +256,7 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
           willChange: 'transform',
         }}
       >
-        {/* guide rings */}
-        {rings.map((r, i) => (
-          <div
-            key={`g${i}`}
-            className="absolute rounded-full border"
-            style={{
-              left: '50%', top: '50%',
-              width: `${r.diameter}%`, height: `${r.diameter}%`,
-              transform: 'translate(-50%, -50%)',
-              borderColor: 'rgba(255,251,235,0.04)',
-            }}
-          />
-        ))}
+        {/* guide rings removed per design reference */}
 
         {rings.map((ring, ri) => {
           counterRefs.current[ri] = counterRefs.current[ri] || [];
