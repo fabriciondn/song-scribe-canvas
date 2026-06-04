@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import GradientBars from './GradientBars';
+import { LegalBadge } from './LegalBadge';
 
 interface Props {
   onPrimary?: () => void;
