@@ -11,6 +11,7 @@ import { Pricing } from '@/components/landing/compuse/Pricing';
 import { FAQ } from '@/components/landing/compuse/FAQ';
 import { FinalCTA } from '@/components/landing/compuse/FinalCTA';
 import { ValueProp } from '@/components/landing/compuse/ValueProp';
+import { AnimatedText } from '@/components/landing/compuse/AnimatedText';
 import { PainPoints } from '@/components/landing/compuse/PainPoints';
 import { Solution } from '@/components/landing/compuse/Solution';
 import { Objections } from '@/components/landing/compuse/Objections';
@@ -90,6 +91,9 @@ const Index: React.FC = () => {
       <main>
         <PremiumHero onPrimary={handleGetStarted} onSecondary={handleLearnMore} />
         <ValueProp />
+        <section className="py-8 md:py-12" style={{ background: '#000' }}>
+          <AnimatedText text="Compuse" />
+        </section>
         <PainPoints />
         <Solution />
         <ServiceCards onCTA={handleGetStarted} />
