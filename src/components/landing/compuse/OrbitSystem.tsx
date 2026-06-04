@@ -6,8 +6,7 @@ interface OrbitItem {
   id: string;
   type: 'label' | 'icon';
   text?: string;
-  icon?: React.ComponentType<{ size?: number; style?: React.CSSProperties }>;
-  tooltip: string;
+  icon?: React.ComponentType<any>;
   // base position in percent of container
   x: number;
   y: number;
