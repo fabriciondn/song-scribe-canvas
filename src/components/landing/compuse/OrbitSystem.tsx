@@ -89,7 +89,7 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
   const stageRef = useRef<HTMLDivElement>(null);
   const ringRefs = useRef<(HTMLDivElement | null)[]>([]);
   const counterRefs = useRef<(HTMLDivElement | null)[][]>([]);
-  const [mouse, setMouse] = useState({ dx: 0, dy: 0 });
+  // (mouse parallax handled in RAF below via refs — avoid React re-renders)
   const [hovered, setHovered] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [composers, setComposers] = useState<Composer[]>([]);
