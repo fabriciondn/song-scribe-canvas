@@ -30,7 +30,7 @@ export const Objections: React.FC = () => {
       <div className="c-container max-w-4xl">
         <Reveal>
           <div className="text-sm font-medium mb-4" style={{ color: 'var(--c-primary)' }}>
-            Quebra de objeções
+            ​
           </div>
           <h2 className="font-display font-bold" style={{ fontSize: 'clamp(1.8rem, 4vw, 3rem)' }}>
             As dúvidas mais comuns antes de registrar.
