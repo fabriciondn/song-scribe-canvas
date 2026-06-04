@@ -29,55 +29,55 @@ interface RingConfig {
 
 const ringsConfig: RingConfig[] = [
   {
-    diameter: 138,
-    baseDuration: 120,
+    diameter: 178,
+    baseDuration: 140,
     direction: 'cw',
     avatarSlots: 5,
     labels: [
-      { id: 'isrc',  label: 'ISRC',  tooltip: 'Código do fonograma.',              size: 84 },
-      { id: 'iswc',  label: 'ISWC',  tooltip: 'Código da composição.',             size: 76 },
-      { id: 'ismn',  label: 'ISMN',  tooltip: 'Código de publicação musical.',     size: 80 },
-      { id: 'isan',  label: 'ISAN',  tooltip: 'Identificador audiovisual.',        size: 84 },
-      { id: 'ipi',   label: 'IPI',   tooltip: 'Identificador de autor.',           size: 72 },
-      { id: 'ean',   label: 'EAN',   tooltip: 'Código de barras internacional.',   size: 78 },
-      { id: 'istc',  label: 'ISTC',  tooltip: 'Identificador de obras textuais.',  size: 76 },
-      { id: 'ddex',  label: 'DDEX',  tooltip: 'Padrão de metadados musicais.',     size: 80 },
-      { id: 'wipo',  label: 'WIPO',  tooltip: 'Propriedade intelectual mundial.',  size: 84 },
-      { id: 'mlc',   label: 'MLC',   tooltip: 'Mechanical Licensing Collective.',  size: 72 },
-      { id: 'bmi',   label: 'BMI',   tooltip: 'Sociedade de direitos EUA.',        size: 72 },
-      { id: 'upc',   label: 'UPC',   tooltip: 'Código universal de produto.',      size: 76 },
+      { id: 'isrc',  label: 'ISRC',  tooltip: 'Código do fonograma.',              size: 112 },
+      { id: 'iswc',  label: 'ISWC',  tooltip: 'Código da composição.',             size: 70 },
+      { id: 'ismn',  label: 'ISMN',  tooltip: 'Código de publicação musical.',     size: 96 },
+      { id: 'isan',  label: 'ISAN',  tooltip: 'Identificador audiovisual.',        size: 62 },
+      { id: 'ipi',   label: 'IPI',   tooltip: 'Identificador de autor.',           size: 124 },
+      { id: 'ean',   label: 'EAN',   tooltip: 'Código de barras internacional.',   size: 68 },
+      { id: 'istc',  label: 'ISTC',  tooltip: 'Identificador de obras textuais.',  size: 88 },
+      { id: 'ddex',  label: 'DDEX',  tooltip: 'Padrão de metadados musicais.',     size: 104 },
+      { id: 'wipo',  label: 'WIPO',  tooltip: 'Propriedade intelectual mundial.',  size: 76 },
+      { id: 'mlc',   label: 'MLC',   tooltip: 'Mechanical Licensing Collective.',  size: 94 },
+      { id: 'bmi',   label: 'BMI',   tooltip: 'Sociedade de direitos EUA.',        size: 60 },
+      { id: 'upc',   label: 'UPC',   tooltip: 'Código universal de produto.',      size: 100 },
     ],
   },
   {
-    diameter: 96,
-    baseDuration: 90,
+    diameter: 128,
+    baseDuration: 105,
     direction: 'ccw',
     avatarSlots: 4,
     labels: [
-      { id: 'hash',   label: 'HASH',         tooltip: 'Impressão digital única da obra.',  size: 78 },
-      { id: 'time',   label: 'TIMESTAMP',    tooltip: 'Data e hora certificadas.',         size: 88 },
-      { id: 'cert',   label: 'CERTIFICADO',  tooltip: 'PDF jurídico em até 5 minutos.',    size: 92 },
-      { id: 'dist',   label: 'DISTRIBUIÇÃO', tooltip: 'Spotify, YouTube e mais.',          size: 96 },
-      { id: 'ecad',   label: 'ECAD',         tooltip: 'Arrecadação no Brasil.',            size: 76 },
-      { id: 'royal',  label: 'ROYALTIES',    tooltip: 'Direitos de execução pública.',     size: 86 },
-      { id: 'pro',    label: 'PRO',          tooltip: 'Performing Rights Org.',            size: 70 },
-      { id: 'da',     label: 'DA',           tooltip: 'Direitos autorais.',                size: 70 },
-      { id: 'pdf',    label: 'PDF',          tooltip: 'Certificado oficial em PDF.',       size: 70 },
-      { id: 'labels', label: '9 LABELS',     tooltip: 'Distribuímos para 9 grandes labels.', size: 82 },
+      { id: 'hash',   label: 'HASH',         tooltip: 'Impressão digital única da obra.',  size: 82 },
+      { id: 'time',   label: 'TIMESTAMP',    tooltip: 'Data e hora certificadas.',         size: 108 },
+      { id: 'cert',   label: 'CERTIFICADO',  tooltip: 'PDF jurídico em até 5 minutos.',    size: 68 },
+      { id: 'dist',   label: 'DISTRIBUIÇÃO', tooltip: 'Spotify, YouTube e mais.',          size: 116 },
+      { id: 'ecad',   label: 'ECAD',         tooltip: 'Arrecadação no Brasil.',            size: 60 },
+      { id: 'royal',  label: 'ROYALTIES',    tooltip: 'Direitos de execução pública.',     size: 98 },
+      { id: 'pro',    label: 'PRO',          tooltip: 'Performing Rights Org.',            size: 78 },
+      { id: 'da',     label: 'DA',           tooltip: 'Direitos autorais.',                size: 56 },
+      { id: 'pdf',    label: 'PDF',          tooltip: 'Certificado oficial em PDF.',       size: 86 },
+      { id: 'labels', label: '9 LABELS',     tooltip: 'Distribuímos para 9 grandes labels.', size: 92 },
     ],
   },
   {
-    diameter: 58,
-    baseDuration: 65,
+    diameter: 86,
+    baseDuration: 85,
     direction: 'cw',
     avatarSlots: 2,
     labels: [
-      { id: 'letra',  label: 'LETRA',     tooltip: 'Sua letra protegida juridicamente.', size: 74 },
-      { id: 'audio',  label: 'ÁUDIO',     tooltip: 'Áudio com hash único e timestamp.',  size: 74 },
-      { id: 'autor',  label: 'AUTOR',     tooltip: 'Titularidade registrada.',           size: 72 },
-      { id: 'obra',   label: 'OBRA',      tooltip: 'Obra original protegida.',           size: 72 },
-      { id: 'blockc', label: 'BLOCKCHAIN', tooltip: 'Selo imutável em blockchain.',      size: 86 },
-      { id: 'meta',   label: 'METADATA',  tooltip: 'Metadados completos da obra.',       size: 80 },
+      { id: 'letra',  label: 'LETRA',     tooltip: 'Sua letra protegida juridicamente.', size: 68 },
+      { id: 'audio',  label: 'ÁUDIO',     tooltip: 'Áudio com hash único e timestamp.',  size: 90 },
+      { id: 'autor',  label: 'AUTOR',     tooltip: 'Titularidade registrada.',           size: 58 },
+      { id: 'obra',   label: 'OBRA',      tooltip: 'Obra original protegida.',           size: 82 },
+      { id: 'blockc', label: 'BLOCKCHAIN', tooltip: 'Selo imutável em blockchain.',      size: 100 },
+      { id: 'meta',   label: 'METADATA',  tooltip: 'Metadados completos da obra.',       size: 70 },
     ],
   },
 ];
@@ -177,10 +177,9 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
     const onScroll = () => {
       const dy = window.scrollY - lastScrollY;
       lastScrollY = window.scrollY;
-      // map |dy| (px) into extra boost: 0px -> 0, 100px -> ~2.5
-      const extra = Math.min(2.5, Math.abs(dy) / 40);
-      // direction influences sign only slightly (faster forward when scrolling down)
-      targetBoost = 1 + extra;
+      // Down (dy>0) speeds up, Up (dy<0) slows down. Range ~[0.25 .. 3]
+      const delta = Math.max(-2, Math.min(2, dy / 30));
+      targetBoost = Math.max(0.25, Math.min(3, 1 + delta));
     };
     window.addEventListener('scroll', onScroll, { passive: true });
 
@@ -214,7 +213,7 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
     };
   }, [rings]);
 
-  const stageSize = isMobile ? 'min(150vw, 760px)' : 'min(115vmin, 1200px)';
+  const stageSize = isMobile ? 'min(180vw, 900px)' : 'min(150vmin, 1600px)';
 
   return (
     <section
@@ -233,7 +232,7 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 55% 60% at 50% 50%, rgba(0,177,140,0.22) 0%, rgba(0,177,140,0.05) 40%, transparent 70%), radial-gradient(ellipse 30% 80% at 0% 50%, rgba(180,30,40,0.18), transparent 60%), radial-gradient(ellipse 30% 80% at 100% 50%, rgba(180,30,40,0.18), transparent 60%)',
+            'radial-gradient(ellipse 45% 55% at 50% 50%, rgba(0,177,140,0.45) 0%, rgba(0,140,110,0.20) 35%, rgba(0,90,70,0.08) 60%, transparent 78%), radial-gradient(ellipse 60% 90% at 0% 50%, rgba(4,40,32,0.85), transparent 65%), radial-gradient(ellipse 60% 90% at 100% 50%, rgba(4,40,32,0.85), transparent 65%), radial-gradient(circle at 50% 100%, rgba(5,20,16,0.9), transparent 70%)',
         }}
       />
 
