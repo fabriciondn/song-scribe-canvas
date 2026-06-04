@@ -23,7 +23,7 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
       id="top"
       className="relative overflow-hidden"
       style={{
-        background: 'var(--c-bg)',
+        background: '#000',
         minHeight: isMobile ? '100svh' : '100vh',
         display: 'flex',
         alignItems: 'center',
