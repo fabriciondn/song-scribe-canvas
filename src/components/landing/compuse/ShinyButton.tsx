@@ -10,6 +10,8 @@ export function ShinyButton({ children, onClick, className = "" }: ShinyButtonPr
   return (
     <>
       <style>{`
+        @import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,500&display=swap");
+
         @property --gradient-angle {
           syntax: "<angle>";
           initial-value: 0deg;
@@ -51,7 +53,7 @@ export function ShinyButton({ children, onClick, className = "" }: ShinyButtonPr
           cursor: pointer;
           outline-offset: 4px;
           padding: 1.25rem 2.5rem;
-          font-family: "Inter", system-ui, sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 1.125rem;
           line-height: 1.2;
           font-weight: 500;
