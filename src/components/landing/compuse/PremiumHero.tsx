@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
-import AnimatedGradient from './AnimatedGradient';
+import GradientBars from './GradientBars';
 
 interface Props {
   onPrimary?: () => void;
