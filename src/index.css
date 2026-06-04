@@ -479,3 +479,99 @@
 .animate-pulse-slow {
   animation: pulse-slow 8s ease-in-out infinite;
 }
+
+/* ============ COMPUSE DESIGN SYSTEM (landing) ============ */
+.compuse-scope {
+  --c-bg: #151515;
+  --c-bg-deep: #080909;
+  --c-surface: #1B1B1B;
+  --c-surface-soft: rgba(255,255,255,0.045);
+  --c-border: rgba(255,251,235,0.14);
+  --c-text: #FFFBEB;
+  --c-text-muted: rgba(255,251,235,0.68);
+  --c-text-soft: rgba(255,251,235,0.48);
+  --c-primary: #00B18C;
+  --c-primary-glow: rgba(0,177,140,0.35);
+  --c-primary-soft: rgba(0,177,140,0.12);
+  --c-danger: #FF4A5F;
+  --c-gold: #F5C86A;
+  --c-whatsapp: #25D366;
+  --ease-premium: cubic-bezier(0.76, 0, 0.24, 1);
+  --duration-fast: 240ms;
+  --duration-normal: 520ms;
+  --duration-slow: 900ms;
+  font-family: "Manrope", "Inter", system-ui, sans-serif;
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+.compuse-scope .font-display { font-family: "Space Grotesk", "Manrope", sans-serif; letter-spacing: -0.02em; }
+
+.compuse-scope .c-container { width: min(100% - 32px, 1200px); margin-inline: auto; }
+
+.compuse-scope .c-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: 999px; padding: 14px 26px;
+  border: 1px solid var(--c-border);
+  background: var(--c-text); color: var(--c-bg);
+  font-weight: 700; font-size: 15px;
+  transition: transform .28s ease, box-shadow .28s ease, background .28s ease, color .28s ease;
+  cursor: pointer; white-space: nowrap;
+}
+.compuse-scope .c-btn:hover { transform: translateY(-2px); box-shadow: 0 0 32px var(--c-primary-glow); }
+.compuse-scope .c-btn-secondary { background: transparent; color: var(--c-text); }
+.compuse-scope .c-btn-secondary:hover { background: rgba(255,255,255,0.04); }
+.compuse-scope .c-btn-whatsapp { background: var(--c-whatsapp); color: #06130B; border-color: transparent; }
+.compuse-scope .c-btn-primary { background: var(--c-primary); color: #06130B; border-color: transparent; }
+
+.compuse-scope .c-card {
+  border-radius: 24px;
+  border: 1px solid var(--c-border);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
+  padding: 28px; overflow: hidden;
+  transition: transform .45s var(--ease-premium), border-color .45s ease, background .45s ease;
+}
+.compuse-scope .c-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(0,177,140,.5);
+  background: linear-gradient(180deg, rgba(0,177,140,.08), rgba(255,255,255,.03));
+}
+
+.compuse-scope .reveal {
+  opacity: 0; transform: translateY(28px) scale(.98); filter: blur(8px);
+  transition: opacity .75s var(--ease-premium), transform .75s var(--ease-premium), filter .75s var(--ease-premium);
+}
+.compuse-scope .reveal.is-visible { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+
+.compuse-scope .orbit-item {
+  position: absolute; border-radius: 999px; will-change: transform, opacity;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+  border: 1px solid var(--c-border);
+  color: var(--c-text); font-weight: 600;
+  transition: box-shadow .35s ease, border-color .35s ease, background .35s ease;
+  cursor: pointer; backdrop-filter: blur(6px);
+}
+.compuse-scope .orbit-item:hover {
+  border-color: rgba(0,177,140,.6);
+  box-shadow: 0 0 36px rgba(0,177,140,.32);
+  background: linear-gradient(180deg, rgba(0,177,140,.18), rgba(0,177,140,.04));
+}
+.compuse-scope .orbit-center {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: 180px; height: 180px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 30% 30%, rgba(0,177,140,.35), rgba(0,177,140,.05) 60%, transparent 70%), #0d0d0d;
+  border: 1px solid rgba(0,177,140,.4);
+  box-shadow: 0 0 80px rgba(0,177,140,.35), inset 0 0 40px rgba(0,177,140,.15);
+  font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 24px;
+  letter-spacing: -0.02em;
+}
+
+@keyframes orbit-float {
+  0%, 100% { transform: translate(var(--ox,0px), var(--oy,0px)); }
+  50% { transform: translate(calc(var(--ox,0px) + 6px), calc(var(--oy,0px) - 8px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compuse-scope * { animation: none !important; transition-duration: 0.01ms !important; }
+}
