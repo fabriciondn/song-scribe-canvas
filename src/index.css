@@ -567,9 +567,21 @@
   letter-spacing: -0.02em;
 }
 
-@keyframes orbit-float {
-  0%, 100% { transform: translate(var(--ox,0px), var(--oy,0px)); }
-  50% { transform: translate(calc(var(--ox,0px) + 6px), calc(var(--oy,0px) - 8px)); }
+@keyframes orbit-spin-cw {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes orbit-spin-ccw {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(-360deg); }
+}
+@keyframes orbit-counter-cw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+@keyframes orbit-counter-ccw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
