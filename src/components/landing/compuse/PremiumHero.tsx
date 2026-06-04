@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import GradientBars from './GradientBars';
-import { LegalBadge } from './LegalBadge';
+import { AwardBadge } from '@/components/ui/award-badge';
 
 interface Props {
   onPrimary?: () => void;
@@ -90,7 +90,12 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
             </div>
 
             <div className="mb-6">
-              <LegalBadge text="Registro autoral com validade jurídica" />
+              <AwardBadge
+                type="golden-kitty"
+                customEyebrow="COMPUSE"
+                customTitle="Registro autoral com validade jurídica"
+                width={420}
+              />
             </div>
 
             <h1

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowRight, FileCheck, Fingerprint, Clock, Music } from 'lucide-react';
 import { Reveal } from './Reveal';
-import { LegalBadge } from './LegalBadge';
+import { AwardBadge } from '@/components/ui/award-badge';
 
 interface Props {
   onPrimary: () => void;
@@ -30,7 +30,12 @@ export const CompuseHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
       <div className="c-container relative">
         <Reveal>
           <div className="mb-6">
-            <LegalBadge text="Registro autoral com validade jurídica" />
+            <AwardBadge
+              type="golden-kitty"
+              customEyebrow="COMPUSE"
+              customTitle="Registro autoral com validade jurídica"
+              width={420}
+            />
           </div>
         </Reveal>
 
