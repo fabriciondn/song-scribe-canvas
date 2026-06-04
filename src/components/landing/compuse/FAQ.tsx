@@ -3,13 +3,38 @@ import { Plus, Minus } from 'lucide-react';
 import { Reveal } from './Reveal';
 
 const faqs = [
-  { q: 'O registro vale juridicamente?', a: 'Sim. O certificado é emitido com hash, timestamp e dados do autor, servindo como prova de anterioridade aceita em mais de 175 países.' },
-  { q: 'Posso registrar letra sem áudio?', a: 'Sim. Você pode registrar apenas a letra, apenas o áudio ou ambos juntos.' },
-  { q: 'Quanto tempo demora?', a: 'O certificado é emitido em até 5 minutos após a confirmação do envio.' },
-  { q: 'Recebo certificado em PDF?', a: 'Sim. Você recebe um PDF com dados da obra, autoria, hash e data/hora de emissão.' },
-  { q: 'Posso registrar várias músicas?', a: 'Sim, com pacotes promocionais para compositores ativos.' },
-  { q: 'O que é hash?', a: 'É a impressão digital única da sua obra, gerada a partir do conteúdo enviado. Qualquer alteração muda o hash.' },
-  { q: 'Qual a diferença entre registro, ISRC e distribuição?', a: 'Registro protege a autoria. ISRC identifica o fonograma. Distribuição leva sua música para plataformas como Spotify e YouTube.' },
+  {
+    q: 'O registro da Compuse substitui o registro no ECAD?',
+    a: 'Não — são coisas diferentes. O certificado da Compuse é uma evidência digital de autoria da obra. O ECAD cuida da arrecadação de direitos de execução pública. Os dois se complementam. Nosso time pode te explicar a diferença e o próximo passo certo pra sua situação.',
+  },
+  {
+    q: 'Posso registrar se nunca fiz isso antes?',
+    a: 'Sim — a Compuse foi criada exatamente pra quem está fazendo isso pela primeira vez. O processo é simples e tem suporte humano via WhatsApp em cada etapa.',
+  },
+  {
+    q: 'Quanto tempo leva pra receber o certificado?',
+    a: 'Minutos. Assim que o registro for processado, você recebe o certificado digital em PDF com todos os dados da obra.',
+  },
+  {
+    q: 'Como funciona o acesso à plataforma?',
+    a: 'Você acessa pelo site da Compuse, preenche os dados da música e o sistema gera o certificado. Simples, sem download e sem instalação.',
+  },
+  {
+    q: 'E se eu não gostar ou tiver algum problema?',
+    a: 'Nosso time está no WhatsApp pra resolver. Garantimos que você vai sair com sua obra registrada e protegida.',
+  },
+  {
+    q: 'Quais formas de pagamento são aceitas?',
+    a: 'Cartão de crédito, Pix e boleto bancário.',
+  },
+  {
+    q: 'Posso registrar músicas em parceria com outro compositor?',
+    a: 'Sim. O certificado inclui o nome de todos os autores da obra.',
+  },
+  {
+    q: 'Tem suporte? Como funciona?',
+    a: 'Suporte humano direto via WhatsApp — pessoas reais, não bots. Você pode tirar dúvidas antes, durante e depois do registro.',
+  },
 ];
 
 export const FAQ: React.FC = () => {
@@ -40,7 +65,7 @@ export const FAQ: React.FC = () => {
                   </button>
                   <div
                     style={{
-                      maxHeight: isOpen ? 300 : 0,
+                      maxHeight: isOpen ? 360 : 0,
                       overflow: 'hidden',
                       transition: 'max-height .52s var(--ease-premium), opacity .52s ease',
                       opacity: isOpen ? 1 : 0,

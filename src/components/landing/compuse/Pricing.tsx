@@ -6,17 +6,32 @@ interface Props { onCTA: () => void; }
 
 const plans = [
   {
-    name: 'Avulso',
-    tag: 'Para começar',
-    price: 'sob consulta',
-    features: ['1 música', 'Certificado em PDF', 'Hash da obra', 'Suporte pelo WhatsApp'],
+    name: 'Registro unitário',
+    tag: 'Pra começar',
+    price: 'R$ 19,99',
+    priceHint: '1 registro',
+    features: [
+      'Certificado digital em PDF',
+      'Hash criptográfico da obra',
+      'Comprovante de autoria com data/hora',
+      'Suporte via WhatsApp',
+    ],
+    cta: 'Registrar minha música',
     featured: false,
   },
   {
-    name: 'Pacote Compositor',
-    tag: 'Mais escolhido',
-    price: '10 obras',
-    features: ['10 músicas', '2 registros bônus', 'Atendimento prioritário', 'Bônus: lançamento digital'],
+    name: 'Pacote 10 + 2',
+    tag: 'Melhor valor',
+    price: 'R$ 179,99',
+    priceHint: '12 registros · R$ 14,99 por obra · economia de R$ 60',
+    features: [
+      '10 registros de obras',
+      '+2 registros bônus grátis',
+      'Certificados digitais em PDF',
+      'Hash criptográfico de cada obra',
+      'Suporte via WhatsApp',
+    ],
+    cta: 'Quero o pacote',
     featured: true,
   },
 ];
@@ -29,8 +44,12 @@ export const Pricing: React.FC<Props> = ({ onCTA }) => {
           <div className="max-w-3xl">
             <div className="text-sm font-medium mb-4" style={{ color: 'var(--c-primary)' }}>Pacotes</div>
             <h2 className="font-display font-bold" style={{ fontSize: 'clamp(1.8rem, 4vw, 3rem)' }}>
-              Escolha o que faz sentido pra sua obra.
+              Escolha o que faz sentido pro seu catálogo.
             </h2>
+            <p className="mt-5 text-base md:text-lg" style={{ color: 'var(--c-text-muted)' }}>
+              Registre uma música hoje ou proteja o catálogo inteiro de uma vez — com 2 registros
+              de bônus quando você fecha em pacote.
+            </p>
           </div>
         </Reveal>
 
@@ -57,8 +76,11 @@ export const Pricing: React.FC<Props> = ({ onCTA }) => {
                     {p.tag}
                   </span>
                 </div>
-                <h3 className="font-display text-3xl font-bold mt-6">{p.name}</h3>
-                <div className="mt-2 text-lg" style={{ color: 'var(--c-text-muted)' }}>{p.price}</div>
+                <h3 className="font-display text-2xl font-bold mt-6">{p.name}</h3>
+                <div className="mt-3 flex items-baseline gap-2">
+                  <span className="font-display text-4xl font-bold" style={{ color: 'var(--c-text)' }}>{p.price}</span>
+                </div>
+                <div className="mt-1 text-xs" style={{ color: 'var(--c-text-soft)' }}>{p.priceHint}</div>
 
                 <ul className="mt-6 space-y-3 flex-1">
                   {p.features.map((f) => (
@@ -73,7 +95,7 @@ export const Pricing: React.FC<Props> = ({ onCTA }) => {
                   onClick={onCTA}
                   className={`c-btn mt-8 w-full ${p.featured ? 'c-btn-primary' : ''}`}
                 >
-                  Quero esse plano
+                  {p.cta}
                 </button>
               </div>
             </Reveal>
