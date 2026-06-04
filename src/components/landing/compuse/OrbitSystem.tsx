@@ -237,6 +237,17 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
         alignItems: 'center',
       }}
     >
+      {/* subtle circular pattern (spec components.md §3) */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.07]"
+        style={{
+          backgroundImage:
+            'repeating-radial-gradient(circle at 50% 50%, rgba(255,251,235,0.5) 0 1px, transparent 1px 110px)',
+          maskImage: 'radial-gradient(ellipse 70% 70% at 50% 50%, #000 30%, transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 70% 70% at 50% 50%, #000 30%, transparent 80%)',
+        }}
+      />
+
       {/* ambient radial glow */}
       <div
         className="absolute inset-0 pointer-events-none"
