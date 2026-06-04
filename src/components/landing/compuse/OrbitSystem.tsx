@@ -232,7 +232,7 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 55% 60% at 50% 50%, rgba(0,177,140,0.22) 0%, rgba(0,177,140,0.05) 40%, transparent 70%), radial-gradient(ellipse 30% 80% at 0% 50%, rgba(180,30,40,0.18), transparent 60%), radial-gradient(ellipse 30% 80% at 100% 50%, rgba(180,30,40,0.18), transparent 60%)',
+            'radial-gradient(ellipse 45% 55% at 50% 50%, rgba(0,177,140,0.45) 0%, rgba(0,140,110,0.20) 35%, rgba(0,90,70,0.08) 60%, transparent 78%), radial-gradient(ellipse 60% 90% at 0% 50%, rgba(4,40,32,0.85), transparent 65%), radial-gradient(ellipse 60% 90% at 100% 50%, rgba(4,40,32,0.85), transparent 65%), radial-gradient(circle at 50% 100%, rgba(5,20,16,0.9), transparent 70%)',
         }}
       />
 
