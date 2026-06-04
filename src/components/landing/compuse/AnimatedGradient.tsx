@@ -225,8 +225,7 @@ export default function AnimatedGradient({
 
     startTimeRef.current = performance.now();
 
-    const animate = (time: number) => {
-      const elapsed = (time - startTimeRef.current) / 1000;
+    const render = (elapsed: number) => {
       const speed = (params.speed / 100) * 5;
       gl.uniform1f(uniforms.u_time, elapsed * speed + params.offset * 0.01);
       gl.uniform2f(uniforms.u_resolution, canvas.width, canvas.height);
@@ -249,15 +248,41 @@ export default function AnimatedGradient({
         uniforms.u_swirlIterations,
         params.swirl === 0 ? 0 : params.swirlIterations
       );
-
       gl.drawArrays(gl.TRIANGLES, 0, 6);
+    };
+
+    const animate = (time: number) => {
+      if (prefersReducedRef.current) {
+        render(pausedAtRef.current);
+        return;
+      }
+      const elapsed = (time - startTimeRef.current) / 1000;
+      pausedAtRef.current = elapsed;
+      render(elapsed);
       frameIdRef.current = requestAnimationFrame(animate);
     };
 
-    frameIdRef.current = requestAnimationFrame(animate);
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onMotionChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      prefersReducedRef.current = e.matches;
+      if (e.matches) {
+        if (frameIdRef.current !== undefined) {
+          cancelAnimationFrame(frameIdRef.current);
+          frameIdRef.current = undefined;
+        }
+        render(pausedAtRef.current);
+      } else {
+        startTimeRef.current = performance.now() - pausedAtRef.current * 1000;
+        frameIdRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    onMotionChange(mq);
+    mq.addEventListener?.("change", onMotionChange);
 
     return () => {
       if (frameIdRef.current !== undefined) cancelAnimationFrame(frameIdRef.current);
+      mq.removeEventListener?.("change", onMotionChange);
       resizeObserver.disconnect();
       gl.deleteProgram(program);
       gl.deleteShader(vertexShader);
