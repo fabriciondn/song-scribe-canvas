@@ -252,8 +252,8 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
         style={{
           width: stageSize,
           height: stageSize,
-          transform: `translate(-50%, -50%) translate(${-mouse.dx * 16}px, ${-mouse.dy * 16}px)`,
-          transition: 'transform .8s var(--ease-premium)',
+          transform: 'translate(-50%, -50%)',
+          willChange: 'transform',
         }}
       >
         {/* guide rings */}
