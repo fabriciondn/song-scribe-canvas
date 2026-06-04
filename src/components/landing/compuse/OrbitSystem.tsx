@@ -169,12 +169,12 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
     let lastScrollY = window.scrollY;
     let scrollBoost = 1;
     let targetBoost = 1;
-    const MAX_PARALLAX = 10; // px — subtle premium feel
+    // Per-layer parallax depth (spec animations.md §3): outer 28 / mid 16 / inner 8
+    const PARALLAX_DEPTH = [28, 16, 8];
 
     const onScroll = () => {
       const dy = window.scrollY - lastScrollY;
       lastScrollY = window.scrollY;
-      // small impulses; clamp gently. Down speeds up, up slows down.
       const impulse = Math.max(-0.8, Math.min(0.8, dy / 60));
       targetBoost = Math.max(0.55, Math.min(1.85, targetBoost + impulse));
     };
@@ -184,7 +184,6 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
       const dt = Math.min(64, now - last) / 1000;
       last = now;
 
-      // very gentle easing of boost toward target, target decays slowly to 1
       scrollBoost += (targetBoost - scrollBoost) * Math.min(1, dt * 2.2);
       targetBoost += (1 - targetBoost) * Math.min(1, dt * 0.9);
 
@@ -192,19 +191,21 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
       const ease = Math.min(1, dt * 3.2);
       mouseCurrentRef.current.x += (mouseTargetRef.current.x - mouseCurrentRef.current.x) * ease;
       mouseCurrentRef.current.y += (mouseTargetRef.current.y - mouseCurrentRef.current.y) * ease;
-      const px = -mouseCurrentRef.current.x * MAX_PARALLAX;
-      const py = -mouseCurrentRef.current.y * MAX_PARALLAX;
-      const stage = stageRef.current;
-      if (stage) {
-        stage.style.transform = `translate(-50%, -50%) translate3d(${px.toFixed(2)}px, ${py.toFixed(2)}px, 0)`;
-      }
+      const mx = -mouseCurrentRef.current.x;
+      const my = -mouseCurrentRef.current.y;
 
       rings.forEach((ring, i) => {
         const dirSign = ring.direction === 'cw' ? 1 : -1;
         const speedDegPerSec = (360 / ring.baseDuration) * scrollBoost * dirSign;
         angles[i] = (angles[i] + speedDegPerSec * dt) % 360;
         const el = ringRefs.current[i];
-        if (el) el.style.transform = `translate(-50%, -50%) rotate(${angles[i]}deg)`;
+        if (el) {
+          // outer ring index 0 -> depth 28, etc.
+          const depth = PARALLAX_DEPTH[i] ?? 8;
+          const px = (mx * depth).toFixed(2);
+          const py = (my * depth).toFixed(2);
+          el.style.transform = `translate(-50%, -50%) translate3d(${px}px, ${py}px, 0) rotate(${angles[i]}deg)`;
+        }
         const counters = counterRefs.current[i];
         if (counters) {
           const inv = -angles[i];
