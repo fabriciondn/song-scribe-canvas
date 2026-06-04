@@ -28,7 +28,7 @@ export const VideoPlayer = React.forwardRef<HTMLDivElement, VideoPlayerProps>(
     const [isPlaying, setIsPlaying] = React.useState(false);
     const [thumbSrc, setThumbSrc] = React.useState<string | undefined>(
       thumbnailUrl ||
-        (videoId ? `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg` : undefined)
+        (videoId ? `https://i.ytimg.com/vi/${videoId}/sddefault.jpg` : undefined)
     );
 
     const aspectClass =
