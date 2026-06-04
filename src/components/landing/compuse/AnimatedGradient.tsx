@@ -117,6 +117,8 @@ export default function AnimatedGradient({
   const containerRef = useRef<HTMLDivElement>(null);
   const frameIdRef = useRef<number | undefined>(undefined);
   const startTimeRef = useRef<number>(0);
+  const prefersReducedRef = useRef(false);
+  const pausedAtRef = useRef(0);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
