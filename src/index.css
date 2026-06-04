@@ -482,8 +482,8 @@
 
 /* ============ COMPUSE DESIGN SYSTEM (landing) ============ */
 .compuse-scope {
-  --c-bg: #151515;
-  --c-bg-deep: #080909;
+  --c-bg: #000000;
+  --c-bg-deep: #000000;
   --c-surface: #1B1B1B;
   --c-surface-soft: rgba(255,255,255,0.045);
   --c-border: rgba(255,251,235,0.14);
