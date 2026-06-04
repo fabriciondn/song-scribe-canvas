@@ -45,7 +45,7 @@ const decorativeBubbles: Omit<OrbitItem, 'kind' | 'avatarUrl'>[] = [
 
 const ringsConfig: RingConfig[] = [
   {
-    diameter: 235,
+    diameter: 188,
     baseDuration: 200,
     direction: 'cw',
     avatarSlots: 0,
