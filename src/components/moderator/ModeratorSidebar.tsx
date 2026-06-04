@@ -63,14 +63,14 @@ export function ModeratorSidebar() {
         <div className="flex items-center gap-2 px-2 py-4">
           {!collapsed && (
             <img 
-              src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+              src="/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png"
               alt="Compose Logo" 
               className="h-8"
             />
           )}
           {collapsed && (
             <img 
-              src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+              src="/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png"
               alt="Compose Logo" 
               className="h-6 w-6"
             />

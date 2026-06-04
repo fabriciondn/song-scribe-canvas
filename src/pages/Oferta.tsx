@@ -198,7 +198,7 @@ const Oferta: React.FC = () => {
       <header className="fixed top-0 w-full z-50 bg-black/90 backdrop-blur-sm border-b border-gray-800/50">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-center">
           <img 
-            src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+            src="/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png"
             alt="Compuse Logo" 
             className="h-8"
           />
@@ -402,7 +402,7 @@ const Oferta: React.FC = () => {
       <footer className="py-8 px-6 bg-gray-950 border-t border-gray-800">
         <div className="max-w-4xl mx-auto text-center">
           <img 
-            src="/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png"
+            src="/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png"
             alt="Compuse Logo" 
             className="h-6 mx-auto mb-4"
           />

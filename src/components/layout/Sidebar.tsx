@@ -127,7 +127,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ) : (
             <>
               <img 
-                src={theme === 'dark' ? "/lovable-uploads/01194843-44b5-470b-9611-9f7d44e46212.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
+                src={theme === 'dark' ? "/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png" : "/lovable-uploads/ba70bb76-0b14-48f2-a7e9-9a6e16e651f7.png"}
                 alt="Logo" 
                 className="h-10"
               />
