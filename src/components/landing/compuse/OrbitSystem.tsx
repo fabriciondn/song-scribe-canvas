@@ -177,10 +177,9 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
     const onScroll = () => {
       const dy = window.scrollY - lastScrollY;
       lastScrollY = window.scrollY;
-      // map |dy| (px) into extra boost: 0px -> 0, 100px -> ~2.5
-      const extra = Math.min(2.5, Math.abs(dy) / 40);
-      // direction influences sign only slightly (faster forward when scrolling down)
-      targetBoost = 1 + extra;
+      // Down (dy>0) speeds up, Up (dy<0) slows down. Range ~[0.25 .. 3]
+      const delta = Math.max(-2, Math.min(2, dy / 30));
+      targetBoost = Math.max(0.25, Math.min(3, 1 + delta));
     };
     window.addEventListener('scroll', onScroll, { passive: true });
 
