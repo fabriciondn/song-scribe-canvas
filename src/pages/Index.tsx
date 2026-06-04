@@ -91,9 +91,6 @@ const Index: React.FC = () => {
       <main>
         <PremiumHero onPrimary={handleGetStarted} onSecondary={handleLearnMore} />
         <ValueProp />
-        <section className="py-8 md:py-12" style={{ background: '#000' }}>
-          <AnimatedText text="Compuse" />
-        </section>
         <PainPoints />
         <Solution />
         <ServiceCards onCTA={handleGetStarted} />
@@ -105,6 +102,10 @@ const Index: React.FC = () => {
         <FAQ />
         <FinalCTA onCTA={handleGetStarted} />
       </main>
+
+      <section className="py-8 md:py-16" style={{ background: '#000' }}>
+        <AnimatedText text="Compuse" />
+      </section>
 
       <footer className="py-12" style={{ background: 'var(--c-bg-deep)', borderTop: '1px solid var(--c-border)' }}>
         <div className="c-container flex flex-col md:flex-row items-center justify-between gap-6">
