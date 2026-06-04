@@ -244,7 +244,7 @@ export const AwardBadge = ({ type, place, link, customTitle, customEyebrow, widt
               animation: disableOverlayAnimation ? "none" : "overlayAnimation1 5s infinite",
               willChange: "transform"
             }}>
-              <polygon points="0,0 260,54 260,0 0,54" fill="hsl(358, 100%, 62%)" filter="url(#blur1)" opacity="0.5" />
+              <polygon points={`0,0 ${W},${H} ${W},0 0,${H}`} fill="hsl(358, 100%, 62%)" filter="url(#blur1)" opacity="0.5" />
             </g>
             <g style={{
               transform: `rotate(${firstOverlayPosition + 10}deg)`,
@@ -253,7 +253,7 @@ export const AwardBadge = ({ type, place, link, customTitle, customEyebrow, widt
               animation: disableOverlayAnimation ? "none" : "overlayAnimation2 5s infinite",
               willChange: "transform"
             }}>
-              <polygon points="0,0 260,54 260,0 0,54" fill="hsl(30, 100%, 50%)" filter="url(#blur1)" opacity="0.5" />
+              <polygon points={`0,0 ${W},${H} ${W},0 0,${H}`} fill="hsl(30, 100%, 50%)" filter="url(#blur1)" opacity="0.5" />
             </g>
             <g style={{
               transform: `rotate(${firstOverlayPosition + 20}deg)`,
@@ -262,7 +262,7 @@ export const AwardBadge = ({ type, place, link, customTitle, customEyebrow, widt
               animation: disableOverlayAnimation ? "none" : "overlayAnimation3 5s infinite",
               willChange: "transform"
             }}>
-              <polygon points="0,0 260,54 260,0 0,54" fill="hsl(60, 100%, 50%)" filter="url(#blur1)" opacity="0.5" />
+              <polygon points={`0,0 ${W},${H} ${W},0 0,${H}`} fill="hsl(60, 100%, 50%)" filter="url(#blur1)" opacity="0.5" />
             </g>
             <g style={{
               transform: `rotate(${firstOverlayPosition + 30}deg)`,
@@ -271,7 +271,7 @@ export const AwardBadge = ({ type, place, link, customTitle, customEyebrow, widt
               animation: disableOverlayAnimation ? "none" : "overlayAnimation4 5s infinite",
               willChange: "transform"
             }}>
-              <polygon points="0,0 260,54 260,0 0,54" fill="hsl(96, 100%, 50%)" filter="url(#blur1)" opacity="0.5" />
+              <polygon points={`0,0 ${W},${H} ${W},0 0,${H}`} fill="hsl(96, 100%, 50%)" filter="url(#blur1)" opacity="0.5" />
             </g>
             <g style={{
               transform: `rotate(${firstOverlayPosition + 40}deg)`,
@@ -280,7 +280,7 @@ export const AwardBadge = ({ type, place, link, customTitle, customEyebrow, widt
               animation: disableOverlayAnimation ? "none" : "overlayAnimation5 5s infinite",
               willChange: "transform"
             }}>
-              <polygon points="0,0 260,54 260,0 0,54" fill="hsl(233, 85%, 47%)" filter="url(#blur1)" opacity="0.5" />
+              <polygon points={`0,0 ${W},${H} ${W},0 0,${H}`} fill="hsl(233, 85%, 47%)" filter="url(#blur1)" opacity="0.5" />
             </g>
             <g style={{
               transform: `rotate(${firstOverlayPosition + 50}deg)`,
@@ -289,7 +289,7 @@ export const AwardBadge = ({ type, place, link, customTitle, customEyebrow, widt
               animation: disableOverlayAnimation ? "none" : "overlayAnimation6 5s infinite",
               willChange: "transform"
             }}>
-              <polygon points="0,0 260,54 260,0 0,54" fill="hsl(271, 85%, 47%)" filter="url(#blur1)" opacity="0.5" />
+              <polygon points={`0,0 ${W},${H} ${W},0 0,${H}`} fill="hsl(271, 85%, 47%)" filter="url(#blur1)" opacity="0.5" />
             </g>
             <g style={{
               transform: `rotate(${firstOverlayPosition + 60}deg)`,
@@ -298,7 +298,7 @@ export const AwardBadge = ({ type, place, link, customTitle, customEyebrow, widt
               animation: disableOverlayAnimation ? "none" : "overlayAnimation7 5s infinite",
               willChange: "transform"
             }}>
-              <polygon points="0,0 260,54 260,0 0,54" fill="hsl(300, 20%, 35%)" filter="url(#blur1)" opacity="0.5" />
+              <polygon points={`0,0 ${W},${H} ${W},0 0,${H}`} fill="hsl(300, 20%, 35%)" filter="url(#blur1)" opacity="0.5" />
             </g>
             <g style={{
               transform: `rotate(${firstOverlayPosition + 70}deg)`,
@@ -307,7 +307,7 @@ export const AwardBadge = ({ type, place, link, customTitle, customEyebrow, widt
               animation: disableOverlayAnimation ? "none" : "overlayAnimation8 5s infinite",
               willChange: "transform"
             }}>
-              <polygon points="0,0 260,54 260,0 0,54" fill="transparent" filter="url(#blur1)" opacity="0.5" />
+              <polygon points={`0,0 ${W},${H} ${W},0 0,${H}`} fill="transparent" filter="url(#blur1)" opacity="0.5" />
             </g>
             <g style={{
               transform: `rotate(${firstOverlayPosition + 80}deg)`,
@@ -316,7 +316,7 @@ export const AwardBadge = ({ type, place, link, customTitle, customEyebrow, widt
               animation: disableOverlayAnimation ? "none" : "overlayAnimation9 5s infinite",
               willChange: "transform"
             }}>
-              <polygon points="0,0 260,54 260,0 0,54" fill="transparent" filter="url(#blur1)" opacity="0.5" />
+              <polygon points={`0,0 ${W},${H} ${W},0 0,${H}`} fill="transparent" filter="url(#blur1)" opacity="0.5" />
             </g>
             <g style={{
               transform: `rotate(${firstOverlayPosition + 90}deg)`,
@@ -325,7 +325,7 @@ export const AwardBadge = ({ type, place, link, customTitle, customEyebrow, widt
               animation: disableOverlayAnimation ? "none" : "overlayAnimation10 5s infinite",
               willChange: "transform"
             }}>
-              <polygon points="0,0 260,54 260,0 0,54" fill="white" filter="url(#blur1)" opacity="0.5" />
+              <polygon points={`0,0 ${W},${H} ${W},0 0,${H}`} fill="white" filter="url(#blur1)" opacity="0.5" />
             </g>
           </g>
         </svg>
