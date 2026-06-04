@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
-import AnimatedGradient from './AnimatedGradient';
+import GradientBars from './GradientBars';
 
 interface Props {
   onPrimary?: () => void;
@@ -29,47 +29,48 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
         alignItems: 'center',
       }}
     >
-      {/* Animated WebGL gradient — Compuse greens */}
-      <AnimatedGradient
-        config={{
-          preset: 'custom',
-          color1: '#000000',
-          color2: '#00B18C',
-          color3: '#050505',
-          rotation: -35,
-          proportion: 45,
-          scale: 0.55,
-          speed: 18,
-          distortion: 8,
-          swirl: 70,
-          swirlIterations: 8,
-          softness: 100,
-          offset: -180,
-          shape: 'Edge',
-          shapeSize: 38,
-        }}
-        noise={{ opacity: 0.18, scale: 1 }}
-        style={{ zIndex: 0 }}
+      {/* Inverted animated gradient bars — Compuse greens, hanging from top */}
+      <GradientBars
+        numBars={20}
+        gradientFrom="rgb(0, 177, 140)"
+        gradientTo="transparent"
+        animationDuration={2.5}
+        inverted
+        className="z-0"
       />
 
-      {/* Vignette + bottom fade for premium contrast */}
+      {/* Soft top glow to reinforce the hanging-bars feel */}
+      <div
+        className="absolute left-0 right-0 top-0 pointer-events-none"
+        style={{
+          zIndex: 1,
+          height: isMobile ? 220 : 320,
+          background:
+            'linear-gradient(to bottom, rgba(0,177,140,0.18) 0%, rgba(0,177,140,0.05) 50%, transparent 100%)',
+        }}
+      />
+
+      {/* Vignette for premium contrast */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           zIndex: 1,
           background:
-            'radial-gradient(ellipse 60% 80% at 50% 50%, transparent 0%, rgba(0,0,0,0.35) 70%, rgba(0,0,0,0.7) 100%)',
+            'radial-gradient(ellipse 70% 80% at 50% 60%, transparent 0%, rgba(0,0,0,0.45) 75%, rgba(0,0,0,0.8) 100%)',
         }}
       />
+
+      {/* Bottom fade into page background */}
       <div
         className="absolute left-0 right-0 bottom-0 pointer-events-none"
         style={{
           zIndex: 2,
-          height: isMobile ? 180 : 260,
+          height: isMobile ? 160 : 220,
           background:
-            'linear-gradient(to bottom, rgba(10,10,10,0) 0%, rgba(10,10,10,0.6) 50%, rgba(10,10,10,0.95) 85%, #0a0a0a 100%)',
+            'linear-gradient(to bottom, rgba(10,10,10,0) 0%, rgba(10,10,10,0.7) 60%, #0a0a0a 100%)',
         }}
       />
+
 
       {/* Hero content */}
       <div className="relative w-full" style={{ zIndex: 10 }}>
