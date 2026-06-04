@@ -297,9 +297,12 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
                 const rad = (angle * Math.PI) / 180;
                 const x = 50 + 50 * Math.cos(rad);
                 const y = 50 + 50 * Math.sin(rad);
-                const size = isMobile ? Math.max(48, it.size * 0.7) : it.size;
+                const isDecorative = !!ring.decorative;
+                const size = isMobile
+                  ? Math.max(isDecorative ? 110 : 48, it.size * (isDecorative ? 0.55 : 0.7))
+                  : it.size;
                 const fontSize = size > 80 ? 12 : 11;
-                const isH = hovered === it.id;
+                const isH = !isDecorative && hovered === it.id;
                 const isAvatar = it.kind === 'avatar';
                 return (
                   <div
@@ -308,7 +311,7 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
                       const arr = counterRefs.current[ri]!;
                       arr[idx] = el;
                     }}
-                    className="orbit-item pointer-events-auto"
+                    className={`orbit-item ${isDecorative ? '' : 'pointer-events-auto'}`}
                     style={{
                       left: `${x}%`,
                       top: `${y}%`,
@@ -320,19 +323,31 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
                       fontFamily: 'Space Grotesk, sans-serif',
                       letterSpacing: isAvatar ? 0 : 1,
                       color: 'var(--c-text-muted)',
-                      zIndex: 3 - ri,
+                      zIndex: isDecorative ? 1 : 3 - ri,
                       overflow: 'hidden',
                       padding: 0,
-                      background: isAvatar
+                      pointerEvents: isDecorative ? 'none' : undefined,
+                      background: isDecorative
+                        ? 'linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.008))'
+                        : isAvatar
                         ? 'rgba(255,255,255,0.04)'
                         : undefined,
-                      borderColor: isAvatar ? 'rgba(0,177,140,0.35)' : undefined,
-                      boxShadow: isAvatar ? '0 0 18px rgba(0,177,140,0.18)' : undefined,
+                      borderColor: isDecorative
+                        ? 'rgba(255,251,235,0.10)'
+                        : isAvatar
+                        ? 'rgba(0,177,140,0.35)'
+                        : undefined,
+                      boxShadow: isDecorative
+                        ? 'inset 0 0 40px rgba(255,255,255,0.025)'
+                        : isAvatar
+                        ? '0 0 18px rgba(0,177,140,0.18)'
+                        : undefined,
+                      backdropFilter: isDecorative ? 'none' : undefined,
                     }}
-                    onMouseEnter={() => setHovered(it.id)}
-                    onMouseLeave={() => setHovered(null)}
+                    onMouseEnter={isDecorative ? undefined : () => setHovered(it.id)}
+                    onMouseLeave={isDecorative ? undefined : () => setHovered(null)}
                   >
-                    {isAvatar ? (
+                    {isDecorative ? null : isAvatar ? (
                       <img
                         src={it.avatarUrl}
                         alt={it.label}
