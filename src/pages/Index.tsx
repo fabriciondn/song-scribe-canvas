@@ -17,6 +17,7 @@ import { Solution } from '@/components/landing/compuse/Solution';
 import { Objections } from '@/components/landing/compuse/Objections';
 import { GuaranteeUrgency } from '@/components/landing/compuse/GuaranteeUrgency';
 import { Testimonials } from '@/components/landing/compuse/Testimonials';
+import { VideoPlayer } from '@/components/landing/compuse/VideoPlayer';
 
 const Index: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -97,6 +98,26 @@ const Index: React.FC = () => {
         <HowItWorks />
         <Testimonials />
         <Pricing onCTA={handleGetStarted} />
+
+        <section className="py-20" style={{ background: 'var(--c-bg-deep)' }}>
+          <div className="c-container max-w-5xl">
+            <div className="text-center mb-10 max-w-2xl mx-auto">
+              <h2 className="font-display font-bold" style={{ fontSize: 'clamp(1.8rem, 4vw, 2.75rem)' }}>
+                Veja a Compuse <span style={{ color: 'var(--c-primary)' }}>em ação</span>
+              </h2>
+              <p className="mt-4 text-base md:text-lg" style={{ color: 'var(--c-text-muted)' }}>
+                Em menos de 2 minutos você entende como protegemos sua obra do início ao fim.
+              </p>
+            </div>
+            <VideoPlayer
+              thumbnailUrl="https://img.youtube.com/vi/tKQ7kZjvjqI/maxresdefault.jpg"
+              videoUrl="https://www.youtube.com/embed/tKQ7kZjvjqI"
+              title="Como funciona o registro Compuse"
+              description="Tour completo pela plataforma: do upload da obra ao certificado com hash criptográfico."
+            />
+          </div>
+        </section>
+
         <Objections />
         <GuaranteeUrgency />
         <FAQ />
