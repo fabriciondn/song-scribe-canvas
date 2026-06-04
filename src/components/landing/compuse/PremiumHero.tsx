@@ -89,12 +89,12 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
               />
             </div>
 
-            <div className="mb-6">
+            <div className="mb-6 flex justify-center">
               <AwardBadge
                 type="golden-kitty"
                 customEyebrow="COMPUSE"
                 customTitle="Registro autoral com validade jurídica"
-                width={420}
+                width={340}
               />
             </div>
 
