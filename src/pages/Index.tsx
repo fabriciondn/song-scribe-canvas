@@ -15,6 +15,7 @@ import { PainPoints } from '@/components/landing/compuse/PainPoints';
 import { Solution } from '@/components/landing/compuse/Solution';
 import { Objections } from '@/components/landing/compuse/Objections';
 import { GuaranteeUrgency } from '@/components/landing/compuse/GuaranteeUrgency';
+import { Testimonials } from '@/components/landing/compuse/Testimonials';
 
 const Index: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -93,6 +94,7 @@ const Index: React.FC = () => {
         <Solution />
         <ServiceCards onCTA={handleGetStarted} />
         <HowItWorks />
+        <Testimonials />
         <Pricing onCTA={handleGetStarted} />
         <Objections />
         <GuaranteeUrgency />
