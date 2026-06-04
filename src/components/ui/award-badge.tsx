@@ -6,6 +6,9 @@ interface AwardBadgeProps {
   type: AwardBadgeType;
   place?: number;
   link?: string;
+  customTitle?: string;
+  customEyebrow?: string;
+  width?: number;
 }
 
 const identityMatrix =
@@ -28,7 +31,9 @@ const title = {
   "product-of-the-week": "Product of the Week",
 };
 
-export const AwardBadge = ({ type, place, link }: AwardBadgeProps) => {
+export const AwardBadge = ({ type, place, link, customTitle, customEyebrow, width = 260 }: AwardBadgeProps) => {
+  const W = width;
+  const H = 54;
   const ref = useRef<HTMLAnchorElement>(null);
   const [firstOverlayPosition, setFirstOverlayPosition] = useState<number>(0);
   const [matrix, setMatrix] = useState<string>(identityMatrix);
@@ -194,7 +199,8 @@ export const AwardBadge = ({ type, place, link }: AwardBadgeProps) => {
       ref={ref}
       href={link}
       target="_blank"
-      className="block w-[180px] sm:w-[260px] h-auto cursor-pointer"
+      className="block h-auto cursor-pointer"
+      style={{ width: W }}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       onMouseEnter={onMouseEnter}
@@ -209,22 +215,22 @@ export const AwardBadge = ({ type, place, link }: AwardBadgeProps) => {
           transition: "transform 200ms ease-out"
         }}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 54" className="w-180px sm:w-260px h-auto">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${W} ${H}`} style={{ width: W, height: "auto" }}>
           <defs>
             <filter id="blur1">
               <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
             </filter>
             <mask id="badgeMask">
-              <rect width="260" height="54" fill="white" rx="10" />
+              <rect width={W} height={H} fill="white" rx="10" />
             </mask>
           </defs>
-          <rect width="260" height="54" rx="10" fill={backgroundColor[(place || 2) - 1] || backgroundColor[1]} />
-          <rect x="4" y="4" width="252" height="46" rx="8" fill="transparent" stroke="#bbb" strokeWidth="1" />
+          <rect width={W} height={H} rx="10" fill={backgroundColor[(place || 2) - 1] || backgroundColor[1]} />
+          <rect x="4" y="4" width={W - 8} height={H - 8} rx="8" fill="transparent" stroke="#bbb" strokeWidth="1" />
           <text fontFamily="Helvetica-Bold, Helvetica" fontSize="9" fontWeight="bold" fill="#666" x="53" y="20">
-            PRODUCT HUNT
+            {customEyebrow ?? "PRODUCT HUNT"}
           </text>
           <text fontFamily="Helvetica-Bold, Helvetica" fontSize="16" fontWeight="bold" fill="#666" x="52" y="40">
-            {title[type]}{place && ` #${place}`}
+            {customTitle ?? `${title[type]}${place ? ` #${place}` : ""}`}
           </text>
           <g transform="translate(8, 9)">
             <path fill="#666"
