@@ -419,20 +419,24 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
               className="font-display font-bold leading-[1.02]"
               style={{ fontSize: isMobile ? 'clamp(2rem, 9vw, 2.8rem)' : 'clamp(2.6rem, 4.6vw, 4rem)' }}
             >
-              Proteja sua música<br />
-              <span style={{ color: 'var(--c-primary)' }}>com você no controle.</span>
+              Proteja sua música sem burocracia,<br />
+              <span style={{ color: 'var(--c-primary)' }}>sem advogado e sem complicação.</span>
             </h1>
             <p className="mt-5 text-sm md:text-base" style={{ color: 'var(--c-text-muted)' }}>
-              Registro autoral, hash, timestamp e certificado em minutos.
+              Registre sua obra em minutos, receba certificado digital com hash criptográfico
+              e garanta a prova de autoria — com suporte humano no WhatsApp.
             </p>
             <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
               <button onClick={onPrimary} className="c-btn c-btn-primary">
-                Registrar agora <ArrowRight size={16} />
+                Registrar minha música agora <ArrowRight size={16} />
               </button>
               <button onClick={onSecondary} className="c-btn c-btn-secondary">
                 Como funciona
               </button>
             </div>
+            <p className="mt-4 text-xs" style={{ color: 'var(--c-text-soft)' }}>
+              Certificado emitido em minutos · Suporte via WhatsApp · A partir de R$ 19,99
+            </p>
           </div>
         </div>
       </div>
