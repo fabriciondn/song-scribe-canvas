@@ -29,7 +29,7 @@ interface RingConfig {
 
 const ringsConfig: RingConfig[] = [
   {
-    diameter: 178,
+    diameter: 145,
     baseDuration: 140,
     direction: 'cw',
     avatarSlots: 5,
