@@ -144,51 +144,60 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
     });
   }, [composers]);
 
-  // mouse parallax for whole stage
+  // refs for mouse parallax target (no React state — avoids re-renders)
+  const mouseTargetRef = useRef({ x: 0, y: 0 });
+  const mouseCurrentRef = useRef({ x: 0, y: 0 });
+
   useEffect(() => {
     if (isMobile) return;
-    let raf: number | null = null;
     const onMove = (e: MouseEvent) => {
-      const el = stageRef.current;
-      if (!el) return;
-      if (raf) cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        const r = el.getBoundingClientRect();
-        const cx = r.left + r.width / 2;
-        const cy = r.top + r.height / 2;
-        const dx = Math.max(-1, Math.min(1, (e.clientX - cx) / (r.width / 2)));
-        const dy = Math.max(-1, Math.min(1, (e.clientY - cy) / (r.height / 2)));
-        setMouse({ dx, dy });
-      });
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      // normalized -1..1, gentle range
+      mouseTargetRef.current.x = (e.clientX / w) * 2 - 1;
+      mouseTargetRef.current.y = (e.clientY / h) * 2 - 1;
     };
-    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mousemove', onMove, { passive: true });
     return () => window.removeEventListener('mousemove', onMove);
   }, [isMobile]);
 
-  // JS-driven rotation, with scroll-velocity speed boost
+  // JS-driven rotation + parallax in a single RAF for buttery smoothness
   useEffect(() => {
     let raf = 0;
     let last = performance.now();
     const angles = rings.map(() => 0);
     let lastScrollY = window.scrollY;
-    let scrollBoost = 1; // multiplier, decays back to 1
+    let scrollBoost = 1;
     let targetBoost = 1;
+    const MAX_PARALLAX = 10; // px — subtle premium feel
 
     const onScroll = () => {
       const dy = window.scrollY - lastScrollY;
       lastScrollY = window.scrollY;
-      // Down (dy>0) speeds up, Up (dy<0) slows down. Range ~[0.25 .. 3]
-      const delta = Math.max(-2, Math.min(2, dy / 30));
-      targetBoost = Math.max(0.25, Math.min(3, 1 + delta));
+      // small impulses; clamp gently. Down speeds up, up slows down.
+      const impulse = Math.max(-0.8, Math.min(0.8, dy / 60));
+      targetBoost = Math.max(0.55, Math.min(1.85, targetBoost + impulse));
     };
     window.addEventListener('scroll', onScroll, { passive: true });
 
     const tick = (now: number) => {
       const dt = Math.min(64, now - last) / 1000;
       last = now;
-      // ease boost toward target then decay target
-      scrollBoost += (targetBoost - scrollBoost) * Math.min(1, dt * 6);
-      targetBoost += (1 - targetBoost) * Math.min(1, dt * 2.5);
+
+      // very gentle easing of boost toward target, target decays slowly to 1
+      scrollBoost += (targetBoost - scrollBoost) * Math.min(1, dt * 2.2);
+      targetBoost += (1 - targetBoost) * Math.min(1, dt * 0.9);
+
+      // smooth mouse parallax (low-pass filter) — premium float
+      const ease = Math.min(1, dt * 3.2);
+      mouseCurrentRef.current.x += (mouseTargetRef.current.x - mouseCurrentRef.current.x) * ease;
+      mouseCurrentRef.current.y += (mouseTargetRef.current.y - mouseCurrentRef.current.y) * ease;
+      const px = -mouseCurrentRef.current.x * MAX_PARALLAX;
+      const py = -mouseCurrentRef.current.y * MAX_PARALLAX;
+      const stage = stageRef.current;
+      if (stage) {
+        stage.style.transform = `translate(-50%, -50%) translate3d(${px.toFixed(2)}px, ${py.toFixed(2)}px, 0)`;
+      }
 
       rings.forEach((ring, i) => {
         const dirSign = ring.direction === 'cw' ? 1 : -1;
