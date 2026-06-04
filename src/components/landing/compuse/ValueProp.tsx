@@ -3,7 +3,7 @@ import { Reveal } from './Reveal';
 
 export const ValueProp: React.FC = () => {
   return (
-    <section className="py-24" style={{ background: 'var(--c-bg)' }}>
+    <section className="py-24" style={{ background: '#000' }}>
       <div className="c-container max-w-3xl">
         <Reveal>
           <div className="text-sm font-medium mb-4" style={{ color: 'var(--c-primary)' }}>

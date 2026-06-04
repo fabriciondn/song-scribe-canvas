@@ -23,7 +23,7 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
       id="top"
       className="relative overflow-hidden"
       style={{
-        background: 'var(--c-bg)',
+        background: '#000',
         minHeight: isMobile ? '100svh' : '100vh',
         display: 'flex',
         alignItems: 'center',
@@ -60,16 +60,17 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
         }}
       />
 
-      {/* Bottom fade into page background */}
+      {/* Bottom smoke fade into pure black — long, soft, no hard cut */}
       <div
         className="absolute left-0 right-0 bottom-0 pointer-events-none"
         style={{
-          zIndex: 2,
-          height: isMobile ? 160 : 220,
+          zIndex: 3,
+          height: isMobile ? 340 : 480,
           background:
-            'linear-gradient(to bottom, rgba(10,10,10,0) 0%, rgba(10,10,10,0.7) 60%, #0a0a0a 100%)',
+            'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 35%, rgba(0,0,0,0.75) 65%, rgba(0,0,0,0.95) 85%, #000 100%)',
         }}
       />
+
 
 
       {/* Hero content */}
