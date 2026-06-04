@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight, FileCheck, Fingerprint, Clock, Music } from 'lucide-react';
 import { Reveal } from './Reveal';
+import { LegalBadge } from './LegalBadge';
 
 interface Props {
   onPrimary: () => void;
@@ -28,10 +29,8 @@ export const CompuseHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
 
       <div className="c-container relative">
         <Reveal>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium mb-6"
-            style={{ border: '1px solid var(--c-border)', background: 'var(--c-surface-soft)', color: 'var(--c-text-muted)' }}>
-            <span className="w-2 h-2 rounded-full" style={{ background: 'var(--c-primary)' }} />
-            Registro autoral com validade jurídica
+          <div className="mb-6">
+            <LegalBadge text="Registro autoral com validade jurídica" />
           </div>
         </Reveal>
 

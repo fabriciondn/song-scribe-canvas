@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import GradientBars from './GradientBars';
+import { LegalBadge } from './LegalBadge';
 
 interface Props {
   onPrimary?: () => void;
@@ -88,20 +89,8 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
               />
             </div>
 
-            <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium mb-6"
-              style={{
-                border: '1px solid rgba(255,255,255,0.12)',
-                background: 'rgba(0,0,0,0.35)',
-                backdropFilter: 'blur(8px)',
-                color: 'var(--c-text-muted)',
-              }}
-            >
-              <span
-                className="w-2 h-2 rounded-full"
-                style={{ background: 'var(--c-primary)', boxShadow: '0 0 12px var(--c-primary)' }}
-              />
-              Registro autoral com validade jurídica
+            <div className="mb-6">
+              <LegalBadge text="Registro autoral com validade jurídica" />
             </div>
 
             <h1
