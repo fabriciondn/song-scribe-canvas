@@ -2,61 +2,62 @@ import React from "react";
 import { Reveal } from "./Reveal";
 import { TestimonialsColumn, type Testimonial } from "./TestimonialsColumn";
 
-// ⚠ Substitua por depoimentos reais antes de publicar.
+// Compositores reais da plataforma Compuse. Textos abaixo são placeholders —
+// substitua por depoimentos reais coletados antes de publicar.
 const testimonials: Testimonial[] = [
   {
     text: "Em menos de 10 minutos minha música estava registrada com certificado digital. Mandei pra um produtor no dia seguinte sem medo nenhum.",
-    image: "https://i.pravatar.cc/80?img=12",
-    name: "Lucas Andrade",
-    role: "Compositor · São Paulo/SP",
+    image: "https://hnencfkdsyiwtvktdvzy.supabase.co/storage/v1/object/public/avatars/ab7729c4-167a-4100-9625-beb6919f469e/ab7729c4-167a-4100-9625-beb6919f469e-0.5884319993820103.jpg",
+    name: "Ed Fausto",
+    role: "Compositor · Água Branca/AL",
   },
   {
     text: "Nunca tinha registrado nenhuma música antes. Tinha medo de errar alguma coisa, mas o suporte no WhatsApp me guiou em tudo.",
-    image: "https://i.pravatar.cc/80?img=32",
-    name: "Mariana Costa",
-    role: "Cantora independente · Belo Horizonte/MG",
+    image: "https://hnencfkdsyiwtvktdvzy.supabase.co/storage/v1/object/public/avatars/d1264b90-2889-4d09-ba4c-96ddd8491611/d1264b90-2889-4d09-ba4c-96ddd8491611-0.9513545135097035.jpg",
+    name: "Juarez Maciel Rabelo",
+    role: "Compositor · Serra/ES",
   },
   {
-    text: "Comprei o pacote de 10+2 e protegi todo o repertório do nosso ministério de uma vez só. Vale demais o investimento.",
-    image: "https://i.pravatar.cc/80?img=15",
-    name: "Pastor Diego Moraes",
-    role: "Ministério de Louvor · Curitiba/PR",
+    text: "Comprei o pacote de 10+2 e protegi todo o meu repertório de uma vez só. Vale demais o investimento.",
+    image: "https://hnencfkdsyiwtvktdvzy.supabase.co/storage/v1/object/public/avatars/b30a05af-6b34-47f5-9914-e925f1e5b268/b30a05af-6b34-47f5-9914-e925f1e5b268-0.6213068476746759.jpg",
+    name: "Milton Rosa dos Santos",
+    role: "Compositor · Maringá/PR",
   },
   {
     text: "Tirei minha dúvida no WhatsApp em poucos minutos, com pessoa de verdade. Isso fez toda diferença pra eu confiar no processo.",
-    image: "https://i.pravatar.cc/80?img=47",
-    name: "Camila Ribeiro",
-    role: "Compositora · Salvador/BA",
+    image: "https://hnencfkdsyiwtvktdvzy.supabase.co/storage/v1/object/public/avatars/eea80b20-e28e-417e-99d0-1a471e7f2e35/eea80b20-e28e-417e-99d0-1a471e7f2e35-0.2058287531147529.jpeg",
+    name: "José da Silva Ramos",
+    role: "Compositor · Campinas/SP",
   },
   {
     text: "Tinha música em caderno, em áudio de WhatsApp, em bloco de notas. Hoje meu catálogo inteiro está protegido e organizado.",
-    image: "https://i.pravatar.cc/80?img=68",
-    name: "Rafael Mendes",
-    role: "Compositor · Goiânia/GO",
+    image: "https://hnencfkdsyiwtvktdvzy.supabase.co/storage/v1/object/public/avatars/11999e6c-1a52-4344-8637-83e7f027fe9b/11999e6c-1a52-4344-8637-83e7f027fe9b-0.8545880352218698.jpg",
+    name: "Joel Roque da Silva",
+    role: "Compositor · São Paulo/SP",
   },
   {
     text: "Eu achava que registrar música era caro e demorado. Paguei R$ 19,99 e recebi o certificado em minutos. Surreal.",
-    image: "https://i.pravatar.cc/80?img=23",
-    name: "Juliana Faria",
-    role: "Cantora e compositora · Recife/PE",
+    image: "https://hnencfkdsyiwtvktdvzy.supabase.co/storage/v1/object/public/avatars/f5fbc9bf-25c1-4757-b672-b4264f36cfa4/f5fbc9bf-25c1-4757-b672-b4264f36cfa4-0.9431225640274293.jpg",
+    name: "Jefferson Lima",
+    role: "Compositor · Campinas/SP",
   },
   {
     text: "Registrei uma parceria com outro compositor e o certificado já saiu com o nome dos dois. Resolvido sem complicação.",
-    image: "https://i.pravatar.cc/80?img=52",
-    name: "Eduardo Lima",
-    role: "Produtor musical · Porto Alegre/RS",
+    image: "https://hnencfkdsyiwtvktdvzy.supabase.co/storage/v1/object/public/avatars/e250830f-f12e-43b0-a32c-104ebcde8c00/e250830f-f12e-43b0-a32c-104ebcde8c00-0.0006559717593208614.jpg",
+    name: "Kacio Morais",
+    role: "Compositor · Fortaleza/CE",
   },
   {
     text: "O processo é tão simples que parece bom demais. Mas funciona — recebi o PDF assinado com hash e tudo em poucos minutos.",
-    image: "https://i.pravatar.cc/80?img=5",
-    name: "Beatriz Souza",
-    role: "Compositora · Florianópolis/SC",
+    image: "https://hnencfkdsyiwtvktdvzy.supabase.co/storage/v1/object/public/avatars/b4a52e69-2806-4afe-b0f2-c6a433de902e/b4a52e69-2806-4afe-b0f2-c6a433de902e-0.8531108704050755.jpeg",
+    name: "Micheli Martins",
+    role: "Compositora · Milagres/CE",
   },
   {
-    text: "Já indiquei pra três amigos compositores. Quem vive de música precisa proteger o que cria — e a Compuse facilita isso.",
-    image: "https://i.pravatar.cc/80?img=60",
-    name: "Thiago Nogueira",
-    role: "Compositor · Fortaleza/CE",
+    text: "Já indiquei pra vários amigos compositores. Quem vive de música precisa proteger o que cria — e a Compuse facilita isso.",
+    image: "https://hnencfkdsyiwtvktdvzy.supabase.co/storage/v1/object/public/avatars/7a0ca180-972f-47b4-8f0e-df383442ffe7/7a0ca180-972f-47b4-8f0e-df383442ffe7-0.6172164889055233.jpg",
+    name: "Márcia Consolação",
+    role: "Compositora · Minas Gerais/MG",
   },
 ];
 
