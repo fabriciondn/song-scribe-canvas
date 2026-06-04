@@ -25,49 +25,57 @@ interface RingConfig {
   labels: Omit<OrbitItem, 'kind' | 'avatarUrl'>[];
   /** how many slots in this ring should host composer avatars */
   avatarSlots: number;
+  /** outer decorative ring: render empty translucent bubbles, no text/avatars */
+  decorative?: boolean;
 }
+
+// Empty decorative bubbles for the outer ring (no text, varied sizes — matches reference)
+const decorativeBubbles: Omit<OrbitItem, 'kind' | 'avatarUrl'>[] = [
+  { id: 'd1',  label: '', tooltip: '', size: 260 },
+  { id: 'd2',  label: '', tooltip: '', size: 210 },
+  { id: 'd3',  label: '', tooltip: '', size: 290 },
+  { id: 'd4',  label: '', tooltip: '', size: 180 },
+  { id: 'd5',  label: '', tooltip: '', size: 240 },
+  { id: 'd6',  label: '', tooltip: '', size: 200 },
+  { id: 'd7',  label: '', tooltip: '', size: 270 },
+  { id: 'd8',  label: '', tooltip: '', size: 190 },
+  { id: 'd9',  label: '', tooltip: '', size: 230 },
+  { id: 'd10', label: '', tooltip: '', size: 220 },
+];
 
 const ringsConfig: RingConfig[] = [
   {
-    diameter: 176,
-    baseDuration: 140,
+    diameter: 235,
+    baseDuration: 200,
     direction: 'cw',
+    avatarSlots: 0,
+    decorative: true,
+    labels: decorativeBubbles,
+  },
+  {
+    diameter: 150,
+    baseDuration: 130,
+    direction: 'ccw',
     avatarSlots: 5,
     labels: [
-      { id: 'isrc',  label: 'ISRC',  tooltip: 'Código do fonograma.',              size: 112 },
-      { id: 'iswc',  label: 'ISWC',  tooltip: 'Código da composição.',             size: 70 },
-      { id: 'ismn',  label: 'ISMN',  tooltip: 'Código de publicação musical.',     size: 96 },
-      { id: 'isan',  label: 'ISAN',  tooltip: 'Identificador audiovisual.',        size: 62 },
-      { id: 'ipi',   label: 'IPI',   tooltip: 'Identificador de autor.',           size: 124 },
-      { id: 'ean',   label: 'EAN',   tooltip: 'Código de barras internacional.',   size: 68 },
-      { id: 'istc',  label: 'ISTC',  tooltip: 'Identificador de obras textuais.',  size: 88 },
-      { id: 'ddex',  label: 'DDEX',  tooltip: 'Padrão de metadados musicais.',     size: 104 },
-      { id: 'wipo',  label: 'WIPO',  tooltip: 'Propriedade intelectual mundial.',  size: 76 },
-      { id: 'mlc',   label: 'MLC',   tooltip: 'Mechanical Licensing Collective.',  size: 94 },
-      { id: 'bmi',   label: 'BMI',   tooltip: 'Sociedade de direitos EUA.',        size: 60 },
-      { id: 'upc',   label: 'UPC',   tooltip: 'Código universal de produto.',      size: 100 },
+      { id: 'isrc',   label: 'ISRC',         tooltip: 'Código do fonograma.',                size: 96  },
+      { id: 'iswc',   label: 'ISWC',         tooltip: 'Código da composição.',               size: 72  },
+      { id: 'ipi',    label: 'IPI',          tooltip: 'Identificador de autor.',             size: 108 },
+      { id: 'istc',   label: 'ISTC',         tooltip: 'Identificador de obras textuais.',    size: 82  },
+      { id: 'ean',    label: 'EAN',          tooltip: 'Código de barras internacional.',     size: 68  },
+      { id: 'upc',    label: 'UPC',          tooltip: 'Código universal de produto.',        size: 90  },
+      { id: 'hash',   label: 'HASH',         tooltip: 'Impressão digital única da obra.',    size: 82  },
+      { id: 'time',   label: 'TIMESTAMP',    tooltip: 'Data e hora certificadas.',           size: 108 },
+      { id: 'cert',   label: 'CERTIFICADO',  tooltip: 'PDF jurídico em até 5 minutos.',      size: 70  },
+      { id: 'dist',   label: 'DISTRIBUIÇÃO', tooltip: 'Spotify, YouTube e mais.',            size: 116 },
+      { id: 'ecad',   label: 'ECAD',         tooltip: 'Arrecadação no Brasil.',              size: 60  },
+      { id: 'royal',  label: 'ROYALTIES',    tooltip: 'Direitos de execução pública.',       size: 96  },
+      { id: 'pdf',    label: 'PDF',          tooltip: 'Certificado oficial em PDF.',         size: 78  },
+      { id: 'labels', label: '9 LABELS',     tooltip: 'Distribuímos para 9 grandes labels.', size: 92  },
     ],
   },
   {
-    diameter: 146,
-    baseDuration: 105,
-    direction: 'ccw',
-    avatarSlots: 4,
-    labels: [
-      { id: 'hash',   label: 'HASH',         tooltip: 'Impressão digital única da obra.',  size: 82 },
-      { id: 'time',   label: 'TIMESTAMP',    tooltip: 'Data e hora certificadas.',         size: 108 },
-      { id: 'cert',   label: 'CERTIFICADO',  tooltip: 'PDF jurídico em até 5 minutos.',    size: 68 },
-      { id: 'dist',   label: 'DISTRIBUIÇÃO', tooltip: 'Spotify, YouTube e mais.',          size: 116 },
-      { id: 'ecad',   label: 'ECAD',         tooltip: 'Arrecadação no Brasil.',            size: 60 },
-      { id: 'royal',  label: 'ROYALTIES',    tooltip: 'Direitos de execução pública.',     size: 98 },
-      { id: 'pro',    label: 'PRO',          tooltip: 'Performing Rights Org.',            size: 78 },
-      { id: 'da',     label: 'DA',           tooltip: 'Direitos autorais.',                size: 56 },
-      { id: 'pdf',    label: 'PDF',          tooltip: 'Certificado oficial em PDF.',       size: 86 },
-      { id: 'labels', label: '9 LABELS',     tooltip: 'Distribuímos para 9 grandes labels.', size: 92 },
-    ],
-  },
-  {
-    diameter: 118,
+    diameter: 105,
     baseDuration: 85,
     direction: 'cw',
     avatarSlots: 2,
