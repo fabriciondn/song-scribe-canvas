@@ -29,7 +29,7 @@ interface RingConfig {
 
 const ringsConfig: RingConfig[] = [
   {
-    diameter: 145,
+    diameter: 185,
     baseDuration: 140,
     direction: 'cw',
     avatarSlots: 5,
@@ -49,7 +49,7 @@ const ringsConfig: RingConfig[] = [
     ],
   },
   {
-    diameter: 102,
+    diameter: 122,
     baseDuration: 105,
     direction: 'ccw',
     avatarSlots: 4,
@@ -67,7 +67,7 @@ const ringsConfig: RingConfig[] = [
     ],
   },
   {
-    diameter: 62,
+    diameter: 78,
     baseDuration: 85,
     direction: 'cw',
     avatarSlots: 2,
@@ -222,7 +222,7 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
     };
   }, [rings]);
 
-  const stageSize = isMobile ? 'min(170vw, 820px)' : 'min(125vmin, 1400px)';
+  const stageSize = isMobile ? 'min(195vw, 920px)' : 'min(145vmin, 1600px)';
 
   return (
     <section
