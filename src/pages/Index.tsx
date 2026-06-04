@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { AuthForm } from '../components/auth/AuthForm';
 import { Button } from '@/components/ui/button';
 import { CompuseHeader } from '@/components/landing/compuse/CompuseHeader';
-import { OrbitSystem } from '@/components/landing/compuse/OrbitSystem';
+import { PremiumHero } from '@/components/landing/compuse/PremiumHero';
 import { ServiceCards } from '@/components/landing/compuse/ServiceCards';
 import { HowItWorks } from '@/components/landing/compuse/HowItWorks';
 import { Pricing } from '@/components/landing/compuse/Pricing';
@@ -88,7 +88,7 @@ const Index: React.FC = () => {
       <CompuseHeader onCTA={handleGetStarted} />
 
       <main>
-        <OrbitSystem onPrimary={handleGetStarted} onSecondary={handleLearnMore} />
+        <PremiumHero onPrimary={handleGetStarted} onSecondary={handleLearnMore} />
         <ValueProp />
         <PainPoints />
         <Solution />
