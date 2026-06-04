@@ -229,7 +229,7 @@ export const AwardBadge = ({ type, place, link, customTitle, customEyebrow, widt
           <text fontFamily="Helvetica-Bold, Helvetica" fontSize="9" fontWeight="bold" fill="#666" x="53" y="20">
             {customEyebrow ?? "PRODUCT HUNT"}
           </text>
-          <text fontFamily="Helvetica-Bold, Helvetica" fontSize="16" fontWeight="bold" fill="#666" x="52" y="40">
+          <text fontFamily="Helvetica-Bold, Helvetica" fontSize="12" fontWeight="bold" fill="#666" x="52" y="38">
             {customTitle ?? `${title[type]}${place ? ` #${place}` : ""}`}
           </text>
           <g transform="translate(8, 9)">
