@@ -187,7 +187,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
 
       {/* Glass card */}
       <div className="relative z-10 w-full max-w-md">
-        <div className="relative rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] p-8 md:p-10">
+        <div className="relative rounded-3xl p-8 md:p-10">
           {/* Logo */}
           <div className="flex flex-col items-center text-center mb-8">
             <h1 className="text-3xl font-bold tracking-tight text-white">Compuse</h1>
