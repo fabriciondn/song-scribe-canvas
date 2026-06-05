@@ -83,7 +83,7 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
                 type="golden-kitty"
                 customEyebrow="COMPUSE"
                 customTitle="Registro autoral com validade jurídica"
-                width={380}
+                width={300}
               />
             </div>
 
