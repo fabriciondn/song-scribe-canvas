@@ -26,6 +26,24 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
 
   const { login, register, loginWithGoogle, resetPassword } = useAuth();
   const { toast } = useToast();
+  const [avatars, setAvatars] = useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase.rpc('get_landing_composer_avatars', { limit_count: 12 });
+        if (data) {
+          const urls = (data as any[])
+            .map((c) => c.avatar_url)
+            .filter((u: string) => u && /^https?:\/\//.test(u))
+            .slice(0, 4);
+          setAvatars(urls);
+        }
+      } catch (e) {
+        console.warn('avatars load failed', e);
+      }
+    })();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
