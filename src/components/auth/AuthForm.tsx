@@ -235,7 +235,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
   // ----- Forgot password view -----
   if (showForgotPassword) {
     return (
-      <Shell>
+      {renderShell(<>
         <h2 className="text-xl font-semibold text-white mb-1">Esqueci minha senha</h2>
         <p className="text-[#9CA3AF] text-sm mb-6">
           Digite seu e-mail para receber um link.
@@ -276,13 +276,13 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
             Voltar para o login
           </button>
         </form>
-      </Shell>
+      </>)}
     );
   }
 
   // ----- Login / Register -----
   return (
-    <Shell>
+    {renderShell(<>
       <h2 className="text-xl font-semibold text-white mb-6 text-center">
         {mode === 'login' ? 'Bem-vindo de volta' : 'Crie sua conta'}
       </h2>
@@ -400,6 +400,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
           </button>
         </p>
       </form>
-    </Shell>
+    </>)}
   );
 };
