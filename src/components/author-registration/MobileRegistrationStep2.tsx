@@ -159,9 +159,17 @@ export const MobileRegistrationStep2: React.FC<MobileRegistrationStep2Props> = (
     setGenre(initialData.genre || '');
     setVersion(initialData.version || '');
     setLyrics(initialData.lyrics || '');
-    setAudioFile(initialData.audioFile || null);
+    // Preserva áudio local se o pai não tiver um novo arquivo (evita perder upload).
+    setAudioFile((prev) => initialData.audioFile || prev || null);
     setAdditionalInfo(initialData.additionalInfo || '');
-  }, [initialData]);
+  }, [
+    initialData?.registrationType,
+    initialData?.genre,
+    initialData?.version,
+    initialData?.lyrics,
+    initialData?.audioFile,
+    initialData?.additionalInfo,
+  ]);
   
   // Persistir dados localmente sempre que houver mudanças (exceto audioFile que não é serializável)
   useEffect(() => {

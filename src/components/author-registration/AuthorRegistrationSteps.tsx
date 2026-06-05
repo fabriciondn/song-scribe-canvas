@@ -182,7 +182,14 @@ export const AuthorRegistrationSteps: React.FC<AuthorRegistrationStepsProps> = (
     );
 
     setStep1Data(nextStep1Data);
-    setAudioFile(initialData.audioFile);
+    // Não sobrescrever um áudio já carregado localmente com null vindo do pai.
+    // Isso evita perder o arquivo escolhido pelo usuário quando o pai
+    // re-renderiza por mudanças não relacionadas (campos de texto, etc).
+    setAudioFile((prev) => {
+      if (initialData.audioFile) return initialData.audioFile;
+      if (prev) return prev;
+      return null;
+    });
     setLyrics(initialData.lyrics || '');
     setIsCurrentUser(Boolean(initialData.lockedByPrefill) || authorMatchesProfile);
 
