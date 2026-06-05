@@ -175,8 +175,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
     }
   };
 
-  // Shared shell wrapper
-  const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  const renderShell = (children: React.ReactNode) => (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#121212] relative overflow-hidden font-['Outfit',sans-serif] p-4">
       {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -185,7 +184,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#121212_70%)]" />
       </div>
 
-      {/* Glass card */}
       <div className="relative z-10 w-full max-w-md">
         <div className="relative rounded-3xl p-8 md:p-10">
           {/* Logo */}
@@ -228,14 +226,15 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
     </div>
   );
 
+
+
   // Input style
   const inputClass =
     'w-full h-12 px-4 bg-white/[0.04] border border-white/10 rounded-xl text-white placeholder:text-[#6B7280] focus:outline-none focus:border-[#00C853] focus:ring-2 focus:ring-[#00C853]/30 transition-all';
 
   // ----- Forgot password view -----
   if (showForgotPassword) {
-    return (
-      <Shell>
+    return renderShell(<>
         <h2 className="text-xl font-semibold text-white mb-1">Esqueci minha senha</h2>
         <p className="text-[#9CA3AF] text-sm mb-6">
           Digite seu e-mail para receber um link.
@@ -276,13 +275,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
             Voltar para o login
           </button>
         </form>
-      </Shell>
-    );
+      </>);
   }
 
   // ----- Login / Register -----
-  return (
-    <Shell>
+  return renderShell(<>
       <h2 className="text-xl font-semibold text-white mb-6 text-center">
         {mode === 'login' ? 'Bem-vindo de volta' : 'Crie sua conta'}
       </h2>
@@ -400,6 +397,5 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
           </button>
         </p>
       </form>
-    </Shell>
-  );
+    </>);
 };
