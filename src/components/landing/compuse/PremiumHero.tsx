@@ -78,23 +78,12 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
       <div className="relative w-full" style={{ zIndex: 10 }}>
         <div className="c-container">
           <div className="text-center mx-auto px-6" style={{ maxWidth: 760 }}>
-            <div className="flex justify-center mb-8">
-              <img
-                src="/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png"
-                alt="Compuse"
-                style={{
-                  height: isMobile ? 48 : 64,
-                  filter: 'drop-shadow(0 0 50px rgba(0,177,140,0.6))',
-                }}
-              />
-            </div>
-
             <div className="mb-6 flex justify-center">
               <AwardBadge
                 type="golden-kitty"
                 customEyebrow="COMPUSE"
                 customTitle="Registro autoral com validade jurídica"
-                width={340}
+                width={380}
               />
             </div>
 
