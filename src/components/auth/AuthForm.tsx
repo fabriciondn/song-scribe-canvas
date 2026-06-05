@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
@@ -26,6 +26,24 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
 
   const { login, register, loginWithGoogle, resetPassword } = useAuth();
   const { toast } = useToast();
+  const [avatars, setAvatars] = useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase.rpc('get_landing_composer_avatars', { limit_count: 12 });
+        if (data) {
+          const urls = (data as any[])
+            .map((c) => c.avatar_url)
+            .filter((u: string) => u && /^https?:\/\//.test(u))
+            .slice(0, 4);
+          setAvatars(urls);
+        }
+      } catch (e) {
+        console.warn('avatars load failed', e);
+      }
+    })();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,9 +190,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
         <div className="relative rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] p-8 md:p-10">
           {/* Logo */}
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00C853] to-[#009624] flex items-center justify-center shadow-lg shadow-[#00C853]/30 mb-4">
-              <span className="text-white text-2xl font-bold">C</span>
-            </div>
             <h1 className="text-3xl font-bold tracking-tight text-white">Compuse</h1>
             <p className="text-[#9CA3AF] text-sm mt-1 font-light">
               Proteja sua música, crie seu legado.
@@ -186,11 +201,23 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
         {/* Footer trust */}
         <div className="mt-8 flex flex-col items-center gap-3">
           <div className="flex -space-x-2">
-            {[1, 2, 3, 4].map((i) => (
+            {(avatars.length > 0
+              ? avatars
+              : [null, null, null, null]
+            ).map((url, i) => (
               <div
                 key={i}
-                className="w-8 h-8 rounded-full border-2 border-[#121212] bg-gradient-to-br from-[#00C853]/60 to-[#009624]/60"
-              />
+                className="w-8 h-8 rounded-full border-2 border-[#121212] overflow-hidden bg-gradient-to-br from-[#00C853]/60 to-[#009624]/60"
+              >
+                {url && (
+                  <img
+                    src={url}
+                    alt="Compositor"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                )}
+              </div>
             ))}
           </div>
           <p className="text-xs text-[#9CA3AF] text-center max-w-xs">
