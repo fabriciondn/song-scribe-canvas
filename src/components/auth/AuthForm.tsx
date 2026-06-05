@@ -397,6 +397,5 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
           </button>
         </p>
       </form>
-    </>)}
-  );
+    </>);
 };
