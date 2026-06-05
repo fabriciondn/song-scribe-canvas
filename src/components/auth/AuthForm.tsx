@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
