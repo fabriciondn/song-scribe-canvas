@@ -175,8 +175,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
     }
   };
 
-  // Shared shell wrapper
-  const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  const renderShell = (children: React.ReactNode) => (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#121212] relative overflow-hidden font-['Outfit',sans-serif] p-4">
       {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -185,7 +184,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#121212_70%)]" />
       </div>
 
-      {/* Glass card */}
       <div className="relative z-10 w-full max-w-md">
         <div className="relative rounded-3xl p-8 md:p-10">
           {/* Logo */}
@@ -227,6 +225,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
       </div>
     </div>
   );
+
+
 
   // Input style
   const inputClass =
