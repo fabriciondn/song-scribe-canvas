@@ -35,12 +35,11 @@ export function MarketingOverview({ aggregates }: Props) {
     const totalLeads = filtered.reduce((s, a) => s + a.metrics.totalLeads, 0);
     const totalSales = filtered.reduce((s, a) => s + a.metrics.totalSales, 0);
     const totalRevenue = filtered.reduce((s, a) => s + a.metrics.totalRevenue, 0);
-    const spendBase = totalSpent > 0 ? totalSpent : totalBudget;
     return {
       totalSpent, totalBudget, totalLeads, totalSales, totalRevenue,
-      cpl: totalLeads > 0 ? spendBase / totalLeads : null,
-      cac: totalSales > 0 ? spendBase / totalSales : null,
-      roi: spendBase > 0 ? ((totalRevenue - spendBase) / spendBase) * 100 : null,
+      cpl: totalLeads > 0 && totalSpent > 0 ? totalSpent / totalLeads : null,
+      cac: totalSales > 0 && totalSpent > 0 ? totalSpent / totalSales : null,
+      roi: totalSpent > 0 ? ((totalRevenue - totalSpent) / totalSpent) * 100 : null,
     };
   }, [filtered]);
 
@@ -95,8 +94,8 @@ export function MarketingOverview({ aggregates }: Props) {
       </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-        <KPI label="Orçamento" value={fmtMoney(totals.totalBudget)} />
-        <KPI label="Gasto" value={fmtMoney(totals.totalSpent)} />
+        <KPI label="Orçamento diário" value={fmtMoney(totals.totalBudget)} />
+        <KPI label="Gasto total" value={fmtMoney(totals.totalSpent)} />
         <KPI label="Receita" value={fmtMoney(totals.totalRevenue)} />
         <KPI label="Leads" value={String(totals.totalLeads)} />
         <KPI label="Vendas" value={String(totals.totalSales)} />
