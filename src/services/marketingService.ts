@@ -62,16 +62,14 @@ export function computeMetrics(
   const totalLeads = results.reduce((s, r) => s + (r.leads || 0), 0);
   const totalSales = results.reduce((s, r) => s + (r.sales || 0), 0);
   const totalRevenue = results.reduce((s, r) => s + Number(r.revenue || 0), 0);
-  // Use budget if no costs registered yet
-  const spendBase = totalSpent > 0 ? totalSpent : Number(campaign.total_budget || 0);
   return {
     totalSpent,
     totalLeads,
     totalSales,
     totalRevenue,
-    cpl: totalLeads > 0 ? spendBase / totalLeads : null,
-    cac: totalSales > 0 ? spendBase / totalSales : null,
-    roi: spendBase > 0 ? ((totalRevenue - spendBase) / spendBase) * 100 : null,
+    cpl: totalLeads > 0 && totalSpent > 0 ? totalSpent / totalLeads : null,
+    cac: totalSales > 0 && totalSpent > 0 ? totalSpent / totalSales : null,
+    roi: totalSpent > 0 ? ((totalRevenue - totalSpent) / totalSpent) * 100 : null,
   };
 }
 
