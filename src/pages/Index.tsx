@@ -74,20 +74,8 @@ const Index: React.FC = () => {
 
   if (showAuth) {
     return (
-      <div className="h-screen w-screen bg-black flex flex-col items-center justify-center px-6 py-4 overflow-hidden">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAuth(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              ← Voltar para o site
-            </Button>
-          </div>
-          <AuthForm defaultMode={defaultAuthMode} />
-        </div>
+      <div className="h-screen w-screen bg-black overflow-hidden">
+        <AuthForm defaultMode={defaultAuthMode} onBack={() => setShowAuth(false)} />
       </div>
     );
   }
