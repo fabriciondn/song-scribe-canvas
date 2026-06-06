@@ -86,8 +86,8 @@ export function CampaignsList({ aggregates, loading, onRefresh }: Props) {
                 <TableHead>Nome</TableHead>
                 <TableHead>Plataforma</TableHead>
                 <TableHead>Período</TableHead>
-                <TableHead>Orçamento</TableHead>
-                <TableHead>Gasto</TableHead>
+                <TableHead>Orçamento diário</TableHead>
+                <TableHead>Gasto total</TableHead>
                 <TableHead>Leads</TableHead>
                 <TableHead>Vendas</TableHead>
                 <TableHead>Receita</TableHead>
