@@ -188,8 +188,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => 
         <div className="relative rounded-3xl p-8 md:p-10">
           {/* Logo */}
           <div className="flex flex-col items-center text-center mb-8">
-            <h1 className="text-3xl font-bold tracking-tight text-white">Compuse</h1>
-            <p className="text-[#9CA3AF] text-sm mt-1 font-light">
+            <img
+              src="/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png"
+              alt="Compuse"
+              className="h-10 mx-auto"
+            />
+            <p className="text-[#9CA3AF] text-sm mt-3 font-light">
               Proteja sua música, crie seu legado.
             </p>
           </div>
