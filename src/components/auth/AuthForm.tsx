@@ -187,6 +187,18 @@ export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login', onBac
 
       <div className="relative z-10 w-full max-w-md">
         <div className="relative rounded-3xl p-8 md:p-10">
+          {/* Back link */}
+          {onBack && (
+            <div className="mb-4 text-center">
+              <button
+                type="button"
+                onClick={onBack}
+                className="text-xs text-[#9CA3AF] hover:text-white transition-colors"
+              >
+                ← Voltar para o site
+              </button>
+            </div>
+          )}
           {/* Logo */}
           <div className="flex flex-col items-center text-center mb-8">
             <img
