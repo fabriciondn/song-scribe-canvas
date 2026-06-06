@@ -113,7 +113,7 @@ export function CampaignFormDialog({ open, onOpenChange, campaign, onSaved }: Pr
             </div>
           </div>
           <div className="grid gap-2">
-            <Label>Orçamento total (R$)</Label>
+            <Label>Orçamento diário (R$)</Label>
             <Input type="number" step="0.01" value={form.total_budget} onChange={(e) => setForm({ ...form, total_budget: parseFloat(e.target.value) || 0 })} />
           </div>
           <div className="grid gap-2">
