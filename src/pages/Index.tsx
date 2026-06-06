@@ -65,12 +65,7 @@ const Index: React.FC = () => {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8 space-y-4">
-            <img
-              src="/__l5e/assets-v1/3e3bdce3-f19c-4b1d-afe0-4fcac32b4eb2/logo-compuse.png"
-              alt="Compuse Logo"
-              className="h-8 mx-auto"
-            />
+          <div className="text-center mb-4">
             <Button
               variant="ghost"
               onClick={() => setShowAuth(false)}
