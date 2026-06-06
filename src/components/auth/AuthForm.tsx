@@ -8,12 +8,13 @@ type AuthMode = 'login' | 'register';
 
 interface AuthFormProps {
   defaultMode?: AuthMode;
+  onBack?: () => void;
 }
 
 const validateEmail = (email: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login' }) => {
+export const AuthForm: React.FC<AuthFormProps> = ({ defaultMode = 'login', onBack }) => {
   const [mode, setMode] = useState<AuthMode>(defaultMode);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
