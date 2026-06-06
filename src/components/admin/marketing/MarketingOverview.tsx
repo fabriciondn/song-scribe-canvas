@@ -95,8 +95,8 @@ export function MarketingOverview({ aggregates }: Props) {
       </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-        <KPI label="Orçamento" value={fmtMoney(totals.totalBudget)} />
-        <KPI label="Gasto" value={fmtMoney(totals.totalSpent)} />
+        <KPI label="Orçamento diário" value={fmtMoney(totals.totalBudget)} />
+        <KPI label="Gasto total" value={fmtMoney(totals.totalSpent)} />
         <KPI label="Receita" value={fmtMoney(totals.totalRevenue)} />
         <KPI label="Leads" value={String(totals.totalLeads)} />
         <KPI label="Vendas" value={String(totals.totalSales)} />
