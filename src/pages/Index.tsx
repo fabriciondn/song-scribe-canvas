@@ -74,11 +74,12 @@ const Index: React.FC = () => {
 
   if (showAuth) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6">
+      <div className="h-screen w-screen bg-black flex flex-col items-center justify-center px-6 py-4 overflow-hidden">
         <div className="w-full max-w-md">
-          <div className="text-center mb-4">
+          <div className="text-center mb-2">
             <Button
               variant="ghost"
+              size="sm"
               onClick={() => setShowAuth(false)}
               className="text-gray-400 hover:text-white"
             >
