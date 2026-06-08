@@ -30,6 +30,11 @@ export function CampaignDetailsDialog({ open, onOpenChange, campaign, onChanged 
     cpm: "" as string | number, ctr: "" as string | number,
   });
 
+  const [dailyForm, setDailyForm] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    spent: 0, leads: 0, sales: 0, revenue: 0,
+  });
+
   const load = async () => {
     if (!campaign) return;
     setLoading(true);
