@@ -197,10 +197,10 @@ export function MarketingOverview({ aggregates }: Props) {
             {subtitle && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
           </div>
           <div
-            className="shrink-0 p-2 rounded-lg"
+            className="shrink-0 p-1.5 rounded-md"
             style={{ backgroundColor: `${accent || "hsl(var(--primary))"}20` }}
           >
-            <Icon className="h-4 w-4" style={{ color: accent || "hsl(var(--primary))" }} />
+            <Icon className="h-3.5 w-3.5" style={{ color: accent || "hsl(var(--primary))" }} />
           </div>
         </div>
       </CardContent>
