@@ -147,7 +147,7 @@ export function CampaignsList({ aggregates, loading, onRefresh }: Props) {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              );})}
             </TableBody>
           </Table>
         </div>
