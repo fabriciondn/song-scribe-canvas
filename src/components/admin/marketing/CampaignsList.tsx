@@ -101,7 +101,11 @@ export function CampaignsList({ aggregates, loading, onRefresh }: Props) {
               {loading && <TableRow><TableCell colSpan={12} className="text-center">Carregando...</TableCell></TableRow>}
               {!loading && filtered.length === 0 && <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground">Nenhuma campanha.</TableCell></TableRow>}
               {filtered.map(({ campaign, metrics }) => (
-                <TableRow key={campaign.id}>
+                <TableRow
+                  key={campaign.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => { setDetailsTarget(campaign); setDetailsOpen(true); }}
+                >
                   <TableCell className="font-medium">{campaign.name}</TableCell>
                   <TableCell><Badge variant="secondary">{campaign.platform}</Badge></TableCell>
                   <TableCell className="text-xs">
@@ -118,7 +122,7 @@ export function CampaignsList({ aggregates, loading, onRefresh }: Props) {
                   <TableCell className={metrics.roi != null && metrics.roi >= 0 ? "text-green-600" : "text-red-600"}>
                     {fmtPct(metrics.roi)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1">
                       <Button size="icon" variant="ghost" title="Detalhes" onClick={() => { setDetailsTarget(campaign); setDetailsOpen(true); }}>
                         <BarChart3 className="h-4 w-4" />

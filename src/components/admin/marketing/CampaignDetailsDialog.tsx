@@ -96,11 +96,75 @@ export function CampaignDetailsDialog({ open, onOpenChange, campaign, onChanged 
         <DialogHeader>
           <DialogTitle>{campaign.name} — {campaign.platform}</DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="costs">
+        <Tabs defaultValue="daily">
           <TabsList>
+            <TabsTrigger value="daily">Desempenho diário</TabsTrigger>
             <TabsTrigger value="costs">Custos</TabsTrigger>
             <TabsTrigger value="results">Resultados</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="daily" className="space-y-4">
+            {(() => {
+              const map = new Map<string, { spent: number; leads: number; sales: number; revenue: number; impressions: number; clicks: number }>();
+              const ensure = (d: string) => {
+                if (!map.has(d)) map.set(d, { spent: 0, leads: 0, sales: 0, revenue: 0, impressions: 0, clicks: 0 });
+                return map.get(d)!;
+              };
+              costs.forEach((c) => { ensure(c.cost_date).spent += Number(c.amount || 0); });
+              results.forEach((r) => {
+                const row = ensure(r.result_date);
+                row.leads += r.leads || 0;
+                row.sales += r.sales || 0;
+                row.revenue += Number(r.revenue || 0);
+                row.impressions += Number(r.impressions || 0);
+                row.clicks += Number(r.clicks || 0);
+              });
+              const rows = Array.from(map.entries())
+                .sort((a, b) => b[0].localeCompare(a[0]))
+                .map(([date, v]) => {
+                  const cpl = v.leads > 0 && v.spent > 0 ? v.spent / v.leads : null;
+                  const cac = v.sales > 0 && v.spent > 0 ? v.spent / v.sales : null;
+                  const roi = v.spent > 0 ? ((v.revenue - v.spent) / v.spent) * 100 : null;
+                  return { date, ...v, cpl, cac, roi };
+                });
+              return (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Gasto</TableHead>
+                      <TableHead>Leads</TableHead>
+                      <TableHead>Vendas</TableHead>
+                      <TableHead>Receita</TableHead>
+                      <TableHead>CPL</TableHead>
+                      <TableHead>CAC</TableHead>
+                      <TableHead>ROI</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.length === 0 && (
+                      <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">Nenhum dado diário ainda. Registre custos e resultados nas abas ao lado.</TableCell></TableRow>
+                    )}
+                    {rows.map((r) => (
+                      <TableRow key={r.date}>
+                        <TableCell className="font-medium">{new Date(r.date).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })}</TableCell>
+                        <TableCell>{fmt(r.spent)}</TableCell>
+                        <TableCell>{r.leads}</TableCell>
+                        <TableCell>{r.sales}</TableCell>
+                        <TableCell>{fmt(r.revenue)}</TableCell>
+                        <TableCell>{r.cpl != null ? fmt(r.cpl) : "-"}</TableCell>
+                        <TableCell>{r.cac != null ? fmt(r.cac) : "-"}</TableCell>
+                        <TableCell className={r.roi == null ? "" : r.roi >= 0 ? "text-green-600" : "text-red-600"}>
+                          {r.roi != null ? `${r.roi.toFixed(1)}%` : "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              );
+            })()}
+          </TabsContent>
+
 
           <TabsContent value="costs" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2 items-end">
