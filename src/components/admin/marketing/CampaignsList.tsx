@@ -101,7 +101,11 @@ export function CampaignsList({ aggregates, loading, onRefresh }: Props) {
               {loading && <TableRow><TableCell colSpan={12} className="text-center">Carregando...</TableCell></TableRow>}
               {!loading && filtered.length === 0 && <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground">Nenhuma campanha.</TableCell></TableRow>}
               {filtered.map(({ campaign, metrics }) => (
-                <TableRow key={campaign.id}>
+                <TableRow
+                  key={campaign.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => { setDetailsTarget(campaign); setDetailsOpen(true); }}
+                >
                   <TableCell className="font-medium">{campaign.name}</TableCell>
                   <TableCell><Badge variant="secondary">{campaign.platform}</Badge></TableCell>
                   <TableCell className="text-xs">
