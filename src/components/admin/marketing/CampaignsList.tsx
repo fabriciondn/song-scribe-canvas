@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, BarChart3 } from "lucide-react";
+import { Plus, Pencil, Trash2, BarChart3, CircleDot, CheckCircle2 } from "lucide-react";
 import { CampaignAggregate, marketingService, Campaign } from "@/services/marketingService";
 import { CampaignFormDialog } from "./CampaignFormDialog";
 import { CampaignDetailsDialog } from "./CampaignDetailsDialog";
@@ -83,6 +83,7 @@ export function CampaignsList({ aggregates, loading, onRefresh }: Props) {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Status</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Plataforma</TableHead>
                 <TableHead>Período</TableHead>
@@ -98,14 +99,24 @@ export function CampaignsList({ aggregates, loading, onRefresh }: Props) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && <TableRow><TableCell colSpan={12} className="text-center">Carregando...</TableCell></TableRow>}
-              {!loading && filtered.length === 0 && <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground">Nenhuma campanha.</TableCell></TableRow>}
-              {filtered.map(({ campaign, metrics }) => (
+              {loading && <TableRow><TableCell colSpan={13} className="text-center">Carregando...</TableCell></TableRow>}
+              {!loading && filtered.length === 0 && <TableRow><TableCell colSpan={13} className="text-center text-muted-foreground">Nenhuma campanha.</TableCell></TableRow>}
+              {filtered.map(({ campaign, metrics }) => {
+                const today = new Date(); today.setHours(0,0,0,0);
+                const isFinished = !!campaign.end_date && new Date(campaign.end_date) < today;
+                return (
                 <TableRow
                   key={campaign.id}
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => { setDetailsTarget(campaign); setDetailsOpen(true); }}
                 >
+                  <TableCell>
+                    {isFinished ? (
+                      <Badge variant="secondary" className="gap-1"><CheckCircle2 className="h-3 w-3" /> Finalizada</Badge>
+                    ) : (
+                      <Badge className="gap-1 bg-green-600 hover:bg-green-600 text-white"><CircleDot className="h-3 w-3 animate-pulse" /> Ativa</Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="font-medium">{campaign.name}</TableCell>
                   <TableCell><Badge variant="secondary">{campaign.platform}</Badge></TableCell>
                   <TableCell className="text-xs">
@@ -136,7 +147,7 @@ export function CampaignsList({ aggregates, loading, onRefresh }: Props) {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              );})}
             </TableBody>
           </Table>
         </div>
