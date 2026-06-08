@@ -109,6 +109,62 @@ export function CampaignDetailsDialog({ open, onOpenChange, campaign, onChanged 
           </TabsList>
 
           <TabsContent value="daily" className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-2 items-end p-3 rounded-md border bg-muted/30">
+              <div>
+                <Label>Data</Label>
+                <Input type="date" value={dailyForm.date} onChange={(e) => setDailyForm({ ...dailyForm, date: e.target.value })} />
+              </div>
+              <div>
+                <Label>Gasto (R$)</Label>
+                <Input type="number" step="0.01" value={dailyForm.spent} onChange={(e) => setDailyForm({ ...dailyForm, spent: parseFloat(e.target.value) || 0 })} />
+              </div>
+              <div>
+                <Label>Leads</Label>
+                <Input type="number" value={dailyForm.leads} onChange={(e) => setDailyForm({ ...dailyForm, leads: parseInt(e.target.value) || 0 })} />
+              </div>
+              <div>
+                <Label>Vendas</Label>
+                <Input type="number" value={dailyForm.sales} onChange={(e) => setDailyForm({ ...dailyForm, sales: parseInt(e.target.value) || 0 })} />
+              </div>
+              <div>
+                <Label>Receita (R$)</Label>
+                <Input type="number" step="0.01" value={dailyForm.revenue} onChange={(e) => setDailyForm({ ...dailyForm, revenue: parseFloat(e.target.value) || 0 })} />
+              </div>
+              <Button
+                onClick={async () => {
+                  if (dailyForm.spent <= 0 && dailyForm.leads === 0 && dailyForm.sales === 0 && dailyForm.revenue === 0) {
+                    toast({ title: "Informe ao menos um valor", variant: "destructive" }); return;
+                  }
+                  try {
+                    if (dailyForm.spent > 0) {
+                      await marketingService.addCost({
+                        campaign_id: campaign.id,
+                        description: "Gasto do dia",
+                        amount: dailyForm.spent,
+                        cost_date: dailyForm.date,
+                      });
+                    }
+                    if (dailyForm.leads || dailyForm.sales || dailyForm.revenue) {
+                      await marketingService.addResult({
+                        campaign_id: campaign.id,
+                        result_date: dailyForm.date,
+                        leads: dailyForm.leads,
+                        sales: dailyForm.sales,
+                        revenue: dailyForm.revenue,
+                        impressions: null, clicks: null, cpm: null, ctr: null,
+                      });
+                    }
+                    setDailyForm({ date: new Date().toISOString().slice(0, 10), spent: 0, leads: 0, sales: 0, revenue: 0 });
+                    await load(); onChanged();
+                    toast({ title: "Dia registrado" });
+                  } catch (e: any) {
+                    toast({ title: "Erro", description: e.message, variant: "destructive" });
+                  }
+                }}
+              >
+                Lançar dia
+              </Button>
+            </div>
             {(() => {
               const map = new Map<string, { spent: number; leads: number; sales: number; revenue: number; impressions: number; clicks: number }>();
               const ensure = (d: string) => {
