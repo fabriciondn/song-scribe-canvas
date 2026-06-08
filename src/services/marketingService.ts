@@ -170,6 +170,17 @@ export const marketingService = {
     return data as CampaignResult;
   },
 
+  async updateResult(id: string, payload: Partial<CampaignResult>): Promise<CampaignResult> {
+    const { data, error } = await supabase
+      .from("marketing_campaign_results")
+      .update(payload)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as CampaignResult;
+  },
+
   async deleteResult(id: string): Promise<void> {
     const { error } = await supabase
       .from("marketing_campaign_results")
