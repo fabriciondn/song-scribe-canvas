@@ -363,11 +363,9 @@ export function MarketingOverview({ aggregates }: Props) {
       {/* ROI + Conversão + Ticket */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card className="border-border/50 overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground uppercase tracking-wider">ROI</CardTitle>
-          </CardHeader>
-          <CardContent style={{ height: 180 }}>
-            <ResponsiveContainer width="100%" height="100%">
+          <CardContent className="p-3" style={{ height: 120 }}>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mb-1">ROI</p>
+            <ResponsiveContainer width="100%" height="85%">
               <RadialBarChart
                 innerRadius="65%"
                 outerRadius="100%"
@@ -382,7 +380,7 @@ export function MarketingOverview({ aggregates }: Props) {
                   textAnchor="middle"
                   dominantBaseline="middle"
                   className="fill-foreground"
-                  style={{ fontSize: 28, fontWeight: 700 }}
+                  style={{ fontSize: 20, fontWeight: 700 }}
                 >
                   {totals.roi == null ? "—" : `${totals.roi.toFixed(1)}%`}
                 </text>
@@ -391,28 +389,25 @@ export function MarketingOverview({ aggregates }: Props) {
           </CardContent>
         </Card>
         <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground uppercase tracking-wider">Taxa de Conversão</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col justify-center" style={{ height: 180 }}>
-            <p className="text-5xl font-bold text-center">
+          <CardContent className="p-3 flex flex-col justify-center" style={{ height: 120 }}>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Taxa de Conversão</p>
+            <p className="text-3xl font-bold mt-1">
               {totals.conversion == null ? "—" : `${totals.conversion.toFixed(1)}%`}
             </p>
-            <p className="text-xs text-muted-foreground text-center mt-2">
+            <p className="text-[10px] text-muted-foreground mt-1">
               {totals.totalSales} vendas / {totals.totalLeads} leads
             </p>
           </CardContent>
         </Card>
         <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground uppercase tracking-wider">Ticket Médio</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col justify-center" style={{ height: 180 }}>
-            <p className="text-5xl font-bold text-center">{fmtMoney(totals.ticketMedio)}</p>
-            <p className="text-xs text-muted-foreground text-center mt-2">Receita / Vendas</p>
+          <CardContent className="p-3 flex flex-col justify-center" style={{ height: 120 }}>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Ticket Médio</p>
+            <p className="text-3xl font-bold mt-1">{fmtMoney(totals.ticketMedio)}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Receita / Vendas</p>
           </CardContent>
         </Card>
       </div>
+
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
