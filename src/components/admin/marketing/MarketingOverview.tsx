@@ -184,17 +184,17 @@ export function MarketingOverview({ aggregates }: Props) {
     accent?: string;
     subtitle?: string;
   }) => (
-    <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50 hover:shadow-lg transition-all">
+    <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50 hover:shadow-md transition-all">
       <div
-        className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl opacity-20"
+        className="absolute top-0 right-0 w-16 h-16 rounded-full blur-2xl opacity-20"
         style={{ background: accent || "hsl(var(--primary))" }}
       />
-      <CardContent className="p-4 relative">
+      <CardContent className="p-3 relative">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">{label}</p>
-            <p className="text-2xl font-bold mt-1 truncate">{value}</p>
-            {subtitle && <p className="text-[11px] text-muted-foreground mt-1">{subtitle}</p>}
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{label}</p>
+            <p className="text-lg font-bold mt-0.5 truncate leading-tight">{value}</p>
+            {subtitle && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
           </div>
           <div
             className="shrink-0 p-2 rounded-lg"
