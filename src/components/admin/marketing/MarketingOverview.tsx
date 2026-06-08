@@ -184,23 +184,23 @@ export function MarketingOverview({ aggregates }: Props) {
     accent?: string;
     subtitle?: string;
   }) => (
-    <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50 hover:shadow-lg transition-all">
+    <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50 hover:shadow-md transition-all">
       <div
-        className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl opacity-20"
+        className="absolute top-0 right-0 w-16 h-16 rounded-full blur-2xl opacity-20"
         style={{ background: accent || "hsl(var(--primary))" }}
       />
-      <CardContent className="p-4 relative">
+      <CardContent className="p-3 relative">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">{label}</p>
-            <p className="text-2xl font-bold mt-1 truncate">{value}</p>
-            {subtitle && <p className="text-[11px] text-muted-foreground mt-1">{subtitle}</p>}
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{label}</p>
+            <p className="text-lg font-bold mt-0.5 truncate leading-tight">{value}</p>
+            {subtitle && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
           </div>
           <div
-            className="shrink-0 p-2 rounded-lg"
+            className="shrink-0 p-1.5 rounded-md"
             style={{ backgroundColor: `${accent || "hsl(var(--primary))"}20` }}
           >
-            <Icon className="h-4 w-4" style={{ color: accent || "hsl(var(--primary))" }} />
+            <Icon className="h-3.5 w-3.5" style={{ color: accent || "hsl(var(--primary))" }} />
           </div>
         </div>
       </CardContent>
@@ -338,7 +338,7 @@ export function MarketingOverview({ aggregates }: Props) {
       </Card>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-2">
         <KPI
           label="Orçamento diário (ativas)"
           value={fmtMoney(totals.dailyBudgetActive)}
@@ -363,11 +363,9 @@ export function MarketingOverview({ aggregates }: Props) {
       {/* ROI + Conversão + Ticket */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card className="border-border/50 overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground uppercase tracking-wider">ROI</CardTitle>
-          </CardHeader>
-          <CardContent style={{ height: 180 }}>
-            <ResponsiveContainer width="100%" height="100%">
+          <CardContent className="p-3" style={{ height: 120 }}>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mb-1">ROI</p>
+            <ResponsiveContainer width="100%" height="85%">
               <RadialBarChart
                 innerRadius="65%"
                 outerRadius="100%"
@@ -382,7 +380,7 @@ export function MarketingOverview({ aggregates }: Props) {
                   textAnchor="middle"
                   dominantBaseline="middle"
                   className="fill-foreground"
-                  style={{ fontSize: 28, fontWeight: 700 }}
+                  style={{ fontSize: 20, fontWeight: 700 }}
                 >
                   {totals.roi == null ? "—" : `${totals.roi.toFixed(1)}%`}
                 </text>
@@ -391,38 +389,35 @@ export function MarketingOverview({ aggregates }: Props) {
           </CardContent>
         </Card>
         <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground uppercase tracking-wider">Taxa de Conversão</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col justify-center" style={{ height: 180 }}>
-            <p className="text-5xl font-bold text-center">
+          <CardContent className="p-3 flex flex-col justify-center" style={{ height: 120 }}>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Taxa de Conversão</p>
+            <p className="text-3xl font-bold mt-1">
               {totals.conversion == null ? "—" : `${totals.conversion.toFixed(1)}%`}
             </p>
-            <p className="text-xs text-muted-foreground text-center mt-2">
+            <p className="text-[10px] text-muted-foreground mt-1">
               {totals.totalSales} vendas / {totals.totalLeads} leads
             </p>
           </CardContent>
         </Card>
         <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground uppercase tracking-wider">Ticket Médio</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col justify-center" style={{ height: 180 }}>
-            <p className="text-5xl font-bold text-center">{fmtMoney(totals.ticketMedio)}</p>
-            <p className="text-xs text-muted-foreground text-center mt-2">Receita / Vendas</p>
+          <CardContent className="p-3 flex flex-col justify-center" style={{ height: 120 }}>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Ticket Médio</p>
+            <p className="text-3xl font-bold mt-1">{fmtMoney(totals.ticketMedio)}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Receita / Vendas</p>
           </CardContent>
         </Card>
       </div>
 
+
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <Card className="lg:col-span-2 border-border/50">
-          <CardHeader>
-            <CardTitle className="text-base">Evolução diária</CardTitle>
+          <CardHeader className="py-3">
+            <CardTitle className="text-sm">Evolução diária</CardTitle>
           </CardHeader>
-          <CardContent style={{ height: 320 }}>
+          <CardContent className="pt-0" style={{ height: 220 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dailyEvolution}>
+              <AreaChart data={dailyEvolution} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gGasto" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#ef4444" stopOpacity={0.5} />
@@ -434,19 +429,20 @@ export function MarketingOverview({ aggregates }: Props) {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
+                <XAxis dataKey="label" tick={{ fontSize: 10 }} />
+                <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: 8,
+                    fontSize: 12,
                   }}
                   formatter={(v: any, name: any) =>
                     name === "leads" || name === "vendas" ? v : fmtMoney(Number(v))
                   }
                 />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Area type="monotone" dataKey="gasto" stroke="#ef4444" fill="url(#gGasto)" strokeWidth={2} />
                 <Area type="monotone" dataKey="receita" stroke="#22c55e" fill="url(#gReceita)" strokeWidth={2} />
               </AreaChart>
@@ -455,26 +451,26 @@ export function MarketingOverview({ aggregates }: Props) {
         </Card>
 
         <Card className="border-border/50">
-          <CardHeader>
-            <CardTitle className="text-base">Gasto por plataforma</CardTitle>
+          <CardHeader className="py-3">
+            <CardTitle className="text-sm">Gasto por plataforma</CardTitle>
           </CardHeader>
-          <CardContent style={{ height: 320 }}>
+          <CardContent className="pt-0" style={{ height: 220 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={platformDistribution}
                   dataKey="value"
                   nameKey="name"
-                  innerRadius={55}
-                  outerRadius={90}
+                  innerRadius={45}
+                  outerRadius={70}
                   paddingAngle={3}
                 >
                   {platformDistribution.map((_, i) => (
                     <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v: any) => fmtMoney(Number(v))} />
-                <Legend iconType="circle" />
+                <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={{ fontSize: 12 }} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -482,31 +478,33 @@ export function MarketingOverview({ aggregates }: Props) {
       </div>
 
       <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="text-base">Comparativo por campanha</CardTitle>
+        <CardHeader className="py-3">
+          <CardTitle className="text-sm">Comparativo por campanha</CardTitle>
         </CardHeader>
-        <CardContent style={{ height: 360 }}>
+        <CardContent className="pt-0" style={{ height: 240 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={campaignComparison} barGap={4}>
+            <BarChart data={campaignComparison} barGap={4} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 10 }} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "hsl(var(--card))",
                   border: "1px solid hsl(var(--border))",
                   borderRadius: 8,
+                  fontSize: 12,
                 }}
                 formatter={(v: any) => fmtMoney(Number(v))}
               />
-              <Legend />
-              <Bar dataKey="Gasto" fill="#ef4444" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="Receita" fill="#22c55e" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="Lucro" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Bar dataKey="Gasto" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Receita" fill="#22c55e" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Lucro" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
+
     </div>
   );
 }
