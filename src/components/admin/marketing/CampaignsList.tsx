@@ -122,7 +122,7 @@ export function CampaignsList({ aggregates, loading, onRefresh }: Props) {
                   <TableCell className={metrics.roi != null && metrics.roi >= 0 ? "text-green-600" : "text-red-600"}>
                     {fmtPct(metrics.roi)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1">
                       <Button size="icon" variant="ghost" title="Detalhes" onClick={() => { setDetailsTarget(campaign); setDetailsOpen(true); }}>
                         <BarChart3 className="h-4 w-4" />
