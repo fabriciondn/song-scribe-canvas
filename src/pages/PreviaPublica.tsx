@@ -166,12 +166,15 @@ interface OrderState {
 
 const PurchaseFlow: React.FC<{ preview: PreviewData; token: string }> = ({ preview, token }) => {
   const [selected, setSelected] = useState<string[]>(preview.tracks.map(t => t.id));
+  const [includeReg, setIncludeReg] = useState(false);
   const [order, setOrder] = useState<OrderState | null>(null);
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [downloads, setDownloads] = useState<Record<string, string>>({});
 
   const toggle = (id: string) =>
     setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
+
+  const total = 49.99 + (includeReg ? 19.99 : 0);
 
   const startOrder = async () => {
     if (selected.length === 0) {
@@ -182,6 +185,7 @@ const PurchaseFlow: React.FC<{ preview: PreviewData; token: string }> = ({ previ
     const { data: res, error } = await supabase.rpc('create_music_preview_order', {
       p_token: token,
       p_track_ids: selected,
+      p_includes_registration: includeReg,
     });
     if (error || !(res as any)?.success) {
       setCreatingOrder(false);
@@ -291,8 +295,27 @@ const PurchaseFlow: React.FC<{ preview: PreviewData; token: string }> = ({ previ
             </label>
           ))}
         </div>
+        {/* Upsell: Registro autoral */}
+        <label className={`block p-4 rounded-xl border-2 cursor-pointer transition ${includeReg ? 'border-primary bg-primary/5' : 'border-dashed border-primary/40 hover:border-primary/70 bg-primary/[0.02]'}`}>
+          <div className="flex items-start gap-3">
+            <Checkbox checked={includeReg} onCheckedChange={(v) => setIncludeReg(!!v)} className="mt-1" />
+            <div className="flex-1 space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold uppercase tracking-wide bg-primary text-primary-foreground px-2 py-0.5 rounded">Oferta exclusiva</span>
+                <span className="text-xs text-muted-foreground line-through">R$ 40,00</span>
+                <span className="text-base font-bold text-primary">R$ 19,99</span>
+              </div>
+              <div className="font-semibold text-sm">🎉 Uau, sua música ficou incrível!</div>
+              <div className="text-sm text-muted-foreground">
+                Aproveite e <strong>proteja sua música</strong> com nosso <strong>Registro Autoral com validade jurídica</strong> — só nesta página por R$ 19,99 (de R$ 40,00).
+              </div>
+            </div>
+          </div>
+        </label>
+
         <div className="text-center text-sm text-muted-foreground">
-          Valor único: <span className="font-bold text-foreground">R$ 49,99</span>
+          Total: <span className="font-bold text-foreground text-lg">R$ {total.toFixed(2).replace('.', ',')}</span>
+          {includeReg && <span className="block text-xs">Faixas R$ 49,99 + Registro R$ 19,99</span>}
         </div>
         <Button className="w-full" onClick={startOrder} disabled={creatingOrder || selected.length === 0}>
           {creatingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
