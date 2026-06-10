@@ -279,7 +279,7 @@ const PurchaseFlow: React.FC<{ preview: PreviewData; token: string }> = ({ previ
           <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
             <Loader2 className="h-3 w-3 animate-spin" /> Aguardando pagamento...
           </div>
-          <Button variant="ghost" size="sm" onClick={cancelAndGoBack} className="w-full">
+          <Button variant="ghost" size="sm" onClick={goBack} className="w-full">
             ← Voltar e alterar seleção
           </Button>
         </CardContent>
