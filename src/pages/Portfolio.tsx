@@ -155,7 +155,7 @@ const Portfolio: React.FC = () => {
         sb.from("portfolio_works").select("*").eq("is_active", true).order("display_order"),
         sb.from("portfolio_testimonials").select("*").eq("is_active", true).order("display_order"),
         sb.from("portfolio_settings").select("key,value"),
-        sb.rpc("get_public_composers", { p_limit: 12 }),
+        sb.rpc("get_public_composers", { p_limit: 60 }),
       ]);
       setWorks(w.data || []);
       setTestimonials(t.data || []);
