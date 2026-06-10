@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield, Users, FileText, BarChart3, Settings, ScrollText, Moon, Sun, UserCheck, DollarSign, Ticket, Music, Gift, TrendingUp, Library, Key, Megaphone } from "lucide-react";
+import { Shield, Users, FileText, BarChart3, Settings, ScrollText, Moon, Sun, UserCheck, DollarSign, Ticket, Music, Gift, TrendingUp, Library, Key, Megaphone, Headphones } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar,
