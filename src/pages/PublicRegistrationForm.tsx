@@ -34,7 +34,7 @@ const formSchema = z.object({
     return /^\d{2}\/\d{2}\/\d{4}$/.test(val);
   }, { message: 'Formato inválido (DD/MM/AAAA)' }),
   phone: z.string().optional().or(z.literal('')),
-  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  
   
   // Step 2: Address
   cep: z.string().min(8, 'CEP deve ter 8 dígitos'),
@@ -256,7 +256,7 @@ export default function PublicRegistrationForm() {
     let fieldsToValidate: (keyof z.infer<typeof formSchema>)[] = [];
     
     if (currentStep === 1) {
-      fieldsToValidate = ['fullName', 'email', 'cpf', 'password'];
+      fieldsToValidate = ['fullName', 'email', 'cpf'];
     } else if (currentStep === 2) {
       fieldsToValidate = ['cep', 'street', 'number', 'neighborhood', 'city', 'state'];
     }
@@ -350,9 +350,9 @@ export default function PublicRegistrationForm() {
           state: values.state,
           phone: values.phone,
           artistic_name: values.artisticName || null,
-          password: values.password,
           works: worksWithUrls,
         });
+
 
       if (error) throw error;
 
@@ -490,19 +490,8 @@ export default function PublicRegistrationForm() {
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Senha de Acesso *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Mínimo 6 caracteres" type="password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    </div>
+
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -942,7 +931,7 @@ export default function PublicRegistrationForm() {
                             
                             // Find the first step with an error and go to it
                             const fieldNames = Object.keys(errors);
-                            if (fieldNames.some(f => ['fullName', 'email', 'cpf', 'password'].includes(f))) {
+                            if (fieldNames.some(f => ['fullName', 'email', 'cpf'].includes(f))) {
                               setCurrentStep(1);
                             } else if (fieldNames.some(f => ['cep', 'street', 'number', 'neighborhood', 'city', 'state'].includes(f))) {
                               setCurrentStep(2);
