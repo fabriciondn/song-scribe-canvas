@@ -256,6 +256,10 @@ const PurchaseFlow: React.FC<{ preview: PreviewData; token: string }> = ({ previ
   }
 
   if (order) {
+    const cancelAndGoBack = async () => {
+      await supabase.rpc('cancel_music_preview_order', { p_order_id: order.id }).catch(() => {});
+      setOrder(null);
+    };
     return (
       <Card>
         <CardContent className="p-4 space-y-3 text-center">
@@ -278,6 +282,9 @@ const PurchaseFlow: React.FC<{ preview: PreviewData; token: string }> = ({ previ
           <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
             <Loader2 className="h-3 w-3 animate-spin" /> Aguardando pagamento...
           </div>
+          <Button variant="ghost" size="sm" onClick={cancelAndGoBack} className="w-full">
+            ← Voltar e alterar seleção
+          </Button>
         </CardContent>
       </Card>
     );
