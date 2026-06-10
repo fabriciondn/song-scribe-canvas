@@ -88,6 +88,23 @@ export const AdminMusicPreviews: React.FC = () => {
     if (error) toast.error('Erro ao carregar faixas');
     else setTracks((data || []) as Track[]);
     setTracksLoading(false);
+
+    // listens
+    const { data: ls } = await supabase
+      .from('music_preview_listens')
+      .select('*')
+      .eq('preview_id', previewId)
+      .order('created_at', { ascending: false })
+      .limit(200);
+    setListens(ls || []);
+
+    // orders
+    const { data: os } = await supabase
+      .from('music_preview_orders')
+      .select('*')
+      .eq('preview_id', previewId)
+      .order('created_at', { ascending: false });
+    setOrders(os || []);
   };
 
   const createPreview = async () => {
