@@ -76,9 +76,9 @@ export default function PublicRegistrationForm() {
       city: '',
       state: '',
       phone: '',
-      password: '',
     },
   });
+
 
   // Load saved data from localStorage on mount
   useEffect(() => {
