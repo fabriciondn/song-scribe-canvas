@@ -125,6 +125,11 @@ const adminMenuItems = [
     id: "marketing",
   },
   {
+    title: "Prévias Clientes",
+    icon: Headphones,
+    id: "music-previews",
+  },
+  {
     title: "Logs",
     icon: ScrollText,
     id: "logs",
