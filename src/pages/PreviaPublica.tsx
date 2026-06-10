@@ -166,12 +166,15 @@ interface OrderState {
 
 const PurchaseFlow: React.FC<{ preview: PreviewData; token: string }> = ({ preview, token }) => {
   const [selected, setSelected] = useState<string[]>(preview.tracks.map(t => t.id));
+  const [includeReg, setIncludeReg] = useState(false);
   const [order, setOrder] = useState<OrderState | null>(null);
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [downloads, setDownloads] = useState<Record<string, string>>({});
 
   const toggle = (id: string) =>
     setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
+
+  const total = 49.99 + (includeReg ? 19.99 : 0);
 
   const startOrder = async () => {
     if (selected.length === 0) {
@@ -182,6 +185,7 @@ const PurchaseFlow: React.FC<{ preview: PreviewData; token: string }> = ({ previ
     const { data: res, error } = await supabase.rpc('create_music_preview_order', {
       p_token: token,
       p_track_ids: selected,
+      p_includes_registration: includeReg,
     });
     if (error || !(res as any)?.success) {
       setCreatingOrder(false);
