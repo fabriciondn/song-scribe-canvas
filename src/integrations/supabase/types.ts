@@ -1490,9 +1490,11 @@ export type Database = {
           client_name: string
           created_at: string
           id: string
+          preview_number: number | null
           project_title: string | null
           reviewed_at: string | null
           share_token: string
+          slug: string | null
           status: string
           updated_at: string
         }
@@ -1502,9 +1504,11 @@ export type Database = {
           client_name: string
           created_at?: string
           id?: string
+          preview_number?: number | null
           project_title?: string | null
           reviewed_at?: string | null
           share_token?: string
+          slug?: string | null
           status?: string
           updated_at?: string
         }
@@ -1514,9 +1518,11 @@ export type Database = {
           client_name?: string
           created_at?: string
           id?: string
+          preview_number?: number | null
           project_title?: string | null
           reviewed_at?: string | null
           share_token?: string
+          slug?: string | null
           status?: string
           updated_at?: string
         }
@@ -2850,7 +2856,7 @@ export type Database = {
             Returns: Json
           }
       submit_music_preview_review: {
-        Args: { p_comment?: string; p_status: string; p_token: string }
+        Args: { p_comment: string; p_status: string; p_token: string }
         Returns: Json
       }
       update_draft: {
