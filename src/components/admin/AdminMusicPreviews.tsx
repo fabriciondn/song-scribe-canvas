@@ -19,6 +19,7 @@ interface Preview {
   client_name: string;
   project_title: string | null;
   share_token: string;
+  slug: string | null;
   status: string;
   client_comment: string | null;
   reviewed_at: string | null;
@@ -117,14 +118,16 @@ export const AdminMusicPreviews: React.FC = () => {
     loadTracks((data as Preview).id);
   };
 
-  const copyLink = (token: string) => {
-    const url = `${window.location.origin}/previa/${token}`;
+  const publicSlug = (p: Preview) => p.slug || p.share_token;
+
+  const copyLink = (p: Preview) => {
+    const url = `${window.location.origin}/${publicSlug(p)}`;
     navigator.clipboard.writeText(url);
     toast.success('Link copiado!');
   };
 
-  const openPublic = (token: string) => {
-    window.open(`/previa/${token}`, '_blank');
+  const openPublic = (p: Preview) => {
+    window.open(`/${publicSlug(p)}`, '_blank');
   };
 
   const deletePreview = async (id: string) => {
@@ -288,10 +291,10 @@ export const AdminMusicPreviews: React.FC = () => {
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="outline" onClick={() => copyLink(selectedPreview.share_token)}>
+                    <Button size="sm" variant="outline" onClick={() => copyLink(selectedPreview)}>
                       <Copy className="h-4 w-4" />Copiar link
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => openPublic(selectedPreview.share_token)}>
+                    <Button size="sm" variant="outline" onClick={() => openPublic(selectedPreview)}>
                       <ExternalLink className="h-4 w-4" />Abrir
                     </Button>
                     <Button size="sm" variant="destructive" onClick={() => deletePreview(selectedPreview.id)}>
@@ -304,7 +307,7 @@ export const AdminMusicPreviews: React.FC = () => {
                 <div className="rounded-lg border p-3 bg-muted/30">
                   <div className="text-xs text-muted-foreground mb-1">Link público:</div>
                   <div className="text-sm font-mono break-all">
-                    {window.location.origin}/previa/{selectedPreview.share_token}
+                    {window.location.origin}/{publicSlug(selectedPreview)}
                   </div>
                 </div>
 
