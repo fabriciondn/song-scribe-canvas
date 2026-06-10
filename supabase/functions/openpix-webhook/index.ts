@@ -138,8 +138,9 @@ serve(async (req) => {
           .eq('id', subscription.id);
 
         await supabaseService.rpc('grant_monthly_subscription_credits', { p_user_id: subscription.user_id });
-        
+
         console.log('✅ Assinatura ativada via OpenPix');
+      }
     } else if (correlationID.startsWith('preview_')) {
       const orderId = correlationID.replace('preview_', '');
       await supabaseService
@@ -148,7 +149,6 @@ serve(async (req) => {
         .eq('id', orderId)
         .eq('status', 'pending');
       console.log('✅ Pedido de prévia pago:', orderId);
-    }
     }
 
     return new Response('OK', { status: 200 });
