@@ -20,6 +20,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useRegistrationStatus } from '@/hooks/useRegistrationStatus';
 import { generateCertificatePDF } from '@/services/certificateService';
 import { supabase } from '@/integrations/supabase/client';
+import { getAuthorRegistrationUrl } from '@/lib/storageSignedUrl';
 import { toast } from '@/hooks/use-toast';
 
 interface RegisteredWork {
