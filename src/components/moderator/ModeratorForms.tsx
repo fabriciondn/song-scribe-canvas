@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Eye, Search, Filter, Download, Calendar, Music, FileText, Download as DownloadIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getAuthorRegistrationUrl } from '@/lib/storageSignedUrl';
+import { SignedAudio } from '@/components/common/SignedAudio';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
