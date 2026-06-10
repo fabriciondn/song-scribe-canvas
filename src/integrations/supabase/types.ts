@@ -1926,6 +1926,96 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
+      portfolio_testimonials: {
+        Row: {
+          audio_url: string
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          photo_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      portfolio_works: {
+        Row: {
+          audio_after_url: string | null
+          audio_before_url: string | null
+          composer_name: string
+          composer_photo_url: string | null
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          style: string | null
+          updated_at: string
+        }
+        Insert: {
+          audio_after_url?: string | null
+          audio_before_url?: string | null
+          composer_name: string
+          composer_photo_url?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          style?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audio_after_url?: string | null
+          audio_before_url?: string | null
+          composer_name?: string
+          composer_photo_url?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          style?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null

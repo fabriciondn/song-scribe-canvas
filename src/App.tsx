@@ -40,6 +40,7 @@ import Settings from "./pages/Settings";
 import Tutorials from "./pages/Tutorials";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
+import Portfolio from "./pages/Portfolio";
 import ModeratorDashboard from "./pages/ModeratorDashboard";
 import AffiliateDashboard from "./pages/AffiliateDashboard";
 import AffiliateApplication from "./pages/AffiliateApplication";
@@ -96,6 +97,7 @@ const AppContent = () => {
         <PageFunctionStatusWrapper>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/oferta" element={<Oferta />} />
 
             {/* Mantém o Dashboard montado ao navegar entre funções (evita piscada do menu) */}
