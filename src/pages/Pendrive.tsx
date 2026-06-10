@@ -146,12 +146,10 @@ const Pendrive = () => {
     }
 
     try {
-      const { data } = supabase.storage
-        .from('author-registrations')
-        .getPublicUrl(registration.audio_file_path);
+      const url = await getAuthorRegistrationUrl(registration.audio_file_path);
 
-      if (data?.publicUrl) {
-        const audio = new Audio(data.publicUrl);
+      if (url) {
+        const audio = new Audio(url);
         audioRef.current = audio;
         
         audio.onended = () => setPlayingId(null);
