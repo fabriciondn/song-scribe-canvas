@@ -428,10 +428,8 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
                               </div>
                               <button 
                                 onClick={async () => {
-                                  const { data } = await supabase.storage
-                                    .from('author-registrations')
-                                    .getPublicUrl(work.audio_url!);
-                                  window.open(data.publicUrl, '_blank');
+                                  const url = await getAuthorRegistrationUrl(work.audio_url!);
+                                  window.open(url, '_blank');
                                 }}
                                 className="text-primary flex items-center gap-1"
                               >
@@ -439,14 +437,7 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
                                 Baixar
                               </button>
                             </div>
-                            <audio 
-                              controls 
-                              className="w-full h-10 accent-primary"
-                              preload="none"
-                              src={supabase.storage.from('author-registrations').getPublicUrl(work.audio_url).data.publicUrl}
-                            >
-                              Seu navegador não suporta áudio.
-                            </audio>
+                            <SignedAudio path={work.audio_url} className="w-full h-10 accent-primary" />
                           </div>
                         )}
                       </div>
