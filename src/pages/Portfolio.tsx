@@ -191,38 +191,27 @@ const Portfolio: React.FC = () => {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden pt-32 pb-16 md:pt-44 md:pb-24">
-        {/* Grid background */}
-        <div
-          className="absolute inset-0 -z-10 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-            maskImage:
-              "radial-gradient(ellipse at center, black 40%, transparent 80%)",
-            WebkitMaskImage:
-              "radial-gradient(ellipse at center, black 40%, transparent 80%)",
-          }}
-        />
+      <section className="relative overflow-hidden pt-32 pb-16 md:pt-40 md:pb-24">
+        {/* Dot grid background */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:24px_24px]" />
         <div className="absolute inset-0 -z-10">
           <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[600px] w-[600px] rounded-full bg-primary/15 blur-3xl" />
         </div>
 
-        <div className="mx-auto max-w-5xl px-6 text-center">
+        <div className="relative mx-auto max-w-7xl px-6 text-center">
           <Reveal>
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs text-primary mb-6">
-              <Sparkles className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm text-white/90 mb-5">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
               Portfólio
-            </div>
+            </span>
           </Reveal>
           <Reveal delay={80}>
-            <h1 className="font-display text-4xl md:text-7xl font-bold leading-[1.05] mb-6">
+            <h1 className="font-display text-4xl lg:text-6xl font-bold tracking-tight leading-[1.05]">
               {settings.hero_title || "Sua música merece soar profissional."}
             </h1>
           </Reveal>
           <Reveal delay={160}>
-            <p className="mx-auto max-w-2xl text-base md:text-lg text-white/70 mb-8">
+            <p className="mt-4 text-lg text-white/70 max-w-xl mx-auto">
               {settings.hero_subtitle || "Ouça o antes e o depois. Decida com os ouvidos."}
             </p>
           </Reveal>
@@ -231,26 +220,24 @@ const Portfolio: React.FC = () => {
               href={whatsappHref}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-base font-semibold text-primary-foreground hover:opacity-90 transition"
+              className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition"
             >
               <MessageCircle className="h-5 w-5" /> Falar no WhatsApp
             </a>
           </Reveal>
-        </div>
 
-        {/* Carousel de compositores */}
-        {works.length > 0 && (
-          <div className="relative mt-16 md:mt-24">
-            {(() => {
-              const photos = works.map((w) => ({
-                src: w.composer_photo_url,
-                name: w.composer_name,
-              }));
-              const row1 = Array.from({ length: 4 }).flatMap(() => photos);
-              const row2 = Array.from({ length: 4 }).flatMap(() => [...photos].reverse());
-              const Avatar = ({ src, name }: { src: string | null; name: string }) => (
-                <div className="shrink-0 mx-3 md:mx-4">
-                  <div className="h-16 w-16 md:h-20 md:w-20 rounded-full overflow-hidden ring-2 ring-primary/40 bg-white/5">
+          {/* Carousel de compositores */}
+          {works.length > 0 && (
+            <div className="mt-12 overflow-hidden relative pb-2">
+              {(() => {
+                const photos = works.map((w) => ({
+                  src: w.composer_photo_url,
+                  name: w.composer_name,
+                }));
+                const row1 = Array.from({ length: 4 }).flatMap(() => photos);
+                const row2 = Array.from({ length: 4 }).flatMap(() => [...photos].reverse());
+                const Avatar = ({ src, name }: { src: string | null; name: string }) => (
+                  <div className="h-16 w-16 flex-shrink-0 rounded-full overflow-hidden ring-2 ring-primary/40 bg-white/5 mx-3 md:mx-4">
                     {src ? (
                       <img src={src} alt={name} className="h-full w-full object-cover" loading="lazy" />
                     ) : (
@@ -259,33 +246,30 @@ const Portfolio: React.FC = () => {
                       </div>
                     )}
                   </div>
-                </div>
-              );
-              return (
-                <>
-                  <div className="flex overflow-hidden mb-4">
-                    <div className="flex animate-scroll-left">
+                );
+                return (
+                  <>
+                    <div className="flex whitespace-nowrap animate-scroll-left">
                       {row1.map((p, i) => (
                         <Avatar key={`r1-${i}`} src={p.src} name={p.name} />
                       ))}
                     </div>
-                  </div>
-                  <div className="flex overflow-hidden">
-                    <div className="flex animate-scroll-right">
+                    <div className="flex whitespace-nowrap mt-6 animate-scroll-right">
                       {row2.map((p, i) => (
                         <Avatar key={`r2-${i}`} src={p.src} name={p.name} />
                       ))}
                     </div>
-                  </div>
-                </>
-              );
-            })()}
-            {/* Fade overlays */}
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-24 md:w-40 bg-gradient-to-r from-black to-transparent" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-24 md:w-40 bg-gradient-to-l from-black to-transparent" />
-          </div>
-        )}
+                  </>
+                );
+              })()}
+              {/* Fade overlays */}
+              <div className="pointer-events-none absolute left-0 top-0 h-full w-24 bg-gradient-to-r from-black to-transparent" />
+              <div className="pointer-events-none absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-black to-transparent" />
+            </div>
+          )}
+        </div>
       </section>
+
 
 
       {/* Stats */}
