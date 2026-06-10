@@ -239,18 +239,26 @@ const Portfolio: React.FC = () => {
           {/* Carousel de compositores */}
           {(() => {
             const photosFromWorks = works
-              .filter((w) => w.composer_name)
+              .filter((w) => w.composer_name && w.composer_photo_url)
               .map((w) => ({
-                src: w.composer_photo_url,
+                src: w.composer_photo_url as string,
                 name: w.composer_name,
               }));
 
-            const photosFromComposers = heroComposers.map((composer) => ({
-              src: composer.avatar_url,
-              name: composer.artistic_name || composer.name || "Compositor",
-            }));
+            const photosFromComposers = heroComposers
+              .filter((c) => !!c.avatar_url)
+              .map((composer) => ({
+                src: composer.avatar_url as string,
+                name: composer.artistic_name || composer.name || "Compositor",
+              }));
 
-            const photos = photosFromWorks.length > 0 ? photosFromWorks : photosFromComposers;
+            // Combina ambas as fontes, removendo duplicatas pela URL da foto
+            const seen = new Set<string>();
+            const photos = [...photosFromWorks, ...photosFromComposers].filter((p) => {
+              if (!p.src || seen.has(p.src)) return false;
+              seen.add(p.src);
+              return true;
+            });
 
             if (photos.length === 0) return null;
 
@@ -262,17 +270,12 @@ const Portfolio: React.FC = () => {
                 const set2 = photos.slice(half).length ? photos.slice(half) : photos;
                 const row1 = Array.from({ length: 4 }).flatMap(() => set1);
                 const row2 = Array.from({ length: 4 }).flatMap(() => [...set2].reverse());
-                const Avatar = ({ src, name }: { src: string | null; name: string }) => (
+                const Avatar = ({ src, name }: { src: string; name: string }) => (
                   <div className="h-16 w-16 md:h-20 md:w-20 flex-shrink-0 rounded-full overflow-hidden ring-2 ring-primary/40 bg-white/5 mx-3 md:mx-4">
-                    {src ? (
-                      <img src={src} alt={name} className="h-full w-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center font-display text-xl font-bold text-white/80">
-                        {name.slice(0, 1)}
-                      </div>
-                    )}
+                    <img src={src} alt={name} className="h-full w-full object-cover" loading="lazy" />
                   </div>
                 );
+
                 return (
                   <>
                     <div className="flex whitespace-nowrap animate-scroll-left">
