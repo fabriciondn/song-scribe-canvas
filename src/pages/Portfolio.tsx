@@ -192,27 +192,27 @@ const Portfolio: React.FC = () => {
 
       {/* Hero */}
       <section className="relative overflow-hidden pt-32 pb-16 md:pt-40 md:pb-24">
-        {/* Dot grid background */}
+        {/* Grid background */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:24px_24px]" />
         <div className="absolute inset-0 -z-10">
           <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[600px] w-[600px] rounded-full bg-primary/15 blur-3xl" />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-6 text-center">
+        <div className="relative mx-auto max-w-5xl px-6 text-center">
           <Reveal>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm text-white/90 mb-5">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Portfólio
+              Portfólio Compuse
             </span>
           </Reveal>
           <Reveal delay={80}>
-            <h1 className="font-display text-4xl lg:text-6xl font-bold tracking-tight leading-[1.05]">
-              {settings.hero_title || "Sua música merece soar profissional."}
+            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05]">
+              {settings.hero_title || "Sua música nas mãos de quem produz de verdade."}
             </h1>
           </Reveal>
           <Reveal delay={160}>
-            <p className="mt-4 text-lg text-white/70 max-w-xl mx-auto">
-              {settings.hero_subtitle || "Ouça o antes e o depois. Decida com os ouvidos."}
+            <p className="mt-5 text-lg md:text-xl text-white/70 max-w-2xl mx-auto">
+              {settings.hero_subtitle || "Centenas de compositores já transformaram suas ideias em músicas profissionais com a Compuse. Ouça o antes e o depois — e decida com os ouvidos."}
             </p>
           </Reveal>
           <Reveal delay={240}>
@@ -220,24 +220,27 @@ const Portfolio: React.FC = () => {
               href={whatsappHref}
               target="_blank"
               rel="noreferrer"
-              className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition"
+              className="mt-8 inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition"
             >
-              <MessageCircle className="h-5 w-5" /> Falar no WhatsApp
+              <MessageCircle className="h-5 w-5" /> Começar agora
             </a>
           </Reveal>
 
           {/* Carousel de compositores */}
           {works.length > 0 && (
-            <div className="mt-12 overflow-hidden relative pb-2">
+            <div className="mt-14 overflow-hidden relative pb-2">
               {(() => {
                 const photos = works.map((w) => ({
                   src: w.composer_photo_url,
                   name: w.composer_name,
                 }));
-                const row1 = Array.from({ length: 4 }).flatMap(() => photos);
-                const row2 = Array.from({ length: 4 }).flatMap(() => [...photos].reverse());
+                const half = Math.ceil(photos.length / 2) || 1;
+                const set1 = photos.slice(0, half).length ? photos.slice(0, half) : photos;
+                const set2 = photos.slice(half).length ? photos.slice(half) : photos;
+                const row1 = Array.from({ length: 4 }).flatMap(() => set1);
+                const row2 = Array.from({ length: 4 }).flatMap(() => [...set2].reverse());
                 const Avatar = ({ src, name }: { src: string | null; name: string }) => (
-                  <div className="h-16 w-16 flex-shrink-0 rounded-full overflow-hidden ring-2 ring-primary/40 bg-white/5 mx-3 md:mx-4">
+                  <div className="h-16 w-16 md:h-20 md:w-20 flex-shrink-0 rounded-full overflow-hidden ring-2 ring-primary/40 bg-white/5 mx-3 md:mx-4">
                     {src ? (
                       <img src={src} alt={name} className="h-full w-full object-cover" loading="lazy" />
                     ) : (
@@ -263,12 +266,13 @@ const Portfolio: React.FC = () => {
                 );
               })()}
               {/* Fade overlays */}
-              <div className="pointer-events-none absolute left-0 top-0 h-full w-24 bg-gradient-to-r from-black to-transparent" />
-              <div className="pointer-events-none absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-black to-transparent" />
+              <div className="pointer-events-none absolute left-0 top-0 h-full w-24 md:w-40 bg-gradient-to-r from-black to-transparent" />
+              <div className="pointer-events-none absolute right-0 top-0 h-full w-24 md:w-40 bg-gradient-to-l from-black to-transparent" />
             </div>
           )}
         </div>
       </section>
+
 
 
 
