@@ -155,7 +155,7 @@ const Portfolio: React.FC = () => {
         sb.from("portfolio_works").select("*").eq("is_active", true).order("display_order"),
         sb.from("portfolio_testimonials").select("*").eq("is_active", true).order("display_order"),
         sb.from("portfolio_settings").select("key,value"),
-        sb.rpc("get_public_composers", { p_limit: 12 }),
+        sb.rpc("get_public_composers", { p_limit: 60 }),
       ]);
       setWorks(w.data || []);
       setTestimonials(t.data || []);
@@ -252,49 +252,52 @@ const Portfolio: React.FC = () => {
                 name: composer.artistic_name || composer.name || "Compositor",
               }));
 
-            // Combina ambas as fontes, removendo duplicatas pela URL da foto
+            // Únicas pela URL
             const seen = new Set<string>();
-            const photos = [...photosFromWorks, ...photosFromComposers].filter((p) => {
+            const unique = [...photosFromWorks, ...photosFromComposers].filter((p) => {
               if (!p.src || seen.has(p.src)) return false;
               seen.add(p.src);
               return true;
             });
 
-            if (photos.length === 0) return null;
+            if (unique.length === 0) return null;
+
+            // Embaralha uma vez (Fisher-Yates) para misturar as duas fontes
+            const shuffled = [...unique];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+
+            const half = Math.ceil(shuffled.length / 2);
+            const set1 = shuffled.length >= 8 ? shuffled.slice(0, half) : shuffled;
+            const set2 = shuffled.length >= 8 ? shuffled.slice(half) : shuffled;
+            // Duplicação única só p/ loop CSS (translateX -50%)
+            const row1 = [...set1, ...set1];
+            const row2 = [...set2, ...set2].reverse();
+
+            const Avatar = ({ src, name }: { src: string; name: string }) => (
+              <div className="h-16 w-16 md:h-20 md:w-20 flex-shrink-0 rounded-full overflow-hidden ring-2 ring-primary/40 bg-white/5 mx-3 md:mx-4">
+                <img src={src} alt={name} className="h-full w-full object-cover" loading="lazy" />
+              </div>
+            );
 
             return (
-            <div className="mt-14 overflow-hidden relative pb-2">
-              {(() => {
-                const half = Math.ceil(photos.length / 2) || 1;
-                const set1 = photos.slice(0, half).length ? photos.slice(0, half) : photos;
-                const set2 = photos.slice(half).length ? photos.slice(half) : photos;
-                const row1 = Array.from({ length: 4 }).flatMap(() => set1);
-                const row2 = Array.from({ length: 4 }).flatMap(() => [...set2].reverse());
-                const Avatar = ({ src, name }: { src: string; name: string }) => (
-                  <div className="h-16 w-16 md:h-20 md:w-20 flex-shrink-0 rounded-full overflow-hidden ring-2 ring-primary/40 bg-white/5 mx-3 md:mx-4">
-                    <img src={src} alt={name} className="h-full w-full object-cover" loading="lazy" />
-                  </div>
-                );
-
-                return (
-                  <>
-                    <div className="flex whitespace-nowrap animate-scroll-left">
-                      {row1.map((p, i) => (
-                        <Avatar key={`r1-${i}`} src={p.src} name={p.name} />
-                      ))}
-                    </div>
-                    <div className="flex whitespace-nowrap mt-6 animate-scroll-right">
-                      {row2.map((p, i) => (
-                        <Avatar key={`r2-${i}`} src={p.src} name={p.name} />
-                      ))}
-                    </div>
-                  </>
-                );
-              })()}
-              {/* Fade overlays */}
-              <div className="pointer-events-none absolute left-0 top-0 h-full w-24 md:w-40 bg-gradient-to-r from-black to-transparent" />
-              <div className="pointer-events-none absolute right-0 top-0 h-full w-24 md:w-40 bg-gradient-to-l from-black to-transparent" />
-            </div>
+              <div className="mt-14 overflow-hidden relative pb-2">
+                <div className="flex whitespace-nowrap animate-scroll-left">
+                  {row1.map((p, i) => (
+                    <Avatar key={`r1-${i}`} src={p.src} name={p.name} />
+                  ))}
+                </div>
+                <div className="flex whitespace-nowrap mt-6 animate-scroll-right">
+                  {row2.map((p, i) => (
+                    <Avatar key={`r2-${i}`} src={p.src} name={p.name} />
+                  ))}
+                </div>
+                {/* Fade overlays */}
+                <div className="pointer-events-none absolute left-0 top-0 h-full w-24 md:w-40 bg-gradient-to-r from-black to-transparent" />
+                <div className="pointer-events-none absolute right-0 top-0 h-full w-24 md:w-40 bg-gradient-to-l from-black to-transparent" />
+              </div>
             );
           })()}
         </div>
