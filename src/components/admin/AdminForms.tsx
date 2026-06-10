@@ -271,7 +271,7 @@ export const AdminForms: React.FC = () => {
         return;
       }
 
-      toast.success('Conta criada com sucesso! O usuário já pode fazer login.');
+      toast.success(`Conta criada! Senha temporária: ${tempPassword}`, { duration: 30000 });
       setIsDialogOpen(false);
     } catch (error) {
       console.error('Erro ao criar conta:', error);
@@ -429,10 +429,11 @@ export const AdminForms: React.FC = () => {
                     <Lock className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">Senha de Acesso</span>
                   </div>
-                  <p className="text-sm pl-6 font-mono bg-muted px-2 py-1 rounded inline-block">
-                    {selectedForm.password || 'Não informada'}
+                  <p className="text-sm pl-6 text-muted-foreground italic">
+                    Será gerada ao criar a conta
                   </p>
                 </div>
+
               </div>
 
               <div className="space-y-2">
@@ -584,7 +585,7 @@ export const AdminForms: React.FC = () => {
                 </div>
                 <Button
                   onClick={handleCreateAccount}
-                  disabled={isCreatingAccount || !selectedForm.password}
+                  disabled={isCreatingAccount}
                   className="gap-2"
                 >
                   {isCreatingAccount ? (
