@@ -56,6 +56,7 @@ import Sorteio from "./pages/Sorteio";
 import SorteioNumeros from "./pages/SorteioNumeros";
 import SorteioComoFunciona from "./pages/SorteioComoFunciona";
 import Oferta from "./pages/Oferta";
+import PreviaPublica from "./pages/PreviaPublica";
 
 const queryClient = new QueryClient({
   defaultOptions: {
