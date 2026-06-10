@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
+import { getAuthorRegistrationUrl } from '@/lib/storageSignedUrl';
+import { SignedAudio } from '@/components/common/SignedAudio';
 import { toast } from 'sonner';
 import { Search, Eye, Calendar, User, Mail, Phone, MapPin, Lock, UserPlus, Loader2, Music, FileText, Download, Edit2, Zap } from 'lucide-react';
 import { format } from 'date-fns';
