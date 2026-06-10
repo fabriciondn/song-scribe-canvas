@@ -97,6 +97,7 @@ const AppContent = () => {
         <PageFunctionStatusWrapper>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/oferta" element={<Oferta />} />
 
             {/* Mantém o Dashboard montado ao navegar entre funções (evita piscada do menu) */}
