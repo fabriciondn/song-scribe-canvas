@@ -209,6 +209,8 @@ const AdminDashboard: React.FC = () => {
         return <MarketingDashboard />;
       case 'music-previews':
         return <AdminMusicPreviews />;
+      case 'portfolio':
+        return <AdminPortfolio />;
       case 'logs':
         return <AdminLogs />;
       case 'menu-functions':
