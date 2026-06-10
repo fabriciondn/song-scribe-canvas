@@ -299,6 +299,16 @@ const PurchaseFlow: React.FC<{ preview: PreviewData; token: string }> = ({ previ
             </label>
           ))}
         </div>
+        {/* Bônus: Playback grátis */}
+        <div className="rounded-xl border border-green-300 bg-green-50 p-3 text-sm text-green-900 flex items-start gap-2">
+          <span className="text-lg leading-none">🎁</span>
+          <div>
+            <div className="font-semibold">Bônus grátis: Playback da sua faixa</div>
+            <div className="text-xs text-green-800/90">
+              Você ganha o <strong>playback</strong> de cada faixa escolhida sem custo. Nossa equipe envia diretamente no seu <strong>WhatsApp</strong> após a confirmação do pagamento.
+            </div>
+          </div>
+        </div>
         {/* Upsell: Registro autoral */}
         <label className={`block p-4 rounded-xl border-2 cursor-pointer transition ${includeReg ? 'border-primary bg-primary/5' : 'border-dashed border-primary/40 hover:border-primary/70 bg-primary/[0.02]'}`}>
           <div className="flex items-start gap-3">
