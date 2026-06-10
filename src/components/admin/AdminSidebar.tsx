@@ -130,6 +130,11 @@ const adminMenuItems = [
     id: "music-previews",
   },
   {
+    title: "Portfólio",
+    icon: Music,
+    id: "portfolio",
+  },
+  {
     title: "Logs",
     icon: ScrollText,
     id: "logs",
