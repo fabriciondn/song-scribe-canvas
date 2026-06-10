@@ -165,6 +165,16 @@ const Portfolio: React.FC = () => {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         .font-display { font-family: 'Syne', sans-serif; letter-spacing: -0.02em; }
+        @keyframes scroll-left {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes scroll-right {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
+        }
+        .animate-scroll-left { animation: scroll-left 40s linear infinite; }
+        .animate-scroll-right { animation: scroll-right 40s linear infinite; }
       `}</style>
 
       {/* Top bar */}
@@ -181,15 +191,29 @@ const Portfolio: React.FC = () => {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden pt-32 pb-20 md:pt-44 md:pb-32">
+      <section className="relative overflow-hidden pt-32 pb-16 md:pt-44 md:pb-24">
+        {/* Grid background */}
+        <div
+          className="absolute inset-0 -z-10 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+            maskImage:
+              "radial-gradient(ellipse at center, black 40%, transparent 80%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse at center, black 40%, transparent 80%)",
+          }}
+        />
         <div className="absolute inset-0 -z-10">
-          <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[600px] w-[600px] rounded-full bg-primary/20 blur-3xl" />
+          <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[600px] w-[600px] rounded-full bg-primary/15 blur-3xl" />
         </div>
+
         <div className="mx-auto max-w-5xl px-6 text-center">
           <Reveal>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-white/70 mb-6">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Portfólio de produções
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs text-primary mb-6">
+              <Sparkles className="h-3.5 w-3.5" />
+              Portfólio
             </div>
           </Reveal>
           <Reveal delay={80}>
@@ -198,7 +222,7 @@ const Portfolio: React.FC = () => {
             </h1>
           </Reveal>
           <Reveal delay={160}>
-            <p className="mx-auto max-w-2xl text-base md:text-lg text-white/70 mb-10">
+            <p className="mx-auto max-w-2xl text-base md:text-lg text-white/70 mb-8">
               {settings.hero_subtitle || "Ouça o antes e o depois. Decida com os ouvidos."}
             </p>
           </Reveal>
@@ -209,11 +233,60 @@ const Portfolio: React.FC = () => {
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-base font-semibold text-primary-foreground hover:opacity-90 transition"
             >
-              <MessageCircle className="h-5 w-5" /> Quero produzir a minha
+              <MessageCircle className="h-5 w-5" /> Falar no WhatsApp
             </a>
           </Reveal>
         </div>
+
+        {/* Carousel de compositores */}
+        {works.length > 0 && (
+          <div className="relative mt-16 md:mt-24">
+            {(() => {
+              const photos = works.map((w) => ({
+                src: w.composer_photo_url,
+                name: w.composer_name,
+              }));
+              const row1 = Array.from({ length: 4 }).flatMap(() => photos);
+              const row2 = Array.from({ length: 4 }).flatMap(() => [...photos].reverse());
+              const Avatar = ({ src, name }: { src: string | null; name: string }) => (
+                <div className="shrink-0 mx-3 md:mx-4">
+                  <div className="h-16 w-16 md:h-20 md:w-20 rounded-full overflow-hidden ring-2 ring-primary/40 bg-white/5">
+                    {src ? (
+                      <img src={src} alt={name} className="h-full w-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center font-display text-xl font-bold text-white/80">
+                        {name.slice(0, 1)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+              return (
+                <>
+                  <div className="flex overflow-hidden mb-4">
+                    <div className="flex animate-scroll-left">
+                      {row1.map((p, i) => (
+                        <Avatar key={`r1-${i}`} src={p.src} name={p.name} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex overflow-hidden">
+                    <div className="flex animate-scroll-right">
+                      {row2.map((p, i) => (
+                        <Avatar key={`r2-${i}`} src={p.src} name={p.name} />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+            {/* Fade overlays */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-24 md:w-40 bg-gradient-to-r from-black to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-24 md:w-40 bg-gradient-to-l from-black to-transparent" />
+          </div>
+        )}
       </section>
+
 
       {/* Stats */}
       <section className="border-y border-white/5 bg-white/[0.02]">
