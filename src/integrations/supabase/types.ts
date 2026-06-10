@@ -1445,6 +1445,110 @@ export type Database = {
           },
         ]
       }
+      music_preview_listens: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          listened_seconds: number
+          preview_id: string
+          region: string | null
+          track_id: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          listened_seconds?: number
+          preview_id: string
+          region?: string | null
+          track_id?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          listened_seconds?: number
+          preview_id?: string
+          region?: string | null
+          track_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_preview_listens_preview_id_fkey"
+            columns: ["preview_id"]
+            isOneToOne: false
+            referencedRelation: "music_previews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "music_preview_listens_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "music_preview_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      music_preview_orders: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          paid_at: string | null
+          payment_id: string | null
+          payment_url: string | null
+          pix_br_code: string | null
+          pix_qr_code: string | null
+          preview_id: string
+          selected_track_ids: string[]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          payment_url?: string | null
+          pix_br_code?: string | null
+          pix_qr_code?: string | null
+          preview_id: string
+          selected_track_ids?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          payment_url?: string | null
+          pix_br_code?: string | null
+          pix_qr_code?: string | null
+          preview_id?: string
+          selected_track_ids?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_preview_orders_preview_id_fkey"
+            columns: ["preview_id"]
+            isOneToOne: false
+            referencedRelation: "music_previews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       music_preview_tracks: {
         Row: {
           created_at: string
@@ -2645,6 +2749,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_music_preview_order: {
+        Args: { p_token: string; p_track_ids: string[] }
+        Returns: Json
+      }
       decrement_user_credit: { Args: { user_id: string }; Returns: undefined }
       delete_draft: { Args: { draft_id: string }; Returns: undefined }
       expire_frozen_bonus_credits: { Args: never; Returns: number }
@@ -2722,6 +2830,7 @@ export type Database = {
       }
       get_moderator_dashboard_stats: { Args: never; Returns: Json }
       get_music_preview_by_token: { Args: { p_token: string }; Returns: Json }
+      get_music_preview_order: { Args: { p_order_id: string }; Returns: Json }
       get_offer_page_stats: {
         Args: { p_end_date: string; p_start_date: string }
         Returns: Json
@@ -2765,6 +2874,18 @@ export type Database = {
       is_admin_user: { Args: never; Returns: boolean }
       is_user_admin: { Args: { check_user_id: string }; Returns: boolean }
       is_user_moderator: { Args: { check_user_id: string }; Returns: boolean }
+      log_music_preview_listen: {
+        Args: {
+          p_city?: string
+          p_country?: string
+          p_ip?: string
+          p_region?: string
+          p_seconds: number
+          p_token: string
+          p_track_id: string
+        }
+        Returns: undefined
+      }
       log_user_activity: {
         Args: { p_action: string; p_metadata?: Json }
         Returns: undefined

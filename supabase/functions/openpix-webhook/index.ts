@@ -138,9 +138,17 @@ serve(async (req) => {
           .eq('id', subscription.id);
 
         await supabaseService.rpc('grant_monthly_subscription_credits', { p_user_id: subscription.user_id });
-        
+
         console.log('✅ Assinatura ativada via OpenPix');
       }
+    } else if (correlationID.startsWith('preview_')) {
+      const orderId = correlationID.replace('preview_', '');
+      await supabaseService
+        .from('music_preview_orders')
+        .update({ status: 'paid', paid_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq('id', orderId)
+        .eq('status', 'pending');
+      console.log('✅ Pedido de prévia pago:', orderId);
     }
 
     return new Response('OK', { status: 200 });
