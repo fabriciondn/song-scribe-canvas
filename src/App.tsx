@@ -153,7 +153,8 @@ const AppContent = () => {
             <Route path="/formulario" element={<PublicRegistrationForm />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/previa/:token" element={<PreviaPublica />} />
-            <Route path="/:slug" element={<PublicComposerProfile />} />
+            <Route path="/:slug" element={<SlugDispatcher />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </PageFunctionStatusWrapper>
