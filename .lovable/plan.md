@@ -1,82 +1,78 @@
 ## Objetivo
+Resolver os 7 findings críticos do scanner sem quebrar funcionalidades em produção, e publicar a página `/portfolio`.
 
-Resolver as 7 vulnerabilidades críticas que estão bloqueando a publicação, sem quebrar nenhuma funcionalidade existente. Depois disso, publicar a rota `/portfolio` em produção.
-
-## Riscos & princípio guia
-
-Vários itens (buckets públicos, tabelas no Realtime) são usados por funcionalidades **em produção**. A regra é: **manter tudo funcionando** — onde hoje se usa URL pública direta, vamos passar a usar **signed URLs** (URLs assinadas) com validade longa; onde hoje se usa Realtime em tabela sensível, vamos **filtrar do lado do servidor** ou trocar por polling pontual quando necessário.
-
-Nada de remover features. Cada mudança será validada lendo os arquivos que tocam o recurso afetado.
+## Estratégia central
+Centralizar todas as URLs de buckets privados em **uma única função helper** (`getStorageUrl`) que devolve **signed URL** para buckets privados e `getPublicUrl` para os demais. Assim, basta substituir cada `supabase.storage.from(...).getPublicUrl(...).data.publicUrl` por `await getStorageUrl(bucket, path)`, mantendo o mesmo comportamento de UI.
 
 ---
 
-## Correções
+## Mudanças
 
-### 1. Bucket `author-registrations` → privado
-- Migration: `UPDATE storage.buckets SET public = false WHERE id = 'author-registrations'`.
-- Auditar todos os pontos que hoje montam URL pública (`getPublicUrl`) para esse bucket e trocar por `createSignedUrl(path, 60 * 60 * 24 * 7)` (7 dias) — arquivos afetados conforme grep:
-  - `src/services/storage/storageBuckets.ts`
-  - `src/components/author-registration/MobileRegistrationStep3.tsx`
-  - `src/components/author-registration/AuthorRegistrationReview.tsx`
-  - `src/components/registered-works/WorkDetailsModal.tsx`
-  - `src/pages/AuthorRegistration.tsx`, `src/pages/PublicRegistrationForm.tsx`, `src/pages/Pendrive.tsx`
-  - `src/components/admin/AdminForms.tsx`, `MobileAdminForms.tsx`, `src/components/moderator/ModeratorForms.tsx`
-  - `src/components/mobile/MobileCertificateDetails.tsx`
-- Confirmar que as policies de `storage.objects` para esse bucket continuam permitindo SELECT pelos donos / admins (já estão corretas no scanner).
+### 1) Migration única (DB) — `supabase/migrations/<ts>_security_hardening.sql`
+- `update storage.buckets set public = false where id in ('author-registrations','backups','temp-pdfs')`
+- `alter publication supabase_realtime drop table public.profiles`
+- `alter publication supabase_realtime drop table public.author_registrations`
+- `alter publication supabase_realtime drop table public.affiliate_withdrawal_requests`
+- `alter table public.public_registration_forms drop column if exists password`
 
-### 2. Bucket `backups` → privado
-- Migration: `UPDATE storage.buckets SET public = false WHERE id = 'backups'`.
-- RLS atual (`auth.uid()::text = (storage.foldername(name))[1]`) continua válida.
-- Onde for usado, trocar por signed URL (varredura adicional após migration).
+> Tudo idempotente / com `if exists` onde possível.
 
-### 3. Bucket `temp-pdfs` → privado
-- Migration: `UPDATE storage.buckets SET public = false WHERE id = 'temp-pdfs'`.
-- Edge function `generate-temp-certificate` já roda como service_role — ajustar para retornar **signed URL** em vez de `publicUrl`.
-- Front-end (telas de certificado) consome a URL retornada pela function, então a troca é transparente.
+### 2) Novo helper — `src/services/storage/getStorageUrl.ts`
+```ts
+const PRIVATE_BUCKETS = new Set(['author-registrations', 'backups', 'temp-pdfs']);
+export async function getStorageUrl(bucket: string, path: string, expiresIn = 60*60*24*7) {
+  if (PRIVATE_BUCKETS.has(bucket)) {
+    const { data } = await supabase.storage.from(bucket).createSignedUrl(path, expiresIn);
+    return data?.signedUrl ?? '';
+  }
+  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+}
+```
 
-### 4. Coluna `password` em `public_registration_forms` → remover
-- Auditar `PublicRegistrationForm.tsx`, `AdminForms.tsx`, `MobileAdminForms.tsx`, `ModeratorForms.tsx`, `LoadFromFormButton.tsx` para remover qualquer leitura/escrita da coluna.
-- Fluxo de criação de senha já passa por `supabase.auth.signUp` (via `secure_public_registration` ou no admin). Apenas tirar referências mortas.
-- Migration: `ALTER TABLE public.public_registration_forms DROP COLUMN IF EXISTS password`.
+### 3) Substituições no front (todos os pontos mapeados pelo grep)
+Trocar `supabase.storage.from('author-registrations').getPublicUrl(path).data.publicUrl` por `await getStorageUrl('author-registrations', path)` em:
+- `src/components/registered-works/WorkDetailsModal.tsx` (2 ocorrências)
+- `src/components/author-registration/MobileRegistrationStep3.tsx`
+- `src/components/author-registration/AuthorRegistrationReview.tsx` (2)
+- `src/pages/AuthorRegistration.tsx`
+- `src/pages/Pendrive.tsx` (2)
+- `src/pages/PublicRegistrationForm.tsx`
+- `src/components/mobile/MobileCertificateDetails.tsx`
+- `src/components/moderator/ModeratorForms.tsx` (2)
+- `src/components/admin/AdminForms.tsx` (2)
+- `src/components/admin/MobileAdminForms.tsx` (2)
 
-### 5. `profiles` fora do Realtime
-- Migration: `ALTER PUBLICATION supabase_realtime DROP TABLE public.profiles`.
-- Front-end: hooks que escutam `profiles` (créditos, presença) — `useUserCredits.tsx`, `useRealtimeUpdates.tsx`, etc. — passam a usar **refetch on focus/interval** (já existe pattern). Onde o realtime era essencial, manter o canal mas restringir à própria linha via filter `id=eq.${auth.uid()}` se Supabase permitir; caso não, polling de 30s.
+Pequenas funções auxiliares síncronas que retornam URL viram async (`useEffect` para popular state quando necessário, ou `useState<string>('')` com efeito de signing).
 
-### 6. `author_registrations` fora do Realtime
-- Migration: `ALTER PUBLICATION supabase_realtime DROP TABLE public.author_registrations`.
-- Hooks `useRegistrationStatus.tsx`, `useGlobalRegistrationNotifications.tsx`, `useRealtimeUpdates.tsx`: trocar Realtime por **polling** de 10–15s enquanto status = `em análise` (transição já é curta, conforme regra de timing existente). Quando status final, parar polling.
+### 4) Edge function `generate-temp-certificate` — já usa `createSignedUrl` (1800s). **Sem mudanças**.
+A função também usa URLs públicas de `certificate-assets` para gerar PDF — esse bucket **não está flagged** (continua público).
 
-### 7. `affiliate_withdrawal_requests` fora do Realtime
-- Migration: `ALTER PUBLICATION supabase_realtime DROP TABLE public.affiliate_withdrawal_requests`.
-- `useAffiliateWithdrawals.tsx` / `AffiliateWithdrawals.tsx`: trocar subscription por refetch após ação (já há mutate).
+### 5) Coluna `password` em `public_registration_forms`
+Adaptar fluxo admin/moderador para gerar senha **temporária aleatória** na hora de criar a conta (já existe edge function `create-user-from-form`?). Caso contrário:
+- Em `AdminForms.tsx`, `MobileAdminForms.tsx`, `ModeratorForms.tsx`: remover leitura/uso de `selectedForm.password`.
+- Substituir botão "Criar Conta" para usar senha aleatória gerada na hora (`crypto.randomUUID().slice(0,12)`), exibir num modal "Senha gerada — entregue ao usuário" + sugerir reset.
+- Em `PublicRegistrationForm.tsx`: remover campo "senha" do form público e do schema Zod. O usuário definirá senha depois via fluxo de "definir senha" (link enviado por e-mail pelo admin ao criar conta) — ou pode pular se admin já gera.
 
----
+> ⚠️ Isso é uma mudança de UX: a senha não será mais coletada no formulário público. O usuário receberá uma senha do admin ou e-mail de reset. É a única forma de eliminar o finding sem manter texto puro no banco.
 
-## Ordem de execução
+### 6) Hooks Realtime — passar para refetch/polling sem perder comportamento
+- `useUserCredits.tsx` — remove subscription em `profiles`; faz refetch on `window.focus` + intervalo de 60s.
+- `useRealtimeUpdates.tsx` / `useRegistrationStatus.tsx` / `useGlobalRegistrationNotifications.tsx` — polling de 15s em `author_registrations` apenas enquanto status = `em análise`.
+- `useAffiliateWithdrawals.tsx` — remove subscription, refetch ao montar e após cada ação.
+- `useSystemNotifications.tsx`, `realtimePresenceService.ts`, `useCollaborativeSession.tsx`, `useMenuFunctions.tsx`, `useAffiliate.tsx` — **não tocar** (escutam outras tabelas, não afetadas).
 
-1. Ler em paralelo todos os arquivos das seções 1–7 que ainda não conheço, para mapear cada referência.
-2. Para cada bucket privado: criar helper `getSignedUrl(bucket, path)` em `src/services/storage/storageBuckets.ts` e substituir os `getPublicUrl` por `await getSignedUrl(...)` nos componentes que renderizam áudio/PDF/imagem.
-3. Ajustar a edge function `generate-temp-certificate` para devolver signed URL.
-4. Remover usos da coluna `password` no front e no fluxo público.
-5. Aplicar a migration única com:
-   - 3× `UPDATE storage.buckets SET public = false` (buckets)
-   - 3× `ALTER PUBLICATION supabase_realtime DROP TABLE` (realtime)
-   - `ALTER TABLE ... DROP COLUMN password`
-6. Substituir Realtime por polling/filter nos hooks listados.
-7. Rodar `security--run_security_scan` para confirmar que os 7 itens foram resolvidos.
-8. Publicar via `preview_ui--publish`.
+### 7) Verificação
+- Após aplicar migration: `security--run_security_scan` → confirmar 0 erros críticos.
+- Smoke test manual mental: registro de obra (upload + áudio toca), painel admin abre form e cria conta, lixeira/pendrive baixa áudio, créditos atualizam após pagamento.
+- Publicar via `preview_ui--publish`.
 
-## O que **não** será alterado
-
+## Não muda
+- UI da página `/portfolio`.
+- Nenhum bucket público intencional (`certificate-assets`, `avatars`, `music_bases`, etc.).
 - Nenhuma policy RLS existente.
-- Nenhum fluxo de pagamento / créditos / assinatura.
-- Nenhuma UI da página de Portfólio (que motivou a publicação).
-- Buckets que já são privados ou de imagem pública intencional (ex.: avatars).
+- Fluxos de pagamento, créditos, assinatura.
 
 ## Critério de pronto
-
-- Scanner retorna 0 findings de nível `error`.
-- Áudios/PDFs/certificados continuam abrindo (signed URL).
-- Notificações de status de registro continuam aparecendo (polling).
-- Publicação bem-sucedida em `compuse.com.br/portfolio`.
+- Scanner: 0 findings nível `error`.
+- Áudios continuam tocando, PDFs continuam baixando.
+- `compuse.com.br/portfolio` no ar.
