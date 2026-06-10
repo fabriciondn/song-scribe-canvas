@@ -256,10 +256,7 @@ const PurchaseFlow: React.FC<{ preview: PreviewData; token: string }> = ({ previ
   }
 
   if (order) {
-    const cancelAndGoBack = async () => {
-      await supabase.rpc('cancel_music_preview_order', { p_order_id: order.id }).catch(() => {});
-      setOrder(null);
-    };
+    const goBack = () => setOrder(null);
     return (
       <Card>
         <CardContent className="p-4 space-y-3 text-center">
