@@ -11,7 +11,7 @@ import PublicComposerProfile from './PublicComposerProfile';
  */
 const SlugDispatcher: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  if (slug && /^previa\d+$/i.test(slug)) {
+  if (slug && (/^p\d+$/i.test(slug) || /^previa\d+$/i.test(slug))) {
     return <PreviaPublica />;
   }
   return <PublicComposerProfile />;
