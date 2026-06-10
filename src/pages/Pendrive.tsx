@@ -109,13 +109,11 @@ const Pendrive = () => {
     }
 
     try {
-      const { data } = supabase.storage
-        .from('author-registrations')
-        .getPublicUrl(registration.audio_file_path);
+      const url = await getAuthorRegistrationUrl(registration.audio_file_path);
 
-      if (data?.publicUrl) {
+      if (url) {
         const link = document.createElement('a');
-        link.href = data.publicUrl;
+        link.href = url;
         link.download = `${registration.title} - ${registration.author}.mp3`;
         link.target = '_blank';
         document.body.appendChild(link);
