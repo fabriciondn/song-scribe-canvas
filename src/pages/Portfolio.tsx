@@ -17,6 +17,13 @@ type Testimonial = {
   audio_url: string;
 };
 
+type PublicComposer = {
+  id: string;
+  name: string;
+  artistic_name: string | null;
+  avatar_url: string | null;
+};
+
 const sb = supabase as any;
 
 const AudioPlayer: React.FC<{ src: string; accent?: "neutral" | "primary"; label?: string }> = ({
@@ -139,17 +146,20 @@ const Portfolio: React.FC = () => {
   const [works, setWorks] = useState<Work[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [settings, setSettings] = useState<Record<string, string>>({});
+  const [heroComposers, setHeroComposers] = useState<PublicComposer[]>([]);
 
   useEffect(() => {
     document.title = "Portfólio — Compuse Produção Musical";
     (async () => {
-      const [w, t, s] = await Promise.all([
+      const [w, t, s, c] = await Promise.all([
         sb.from("portfolio_works").select("*").eq("is_active", true).order("display_order"),
         sb.from("portfolio_testimonials").select("*").eq("is_active", true).order("display_order"),
         sb.from("portfolio_settings").select("key,value"),
+        sb.rpc("get_public_composers", { p_limit: 12 }),
       ]);
       setWorks(w.data || []);
       setTestimonials(t.data || []);
+      setHeroComposers(c.data || []);
       const map: Record<string, string> = {};
       (s.data || []).forEach((r: any) => (map[r.key] = r.value ?? ""));
       setSettings(map);
@@ -207,12 +217,12 @@ const Portfolio: React.FC = () => {
           </Reveal>
           <Reveal delay={80}>
             <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05]">
-              {settings.hero_title || "Sua música nas mãos de quem produz de verdade."}
+              Sua música nas mãos de quem produz de verdade.
             </h1>
           </Reveal>
           <Reveal delay={160}>
             <p className="mt-5 text-lg md:text-xl text-white/70 max-w-2xl mx-auto">
-              {settings.hero_subtitle || "Centenas de compositores já transformaram suas ideias em músicas profissionais com a Compuse. Ouça o antes e o depois — e decida com os ouvidos."}
+              Centenas de compositores já transformaram suas ideias em músicas profissionais com a Compuse. Ouça o antes e o depois — e decida com os ouvidos.
             </p>
           </Reveal>
           <Reveal delay={240}>
@@ -227,13 +237,26 @@ const Portfolio: React.FC = () => {
           </Reveal>
 
           {/* Carousel de compositores */}
-          {works.length > 0 && (
+          {(() => {
+            const photosFromWorks = works
+              .filter((w) => w.composer_name)
+              .map((w) => ({
+                src: w.composer_photo_url,
+                name: w.composer_name,
+              }));
+
+            const photosFromComposers = heroComposers.map((composer) => ({
+              src: composer.avatar_url,
+              name: composer.artistic_name || composer.name || "Compositor",
+            }));
+
+            const photos = photosFromWorks.length > 0 ? photosFromWorks : photosFromComposers;
+
+            if (photos.length === 0) return null;
+
+            return (
             <div className="mt-14 overflow-hidden relative pb-2">
               {(() => {
-                const photos = works.map((w) => ({
-                  src: w.composer_photo_url,
-                  name: w.composer_name,
-                }));
                 const half = Math.ceil(photos.length / 2) || 1;
                 const set1 = photos.slice(0, half).length ? photos.slice(0, half) : photos;
                 const set2 = photos.slice(half).length ? photos.slice(half) : photos;
@@ -269,7 +292,8 @@ const Portfolio: React.FC = () => {
               <div className="pointer-events-none absolute left-0 top-0 h-full w-24 md:w-40 bg-gradient-to-r from-black to-transparent" />
               <div className="pointer-events-none absolute right-0 top-0 h-full w-24 md:w-40 bg-gradient-to-l from-black to-transparent" />
             </div>
-          )}
+            );
+          })()}
         </div>
       </section>
 
