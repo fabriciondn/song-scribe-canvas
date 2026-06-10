@@ -256,6 +256,7 @@ const PurchaseFlow: React.FC<{ preview: PreviewData; token: string }> = ({ previ
   }
 
   if (order) {
+    const goBack = () => setOrder(null);
     return (
       <Card>
         <CardContent className="p-4 space-y-3 text-center">
@@ -278,6 +279,9 @@ const PurchaseFlow: React.FC<{ preview: PreviewData; token: string }> = ({ previ
           <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
             <Loader2 className="h-3 w-3 animate-spin" /> Aguardando pagamento...
           </div>
+          <Button variant="ghost" size="sm" onClick={goBack} className="w-full">
+            ← Voltar e alterar seleção
+          </Button>
         </CardContent>
       </Card>
     );
