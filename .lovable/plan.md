@@ -1,49 +1,46 @@
-# Gestão de Marketing — Painel Admin
+## Landing Page de Portfólio de Produção Musical
 
-Nova área no admin para criar e gerir campanhas de marketing, registrar custos/resultados e visualizar métricas (CPL, CAC, ROI).
+Página pública e clean em `/portfolio` para exibir os trabalhos de produção musical com comparativos antes/depois e depoimentos em áudio. Tudo gerenciável pelo admin.
 
-## Banco de dados (migration)
+### Identidade visual
+- Paleta: preto (#0a0a0a), branco (#ffffff) e verde do site como acento (segue token `--primary` existente).
+- Tipografia: **Syne** nos títulos, **Plus Jakarta Sans** no corpo.
+- Estilo: muito clean, generoso em espaço, micro-animações ao scroll (fade/slide suaves), foto redonda do compositor com anel verde sutil, players minimalistas com waveform estilizada.
 
-Três tabelas novas em `public`, todas com RLS restrita a admins (via `is_user_admin(auth.uid())`):
+### Estrutura da página `/portfolio`
+1. **Hero** — título curto e impactante + subtítulo de uma linha + CTA WhatsApp.
+   - Ex.: *"Sua música, do esboço ao mestre."* / *"Produção musical profissional com resultado audível."*
+2. **Faixa de números** (3 stats configuráveis: ex. "+120 músicas produzidas", "9 anos de estúdio", "4.9★ avaliação").
+3. **Grid de trabalhos** — cards com:
+   - Foto redonda do compositor
+   - Nome + estilo musical
+   - Dois players lado a lado: **Antes** (cinza) e **Depois** (verde)
+   - Tag opcional ("Sertanejo", "Gospel", etc.)
+4. **Depoimentos em áudio** — carrossel com foto redonda + player do depoimento + nome.
+5. **CTA final** — bloco verde com botão grande "Quero produzir minha música" abrindo WhatsApp (número configurável no admin).
+6. **Footer** simples.
 
-1. **`marketing_campaigns`**
-   - `name`, `platform` (text), `start_date`, `end_date`, `total_budget` (numeric), `notes`, `created_by` (uuid), `created_at`, `updated_at`.
+### Painel Admin (nova aba "Portfólio")
+- **Trabalhos** (CRUD): nome do compositor, foto, estilo, áudio antes, áudio depois, ordem, ativo/inativo.
+- **Depoimentos** (CRUD): nome, foto, áudio, ordem, ativo/inativo.
+- **Configurações da página**: headline, subheadline, número WhatsApp, mensagem pré-preenchida, 3 stats do hero.
+- Uploads vão para um bucket Storage público de áudios/fotos do portfólio.
 
-2. **`marketing_campaign_costs`**
-   - `campaign_id` → campaigns, `description`, `amount` (numeric), `cost_date`, `created_at`.
+### Detalhes técnicos
+- Rota nova `/portfolio` no router (público, sem auth).
+- 3 tabelas novas: `portfolio_works`, `portfolio_testimonials`, `portfolio_settings` (key/value singleton).
+- Bucket `portfolio-media` público para imagens e áudios.
+- RLS: SELECT público nas 3 tabelas; INSERT/UPDATE/DELETE só admin (`has_role(auth.uid(),'admin')`).
+- Componente novo `AdminPortfolio.tsx` adicionado ao `AdminDashboard`.
+- Player customizado leve (HTML5 audio + barra de progresso animada), sem libs novas.
+- Animações com Tailwind + IntersectionObserver simples (sem novas dependências).
 
-3. **`marketing_campaign_results`**
-   - `campaign_id` → campaigns, `result_date`, `leads` (int), `sales` (int), `revenue` (numeric), `impressions` (int, opcional), `clicks` (int, opcional), `cpm` (numeric, opcional), `ctr` (numeric, opcional), `created_at`.
+### Copys (curtas e diretas)
+- Hero: *"Sua música merece soar profissional."* / *"Ouça o antes e o depois. Decida com os ouvidos."*
+- Trabalhos: *"Resultados reais. Sem retoque."*
+- Depoimentos: *"Quem produziu com a gente."*
+- CTA: *"Vamos produzir a sua agora?"* → botão **Falar no WhatsApp**.
 
-GRANTs: `authenticated` (SELECT/INSERT/UPDATE/DELETE), `service_role` ALL. Policies: somente admins (`is_user_admin(auth.uid())`) podem ler/escrever.
-
-Triggers de `updated_at` em `marketing_campaigns`.
-
-## Frontend
-
-### Roteamento e acesso
-- Adicionar item **"Marketing"** (ícone `Megaphone`) em `src/components/admin/AdminSidebar.tsx` com `id: "marketing"`.
-- Em `src/pages/AdminDashboard.tsx` (renderiza tabs do admin): registrar a tab `marketing` que carrega o novo componente. Acesso já é protegido por `useAdminAccess`.
-
-### Componentes novos (em `src/components/admin/marketing/`)
-- `MarketingDashboard.tsx` — container com tabs internas: **Visão Geral** | **Campanhas**.
-- `MarketingOverview.tsx` — KPIs agregados (CPL, CAC, ROI, gasto total, receita total) + gráficos (Recharts já existe): linha de ROI/CPL/CAC ao longo do tempo, barras de gasto vs receita por campanha. Filtros: período (date range), plataforma.
-- `CampaignsList.tsx` — tabela com colunas: Nome, Plataforma, Período, Orçamento, Gasto, Leads, Vendas, Receita, CPL, CAC, ROI. Ações: ver detalhes, editar, excluir. Filtros de plataforma e período.
-- `CampaignFormDialog.tsx` — dialog para criar/editar campanha (zod + react-hook-form).
-- `CampaignDetailsDialog.tsx` — detalhes com sub-abas: **Custos** e **Resultados**, cada uma com lista + form de adicionar registro.
-- `CostFormDialog.tsx` / `ResultFormDialog.tsx` — dialogs simples.
-
-### Service
-- `src/services/marketingService.ts` — CRUD para campanhas, custos e resultados via `supabase` client; helper `computeMetrics(campaign, costs, results)` retornando `{ totalSpent, totalLeads, totalSales, totalRevenue, cpl, cac, roi }`.
-
-### Hook
-- `src/hooks/useMarketingCampaigns.tsx` — busca campanhas + agrega custos/resultados em uma única chamada (com filtros opcionais).
-
-## Métricas (cálculo no cliente)
-- `CPL = totalSpent / totalLeads` (guard para 0)
-- `CAC = totalSpent / totalSales`
-- `ROI = ((totalRevenue - totalSpent) / totalSpent) * 100`
-- CPM/CTR exibidos quando preenchidos manualmente nos resultados.
-
-## Fora de escopo (não alterar)
-Nada em registros, checkout, sidebar do usuário, ou outros painéis. Apenas adições isoladas.
+### Fora do escopo
+- Não altera nenhuma funcionalidade existente.
+- Sem sistema de avaliações/comentários públicos nesta etapa.
