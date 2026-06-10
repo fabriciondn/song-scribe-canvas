@@ -27,6 +27,7 @@ import { OnlineVisitorsPanel } from '@/components/admin/OnlineVisitorsPanel';
 import { AdminRegistrations } from '@/components/admin/AdminRegistrations';
 import { AdminApiSettings } from '@/components/admin/AdminApiSettings';
 import { MarketingDashboard } from '@/components/admin/marketing/MarketingDashboard';
+import { AdminMusicPreviews } from '@/components/admin/AdminMusicPreviews';
 import { MobileAdminDashboard } from '@/components/admin/MobileAdminDashboard';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -205,6 +206,8 @@ const AdminDashboard: React.FC = () => {
         return <AdminOfferAnalytics />;
       case 'marketing':
         return <MarketingDashboard />;
+      case 'music-previews':
+        return <AdminMusicPreviews />;
       case 'logs':
         return <AdminLogs />;
       case 'menu-functions':

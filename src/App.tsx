@@ -56,6 +56,7 @@ import Sorteio from "./pages/Sorteio";
 import SorteioNumeros from "./pages/SorteioNumeros";
 import SorteioComoFunciona from "./pages/SorteioComoFunciona";
 import Oferta from "./pages/Oferta";
+import PreviaPublica from "./pages/PreviaPublica";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -151,6 +152,7 @@ const AppContent = () => {
             <Route path="/ref/:code" element={<AffiliateLink />} />
             <Route path="/formulario" element={<PublicRegistrationForm />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/previa/:token" element={<PreviaPublica />} />
             <Route path="/:slug" element={<PublicComposerProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
