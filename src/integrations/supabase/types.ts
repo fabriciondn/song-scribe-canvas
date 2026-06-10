@@ -1445,6 +1445,83 @@ export type Database = {
           },
         ]
       }
+      music_preview_tracks: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          preview_id: string
+          preview_seconds: number
+          storage_path: string
+          track_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          preview_id: string
+          preview_seconds?: number
+          storage_path: string
+          track_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          preview_id?: string
+          preview_seconds?: number
+          storage_path?: string
+          track_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_preview_tracks_preview_id_fkey"
+            columns: ["preview_id"]
+            isOneToOne: false
+            referencedRelation: "music_previews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      music_previews: {
+        Row: {
+          admin_user_id: string
+          client_comment: string | null
+          client_name: string
+          created_at: string
+          id: string
+          project_title: string | null
+          reviewed_at: string | null
+          share_token: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_user_id: string
+          client_comment?: string | null
+          client_name: string
+          created_at?: string
+          id?: string
+          project_title?: string | null
+          reviewed_at?: string | null
+          share_token?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_user_id?: string
+          client_comment?: string | null
+          client_name?: string
+          created_at?: string
+          id?: string
+          project_title?: string | null
+          reviewed_at?: string | null
+          share_token?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       offer_page_analytics: {
         Row: {
           created_at: string | null
@@ -2638,6 +2715,7 @@ export type Database = {
         }[]
       }
       get_moderator_dashboard_stats: { Args: never; Returns: Json }
+      get_music_preview_by_token: { Args: { p_token: string }; Returns: Json }
       get_offer_page_stats: {
         Args: { p_end_date: string; p_start_date: string }
         Returns: Json
@@ -2771,6 +2849,10 @@ export type Database = {
             }
             Returns: Json
           }
+      submit_music_preview_review: {
+        Args: { p_comment?: string; p_status: string; p_token: string }
+        Returns: Json
+      }
       update_draft: {
         Args: { draft_id: string; draft_updates: Json }
         Returns: {
