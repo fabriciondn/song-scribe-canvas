@@ -195,11 +195,9 @@ export const WorkDetailsModal: React.FC<WorkDetailsModalProps> = ({
     }
 
     try {
-      const { data } = supabase.storage
-        .from('author-registrations')
-        .getPublicUrl(work.audio_file_path);
+      const signedUrl = await getAuthorRegistrationUrl(work.audio_file_path);
 
-      const response = await fetch(data.publicUrl);
+      const response = await fetch(signedUrl);
       const blob = await response.blob();
       
       const blobUrl = URL.createObjectURL(blob);
