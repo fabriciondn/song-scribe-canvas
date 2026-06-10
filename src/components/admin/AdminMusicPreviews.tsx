@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
-  Music, Plus, Copy, Trash2, Upload, ExternalLink, Loader2, CheckCircle2, XCircle, Clock,
+  Music, Plus, Copy, Trash2, Upload, ExternalLink, Loader2, CheckCircle2, XCircle, Clock, MapPin, Headphones,
 } from 'lucide-react';
 
 interface Preview {
@@ -48,6 +48,8 @@ export const AdminMusicPreviews: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [newTrackName, setNewTrackName] = useState('');
   const [newTrackSeconds, setNewTrackSeconds] = useState(30);
+  const [listens, setListens] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
@@ -86,6 +88,23 @@ export const AdminMusicPreviews: React.FC = () => {
     if (error) toast.error('Erro ao carregar faixas');
     else setTracks((data || []) as Track[]);
     setTracksLoading(false);
+
+    // listens
+    const { data: ls } = await supabase
+      .from('music_preview_listens')
+      .select('*')
+      .eq('preview_id', previewId)
+      .order('created_at', { ascending: false })
+      .limit(200);
+    setListens(ls || []);
+
+    // orders
+    const { data: os } = await supabase
+      .from('music_preview_orders')
+      .select('*')
+      .eq('preview_id', previewId)
+      .order('created_at', { ascending: false });
+    setOrders(os || []);
   };
 
   const createPreview = async () => {
@@ -362,6 +381,59 @@ export const AdminMusicPreviews: React.FC = () => {
                         <Button size="sm" variant="ghost" onClick={() => deleteTrack(t)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold flex items-center gap-2">
+                    <Headphones className="h-4 w-4" />Acessos ({listens.length})
+                  </div>
+                  {listens.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground text-sm">Ninguém ouviu ainda.</div>
+                  ) : (
+                    <div className="max-h-72 overflow-y-auto space-y-1 border rounded">
+                      {listens.map((l) => {
+                        const tk = tracks.find((t) => t.id === l.track_id);
+                        return (
+                          <div key={l.id} className="flex items-center justify-between gap-2 p-2 border-b last:border-b-0 text-xs">
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium truncate">{tk?.track_name || 'Faixa removida'}</div>
+                              <div className="text-muted-foreground flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {[l.city, l.region, l.country].filter(Boolean).join(', ') || 'Local desconhecido'}
+                                {l.ip_address && <span className="ml-1">· {l.ip_address}</span>}
+                              </div>
+                              <div className="text-muted-foreground">
+                                {new Date(l.created_at).toLocaleString('pt-BR')}
+                              </div>
+                            </div>
+                            <div className="font-mono text-sm font-semibold">{l.listened_seconds}s</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold">Pedidos PIX ({orders.length})</div>
+                  {orders.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground text-sm">Nenhum pedido gerado.</div>
+                  ) : (
+                    orders.map((o) => (
+                      <div key={o.id} className="flex items-center justify-between gap-2 p-2 rounded border text-xs">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium">R$ {Number(o.amount).toFixed(2).replace('.', ',')} · {o.selected_track_ids?.length || 0} faixa(s)</div>
+                          <div className="text-muted-foreground">
+                            {new Date(o.created_at).toLocaleString('pt-BR')}
+                            {o.paid_at && ` · pago em ${new Date(o.paid_at).toLocaleString('pt-BR')}`}
+                          </div>
+                        </div>
+                        <Badge className={o.status === 'paid' ? 'bg-green-100 text-green-800 border-green-200' : ''} variant={o.status === 'paid' ? 'default' : 'secondary'}>
+                          {o.status === 'paid' ? 'Pago' : 'Aguardando'}
+                        </Badge>
                       </div>
                     ))
                   )}
