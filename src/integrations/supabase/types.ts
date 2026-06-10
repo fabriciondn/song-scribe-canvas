@@ -2752,16 +2752,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      create_music_preview_order:
-        | { Args: { p_token: string; p_track_ids: string[] }; Returns: Json }
-        | {
-            Args: {
-              p_includes_registration?: boolean
-              p_token: string
-              p_track_ids: string[]
-            }
-            Returns: Json
-          }
+      create_music_preview_order: {
+        Args: {
+          p_includes_registration?: boolean
+          p_token: string
+          p_track_ids: string[]
+        }
+        Returns: Json
+      }
       decrement_user_credit: { Args: { user_id: string }; Returns: undefined }
       delete_draft: { Args: { draft_id: string }; Returns: undefined }
       expire_frozen_bonus_credits: { Args: never; Returns: number }

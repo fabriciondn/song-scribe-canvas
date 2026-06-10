@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.create_music_preview_order(text, uuid[]);
