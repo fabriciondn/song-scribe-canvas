@@ -48,6 +48,8 @@ export const AdminMusicPreviews: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [newTrackName, setNewTrackName] = useState('');
   const [newTrackSeconds, setNewTrackSeconds] = useState(30);
+  const [listens, setListens] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
