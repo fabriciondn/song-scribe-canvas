@@ -165,6 +165,16 @@ const Portfolio: React.FC = () => {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         .font-display { font-family: 'Syne', sans-serif; letter-spacing: -0.02em; }
+        @keyframes scroll-left {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes scroll-right {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
+        }
+        .animate-scroll-left { animation: scroll-left 40s linear infinite; }
+        .animate-scroll-right { animation: scroll-right 40s linear infinite; }
       `}</style>
 
       {/* Top bar */}
