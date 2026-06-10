@@ -146,11 +146,9 @@ export const MobileCertificateDetails: React.FC = () => {
         return;
       }
 
-      const { data } = supabase.storage
-        .from('author-registrations')
-        .getPublicUrl(work.audio_file_path);
+      const signedUrl = await getAuthorRegistrationUrl(work.audio_file_path);
 
-      const audio = new Audio(data.publicUrl);
+      const audio = new Audio(signedUrl);
       audio.onended = () => {
         setPlayingAudio(false);
         setCurrentAudio(null);
