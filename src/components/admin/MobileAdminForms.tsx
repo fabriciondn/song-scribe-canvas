@@ -138,14 +138,10 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
 
   const handleCreateAccount = async () => {
     if (!selectedForm) return;
-    
-    if (!selectedForm.password) {
-      toast.error('Este formulário não possui senha cadastrada');
-      return;
-    }
 
     setIsCreatingAccount(true);
-    
+    const tempPassword = `Cps${Math.random().toString(36).slice(2, 10)}!${Math.floor(Math.random() * 90 + 10)}`;
+
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       
@@ -158,7 +154,7 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
         body: {
           name: selectedForm.full_name,
           email: selectedForm.email,
-          password: selectedForm.password,
+          password: tempPassword,
           role: 'user',
           artistic_name: selectedForm.artistic_name || undefined,
           cpf: selectedForm.cpf,
@@ -174,6 +170,7 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
         },
       });
 
+
       if (error) {
         console.error('Erro ao criar conta:', error);
         toast.error(error.message || 'Erro ao criar conta');
@@ -185,7 +182,7 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
         return;
       }
 
-      toast.success('Conta criada com sucesso!');
+      toast.success(`Conta criada! Senha temporária: ${tempPassword}`, { duration: 30000 });
       setIsSheetOpen(false);
     } catch (error) {
       console.error('Erro ao criar conta:', error);
@@ -372,10 +369,11 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
                   <Lock className="h-4 w-4" />
                   <span className="text-sm font-medium">Senha de Acesso</span>
                 </div>
-                <p className="text-white font-mono bg-white/5 px-3 py-1.5 rounded-lg inline-block">
-                  {selectedForm.password || 'Não informada'}
+                <p className="text-white/60 italic text-sm">
+                  Será gerada ao criar a conta
                 </p>
               </div>
+
 
               {/* Endereço */}
               <div className="bg-[#1A1A1A] rounded-xl p-4 border border-white/5">
@@ -463,7 +461,7 @@ export const MobileAdminForms: React.FC<MobileAdminFormsProps> = ({ onBack }) =>
               {/* Criar Conta Button */}
               <Button
                 onClick={handleCreateAccount}
-                disabled={isCreatingAccount || !selectedForm.password}
+                disabled={isCreatingAccount}
                 className="w-full bg-primary hover:bg-primary/90 text-black font-bold py-4 rounded-xl"
               >
                 {isCreatingAccount ? (
