@@ -117,7 +117,8 @@ const TrackPlayer: React.FC<{ track: Track }> = ({ track }) => {
 };
 
 const PreviaPublica: React.FC = () => {
-  const { token } = useParams<{ token: string }>();
+  const params = useParams<{ token?: string; slug?: string }>();
+  const token = params.token || params.slug;
   const [data, setData] = useState<PreviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState('');

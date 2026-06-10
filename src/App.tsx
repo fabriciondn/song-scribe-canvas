@@ -57,6 +57,8 @@ import SorteioNumeros from "./pages/SorteioNumeros";
 import SorteioComoFunciona from "./pages/SorteioComoFunciona";
 import Oferta from "./pages/Oferta";
 import PreviaPublica from "./pages/PreviaPublica";
+import SlugDispatcher from "./pages/SlugDispatcher";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
