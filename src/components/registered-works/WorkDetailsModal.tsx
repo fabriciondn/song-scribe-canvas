@@ -20,6 +20,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useRegistrationStatus } from '@/hooks/useRegistrationStatus';
 import { generateCertificatePDF } from '@/services/certificateService';
 import { supabase } from '@/integrations/supabase/client';
+import { getAuthorRegistrationUrl } from '@/lib/storageSignedUrl';
 import { toast } from '@/hooks/use-toast';
 
 interface RegisteredWork {
@@ -150,11 +151,9 @@ export const WorkDetailsModal: React.FC<WorkDetailsModalProps> = ({
         setPlayingAudio(false);
       }
 
-      const { data } = supabase.storage
-        .from('author-registrations')
-        .getPublicUrl(work.audio_file_path);
+      const signedUrl = await getAuthorRegistrationUrl(work.audio_file_path);
 
-      const audio = new Audio(data.publicUrl);
+      const audio = new Audio(signedUrl);
       audio.onended = () => {
         setPlayingAudio(false);
         setCurrentAudio(null);
@@ -196,11 +195,9 @@ export const WorkDetailsModal: React.FC<WorkDetailsModalProps> = ({
     }
 
     try {
-      const { data } = supabase.storage
-        .from('author-registrations')
-        .getPublicUrl(work.audio_file_path);
+      const signedUrl = await getAuthorRegistrationUrl(work.audio_file_path);
 
-      const response = await fetch(data.publicUrl);
+      const response = await fetch(signedUrl);
       const blob = await response.blob();
       
       const blobUrl = URL.createObjectURL(blob);

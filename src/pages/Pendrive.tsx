@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getAuthorRegistrationUrl } from '@/lib/storageSignedUrl';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -108,13 +109,11 @@ const Pendrive = () => {
     }
 
     try {
-      const { data } = supabase.storage
-        .from('author-registrations')
-        .getPublicUrl(registration.audio_file_path);
+      const url = await getAuthorRegistrationUrl(registration.audio_file_path);
 
-      if (data?.publicUrl) {
+      if (url) {
         const link = document.createElement('a');
-        link.href = data.publicUrl;
+        link.href = url;
         link.download = `${registration.title} - ${registration.author}.mp3`;
         link.target = '_blank';
         document.body.appendChild(link);
@@ -147,12 +146,10 @@ const Pendrive = () => {
     }
 
     try {
-      const { data } = supabase.storage
-        .from('author-registrations')
-        .getPublicUrl(registration.audio_file_path);
+      const url = await getAuthorRegistrationUrl(registration.audio_file_path);
 
-      if (data?.publicUrl) {
-        const audio = new Audio(data.publicUrl);
+      if (url) {
+        const audio = new Audio(url);
         audioRef.current = audio;
         
         audio.onended = () => setPlayingId(null);

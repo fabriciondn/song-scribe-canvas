@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Eye, Search, Filter, Download, Calendar, Music, FileText, Download as DownloadIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getAuthorRegistrationUrl } from '@/lib/storageSignedUrl';
+import { SignedAudio } from '@/components/common/SignedAudio';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -363,22 +365,15 @@ export const ModeratorForms = () => {
                                   size="sm" 
                                   className="h-6 gap-1 text-[10px]"
                                   onClick={async () => {
-                                    const { data } = await supabase.storage
-                                      .from('author-registrations')
-                                      .getPublicUrl(work.audio_url!);
-                                    window.open(data.publicUrl, '_blank');
+                                    const url = await getAuthorRegistrationUrl(work.audio_url!);
+                                    window.open(url, '_blank');
                                   }}
                                 >
                                   <DownloadIcon className="h-3 w-3" />
                                   Baixar
                                 </Button>
                               </div>
-                              <audio 
-                                controls 
-                                className="w-full h-8"
-                                src={supabase.storage.from('author-registrations').getPublicUrl(work.audio_url).data.publicUrl}
-                              >
-                              </audio>
+                              <SignedAudio path={work.audio_url} className="w-full h-8" />
                             </div>
                           )}
                         </CardContent>

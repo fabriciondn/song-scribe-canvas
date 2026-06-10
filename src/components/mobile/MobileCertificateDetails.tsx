@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getAuthorRegistrationUrl } from '@/lib/storageSignedUrl';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useProfile } from '@/hooks/useProfile';
 import { generateCertificatePDF } from '@/services/certificateService';
@@ -145,11 +146,9 @@ export const MobileCertificateDetails: React.FC = () => {
         return;
       }
 
-      const { data } = supabase.storage
-        .from('author-registrations')
-        .getPublicUrl(work.audio_file_path);
+      const signedUrl = await getAuthorRegistrationUrl(work.audio_file_path);
 
-      const audio = new Audio(data.publicUrl);
+      const audio = new Audio(signedUrl);
       audio.onended = () => {
         setPlayingAudio(false);
         setCurrentAudio(null);
