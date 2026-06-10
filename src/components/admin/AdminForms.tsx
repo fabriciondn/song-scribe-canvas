@@ -67,16 +67,13 @@ export const AdminForms: React.FC = () => {
 
       // 2. Se não existe, criar via edge function
       if (!profile) {
-        if (!selectedForm.password) {
-          toast.error('Usuário ainda não tem conta e o formulário não possui senha. Crie a conta manualmente primeiro.');
-          return;
-        }
+        const tempPassword = `Cps${Math.random().toString(36).slice(2, 10)}!${Math.floor(Math.random() * 90 + 10)}`;
         toast.info('Criando conta do compositor...');
         const { data, error } = await supabase.functions.invoke('create-user-by-admin', {
           body: {
             name: selectedForm.full_name,
             email: selectedForm.email,
-            password: selectedForm.password,
+            password: tempPassword,
             role: 'user',
             artistic_name: selectedForm.artistic_name || undefined,
             cpf: selectedForm.cpf,
@@ -95,6 +92,8 @@ export const AdminForms: React.FC = () => {
           toast.error(error?.message || data?.error || 'Erro ao criar conta');
           return;
         }
+        toast.success(`Conta criada! Senha temporária: ${tempPassword}`, { duration: 30000 });
+
         const refetch = await supabase
           .from('profiles')
           .select('id, name, email, artistic_name')
@@ -227,14 +226,10 @@ export const AdminForms: React.FC = () => {
 
   const handleCreateAccount = async () => {
     if (!selectedForm) return;
-    
-    if (!selectedForm.password) {
-      toast.error('Este formulário não possui senha cadastrada');
-      return;
-    }
 
     setIsCreatingAccount(true);
-    
+    const tempPassword = `Cps${Math.random().toString(36).slice(2, 10)}!${Math.floor(Math.random() * 90 + 10)}`;
+
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       
@@ -247,7 +242,7 @@ export const AdminForms: React.FC = () => {
         body: {
           name: selectedForm.full_name,
           email: selectedForm.email,
-          password: selectedForm.password,
+          password: tempPassword,
           role: 'user',
           // Não passar credits para criar com 0 por padrão
           artistic_name: selectedForm.artistic_name || undefined,
@@ -263,6 +258,7 @@ export const AdminForms: React.FC = () => {
           works: selectedForm.works,
         },
       });
+
 
       if (error) {
         console.error('Erro ao criar conta:', error);
