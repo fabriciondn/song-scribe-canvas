@@ -554,24 +554,15 @@ export const AdminForms: React.FC = () => {
                                   size="sm" 
                                   className="h-7 gap-1"
                                   onClick={async () => {
-                                    const { data } = await supabase.storage
-                                      .from('author-registrations')
-                                      .getPublicUrl(work.audio_url!);
-                                    window.open(data.publicUrl, '_blank');
+                                    const url = await getAuthorRegistrationUrl(work.audio_url!);
+                                    window.open(url, '_blank');
                                   }}
                                 >
                                   <Download className="h-3 w-3" />
                                   Baixar
                                 </Button>
                               </div>
-                              <audio 
-                                controls 
-                                className="w-full h-10"
-                                src={supabase.storage.from('author-registrations').getPublicUrl(work.audio_url).data.publicUrl}
-                                preload="none"
-                              >
-                                Seu navegador não suporta áudio.
-                              </audio>
+                              <SignedAudio path={work.audio_url} className="w-full h-10" />
                             </div>
                           )}
                         </CardContent>
