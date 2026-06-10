@@ -28,6 +28,7 @@ import { AdminRegistrations } from '@/components/admin/AdminRegistrations';
 import { AdminApiSettings } from '@/components/admin/AdminApiSettings';
 import { MarketingDashboard } from '@/components/admin/marketing/MarketingDashboard';
 import { AdminMusicPreviews } from '@/components/admin/AdminMusicPreviews';
+import { AdminPortfolio } from '@/components/admin/AdminPortfolio';
 import { MobileAdminDashboard } from '@/components/admin/MobileAdminDashboard';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
