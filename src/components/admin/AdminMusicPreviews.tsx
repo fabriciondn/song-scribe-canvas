@@ -630,6 +630,85 @@ export const AdminMusicPreviews: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Edit Preview Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar prévia</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nome do cliente *</Label>
+              <Input value={editClientName} onChange={(e) => setEditClientName(e.target.value)} />
+            </div>
+            <div>
+              <Label>Título do projeto / música</Label>
+              <Input value={editProjectTitle} onChange={(e) => setEditProjectTitle(e.target.value)} />
+            </div>
+            <div>
+              <Label>Status</Label>
+              <select
+                className="w-full h-10 rounded-md border bg-background px-3 text-sm"
+                value={editStatus}
+                onChange={(e) => setEditStatus(e.target.value)}
+              >
+                <option value="pending">Aguardando</option>
+                <option value="approved">Aprovada (dar baixa)</option>
+                <option value="rejected">Recusada</option>
+              </select>
+            </div>
+            <div>
+              <Label>Comentário do cliente</Label>
+              <Textarea value={editComment} onChange={(e) => setEditComment(e.target.value)} rows={3} />
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={editRegenSlug}
+                onChange={(e) => setEditRegenSlug(e.target.checked)}
+              />
+              Atualizar o link público com o novo nome (o link antigo deixará de funcionar)
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
+            <Button onClick={saveEditPreview} disabled={savingEdit}>
+              {savingEdit && <Loader2 className="h-4 w-4 animate-spin" />}Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Track Dialog */}
+      <Dialog open={trackEditOpen} onOpenChange={setTrackEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar faixa</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nome da faixa *</Label>
+              <Input value={editTrackName} onChange={(e) => setEditTrackName(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Tempo de prévia (s) *</Label>
+                <Input type="number" min={1} max={600} value={editTrackSeconds}
+                  onChange={(e) => setEditTrackSeconds(parseInt(e.target.value || '0', 10))} />
+              </div>
+              <div>
+                <Label>Posição (ordem)</Label>
+                <Input type="number" min={0} value={editTrackPosition}
+                  onChange={(e) => setEditTrackPosition(parseInt(e.target.value || '0', 10))} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTrackEditOpen(false)}>Cancelar</Button>
+            <Button onClick={saveEditTrack} disabled={savingTrack}>
+              {savingTrack && <Loader2 className="h-4 w-4 animate-spin" />}Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+
