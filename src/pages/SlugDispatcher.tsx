@@ -5,13 +5,19 @@ import PublicComposerProfile from './PublicComposerProfile';
 
 /**
  * Dispatcher for top-level /:slug routes.
- * If the slug matches the music-preview pattern (previa0001, previa1234, etc),
- * render the public music preview page. Otherwise fall back to the
- * public composer profile.
+ * Music preview slugs:
+ *  - legacy: p0001, previa0001
+ *  - new:    previa-{musica}-{cliente}
+ * Otherwise fall back to public composer profile.
  */
 const SlugDispatcher: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  if (slug && (/^p\d+$/i.test(slug) || /^previa\d+$/i.test(slug))) {
+  if (
+    slug &&
+    (/^p\d+$/i.test(slug) ||
+      /^previa\d+$/i.test(slug) ||
+      /^previa-[a-z0-9-]+$/i.test(slug))
+  ) {
     return <PreviaPublica />;
   }
   return <PublicComposerProfile />;
