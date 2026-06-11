@@ -458,16 +458,23 @@ export const AdminMusicPreviews: React.FC = () => {
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" onClick={openEditPreview}>
+                      <Pencil className="h-4 w-4" />Editar
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => copyLink(selectedPreview)}>
                       <Copy className="h-4 w-4" />Copiar link
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => openPublic(selectedPreview)}>
                       <ExternalLink className="h-4 w-4" />Abrir
                     </Button>
+                    <Button size="sm" variant="outline" onClick={regenerateSlug} title="Gerar novo link público">
+                      <RefreshCw className="h-4 w-4" />Novo link
+                    </Button>
                     <Button size="sm" variant="destructive" onClick={() => deletePreview(selectedPreview.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
+
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
