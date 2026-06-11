@@ -485,6 +485,33 @@ export const AdminMusicPreviews: React.FC = () => {
                   </div>
                 </div>
 
+                <div className="rounded-lg border p-3 space-y-2">
+                  <div className="text-xs text-muted-foreground">Dar baixa / alterar status:</div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant={selectedPreview.status === 'approved' ? 'default' : 'outline'}
+                      onClick={() => quickStatus('approved')}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />Aprovada
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedPreview.status === 'rejected' ? 'default' : 'outline'}
+                      onClick={() => quickStatus('rejected')}
+                    >
+                      <XCircle className="h-4 w-4" />Recusada
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedPreview.status === 'pending' ? 'default' : 'outline'}
+                      onClick={() => quickStatus('pending')}
+                    >
+                      <Clock className="h-4 w-4" />Aguardando
+                    </Button>
+                  </div>
+                </div>
+
                 {selectedPreview.status !== 'pending' && (
                   <div className={`rounded-lg border p-3 ${selectedPreview.status === 'approved' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                     <div className="flex items-center gap-2 mb-1">
@@ -500,6 +527,7 @@ export const AdminMusicPreviews: React.FC = () => {
                     )}
                   </div>
                 )}
+
 
                 <div className="rounded-lg border p-3 space-y-3">
                   <div className="font-semibold flex items-center gap-2"><Upload className="h-4 w-4" />Adicionar faixa</div>
