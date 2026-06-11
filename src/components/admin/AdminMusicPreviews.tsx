@@ -132,12 +132,14 @@ export const AdminMusicPreviews: React.FC = () => {
     }
     setCreating(true);
     const { data: userData } = await supabase.auth.getUser();
+    const newSlug = await generateUniquePreviewSlug(clientName.trim(), projectTitle.trim() || null);
     const { data, error } = await supabase
       .from('music_previews')
       .insert({
         client_name: clientName.trim(),
         project_title: projectTitle.trim() || null,
         admin_user_id: userData.user!.id,
+        slug: newSlug,
       })
       .select()
       .single();
@@ -154,6 +156,134 @@ export const AdminMusicPreviews: React.FC = () => {
     setSelectedPreview(data as Preview);
     loadTracks((data as Preview).id);
   };
+
+  const openEditPreview = () => {
+    if (!selectedPreview) return;
+    setEditClientName(selectedPreview.client_name);
+    setEditProjectTitle(selectedPreview.project_title || '');
+    setEditStatus(selectedPreview.status);
+    setEditComment(selectedPreview.client_comment || '');
+    setEditRegenSlug(false);
+    setEditOpen(true);
+  };
+
+  const saveEditPreview = async () => {
+    if (!selectedPreview) return;
+    if (!editClientName.trim()) {
+      toast.error('Informe o nome do cliente');
+      return;
+    }
+    setSavingEdit(true);
+    const updates: any = {
+      client_name: editClientName.trim(),
+      project_title: editProjectTitle.trim() || null,
+      status: editStatus,
+      client_comment: editComment.trim() || null,
+    };
+    if (editStatus !== 'pending' && selectedPreview.status !== editStatus) {
+      updates.reviewed_at = new Date().toISOString();
+    }
+    if (editRegenSlug) {
+      updates.slug = await generateUniquePreviewSlug(
+        editClientName.trim(),
+        editProjectTitle.trim() || null,
+        selectedPreview.id,
+      );
+    }
+    const { data, error } = await supabase
+      .from('music_previews')
+      .update(updates)
+      .eq('id', selectedPreview.id)
+      .select()
+      .single();
+    setSavingEdit(false);
+    if (error) {
+      toast.error('Erro ao salvar');
+      return;
+    }
+    toast.success('Prévia atualizada!');
+    setEditOpen(false);
+    setSelectedPreview(data as Preview);
+    load();
+  };
+
+  const quickStatus = async (status: 'pending' | 'approved' | 'rejected') => {
+    if (!selectedPreview) return;
+    const updates: any = { status };
+    if (status === 'pending') updates.reviewed_at = null;
+    else updates.reviewed_at = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('music_previews')
+      .update(updates)
+      .eq('id', selectedPreview.id)
+      .select()
+      .single();
+    if (error) {
+      toast.error('Erro ao atualizar status');
+      return;
+    }
+    toast.success('Status atualizado');
+    setSelectedPreview(data as Preview);
+    load();
+  };
+
+  const regenerateSlug = async () => {
+    if (!selectedPreview) return;
+    if (!confirm('Gerar novo link público? O link anterior deixará de funcionar.')) return;
+    const newSlug = await generateUniquePreviewSlug(
+      selectedPreview.client_name,
+      selectedPreview.project_title,
+      selectedPreview.id,
+    );
+    const { data, error } = await supabase
+      .from('music_previews')
+      .update({ slug: newSlug })
+      .eq('id', selectedPreview.id)
+      .select()
+      .single();
+    if (error) {
+      toast.error('Erro ao gerar novo link');
+      return;
+    }
+    toast.success('Novo link gerado!');
+    setSelectedPreview(data as Preview);
+    load();
+  };
+
+  const openEditTrack = (t: Track) => {
+    setEditingTrack(t);
+    setEditTrackName(t.track_name);
+    setEditTrackSeconds(t.preview_seconds);
+    setEditTrackPosition(t.position);
+    setTrackEditOpen(true);
+  };
+
+  const saveEditTrack = async () => {
+    if (!editingTrack) return;
+    if (!editTrackName.trim() || editTrackSeconds <= 0) {
+      toast.error('Dados inválidos');
+      return;
+    }
+    setSavingTrack(true);
+    const { error } = await supabase
+      .from('music_preview_tracks')
+      .update({
+        track_name: editTrackName.trim(),
+        preview_seconds: Number(editTrackSeconds),
+        position: Number(editTrackPosition),
+      })
+      .eq('id', editingTrack.id);
+    setSavingTrack(false);
+    if (error) {
+      toast.error('Erro ao salvar faixa');
+      return;
+    }
+    toast.success('Faixa atualizada');
+    setTrackEditOpen(false);
+    setEditingTrack(null);
+    if (selectedPreview) loadTracks(selectedPreview.id);
+  };
+
 
   const publicSlug = (p: Preview) => p.slug || p.share_token;
 
