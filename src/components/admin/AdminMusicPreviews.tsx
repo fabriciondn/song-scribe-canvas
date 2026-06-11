@@ -53,6 +53,23 @@ export const AdminMusicPreviews: React.FC = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Edit preview modal
+  const [editOpen, setEditOpen] = useState(false);
+  const [editClientName, setEditClientName] = useState('');
+  const [editProjectTitle, setEditProjectTitle] = useState('');
+  const [editStatus, setEditStatus] = useState<string>('pending');
+  const [editComment, setEditComment] = useState('');
+  const [editRegenSlug, setEditRegenSlug] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  // Edit track modal
+  const [trackEditOpen, setTrackEditOpen] = useState(false);
+  const [editingTrack, setEditingTrack] = useState<Track | null>(null);
+  const [editTrackName, setEditTrackName] = useState('');
+  const [editTrackSeconds, setEditTrackSeconds] = useState(30);
+  const [editTrackPosition, setEditTrackPosition] = useState(0);
+  const [savingTrack, setSavingTrack] = useState(false);
+
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
