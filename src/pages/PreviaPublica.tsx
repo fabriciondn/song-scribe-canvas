@@ -57,16 +57,16 @@ const TrackPlayer: React.FC<{ track: Track; token: string }> = ({ track, token }
   const ensureUrl = async () => {
     if (url) return url;
     setLoading(true);
-    const { data, error } = await supabase.storage
-      .from('music-previews')
-      .createSignedUrl(track.storage_path, 60 * 10);
+    const { data, error } = await supabase.functions.invoke('get-preview-audio-url', {
+      body: { token, track_id: track.id },
+    });
     setLoading(false);
-    if (error || !data?.signedUrl) {
+    if (error || !data?.url) {
       toast.error('Erro ao carregar áudio');
       return null;
     }
-    setUrl(data.signedUrl);
-    return data.signedUrl;
+    setUrl(data.url);
+    return data.url;
   };
 
   const logListen = async (seconds: number) => {
