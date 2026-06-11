@@ -103,9 +103,14 @@ serve(async (req) => {
       .eq('user_id', user_id)
       .maybeSingle();
 
-    // Se já tem assinatura ativa, retornar erro
-    if (existingSubscription && existingSubscription.status === 'active') {
-      console.log('⚠️ Usuário já tem assinatura ativa');
+    // Se já tem assinatura ativa E NÃO vencida, retornar erro
+    const isReallyActive =
+      existingSubscription?.status === 'active' &&
+      existingSubscription?.expires_at &&
+      new Date(existingSubscription.expires_at).getTime() > Date.now();
+
+    if (isReallyActive) {
+      console.log('⚠️ Usuário já tem assinatura ativa e válida');
       return new Response(
         JSON.stringify({ error: 'Você já possui uma assinatura ativa' }),
         { 
