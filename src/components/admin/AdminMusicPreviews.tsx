@@ -559,13 +559,17 @@ export const AdminMusicPreviews: React.FC = () => {
                       <div key={t.id} className="flex items-center justify-between gap-2 p-2 rounded border">
                         <div className="min-w-0 flex-1">
                           <div className="font-medium truncate">{t.track_name}</div>
-                          <div className="text-xs text-muted-foreground">Prévia: {t.preview_seconds}s</div>
+                          <div className="text-xs text-muted-foreground">Prévia: {t.preview_seconds}s · Posição: {t.position}</div>
                         </div>
-                        <Button size="sm" variant="ghost" onClick={() => deleteTrack(t)}>
+                        <Button size="sm" variant="ghost" onClick={() => openEditTrack(t)} title="Editar faixa">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => deleteTrack(t)} title="Excluir faixa">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     ))
+
                   )}
                 </div>
 
