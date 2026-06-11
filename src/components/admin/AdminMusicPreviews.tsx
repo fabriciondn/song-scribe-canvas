@@ -11,8 +11,9 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
-  Music, Plus, Copy, Trash2, Upload, ExternalLink, Loader2, CheckCircle2, XCircle, Clock, MapPin, Headphones,
+  Music, Plus, Copy, Trash2, Upload, ExternalLink, Loader2, CheckCircle2, XCircle, Clock, MapPin, Headphones, Pencil, RefreshCw,
 } from 'lucide-react';
+import { generateUniquePreviewSlug } from '@/lib/previewSlug';
 
 interface Preview {
   id: string;
@@ -51,6 +52,23 @@ export const AdminMusicPreviews: React.FC = () => {
   const [listens, setListens] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Edit preview modal
+  const [editOpen, setEditOpen] = useState(false);
+  const [editClientName, setEditClientName] = useState('');
+  const [editProjectTitle, setEditProjectTitle] = useState('');
+  const [editStatus, setEditStatus] = useState<string>('pending');
+  const [editComment, setEditComment] = useState('');
+  const [editRegenSlug, setEditRegenSlug] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  // Edit track modal
+  const [trackEditOpen, setTrackEditOpen] = useState(false);
+  const [editingTrack, setEditingTrack] = useState<Track | null>(null);
+  const [editTrackName, setEditTrackName] = useState('');
+  const [editTrackSeconds, setEditTrackSeconds] = useState(30);
+  const [editTrackPosition, setEditTrackPosition] = useState(0);
+  const [savingTrack, setSavingTrack] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -114,12 +132,14 @@ export const AdminMusicPreviews: React.FC = () => {
     }
     setCreating(true);
     const { data: userData } = await supabase.auth.getUser();
+    const newSlug = await generateUniquePreviewSlug(clientName.trim(), projectTitle.trim() || null);
     const { data, error } = await supabase
       .from('music_previews')
       .insert({
         client_name: clientName.trim(),
         project_title: projectTitle.trim() || null,
         admin_user_id: userData.user!.id,
+        slug: newSlug,
       })
       .select()
       .single();
@@ -136,6 +156,134 @@ export const AdminMusicPreviews: React.FC = () => {
     setSelectedPreview(data as Preview);
     loadTracks((data as Preview).id);
   };
+
+  const openEditPreview = () => {
+    if (!selectedPreview) return;
+    setEditClientName(selectedPreview.client_name);
+    setEditProjectTitle(selectedPreview.project_title || '');
+    setEditStatus(selectedPreview.status);
+    setEditComment(selectedPreview.client_comment || '');
+    setEditRegenSlug(false);
+    setEditOpen(true);
+  };
+
+  const saveEditPreview = async () => {
+    if (!selectedPreview) return;
+    if (!editClientName.trim()) {
+      toast.error('Informe o nome do cliente');
+      return;
+    }
+    setSavingEdit(true);
+    const updates: any = {
+      client_name: editClientName.trim(),
+      project_title: editProjectTitle.trim() || null,
+      status: editStatus,
+      client_comment: editComment.trim() || null,
+    };
+    if (editStatus !== 'pending' && selectedPreview.status !== editStatus) {
+      updates.reviewed_at = new Date().toISOString();
+    }
+    if (editRegenSlug) {
+      updates.slug = await generateUniquePreviewSlug(
+        editClientName.trim(),
+        editProjectTitle.trim() || null,
+        selectedPreview.id,
+      );
+    }
+    const { data, error } = await supabase
+      .from('music_previews')
+      .update(updates)
+      .eq('id', selectedPreview.id)
+      .select()
+      .single();
+    setSavingEdit(false);
+    if (error) {
+      toast.error('Erro ao salvar');
+      return;
+    }
+    toast.success('Prévia atualizada!');
+    setEditOpen(false);
+    setSelectedPreview(data as Preview);
+    load();
+  };
+
+  const quickStatus = async (status: 'pending' | 'approved' | 'rejected') => {
+    if (!selectedPreview) return;
+    const updates: any = { status };
+    if (status === 'pending') updates.reviewed_at = null;
+    else updates.reviewed_at = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('music_previews')
+      .update(updates)
+      .eq('id', selectedPreview.id)
+      .select()
+      .single();
+    if (error) {
+      toast.error('Erro ao atualizar status');
+      return;
+    }
+    toast.success('Status atualizado');
+    setSelectedPreview(data as Preview);
+    load();
+  };
+
+  const regenerateSlug = async () => {
+    if (!selectedPreview) return;
+    if (!confirm('Gerar novo link público? O link anterior deixará de funcionar.')) return;
+    const newSlug = await generateUniquePreviewSlug(
+      selectedPreview.client_name,
+      selectedPreview.project_title,
+      selectedPreview.id,
+    );
+    const { data, error } = await supabase
+      .from('music_previews')
+      .update({ slug: newSlug })
+      .eq('id', selectedPreview.id)
+      .select()
+      .single();
+    if (error) {
+      toast.error('Erro ao gerar novo link');
+      return;
+    }
+    toast.success('Novo link gerado!');
+    setSelectedPreview(data as Preview);
+    load();
+  };
+
+  const openEditTrack = (t: Track) => {
+    setEditingTrack(t);
+    setEditTrackName(t.track_name);
+    setEditTrackSeconds(t.preview_seconds);
+    setEditTrackPosition(t.position);
+    setTrackEditOpen(true);
+  };
+
+  const saveEditTrack = async () => {
+    if (!editingTrack) return;
+    if (!editTrackName.trim() || editTrackSeconds <= 0) {
+      toast.error('Dados inválidos');
+      return;
+    }
+    setSavingTrack(true);
+    const { error } = await supabase
+      .from('music_preview_tracks')
+      .update({
+        track_name: editTrackName.trim(),
+        preview_seconds: Number(editTrackSeconds),
+        position: Number(editTrackPosition),
+      })
+      .eq('id', editingTrack.id);
+    setSavingTrack(false);
+    if (error) {
+      toast.error('Erro ao salvar faixa');
+      return;
+    }
+    toast.success('Faixa atualizada');
+    setTrackEditOpen(false);
+    setEditingTrack(null);
+    if (selectedPreview) loadTracks(selectedPreview.id);
+  };
+
 
   const publicSlug = (p: Preview) => p.slug || p.share_token;
 
@@ -310,16 +458,23 @@ export const AdminMusicPreviews: React.FC = () => {
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" onClick={openEditPreview}>
+                      <Pencil className="h-4 w-4" />Editar
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => copyLink(selectedPreview)}>
                       <Copy className="h-4 w-4" />Copiar link
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => openPublic(selectedPreview)}>
                       <ExternalLink className="h-4 w-4" />Abrir
                     </Button>
+                    <Button size="sm" variant="outline" onClick={regenerateSlug} title="Gerar novo link público">
+                      <RefreshCw className="h-4 w-4" />Novo link
+                    </Button>
                     <Button size="sm" variant="destructive" onClick={() => deletePreview(selectedPreview.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
+
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -327,6 +482,33 @@ export const AdminMusicPreviews: React.FC = () => {
                   <div className="text-xs text-muted-foreground mb-1">Link público:</div>
                   <div className="text-sm font-mono break-all">
                     {window.location.origin}/{publicSlug(selectedPreview)}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border p-3 space-y-2">
+                  <div className="text-xs text-muted-foreground">Dar baixa / alterar status:</div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant={selectedPreview.status === 'approved' ? 'default' : 'outline'}
+                      onClick={() => quickStatus('approved')}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />Aprovada
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedPreview.status === 'rejected' ? 'default' : 'outline'}
+                      onClick={() => quickStatus('rejected')}
+                    >
+                      <XCircle className="h-4 w-4" />Recusada
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedPreview.status === 'pending' ? 'default' : 'outline'}
+                      onClick={() => quickStatus('pending')}
+                    >
+                      <Clock className="h-4 w-4" />Aguardando
+                    </Button>
                   </div>
                 </div>
 
@@ -345,6 +527,7 @@ export const AdminMusicPreviews: React.FC = () => {
                     )}
                   </div>
                 )}
+
 
                 <div className="rounded-lg border p-3 space-y-3">
                   <div className="font-semibold flex items-center gap-2"><Upload className="h-4 w-4" />Adicionar faixa</div>
@@ -376,13 +559,17 @@ export const AdminMusicPreviews: React.FC = () => {
                       <div key={t.id} className="flex items-center justify-between gap-2 p-2 rounded border">
                         <div className="min-w-0 flex-1">
                           <div className="font-medium truncate">{t.track_name}</div>
-                          <div className="text-xs text-muted-foreground">Prévia: {t.preview_seconds}s</div>
+                          <div className="text-xs text-muted-foreground">Prévia: {t.preview_seconds}s · Posição: {t.position}</div>
                         </div>
-                        <Button size="sm" variant="ghost" onClick={() => deleteTrack(t)}>
+                        <Button size="sm" variant="ghost" onClick={() => openEditTrack(t)} title="Editar faixa">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => deleteTrack(t)} title="Excluir faixa">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     ))
+
                   )}
                 </div>
 
@@ -443,6 +630,85 @@ export const AdminMusicPreviews: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Edit Preview Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar prévia</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nome do cliente *</Label>
+              <Input value={editClientName} onChange={(e) => setEditClientName(e.target.value)} />
+            </div>
+            <div>
+              <Label>Título do projeto / música</Label>
+              <Input value={editProjectTitle} onChange={(e) => setEditProjectTitle(e.target.value)} />
+            </div>
+            <div>
+              <Label>Status</Label>
+              <select
+                className="w-full h-10 rounded-md border bg-background px-3 text-sm"
+                value={editStatus}
+                onChange={(e) => setEditStatus(e.target.value)}
+              >
+                <option value="pending">Aguardando</option>
+                <option value="approved">Aprovada (dar baixa)</option>
+                <option value="rejected">Recusada</option>
+              </select>
+            </div>
+            <div>
+              <Label>Comentário do cliente</Label>
+              <Textarea value={editComment} onChange={(e) => setEditComment(e.target.value)} rows={3} />
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={editRegenSlug}
+                onChange={(e) => setEditRegenSlug(e.target.checked)}
+              />
+              Atualizar o link público com o novo nome (o link antigo deixará de funcionar)
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
+            <Button onClick={saveEditPreview} disabled={savingEdit}>
+              {savingEdit && <Loader2 className="h-4 w-4 animate-spin" />}Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Track Dialog */}
+      <Dialog open={trackEditOpen} onOpenChange={setTrackEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar faixa</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nome da faixa *</Label>
+              <Input value={editTrackName} onChange={(e) => setEditTrackName(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Tempo de prévia (s) *</Label>
+                <Input type="number" min={1} max={600} value={editTrackSeconds}
+                  onChange={(e) => setEditTrackSeconds(parseInt(e.target.value || '0', 10))} />
+              </div>
+              <div>
+                <Label>Posição (ordem)</Label>
+                <Input type="number" min={0} value={editTrackPosition}
+                  onChange={(e) => setEditTrackPosition(parseInt(e.target.value || '0', 10))} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTrackEditOpen(false)}>Cancelar</Button>
+            <Button onClick={saveEditTrack} disabled={savingTrack}>
+              {savingTrack && <Loader2 className="h-4 w-4 animate-spin" />}Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+
