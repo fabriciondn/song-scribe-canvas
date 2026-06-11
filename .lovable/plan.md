@@ -1,51 +1,64 @@
-# Corrigir "Erro ao carregar áudio" na prévia pública
+## Objetivo
 
-## Causa raiz
+Permitir edição completa das prévias já criadas e mudar o formato do link público de código numérico (`previa0001`) para `previa-{musica}-{cliente}`.
 
-O bucket `music-previews` é **privado** e não possui policy de `SELECT` em `storage.objects` para o role `anon`. A página `PreviaPublica.tsx` é acessada por usuários **não autenticados** (link público com token) e chama `supabase.storage.from('music-previews').createSignedUrl(...)` direto do navegador. Sem policy de leitura para `anon`, o Supabase recusa gerar a URL assinada e o frontend mostra "Erro ao carregar áudio".
+## 1. Edição das Prévias (AdminMusicPreviews.tsx)
 
-As outras prévias antigas que funcionaram provavelmente foram acessadas enquanto o usuário estava logado como admin, mascarando o bug.
+Adicionar na coluna direita (quando uma prévia está selecionada):
 
-## Solução (mínima, sem mexer em nada que funciona)
+**Editar dados da prévia:**
+- Botão "Editar" abre modal com campos:
+  - Nome do cliente
+  - Título do projeto/música
+  - Status (Aguardando / Aprovada / Recusada) — permitir "dar baixa" manualmente
+  - Comentário do cliente (opcional)
+- Salva via `update` em `music_previews`.
 
-Criar uma edge function pública que valide o token e devolva uma signed URL usando service role — mesmo padrão já usado por `create-preview-pix` e `log_music_preview_listen`. Nenhuma policy de storage precisa ser afrouxada.
+**Editar faixas existentes** (hoje só permite excluir):
+- Cada faixa ganha botão "Editar" ao lado do "Excluir" → modal com:
+  - Nome da faixa
+  - Tempo de prévia (segundos)
+  - Posição (ordem)
+- Salva via `update` em `music_preview_tracks`.
 
-### 1. Nova edge function `get-preview-audio-url`
+**Dar baixa rápida:**
+- Botões de ação rápida no header da prévia: "Marcar como Aprovada", "Marcar como Recusada", "Reabrir (Aguardando)" — atualiza `status` e `reviewed_at`.
 
-- Recebe `{ token, track_id }` no body.
-- Com service role:
-  - Busca `music_previews` por `public_token = token` (mesma lógica do RPC `get_music_preview_by_token`).
-  - Confirma que `track_id` pertence àquela prévia em `music_preview_tracks`.
-  - Pega o `storage_path` da faixa.
-  - Gera signed URL no bucket `music-previews` (TTL 10 min).
-- Retorna `{ url }` ou erro.
-- Sem JWT obrigatório (configurar `verify_jwt = false` em `supabase/config.toml`).
-- Headers CORS liberados.
+Os botões de copiar link, abrir, excluir prévia inteira (já existentes) permanecem intactos.
 
-### 2. Ajuste em `src/pages/PreviaPublica.tsx` (apenas dentro de `TrackPlayer`)
+## 2. Novo formato de URL pública
 
-Substituir o bloco em `ensureUrl()`:
+**Formato novo:** `/previa-{slug-musica}-{slug-cliente}`
+Exemplo: `Assis Melo` + `Casa velha` → `/previa-casa-velha-assis-melo`
 
-```ts
-const { data, error } = await supabase.storage
-  .from('music-previews')
-  .createSignedUrl(track.storage_path, 60 * 10);
-```
+**Geração do slug** (helper novo `src/lib/previewSlug.ts`):
+- Normaliza removendo acentos, lowercase, troca espaços/símbolos por `-`.
+- Se já existir slug igual, sufixa `-2`, `-3` etc.
+- Fallback: se não houver `project_title`, usa só `previa-{cliente}`.
 
-Por uma chamada à nova edge function:
+**Onde aplicar:**
+- Ao **criar** nova prévia: gerar slug no formato novo e salvar em `music_previews.slug`.
+- Ao **editar** nome do cliente ou título do projeto: regenerar slug automaticamente (com confirmação para o admin, já que o link antigo deixa de funcionar).
+- **Migration de dados:** atualizar prévias já existentes para o novo padrão de slug (mantendo `share_token` intacto como fallback de acesso).
 
-```ts
-const { data, error } = await supabase.functions.invoke('get-preview-audio-url', {
-  body: { token, track_id: track.id },
-});
-// usar data.url
-```
+**Roteamento** (`SlugDispatcher.tsx`):
+- Ampliar regex para reconhecer também `^previa-[a-z0-9-]+$` além dos padrões antigos `previa\d+` / `p\d+`, mantendo retrocompatibilidade com links já enviados a clientes.
 
-Nenhuma outra parte do componente é alterada. Lógica de play/pause, progresso, logging e fluxo de compra ficam intactos.
+## 3. O que NÃO será mexido
 
-## O que NÃO será mexido
+- Bucket `music-previews` e edge function `get-preview-audio-url` (recém-criada).
+- Página pública `PreviaPublica.tsx` (continua resolvendo por slug OU share_token).
+- Fluxo de PIX/pedidos, listens, upload de áudio.
+- Outras rotas do app.
 
-- Policies do bucket `music-previews` (continuam privadas, sem leitura para `anon`).
-- Fluxo de compra / PIX / download.
-- Componente admin de prévias.
-- Demais páginas e RPCs.
+## Arquivos afetados
+
+- `src/components/admin/AdminMusicPreviews.tsx` — modais de edição, ações de status, edição de faixa.
+- `src/lib/previewSlug.ts` (novo) — geração e deduplicação de slug.
+- `src/pages/SlugDispatcher.tsx` — regex aceitando `previa-...`.
+- Migration SQL — backfill de `slug` nas prévias existentes no novo formato.
+
+## Perguntas rápidas
+
+1. Ao editar nome do cliente/música de uma prévia já enviada, devo **regenerar o slug** (link antigo quebra) ou **manter o slug original** para não invalidar o link que o cliente recebeu? Sugiro manter original por padrão e oferecer botão "Gerar novo link".
+2. "Dar baixa" significa marcar como Aprovada manualmente, certo? Ou seria um status novo tipo "Finalizada/Entregue"?
