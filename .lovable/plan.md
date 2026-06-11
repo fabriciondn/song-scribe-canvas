@@ -1,55 +1,51 @@
-## Diagnóstico
+# Corrigir "Erro ao carregar áudio" na prévia pública
 
-**Cliente:** Marcos Ribeiro Antonio (`4d684d02-6177-436f-a1d7-47da2b30a8a6`)
-**Moderador:** Edinaldo Nedino (`acordeondeourobrasil@gmail.com`) — token MP configurado via secret, OK.
+## Causa raiz
 
-A assinatura dele está assim no banco:
-- `status = 'active'`
-- `expires_at = 2026-06-09` (já venceu há 2 dias — hoje é 11/06/2026)
+O bucket `music-previews` é **privado** e não possui policy de `SELECT` em `storage.objects` para o role `anon`. A página `PreviaPublica.tsx` é acessada por usuários **não autenticados** (link público com token) e chama `supabase.storage.from('music-previews').createSignedUrl(...)` direto do navegador. Sem policy de leitura para `anon`, o Supabase recusa gerar a URL assinada e o frontend mostra "Erro ao carregar áudio".
 
-A edge function `create-pro-subscription-mercadopago` faz esta verificação:
+As outras prévias antigas que funcionaram provavelmente foram acessadas enquanto o usuário estava logado como admin, mascarando o bug.
+
+## Solução (mínima, sem mexer em nada que funciona)
+
+Criar uma edge function pública que valide o token e devolva uma signed URL usando service role — mesmo padrão já usado por `create-preview-pix` e `log_music_preview_listen`. Nenhuma policy de storage precisa ser afrouxada.
+
+### 1. Nova edge function `get-preview-audio-url`
+
+- Recebe `{ token, track_id }` no body.
+- Com service role:
+  - Busca `music_previews` por `public_token = token` (mesma lógica do RPC `get_music_preview_by_token`).
+  - Confirma que `track_id` pertence àquela prévia em `music_preview_tracks`.
+  - Pega o `storage_path` da faixa.
+  - Gera signed URL no bucket `music-previews` (TTL 10 min).
+- Retorna `{ url }` ou erro.
+- Sem JWT obrigatório (configurar `verify_jwt = false` em `supabase/config.toml`).
+- Headers CORS liberados.
+
+### 2. Ajuste em `src/pages/PreviaPublica.tsx` (apenas dentro de `TrackPlayer`)
+
+Substituir o bloco em `ensureUrl()`:
 
 ```ts
-if (existingSubscription && existingSubscription.status === 'active') {
-  return error 400 "Você já possui uma assinatura ativa"
-}
+const { data, error } = await supabase.storage
+  .from('music-previews')
+  .createSignedUrl(track.storage_path, 60 * 10);
 ```
 
-Ela só olha o `status`, **não** olha `expires_at`. Como nenhum job marcou a assinatura como `expired`, o sistema entende que ele ainda tem plano ativo e **bloqueia a renovação** — daí o erro.
-
-Confirmado: há **3 assinaturas no banco** com `status='active'` e `expires_at < now()` na mesma situação.
-
-## Correção proposta
-
-### 1. Corrigir a verificação na edge function `create-pro-subscription-mercadopago`
-Considerar uma assinatura como ativa **somente** se `status='active'` **E** `expires_at > now()`. Assim, planos vencidos passam para o fluxo de UPDATE (reaproveitar a linha existente como `pending` e gerar novo PIX), exatamente como já acontece com `expired`/`trial`.
+Por uma chamada à nova edge function:
 
 ```ts
-const isReallyActive =
-  existingSubscription?.status === 'active' &&
-  existingSubscription?.expires_at &&
-  new Date(existingSubscription.expires_at) > new Date();
-
-if (isReallyActive) {
-  return error 400 "Você já possui uma assinatura ativa";
-}
+const { data, error } = await supabase.functions.invoke('get-preview-audio-url', {
+  body: { token, track_id: track.id },
+});
+// usar data.url
 ```
 
-Nenhuma outra parte da function muda — o bloco de UPDATE já existe e funciona.
+Nenhuma outra parte do componente é alterada. Lógica de play/pause, progresso, logging e fluxo de compra ficam intactos.
 
-### 2. Corrigir os dados dos 3 usuários afetados
-Migração única marcando como `expired` todas as assinaturas com `status='active' AND expires_at < now()`, liberando renovação imediata para Marcos e os outros 2 clientes na mesma situação.
+## O que NÃO será mexido
 
-```sql
-UPDATE subscriptions
-SET status = 'expired', updated_at = now()
-WHERE status = 'active' AND expires_at < now();
-```
-
-## Fora do escopo (não vou mexer)
-- Não vou criar cron/trigger automático para expirar assinaturas (não foi pedido e o fix da function já resolve o bloqueio na prática).
-- Não vou alterar webhook do Mercado Pago nem fluxo de pagamento.
-- Não vou tocar em nada relacionado ao Portfolio/carrossel.
-
-## Resultado esperado
-Após aplicar: Marcos consegue gerar o PIX de renovação normalmente, e o pagamento continua indo para a conta MP do moderador Edinaldo (lógica de token do moderador permanece intacta).
+- Policies do bucket `music-previews` (continuam privadas, sem leitura para `anon`).
+- Fluxo de compra / PIX / download.
+- Componente admin de prévias.
+- Demais páginas e RPCs.
