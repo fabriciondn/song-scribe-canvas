@@ -1,0 +1,2 @@
+CREATE POLICY "Public read public-assets" ON storage.objects FOR SELECT USING (bucket_id = 'public-assets');
+CREATE POLICY "Admins manage public-assets" ON storage.objects FOR ALL TO authenticated USING (bucket_id = 'public-assets' AND public.is_user_admin(auth.uid())) WITH CHECK (bucket_id = 'public-assets' AND public.is_user_admin(auth.uid()));
