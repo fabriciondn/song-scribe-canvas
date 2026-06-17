@@ -2965,7 +2965,9 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
-      is_admin_user: { Args: never; Returns: boolean }
+      is_admin_user:
+        | { Args: never; Returns: boolean }
+        | { Args: { _user_id: string }; Returns: boolean }
       is_user_admin: { Args: { check_user_id: string }; Returns: boolean }
       is_user_moderator: { Args: { check_user_id: string }; Returns: boolean }
       log_music_preview_listen: {
