@@ -29,8 +29,10 @@ export interface RevenueTransaction {
   bonus_credits?: number;
   payment_id: string;
   completed_at: string;
-  transaction_type: 'credits' | 'subscription';
+  transaction_type: 'credits' | 'subscription' | 'moderator';
   subscription_plan?: string;
+  via_moderator?: boolean;
+  moderator_name?: string;
 }
 
 export interface UserByPlan {
@@ -96,8 +98,15 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
     }
     
     const subscriptionRevenue = paidSubscriptions?.reduce((sum, s) => sum + Number(s.amount || 0), 0) || 0;
-    
-    const totalRevenue = creditRevenue + subscriptionRevenue;
+
+    // Faturamento via moderadores (assinaturas pagas direto no MP do moderador)
+    const { data: modTxs, error: modError } = await supabase
+      .from('moderator_transactions')
+      .select('amount');
+    if (modError) console.error('Erro ao buscar transações de moderadores:', modError);
+    const moderatorRevenue = modTxs?.reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
+
+    const totalRevenue = creditRevenue + subscriptionRevenue + moderatorRevenue;
     
     // Buscar contagem de usuários por tipo de assinatura
     const { data: allSubscriptions, error: allSubsError } = await supabase
@@ -201,10 +210,19 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
 
     if (subsError) throw subsError;
 
+    // Buscar transações de moderadores
+    const { data: modTransactions, error: modTxError } = await supabase
+      .from('moderator_transactions')
+      .select('id, user_id, moderator_id, amount, description, created_at')
+      .order('created_at', { ascending: false });
+    if (modTxError) console.error('Erro ao buscar transações de moderadores:', modTxError);
+
     // Coletar todos os user_ids
     const creditUserIds = creditTransactions?.map(t => t.user_id) || [];
     const subsUserIds = subscriptions?.map(s => s.user_id) || [];
-    const allUserIds = [...new Set([...creditUserIds, ...subsUserIds])];
+    const modUserIds = modTransactions?.map(t => t.user_id) || [];
+    const modIds = modTransactions?.map(t => t.moderator_id) || [];
+    const allUserIds = [...new Set([...creditUserIds, ...subsUserIds, ...modUserIds, ...modIds])];
 
     if (allUserIds.length === 0) {
       return [];
@@ -258,8 +276,32 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
       };
     });
 
+    // Mapear transações de moderadores
+    const moderatorTransactionsData: RevenueTransaction[] = (modTransactions || []).map(t => {
+      const profile = profilesMap.get(t.user_id);
+      const mod = profilesMap.get(t.moderator_id);
+      return {
+        id: t.id,
+        user_id: t.user_id,
+        user_name: profile?.name || 'Usuário Desconhecido',
+        user_email: profile?.email || '',
+        user_avatar: profile?.avatar_url || null,
+        total_amount: Number(t.amount) || 0,
+        payment_id: '',
+        completed_at: t.created_at || '',
+        transaction_type: 'moderator' as const,
+        subscription_plan: 'pro',
+        via_moderator: true,
+        moderator_name: mod?.name || 'Moderador',
+      };
+    });
+
     // Combinar e ordenar por data
-    const allTransactions = [...creditTransactionsData, ...subscriptionTransactionsData];
+    const allTransactions = [
+      ...creditTransactionsData,
+      ...subscriptionTransactionsData,
+      ...moderatorTransactionsData,
+    ];
     allTransactions.sort((a, b) => {
       const dateA = new Date(a.completed_at).getTime();
       const dateB = new Date(b.completed_at).getTime();
