@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui/card';
 import { getAdminDashboardStats, getRevenueTransactions, getUsersByPlan } from '@/services/adminService';
 import { RevenueDetailsModal } from './RevenueDetailsModal';
 import { UsersByPlanModal } from './UsersByPlanModal';
 import { UserOriginReport } from './UserOriginReport';
 import { MobileAdminOverview } from './MobileAdminOverview';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { 
-  Users, 
+import {
+  Users,
   Shield,
-  BarChart3,
   UserCheck,
   Clock,
   UserX,
-  CreditCard
+  CreditCard,
+  ArrowUpRight,
+  TrendingUp,
 } from 'lucide-react';
 
 export const AdminOverview: React.FC = () => {
   const isMobile = useIsMobile();
   const [showRevenueModal, setShowRevenueModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'pro' | 'trial' | 'free' | 'inactive' | null>(null);
-  
+
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['admin-dashboard-stats'],
     queryFn: getAdminDashboardStats,
@@ -45,137 +45,146 @@ export const AdminOverview: React.FC = () => {
   if (statsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t border-white/40" />
       </div>
     );
   }
 
-  // Mobile version
-  if (isMobile) {
-    return <MobileAdminOverview />;
-  }
+  if (isMobile) return <MobileAdminOverview />;
+
+  const fmtBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
   return (
     <>
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card className="bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800/30">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-blue-700 dark:text-blue-400">Total Compositores</p>
-                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-200">{stats?.totalComposers || 0}</p>
-                  <p className="text-xs text-blue-600 dark:text-blue-500 mt-1">Cadastrados na plataforma</p>
-                </div>
-                <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-              </div>
-            </CardContent>
-          </Card>
+      <div className="space-y-12">
+        {/* Narrative intro */}
+        <section className="space-y-2">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-white/35">Visão geral</p>
+          <h2 className="text-3xl font-medium tracking-tight text-white">
+            Como está a Compuse hoje
+          </h2>
+          <p className="text-sm text-white/45 max-w-xl">
+            Um resumo executivo dos números que mais importam — atualizado em tempo real.
+          </p>
+        </section>
 
-          <Card className="bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800/30">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-700 dark:text-green-400">Obras Protegidas</p>
-                  <p className="text-2xl font-bold text-green-900 dark:text-green-200">{stats?.totalProtectedWorks || 0}</p>
-                  <p className="text-xs text-green-600 dark:text-green-500 mt-1">Obras registradas</p>
-                </div>
-                <Shield className="h-8 w-8 text-green-600 dark:text-green-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="bg-purple-50 border-purple-200 dark:bg-purple-950/20 dark:border-purple-800/30 cursor-pointer hover:shadow-lg transition-shadow"
+        {/* Hero asymmetric row */}
+        <section className="grid grid-cols-12 gap-6">
+          {/* Revenue — dominant */}
+          <button
             onClick={() => setShowRevenueModal(true)}
+            className="group relative col-span-12 lg:col-span-7 text-left p-8 rounded-3xl overflow-hidden
+                       bg-gradient-to-br from-white/[0.04] to-white/[0.01]
+                       shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_30px_60px_-30px_rgba(0,0,0,0.6)]
+                       hover:shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_40px_80px_-30px_rgba(0,0,0,0.8)]
+                       transition-all duration-200 ease-out"
           >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-purple-700 dark:text-purple-400">Total Faturado</p>
-                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-200">
-                    {new Intl.NumberFormat('pt-BR', { 
-                      style: 'currency', 
-                      currency: 'BRL' 
-                    }).format(stats?.totalRevenue || 0)}
-                  </p>
-                  <p className="text-xs text-purple-600 dark:text-purple-500 mt-1">Via Mercado Pago · Clique para detalhes</p>
-                </div>
-                <BarChart3 className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.10),transparent_55%)] opacity-80 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute top-6 right-6 h-8 w-8 rounded-full flex items-center justify-center bg-white/[0.04] text-white/40 group-hover:text-white group-hover:bg-white/[0.08] transition-colors">
+              <ArrowUpRight className="h-4 w-4" />
+            </div>
 
-        {/* Resumo de Usuários por Plano */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card 
-            className="bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800/30 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => setSelectedPlan('pro')}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Plano Pro</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-200">{stats?.proUsers || 0}</p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">Usuários ativos · Clique para ver</p>
-                </div>
-                <CreditCard className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+            <div className="relative space-y-12">
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[11px] uppercase tracking-[0.18em] text-white/45">Receita acumulada</span>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card 
-            className="bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800/30 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => setSelectedPlan('trial')}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-amber-700 dark:text-amber-400">Trial</p>
-                  <p className="text-2xl font-bold text-amber-900 dark:text-amber-200">{stats?.trialUsers || 0}</p>
-                  <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">Em período de teste · Clique para ver</p>
+              <div>
+                <p className="text-[64px] leading-none font-light tracking-tight text-white tabular-nums">
+                  {fmtBRL(stats?.totalRevenue || 0)}
+                </p>
+                <div className="flex items-center gap-3 mt-5">
+                  <span className="inline-flex items-center gap-1 text-xs text-emerald-300/90">
+                    <TrendingUp className="h-3 w-3" />
+                    Via Mercado Pago
+                  </span>
+                  <span className="text-white/20">·</span>
+                  <span className="text-xs text-white/40">Toque para ver transações</span>
                 </div>
-                <Clock className="h-8 w-8 text-amber-600 dark:text-amber-400" />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </button>
 
-          <Card 
-            className="bg-slate-50 border-slate-200 dark:bg-slate-950/20 dark:border-slate-800/30 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => setSelectedPlan('free')}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-400">Plano Grátis</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-200">{stats?.freeUsers || 0}</p>
-                  <p className="text-xs text-slate-600 dark:text-slate-500 mt-1">Usuários gratuitos · Clique para ver</p>
-                </div>
-                <UserCheck className="h-8 w-8 text-slate-600 dark:text-slate-400" />
-              </div>
-            </CardContent>
-          </Card>
+          {/* Stacked secondary metrics */}
+          <div className="col-span-12 lg:col-span-5 grid grid-rows-2 gap-6">
+            <SurfaceMetric
+              label="Compositores"
+              value={stats?.totalComposers || 0}
+              hint="Cadastrados na plataforma"
+              icon={<Users className="h-4 w-4" />}
+            />
+            <SurfaceMetric
+              label="Obras Protegidas"
+              value={stats?.totalProtectedWorks || 0}
+              hint="Registradas com autoria"
+              icon={<Shield className="h-4 w-4" />}
+              accent="emerald"
+            />
+          </div>
+        </section>
 
-          <Card 
-            className="bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800/30 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => setSelectedPlan('inactive')}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-red-700 dark:text-red-400">Inativos +30d</p>
-                  <p className="text-2xl font-bold text-red-900 dark:text-red-200">{stats?.inactiveUsers || 0}</p>
-                  <p className="text-xs text-red-600 dark:text-red-500 mt-1">Sem acesso há 30+ dias · Clique para ver</p>
-                </div>
-                <UserX className="h-8 w-8 text-red-600 dark:text-red-400" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Relatório de Origem dos Usuários */}
-        <UserOriginReport />
+        {/* Plan distribution — varied */}
+        <section className="space-y-5">
+          <div className="flex items-baseline justify-between">
+            <h3 className="text-[15px] font-medium text-white/90 tracking-tight">Distribuição de planos</h3>
+            <span className="text-[11px] text-white/35 tracking-wide uppercase">Clique para detalhes</span>
+          </div>
+
+          <div className="grid grid-cols-12 gap-4">
+            <PlanTile
+              span="col-span-12 md:col-span-4"
+              tone="pro"
+              label="Plano Pro"
+              value={stats?.proUsers || 0}
+              hint="Assinaturas ativas"
+              icon={<CreditCard className="h-4 w-4" />}
+              onClick={() => setSelectedPlan('pro')}
+              tall
+            />
+            <PlanTile
+              span="col-span-6 md:col-span-4"
+              tone="trial"
+              label="Trial"
+              value={stats?.trialUsers || 0}
+              hint="Em período de teste"
+              icon={<Clock className="h-4 w-4" />}
+              onClick={() => setSelectedPlan('trial')}
+            />
+            <PlanTile
+              span="col-span-6 md:col-span-4"
+              tone="free"
+              label="Plano Grátis"
+              value={stats?.freeUsers || 0}
+              hint="Usuários gratuitos"
+              icon={<UserCheck className="h-4 w-4" />}
+              onClick={() => setSelectedPlan('free')}
+            />
+            <PlanTile
+              span="col-span-12 md:col-span-8"
+              tone="inactive"
+              label="Inativos há mais de 30 dias"
+              value={stats?.inactiveUsers || 0}
+              hint="Merecem uma campanha de reengajamento"
+              icon={<UserX className="h-4 w-4" />}
+              onClick={() => setSelectedPlan('inactive')}
+              horizontal
+            />
+            <PlanTile
+              span="col-span-12 md:col-span-4"
+              tone="neutral"
+              label="Total na base"
+              value={(stats?.proUsers || 0) + (stats?.trialUsers || 0) + (stats?.freeUsers || 0)}
+              hint="Soma de planos ativos"
+              icon={<Users className="h-4 w-4" />}
+            />
+          </div>
+        </section>
+
+        {/* Origin report */}
+        <section>
+          <UserOriginReport />
+        </section>
       </div>
 
       <RevenueDetailsModal
@@ -195,5 +204,100 @@ export const AdminOverview: React.FC = () => {
         />
       )}
     </>
+  );
+};
+
+/* ---------- presentation primitives ---------- */
+
+const SurfaceMetric: React.FC<{
+  label: string;
+  value: number | string;
+  hint: string;
+  icon: React.ReactNode;
+  accent?: 'neutral' | 'emerald';
+}> = ({ label, value, hint, icon, accent = 'neutral' }) => {
+  const tint =
+    accent === 'emerald'
+      ? 'bg-[radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.08),transparent_60%)]'
+      : 'bg-[radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.05),transparent_60%)]';
+  return (
+    <div className="group relative p-6 rounded-2xl overflow-hidden bg-white/[0.025] hover:bg-white/[0.04]
+                    shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_20px_40px_-20px_rgba(0,0,0,0.5)]
+                    transition-colors duration-200">
+      <div className={`absolute inset-0 ${tint} opacity-70`} />
+      <div className="relative flex items-start justify-between h-full">
+        <div className="flex flex-col justify-between h-full">
+          <span className="text-[11px] uppercase tracking-[0.16em] text-white/45">{label}</span>
+          <div className="mt-6">
+            <p className="text-4xl font-light tracking-tight text-white tabular-nums">{value}</p>
+            <p className="text-xs text-white/35 mt-2">{hint}</p>
+          </div>
+        </div>
+        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-white/[0.04] text-white/55">
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PlanTile: React.FC<{
+  span: string;
+  tone: 'pro' | 'trial' | 'free' | 'inactive' | 'neutral';
+  label: string;
+  value: number;
+  hint: string;
+  icon: React.ReactNode;
+  onClick?: () => void;
+  tall?: boolean;
+  horizontal?: boolean;
+}> = ({ span, tone, label, value, hint, icon, onClick, tall, horizontal }) => {
+  const tones: Record<string, string> = {
+    pro: 'bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.10),transparent_60%)]',
+    trial: 'bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.05),transparent_60%)]',
+    free: 'bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.04),transparent_60%)]',
+    inactive: 'bg-[radial-gradient(circle_at_top_left,rgba(239,68,68,0.07),transparent_60%)]',
+    neutral: 'bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.04),transparent_60%)]',
+  };
+  const dot: Record<string, string> = {
+    pro: 'bg-emerald-400',
+    trial: 'bg-white/60',
+    free: 'bg-white/40',
+    inactive: 'bg-red-400/80',
+    neutral: 'bg-white/40',
+  };
+
+  const Tag: any = onClick ? 'button' : 'div';
+
+  return (
+    <Tag
+      onClick={onClick}
+      className={`${span} group relative text-left rounded-2xl overflow-hidden p-6
+                  bg-white/[0.025] hover:bg-white/[0.04]
+                  shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_20px_40px_-25px_rgba(0,0,0,0.55)]
+                  transition-all duration-200 ${tall ? 'min-h-[200px]' : 'min-h-[140px]'}`}
+    >
+      <div className={`absolute inset-0 ${tones[tone]} opacity-70`} />
+      <div className={`relative h-full flex ${horizontal ? 'flex-row items-center justify-between gap-6' : 'flex-col justify-between'}`}>
+        <div className="flex items-center gap-2">
+          <span className={`h-1.5 w-1.5 rounded-full ${dot[tone]}`} />
+          <span className="text-[11px] uppercase tracking-[0.16em] text-white/45">{label}</span>
+        </div>
+        <div className={horizontal ? 'flex items-baseline gap-4' : ''}>
+          <p className={`${tall ? 'text-5xl' : 'text-4xl'} font-light tracking-tight text-white tabular-nums`}>{value}</p>
+          <p className="text-xs text-white/35 mt-2">{hint}</p>
+        </div>
+        {!horizontal && (
+          <div className="absolute top-5 right-5 h-7 w-7 rounded-full flex items-center justify-center bg-white/[0.04] text-white/50 group-hover:text-white/80 transition-colors">
+            {icon}
+          </div>
+        )}
+        {horizontal && (
+          <div className="h-9 w-9 rounded-full flex items-center justify-center bg-white/[0.04] text-white/55">
+            {icon}
+          </div>
+        )}
+      </div>
+    </Tag>
   );
 };
