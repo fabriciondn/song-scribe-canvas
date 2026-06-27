@@ -203,19 +203,17 @@ const SurfaceMetric: React.FC<{
       ? 'bg-[radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.08),transparent_60%)]'
       : 'bg-[radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.05),transparent_60%)]';
   return (
-    <div className="group relative p-6 rounded-2xl overflow-hidden bg-white/[0.025] hover:bg-white/[0.04]
-                    shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_20px_40px_-20px_rgba(0,0,0,0.5)]
+    <div className="group relative p-4 rounded-2xl overflow-hidden bg-white/[0.025] hover:bg-white/[0.04]
+                    shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_14px_28px_-18px_rgba(0,0,0,0.5)]
                     transition-colors duration-200">
       <div className={`absolute inset-0 ${tint} opacity-70`} />
-      <div className="relative flex items-start justify-between h-full">
-        <div className="flex flex-col justify-between h-full">
-          <span className="text-[11px] uppercase tracking-[0.16em] text-white/45">{label}</span>
-          <div className="mt-6">
-            <p className="text-4xl font-light tracking-tight text-white tabular-nums">{value}</p>
-            <p className="text-xs text-white/35 mt-2">{hint}</p>
-          </div>
+      <div className="relative flex items-center justify-between h-full gap-3">
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase tracking-[0.16em] text-white/45">{label}</span>
+          <p className="text-2xl font-light tracking-tight text-white tabular-nums mt-1">{value}</p>
+          <p className="text-[10px] text-white/35 mt-0.5">{hint}</p>
         </div>
-        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-white/[0.04] text-white/55">
+        <div className="h-7 w-7 rounded-full flex items-center justify-center bg-white/[0.04] text-white/55 shrink-0">
           {icon}
         </div>
       </div>
