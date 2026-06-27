@@ -287,10 +287,10 @@ const AdminDashboard: React.FC = () => {
 };
 
 const StatusPill: React.FC<{ dot: string; label: string; value: string }> = ({ dot, label, value }) => (
-  <div className="flex items-center gap-2 h-8 px-3 rounded-full bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
+  <div className="flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
     <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-    <span className="text-[11px] text-white/45 tracking-wide">{label}</span>
-    <span className="text-[11px] text-white/85 font-medium tabular-nums">{value}</span>
+    <span className="text-[10px] text-white/45 tracking-wide">{label}</span>
+    <span className="text-[10px] text-white/85 font-medium tabular-nums">{value}</span>
   </div>
 );
 
