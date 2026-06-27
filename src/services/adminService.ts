@@ -210,10 +210,19 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
 
     if (subsError) throw subsError;
 
+    // Buscar transações de moderadores
+    const { data: modTransactions, error: modTxError } = await supabase
+      .from('moderator_transactions')
+      .select('id, user_id, moderator_id, amount, description, created_at')
+      .order('created_at', { ascending: false });
+    if (modTxError) console.error('Erro ao buscar transações de moderadores:', modTxError);
+
     // Coletar todos os user_ids
     const creditUserIds = creditTransactions?.map(t => t.user_id) || [];
     const subsUserIds = subscriptions?.map(s => s.user_id) || [];
-    const allUserIds = [...new Set([...creditUserIds, ...subsUserIds])];
+    const modUserIds = modTransactions?.map(t => t.user_id) || [];
+    const modIds = modTransactions?.map(t => t.moderator_id) || [];
+    const allUserIds = [...new Set([...creditUserIds, ...subsUserIds, ...modUserIds, ...modIds])];
 
     if (allUserIds.length === 0) {
       return [];
