@@ -138,7 +138,7 @@ export const AdminOverview: React.FC = () => {
               tone="pro"
               label="Plano Pro"
               value={stats?.proUsers || 0}
-              hint="Assinaturas ativas"
+              hint={`MRR ${fmtBRL(mrr)}`}
               icon={<CreditCard className="h-3.5 w-3.5" />}
               onClick={() => setSelectedPlan('pro')}
             />
