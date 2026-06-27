@@ -42,6 +42,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Search, Bell, Command } from 'lucide-react';
 import { buildPreviewSafePath } from '@/utils/previewToken';
+import { subscribeToOnlineVisitors } from '@/services/realtimePresenceService';
 
 const AdminDashboard: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
