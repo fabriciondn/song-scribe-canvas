@@ -221,10 +221,10 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Global search */}
-              <div className="hidden lg:flex items-center gap-2.5 h-9 px-3.5 rounded-full bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.06] transition-colors cursor-pointer w-[280px]">
-                <Search className="h-3.5 w-3.5 text-white/40" />
-                <span className="text-xs text-white/40 flex-1">Pesquisar…</span>
-                <kbd className="flex items-center gap-0.5 text-[10px] text-white/40 px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/[0.06]">
+              <div className="hidden lg:flex items-center gap-2 h-8 px-3 rounded-full bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.06] transition-colors cursor-pointer w-[220px]">
+                <Search className="h-3 w-3 text-white/40" />
+                <span className="text-[11px] text-white/40 flex-1">Pesquisar…</span>
+                <kbd className="flex items-center gap-0.5 text-[10px] text-white/40 px-1 py-0.5 rounded bg-white/[0.05] border border-white/[0.06]">
                   <Command className="h-2.5 w-2.5" />K
                 </kbd>
               </div>
