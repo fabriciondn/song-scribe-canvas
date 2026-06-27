@@ -98,12 +98,37 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
     
     const subscriptionRevenue = paidSubscriptions?.reduce((sum, s) => sum + Number(s.amount || 0), 0) || 0;
 
-    // Faturamento via moderadores (assinaturas pagas direto no MP do moderador)
+    // Faturamento via moderadores (mesma fórmula usada no Painel do Moderador):
+    // créditos distribuídos * R$30 + registros de autoria * R$30
+    const PRICE_PER_CREDIT = 30;
+    const PRICE_PER_REGISTRATION = 30;
+
     const { data: modTxs, error: modError } = await supabase
       .from('moderator_transactions')
       .select('amount');
     if (modError) console.error('Erro ao buscar transações de moderadores:', modError);
-    const moderatorRevenue = modTxs?.reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
+    const moderatorCreditsTotal = modTxs?.reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
+
+    const { data: managedUsers, error: managedError } = await supabase
+      .from('moderator_users')
+      .select('user_id');
+    if (managedError) console.error('Erro ao buscar usuários gerenciados:', managedError);
+    const managedUserIds = Array.from(new Set((managedUsers || []).map((u: any) => u.user_id)));
+
+    let moderatorRegistrations = 0;
+    if (managedUserIds.length > 0) {
+      const { count, error: regError } = await supabase
+        .from('author_registrations')
+        .select('id', { count: 'exact', head: true })
+        .in('user_id', managedUserIds);
+      if (regError) console.error('Erro ao contar registros de moderadores:', regError);
+      moderatorRegistrations = count || 0;
+    }
+
+    const moderatorRevenue =
+      moderatorCreditsTotal * PRICE_PER_CREDIT +
+      moderatorRegistrations * PRICE_PER_REGISTRATION;
+
 
     const totalRevenue = creditRevenue + subscriptionRevenue + moderatorRevenue;
 
