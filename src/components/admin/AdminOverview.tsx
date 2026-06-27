@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { getAdminDashboardStats, getRevenueTransactions, getUsersByPlan } from '@/services/adminService';
 import { RevenueDetailsModal } from './RevenueDetailsModal';
 import { UsersByPlanModal } from './UsersByPlanModal';
@@ -40,6 +41,22 @@ export const AdminOverview: React.FC = () => {
     queryKey: ['users-by-plan', selectedPlan],
     queryFn: () => selectedPlan ? getUsersByPlan(selectedPlan) : Promise.resolve([]),
     enabled: !!selectedPlan,
+  });
+
+  // MRR — soma de assinaturas PRO ativas e não vencidas
+  const { data: mrr = 0 } = useQuery({
+    queryKey: ['admin-overview-mrr'],
+    queryFn: async () => {
+      const nowIso = new Date().toISOString();
+      const { data } = await supabase
+        .from('subscriptions')
+        .select('amount, expires_at, status, plan_type')
+        .eq('plan_type', 'pro')
+        .eq('status', 'active')
+        .gt('expires_at', nowIso);
+      return (data || []).reduce((acc, s: any) => acc + Number(s.amount || 0), 0);
+    },
+    refetchInterval: 120_000,
   });
 
   if (statsLoading) {
@@ -121,7 +138,7 @@ export const AdminOverview: React.FC = () => {
               tone="pro"
               label="Plano Pro"
               value={stats?.proUsers || 0}
-              hint="Assinaturas ativas"
+              hint={`MRR ${fmtBRL(mrr)}`}
               icon={<CreditCard className="h-3.5 w-3.5" />}
               onClick={() => setSelectedPlan('pro')}
             />
