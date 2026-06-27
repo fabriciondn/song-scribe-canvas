@@ -135,9 +135,33 @@ const AdminDashboard: React.FC = () => {
     };
   }, [effectiveIsAdmin, gateLoading]);
 
-  if (gateLoading) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
+  // MRR — soma de assinaturas PRO ativas (não vencidas)
+  useEffect(() => {
+    if (gateLoading || !effectiveIsAdmin) return;
+    let cancelled = false;
+    const loadMrr = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('subscriptions')
+          .select('amount')
+          .eq('status', 'active')
+          .eq('plan_type', 'pro')
+          .gt('expires_at', new Date().toISOString());
+        if (error) throw error;
+        if (cancelled) return;
+        const rows = (data || []) as Array<{ amount: number | null }>;
+        const total = rows.reduce((s, r) => s + (Number(r.amount) || 29.9), 0);
+        setSystemHealth((prev) => ({ ...prev, mrr: total, activePro: rows.length }));
+      } catch {
+        if (!cancelled) setSystemHealth((prev) => ({ ...prev, mrr: null }));
+      }
+    };
+    loadMrr();
+    const id = window.setInterval(loadMrr, 60000);
+    return () => { cancelled = true; window.clearInterval(id); };
+  }, [effectiveIsAdmin, gateLoading]);
+
+
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-10 w-10 border-t border-white/40 mx-auto" />
           <p className="text-white/50 text-sm tracking-wide">
