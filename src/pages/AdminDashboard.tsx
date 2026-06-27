@@ -261,7 +261,7 @@ const AdminDashboard: React.FC = () => {
 
   const renderActiveTab = () => {
     switch (activeTab) {
-      case 'overview': return <AdminOverview />;
+      case 'overview': return <AdminOverview bizMetrics={bizMetrics} />;
       case 'online-visitors': return <OnlineVisitorsPanel />;
       case 'users': return <AdminUsers />;
       case 'registrations': return <AdminRegistrations />;
