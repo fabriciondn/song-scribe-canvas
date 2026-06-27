@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -20,24 +20,47 @@ interface RevenueDetailsModalProps {
   isLoading: boolean;
 }
 
+type Filter = 'all' | 'with_mod' | 'without_mod';
+
 export const RevenueDetailsModal: React.FC<RevenueDetailsModalProps> = ({
   open,
   onOpenChange,
   transactions,
   isLoading,
 }) => {
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
+  const [filter, setFilter] = useState<Filter>('all');
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'Data não disponível';
-    const date = new Date(dateString);
-    return formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
+    return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: ptBR });
   };
+
+  const filtered = useMemo(() => {
+    if (filter === 'with_mod') return transactions.filter((t) => t.via_moderator);
+    if (filter === 'without_mod') return transactions.filter((t) => !t.via_moderator);
+    return transactions;
+  }, [transactions, filter]);
+
+  const total = useMemo(
+    () => filtered.reduce((acc, t) => acc + Number(t.total_amount || 0), 0),
+    [filtered]
+  );
+
+  const FilterBtn: React.FC<{ value: Filter; label: string }> = ({ value, label }) => (
+    <button
+      onClick={() => setFilter(value)}
+      className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
+        filter === value
+          ? 'bg-white/[0.08] text-white'
+          : 'bg-white/[0.02] text-white/55 hover:text-white/80'
+      }`}
+    >
+      {label}
+    </button>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -45,9 +68,22 @@ export const RevenueDetailsModal: React.FC<RevenueDetailsModalProps> = ({
         <DialogHeader>
           <DialogTitle>Detalhes do Faturamento</DialogTitle>
           <DialogDescription>
-            Transações completadas via Mercado Pago
+            Transações via Mercado Pago, OpenPix e moderadores
           </DialogDescription>
         </DialogHeader>
+
+        <div className="flex items-center justify-between flex-wrap gap-2 pb-2">
+          <div className="flex items-center gap-2">
+            <FilterBtn value="all" label="Todos" />
+            <FilterBtn value="with_mod" label="Com moderadores" />
+            <FilterBtn value="without_mod" label="Sem moderadores" />
+          </div>
+          <div className="text-sm">
+            <span className="text-muted-foreground mr-2">Total:</span>
+            <span className="font-semibold text-emerald-500">{formatCurrency(total)}</span>
+          </div>
+        </div>
+
         
         <ScrollArea className="h-[500px] pr-4">
           {isLoading ? (
