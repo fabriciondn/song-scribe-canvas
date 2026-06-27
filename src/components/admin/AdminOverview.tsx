@@ -252,28 +252,23 @@ const PlanTile: React.FC<{
   return (
     <Tag
       onClick={onClick}
-      className={`${span} group relative text-left rounded-2xl overflow-hidden p-6
+      className={`${span} group relative text-left rounded-2xl overflow-hidden p-4
                   bg-white/[0.025] hover:bg-white/[0.04]
-                  shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_20px_40px_-25px_rgba(0,0,0,0.55)]
-                  transition-all duration-200 ${tall ? 'min-h-[200px]' : 'min-h-[140px]'}`}
+                  shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_14px_28px_-22px_rgba(0,0,0,0.55)]
+                  transition-all duration-200 min-h-[90px]`}
     >
       <div className={`absolute inset-0 ${tones[tone]} opacity-70`} />
-      <div className={`relative h-full flex ${horizontal ? 'flex-row items-center justify-between gap-6' : 'flex-col justify-between'}`}>
-        <div className="flex items-center gap-2">
+      <div className={`relative h-full flex ${horizontal ? 'flex-row items-center justify-between gap-3' : 'flex-col justify-between'}`}>
+        <div className="flex items-center gap-1.5">
           <span className={`h-1.5 w-1.5 rounded-full ${dot[tone]}`} />
-          <span className="text-[11px] uppercase tracking-[0.16em] text-white/45">{label}</span>
+          <span className="text-[10px] uppercase tracking-[0.14em] text-white/45 truncate">{label}</span>
         </div>
-        <div className={horizontal ? 'flex items-baseline gap-4' : ''}>
-          <p className={`${tall ? 'text-5xl' : 'text-4xl'} font-light tracking-tight text-white tabular-nums`}>{value}</p>
-          <p className="text-xs text-white/35 mt-2">{hint}</p>
+        <div className={horizontal ? 'flex items-baseline gap-3 flex-1 justify-end' : 'mt-2'}>
+          <p className="text-[26px] leading-none font-light tracking-tight text-white tabular-nums">{value}</p>
+          <p className="text-[10px] text-white/35 mt-1">{hint}</p>
         </div>
         {!horizontal && (
-          <div className="absolute top-5 right-5 h-7 w-7 rounded-full flex items-center justify-center bg-white/[0.04] text-white/50 group-hover:text-white/80 transition-colors">
-            {icon}
-          </div>
-        )}
-        {horizontal && (
-          <div className="h-9 w-9 rounded-full flex items-center justify-center bg-white/[0.04] text-white/55">
+          <div className="absolute top-3 right-3 h-6 w-6 rounded-full flex items-center justify-center bg-white/[0.04] text-white/50 group-hover:text-white/80 transition-colors">
             {icon}
           </div>
         )}
