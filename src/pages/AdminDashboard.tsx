@@ -207,25 +207,24 @@ const AdminDashboard: React.FC = () => {
         <SidebarInset className="flex-1 relative bg-transparent">
           {/* Premium Header */}
           <header className="sticky top-0 z-30 backdrop-blur-xl bg-[#0a0a0b]/70 border-b border-white/[0.06]">
-            <div className="flex items-center gap-6 px-8 h-[72px]">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-3">
-                  <h1 className="text-[15px] font-medium text-white tracking-tight">
-                    {greeting}, <span className="text-white/60 font-normal">{firstName}</span>
-                  </h1>
-                  <span className="text-white/25 text-xs">·</span>
-                  <span className="text-xs text-white/40 capitalize tracking-wide">{dateLabel}</span>
-                </div>
-                <p className="text-[11px] text-white/30 mt-0.5 tracking-wide uppercase">
+            <div className="flex items-center gap-6 px-6 h-[52px]">
+              <div className="flex-1 min-w-0 flex items-center gap-3">
+                <h1 className="text-[13px] font-medium text-white tracking-tight whitespace-nowrap">
+                  {greeting}, <span className="text-white/60 font-normal">{firstName}</span>
+                </h1>
+                <span className="text-white/20 text-xs">·</span>
+                <span className="text-[11px] text-white/40 capitalize tracking-wide whitespace-nowrap">{dateLabel}</span>
+                <span className="text-white/15 text-xs hidden md:inline">·</span>
+                <span className="hidden md:inline text-[10px] text-white/30 tracking-[0.14em] uppercase whitespace-nowrap">
                   Compuse — Painel Executivo
-                </p>
+                </span>
               </div>
 
               {/* Global search */}
-              <div className="hidden lg:flex items-center gap-2.5 h-9 px-3.5 rounded-full bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.06] transition-colors cursor-pointer w-[280px]">
-                <Search className="h-3.5 w-3.5 text-white/40" />
-                <span className="text-xs text-white/40 flex-1">Pesquisar…</span>
-                <kbd className="flex items-center gap-0.5 text-[10px] text-white/40 px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/[0.06]">
+              <div className="hidden lg:flex items-center gap-2 h-8 px-3 rounded-full bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.06] transition-colors cursor-pointer w-[220px]">
+                <Search className="h-3 w-3 text-white/40" />
+                <span className="text-[11px] text-white/40 flex-1">Pesquisar…</span>
+                <kbd className="flex items-center gap-0.5 text-[10px] text-white/40 px-1 py-0.5 rounded bg-white/[0.05] border border-white/[0.06]">
                   <Command className="h-2.5 w-2.5" />K
                 </kbd>
               </div>
@@ -252,16 +251,16 @@ const AdminDashboard: React.FC = () => {
                 />
               </div>
 
-              <button className="relative h-9 w-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors">
-                <Bell className="h-4 w-4" />
-                <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <button className="relative h-8 w-8 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors">
+                <Bell className="h-3.5 w-3.5" />
+                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400" />
               </button>
 
               <DropdownMenu>
                 <DropdownMenuTrigger className="outline-none">
-                  <Avatar className="w-9 h-9 cursor-pointer ring-1 ring-white/10 hover:ring-white/20 transition">
+                  <Avatar className="w-8 h-8 cursor-pointer ring-1 ring-white/10 hover:ring-white/20 transition">
                     <AvatarImage src={profile?.avatar_url} alt={profile?.name} />
-                    <AvatarFallback className="bg-white/[0.06] text-white/70 text-xs">
+                    <AvatarFallback className="bg-white/[0.06] text-white/70 text-[10px]">
                       {profile?.name?.slice(0, 2).toUpperCase() || 'AD'}
                     </AvatarFallback>
                   </Avatar>
@@ -276,7 +275,7 @@ const AdminDashboard: React.FC = () => {
           </header>
 
           {/* Main */}
-          <main className="relative px-8 py-10">
+          <main className="relative px-6 py-4">
             <div className="max-w-[1400px] mx-auto">
               {renderActiveTab()}
             </div>
@@ -288,10 +287,10 @@ const AdminDashboard: React.FC = () => {
 };
 
 const StatusPill: React.FC<{ dot: string; label: string; value: string }> = ({ dot, label, value }) => (
-  <div className="flex items-center gap-2 h-8 px-3 rounded-full bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
+  <div className="flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
     <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-    <span className="text-[11px] text-white/45 tracking-wide">{label}</span>
-    <span className="text-[11px] text-white/85 font-medium tabular-nums">{value}</span>
+    <span className="text-[10px] text-white/45 tracking-wide">{label}</span>
+    <span className="text-[10px] text-white/85 font-medium tabular-nums">{value}</span>
   </div>
 );
 

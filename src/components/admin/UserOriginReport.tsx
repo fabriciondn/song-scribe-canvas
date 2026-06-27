@@ -92,50 +92,40 @@ export const UserOriginReport: React.FC = () => {
   ];
 
   return (
-    <div className="relative rounded-3xl overflow-hidden p-10 bg-white/[0.025]
-                    shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_30px_60px_-30px_rgba(0,0,0,0.6)]">
+    <div className="relative rounded-2xl overflow-hidden p-4 bg-white/[0.025] h-full
+                    shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_18px_36px_-25px_rgba(0,0,0,0.6)]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.04),transparent_60%)]" />
 
-      <div className="relative grid grid-cols-12 gap-10">
-        {/* Left: hero total */}
-        <div className="col-span-12 lg:col-span-4 flex flex-col justify-between gap-8">
+      <div className="relative flex flex-col gap-3 h-full">
+        <div className="flex items-baseline justify-between gap-3">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">Origem dos usuários</p>
-            <h3 className="mt-2 text-xl font-medium text-white tracking-tight">
-              De onde vem a sua base
-            </h3>
-            <p className="mt-2 text-xs text-white/40 max-w-[260px] leading-relaxed">
-              A composição da sua base de usuários ativa, em tempo real.
-            </p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">Origem dos usuários</p>
+            <h3 className="text-[13px] font-medium text-white tracking-tight mt-0.5">De onde vem sua base</h3>
           </div>
-          <div>
-            <p className="text-6xl font-light tracking-tight text-white tabular-nums leading-none">
+          <div className="text-right">
+            <p className="text-2xl font-light tracking-tight text-white tabular-nums leading-none">
               {stats?.total || 0}
             </p>
-            <p className="text-xs text-white/40 mt-3">usuários na plataforma</p>
+            <p className="text-[10px] text-white/40">no total</p>
           </div>
         </div>
 
-        {/* Right: breakdown */}
-        <div className="col-span-12 lg:col-span-8 space-y-7">
+        <div className="space-y-2.5 mt-1">
           {rows.map((row) => (
-            <div key={row.key} className="group space-y-3">
-              <div className="flex items-end justify-between gap-4">
-                <div className="flex items-center gap-2.5 text-white/75">
-                  <span className="h-7 w-7 rounded-full flex items-center justify-center bg-white/[0.04] text-white/55">
+            <div key={row.key} className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-white/75 min-w-0">
+                  <span className="h-5 w-5 rounded-full flex items-center justify-center bg-white/[0.04] text-white/55 shrink-0">
                     {row.icon}
                   </span>
-                  <div>
-                    <p className="text-sm text-white/90">{row.label}</p>
-                    <p className="text-[11px] text-white/35">{row.hint}</p>
-                  </div>
+                  <p className="text-[11px] text-white/85 truncate">{row.label}</p>
                 </div>
-                <div className="text-right">
-                  <span className="text-xl font-light text-white tabular-nums">{row.value}</span>
-                  <span className="text-xs text-white/40 ml-2 tabular-nums">{row.pct.toFixed(1)}%</span>
+                <div className="text-right shrink-0">
+                  <span className="text-[12px] font-light text-white tabular-nums">{row.value}</span>
+                  <span className="text-[10px] text-white/40 ml-1.5 tabular-nums">{row.pct.toFixed(1)}%</span>
                 </div>
               </div>
-              <div className="h-[3px] rounded-full bg-white/[0.05] overflow-hidden">
+              <div className="h-[2px] rounded-full bg-white/[0.05] overflow-hidden">
                 <div
                   className={`h-full ${row.bar} transition-all duration-700 ease-out`}
                   style={{ width: `${row.pct}%` }}

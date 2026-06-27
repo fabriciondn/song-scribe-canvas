@@ -56,134 +56,116 @@ export const AdminOverview: React.FC = () => {
 
   return (
     <>
-      <div className="space-y-12">
-        {/* Narrative intro */}
-        <section className="space-y-2">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-white/35">Visão geral</p>
-          <h2 className="text-3xl font-medium tracking-tight text-white">
-            Como está a Compuse hoje
-          </h2>
-          <p className="text-sm text-white/45 max-w-xl">
-            Um resumo executivo dos números que mais importam — atualizado em tempo real.
-          </p>
-        </section>
-
+      <div className="space-y-4">
         {/* Hero asymmetric row */}
-        <section className="grid grid-cols-12 gap-6">
+        <section className="grid grid-cols-12 gap-3">
           {/* Revenue — dominant */}
           <button
             onClick={() => setShowRevenueModal(true)}
-            className="group relative col-span-12 lg:col-span-7 text-left p-8 rounded-3xl overflow-hidden
+            className="group relative col-span-12 lg:col-span-7 text-left p-5 rounded-2xl overflow-hidden
                        bg-gradient-to-br from-white/[0.04] to-white/[0.01]
-                       shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_30px_60px_-30px_rgba(0,0,0,0.6)]
-                       hover:shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_40px_80px_-30px_rgba(0,0,0,0.8)]
+                       shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_20px_40px_-25px_rgba(0,0,0,0.6)]
+                       hover:shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_28px_55px_-25px_rgba(0,0,0,0.8)]
                        transition-all duration-200 ease-out"
           >
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.10),transparent_55%)] opacity-80 group-hover:opacity-100 transition-opacity" />
-            <div className="absolute top-6 right-6 h-8 w-8 rounded-full flex items-center justify-center bg-white/[0.04] text-white/40 group-hover:text-white group-hover:bg-white/[0.08] transition-colors">
-              <ArrowUpRight className="h-4 w-4" />
+            <div className="absolute top-4 right-4 h-7 w-7 rounded-full flex items-center justify-center bg-white/[0.04] text-white/40 group-hover:text-white group-hover:bg-white/[0.08] transition-colors">
+              <ArrowUpRight className="h-3.5 w-3.5" />
             </div>
 
-            <div className="relative space-y-12">
+            <div className="relative flex flex-col justify-between min-h-[120px]">
               <div className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                <span className="text-[11px] uppercase tracking-[0.18em] text-white/45">Receita acumulada</span>
+                <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">Receita acumulada</span>
               </div>
 
-              <div>
-                <p className="text-[64px] leading-none font-light tracking-tight text-white tabular-nums">
+              <div className="mt-4">
+                <p className="text-[40px] leading-none font-light tracking-tight text-white tabular-nums">
                   {fmtBRL(stats?.totalRevenue || 0)}
                 </p>
-                <div className="flex items-center gap-3 mt-5">
-                  <span className="inline-flex items-center gap-1 text-xs text-emerald-300/90">
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300/90">
                     <TrendingUp className="h-3 w-3" />
                     Via Mercado Pago
                   </span>
                   <span className="text-white/20">·</span>
-                  <span className="text-xs text-white/40">Toque para ver transações</span>
+                  <span className="text-[11px] text-white/40">Toque para ver transações</span>
                 </div>
               </div>
             </div>
           </button>
 
           {/* Stacked secondary metrics */}
-          <div className="col-span-12 lg:col-span-5 grid grid-rows-2 gap-6">
+          <div className="col-span-12 lg:col-span-5 grid grid-rows-2 gap-3">
             <SurfaceMetric
               label="Compositores"
               value={stats?.totalComposers || 0}
               hint="Cadastrados na plataforma"
-              icon={<Users className="h-4 w-4" />}
+              icon={<Users className="h-3.5 w-3.5" />}
             />
             <SurfaceMetric
               label="Obras Protegidas"
               value={stats?.totalProtectedWorks || 0}
               hint="Registradas com autoria"
-              icon={<Shield className="h-4 w-4" />}
+              icon={<Shield className="h-3.5 w-3.5" />}
               accent="emerald"
             />
           </div>
         </section>
 
-        {/* Plan distribution — varied */}
-        <section className="space-y-5">
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-[15px] font-medium text-white/90 tracking-tight">Distribuição de planos</h3>
-            <span className="text-[11px] text-white/35 tracking-wide uppercase">Clique para detalhes</span>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4">
+        {/* Plan distribution + Origin report on same row to fit viewport */}
+        <section className="grid grid-cols-12 gap-3">
+          <div className="col-span-12 xl:col-span-7 grid grid-cols-12 gap-3">
             <PlanTile
-              span="col-span-12 md:col-span-4"
+              span="col-span-6 md:col-span-4"
               tone="pro"
               label="Plano Pro"
               value={stats?.proUsers || 0}
               hint="Assinaturas ativas"
-              icon={<CreditCard className="h-4 w-4" />}
+              icon={<CreditCard className="h-3.5 w-3.5" />}
               onClick={() => setSelectedPlan('pro')}
-              tall
             />
             <PlanTile
               span="col-span-6 md:col-span-4"
               tone="trial"
               label="Trial"
               value={stats?.trialUsers || 0}
-              hint="Em período de teste"
-              icon={<Clock className="h-4 w-4" />}
+              hint="Em teste"
+              icon={<Clock className="h-3.5 w-3.5" />}
               onClick={() => setSelectedPlan('trial')}
             />
             <PlanTile
               span="col-span-6 md:col-span-4"
               tone="free"
-              label="Plano Grátis"
+              label="Grátis"
               value={stats?.freeUsers || 0}
               hint="Usuários gratuitos"
-              icon={<UserCheck className="h-4 w-4" />}
+              icon={<UserCheck className="h-3.5 w-3.5" />}
               onClick={() => setSelectedPlan('free')}
             />
             <PlanTile
-              span="col-span-12 md:col-span-8"
+              span="col-span-6 md:col-span-8"
               tone="inactive"
-              label="Inativos há mais de 30 dias"
+              label="Inativos +30d"
               value={stats?.inactiveUsers || 0}
-              hint="Merecem uma campanha de reengajamento"
-              icon={<UserX className="h-4 w-4" />}
+              hint="Reengajamento"
+              icon={<UserX className="h-3.5 w-3.5" />}
               onClick={() => setSelectedPlan('inactive')}
               horizontal
             />
             <PlanTile
-              span="col-span-12 md:col-span-4"
+              span="col-span-6 md:col-span-4"
               tone="neutral"
-              label="Total na base"
+              label="Total ativos"
               value={(stats?.proUsers || 0) + (stats?.trialUsers || 0) + (stats?.freeUsers || 0)}
-              hint="Soma de planos ativos"
-              icon={<Users className="h-4 w-4" />}
+              hint="Soma dos planos"
+              icon={<Users className="h-3.5 w-3.5" />}
             />
           </div>
-        </section>
 
-        {/* Origin report */}
-        <section>
-          <UserOriginReport />
+          <div className="col-span-12 xl:col-span-5">
+            <UserOriginReport />
+          </div>
         </section>
       </div>
 
@@ -221,19 +203,17 @@ const SurfaceMetric: React.FC<{
       ? 'bg-[radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.08),transparent_60%)]'
       : 'bg-[radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.05),transparent_60%)]';
   return (
-    <div className="group relative p-6 rounded-2xl overflow-hidden bg-white/[0.025] hover:bg-white/[0.04]
-                    shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_20px_40px_-20px_rgba(0,0,0,0.5)]
+    <div className="group relative p-4 rounded-2xl overflow-hidden bg-white/[0.025] hover:bg-white/[0.04]
+                    shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_14px_28px_-18px_rgba(0,0,0,0.5)]
                     transition-colors duration-200">
       <div className={`absolute inset-0 ${tint} opacity-70`} />
-      <div className="relative flex items-start justify-between h-full">
-        <div className="flex flex-col justify-between h-full">
-          <span className="text-[11px] uppercase tracking-[0.16em] text-white/45">{label}</span>
-          <div className="mt-6">
-            <p className="text-4xl font-light tracking-tight text-white tabular-nums">{value}</p>
-            <p className="text-xs text-white/35 mt-2">{hint}</p>
-          </div>
+      <div className="relative flex items-center justify-between h-full gap-3">
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase tracking-[0.16em] text-white/45">{label}</span>
+          <p className="text-2xl font-light tracking-tight text-white tabular-nums mt-1">{value}</p>
+          <p className="text-[10px] text-white/35 mt-0.5">{hint}</p>
         </div>
-        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-white/[0.04] text-white/55">
+        <div className="h-7 w-7 rounded-full flex items-center justify-center bg-white/[0.04] text-white/55 shrink-0">
           {icon}
         </div>
       </div>
@@ -272,28 +252,23 @@ const PlanTile: React.FC<{
   return (
     <Tag
       onClick={onClick}
-      className={`${span} group relative text-left rounded-2xl overflow-hidden p-6
+      className={`${span} group relative text-left rounded-2xl overflow-hidden p-4
                   bg-white/[0.025] hover:bg-white/[0.04]
-                  shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_20px_40px_-25px_rgba(0,0,0,0.55)]
-                  transition-all duration-200 ${tall ? 'min-h-[200px]' : 'min-h-[140px]'}`}
+                  shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_14px_28px_-22px_rgba(0,0,0,0.55)]
+                  transition-all duration-200 min-h-[90px]`}
     >
       <div className={`absolute inset-0 ${tones[tone]} opacity-70`} />
-      <div className={`relative h-full flex ${horizontal ? 'flex-row items-center justify-between gap-6' : 'flex-col justify-between'}`}>
-        <div className="flex items-center gap-2">
+      <div className={`relative h-full flex ${horizontal ? 'flex-row items-center justify-between gap-3' : 'flex-col justify-between'}`}>
+        <div className="flex items-center gap-1.5">
           <span className={`h-1.5 w-1.5 rounded-full ${dot[tone]}`} />
-          <span className="text-[11px] uppercase tracking-[0.16em] text-white/45">{label}</span>
+          <span className="text-[10px] uppercase tracking-[0.14em] text-white/45 truncate">{label}</span>
         </div>
-        <div className={horizontal ? 'flex items-baseline gap-4' : ''}>
-          <p className={`${tall ? 'text-5xl' : 'text-4xl'} font-light tracking-tight text-white tabular-nums`}>{value}</p>
-          <p className="text-xs text-white/35 mt-2">{hint}</p>
+        <div className={horizontal ? 'flex items-baseline gap-3 flex-1 justify-end' : 'mt-2'}>
+          <p className="text-[26px] leading-none font-light tracking-tight text-white tabular-nums">{value}</p>
+          <p className="text-[10px] text-white/35 mt-1">{hint}</p>
         </div>
         {!horizontal && (
-          <div className="absolute top-5 right-5 h-7 w-7 rounded-full flex items-center justify-center bg-white/[0.04] text-white/50 group-hover:text-white/80 transition-colors">
-            {icon}
-          </div>
-        )}
-        {horizontal && (
-          <div className="h-9 w-9 rounded-full flex items-center justify-center bg-white/[0.04] text-white/55">
+          <div className="absolute top-3 right-3 h-6 w-6 rounded-full flex items-center justify-center bg-white/[0.04] text-white/50 group-hover:text-white/80 transition-colors">
             {icon}
           </div>
         )}
