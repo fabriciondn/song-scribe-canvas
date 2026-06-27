@@ -161,8 +161,11 @@ const AdminDashboard: React.FC = () => {
     return () => { cancelled = true; window.clearInterval(id); };
   }, [effectiveIsAdmin, gateLoading]);
 
-
+  if (gateLoading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
         <div className="text-center space-y-4">
+
           <div className="animate-spin rounded-full h-10 w-10 border-t border-white/40 mx-auto" />
           <p className="text-white/50 text-sm tracking-wide">
             {authLoading || roleLoading ? 'Verificando sessão…' : 'Confirmando permissões…'}
