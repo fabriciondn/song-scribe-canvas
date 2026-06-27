@@ -164,30 +164,30 @@ export const ModeratorOverview = () => {
     : 0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <Header onRefresh={() => refetch()} isFetching={isFetching} />
 
       {/* Hero asymmetric row */}
-      <section className="grid grid-cols-12 gap-3">
+      <section className="grid grid-cols-12 gap-2">
         {/* Revenue dominant */}
-        <div className="group relative col-span-12 lg:col-span-7 p-5 rounded-2xl overflow-hidden
+        <div className="group relative col-span-12 lg:col-span-7 p-3.5 rounded-xl overflow-hidden
                         bg-gradient-to-br from-white/[0.04] to-white/[0.01]
                         shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_20px_40px_-25px_rgba(0,0,0,0.6)]
                         transition-all duration-200">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.10),transparent_55%)] opacity-80" />
-          <div className="absolute top-4 right-4 h-7 w-7 rounded-full flex items-center justify-center bg-white/[0.04] text-white/45">
-            <DollarSign className="h-3.5 w-3.5" />
+          <div className="absolute top-3 right-3 h-6 w-6 rounded-full flex items-center justify-center bg-white/[0.04] text-white/45">
+            <DollarSign className="h-3 w-3" />
           </div>
-          <div className="relative flex flex-col justify-between min-h-[120px]">
+          <div className="relative flex flex-col justify-between min-h-[80px]">
             <div className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">Total faturado</span>
             </div>
-            <div className="mt-4">
-              <p className="text-[40px] leading-none font-light tracking-tight text-white tabular-nums">
+            <div className="mt-2">
+              <p className="text-[28px] leading-none font-light tracking-tight text-white tabular-nums">
                 {fmtBRL(totalRevenue)}
               </p>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-2 mt-1.5">
                 <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300/90">
                   <TrendingUp className="h-3 w-3" />
                   Créditos + registros
@@ -200,7 +200,7 @@ export const ModeratorOverview = () => {
         </div>
 
         {/* Stacked secondary metrics */}
-        <div className="col-span-12 lg:col-span-5 grid grid-rows-2 gap-3">
+        <div className="col-span-12 lg:col-span-5 grid grid-rows-2 gap-2">
           <SurfaceMetric
             label="Usuários gerenciados"
             value={safeStats.total_managed_users}
@@ -216,6 +216,7 @@ export const ModeratorOverview = () => {
           />
         </div>
       </section>
+
 
       {/* Secondary metrics row */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
