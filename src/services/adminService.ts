@@ -283,10 +283,47 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
       return { via: true, name: mod?.name || 'Moderador' };
     };
 
-    // Mapear transações de créditos
+    // Buscar todos os registros autorais (para agregar por moderador)
+    const { data: allRegistrations, error: regsError } = await supabase
+      .from('author_registrations')
+      .select('user_id, created_at')
+      .order('created_at', { ascending: false })
+      .limit(10000);
+    if (regsError) console.error('Erro ao buscar registros autorais:', regsError);
+
+    // Calcular agregados por moderador
+    const PRICE_PER_CREDIT = 30;
+    const PRICE_PER_REGISTRATION = 30;
+
+    // Soma de créditos distribuídos por moderador (tabela moderator_transactions)
+    const creditsByModerator = new Map<string, number>();
+    (modTransactions || []).forEach((t: any) => {
+      const cur = creditsByModerator.get(t.moderator_id) || 0;
+      creditsByModerator.set(t.moderator_id, cur + (Number(t.amount) || 0));
+    });
+
+    // Registros por moderador (via moderator_users)
+    const worksByModerator = new Map<string, number>();
+    const lastDateByModerator = new Map<string, string>();
+    (allRegistrations || []).forEach((r: any) => {
+      const modId = userToModeratorMap.get(r.user_id);
+      if (!modId) return;
+      worksByModerator.set(modId, (worksByModerator.get(modId) || 0) + 1);
+      const cur = lastDateByModerator.get(modId);
+      if (!cur || new Date(r.created_at) > new Date(cur)) {
+        lastDateByModerator.set(modId, r.created_at);
+      }
+    });
+
+    // Conjunto de todos os moderadores ativos (com pelo menos um vínculo)
+    const moderatorIds = new Set<string>([
+      ...Array.from(userToModeratorMap.values()),
+      ...Array.from(creditsByModerator.keys()),
+    ]);
+
+    // Mapear transações de créditos (pagamentos diretos na plataforma — sem moderador)
     const creditTransactionsData: RevenueTransaction[] = (creditTransactions || []).map(t => {
       const profile = profilesMap.get(t.user_id);
-      const modInfo = resolveModerator(t.user_id);
       return {
         id: t.id,
         user_id: t.user_id,
@@ -299,15 +336,13 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
         payment_id: t.payment_id || '',
         completed_at: t.completed_at || '',
         transaction_type: 'credits' as const,
-        via_moderator: modInfo.via,
-        moderator_name: modInfo.name,
+        via_moderator: false,
       };
     });
 
-    // Mapear transações de assinaturas
+    // Mapear assinaturas (pagamentos diretos na plataforma — sem moderador)
     const subscriptionTransactionsData: RevenueTransaction[] = (subscriptions || []).map(s => {
       const profile = profilesMap.get(s.user_id);
-      const modInfo = resolveModerator(s.user_id);
       return {
         id: s.id,
         user_id: s.user_id,
@@ -319,29 +354,52 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
         completed_at: s.started_at || '',
         transaction_type: 'subscription' as const,
         subscription_plan: s.plan_type || 'pro',
-        via_moderator: modInfo.via,
-        moderator_name: modInfo.name,
+        via_moderator: false,
       };
     });
 
-    // Mapear transações de moderadores (lançamentos manuais / específicos)
-    const moderatorTransactionsData: RevenueTransaction[] = (modTransactions || []).map(t => {
-      const profile = profilesMap.get(t.user_id);
-      const mod = profilesMap.get(t.moderator_id);
-      return {
-        id: t.id,
-        user_id: t.user_id,
-        user_name: profile?.name || 'Usuário Desconhecido',
-        user_email: profile?.email || '',
-        user_avatar: profile?.avatar_url || null,
-        total_amount: Number(t.amount) || 0,
-        payment_id: '',
-        completed_at: t.created_at || '',
-        transaction_type: 'moderator' as const,
-        subscription_plan: 'pro',
-        via_moderator: true,
-        moderator_name: mod?.name || 'Moderador',
-      };
+    // Agregar por moderador (créditos distribuídos + registros de obras × R$30)
+    const moderatorTransactionsData: RevenueTransaction[] = [];
+    moderatorIds.forEach((modId) => {
+      const mod = profilesMap.get(modId);
+      const credits = creditsByModerator.get(modId) || 0;
+      const works = worksByModerator.get(modId) || 0;
+      const lastDate = lastDateByModerator.get(modId) || new Date().toISOString();
+      const moderatorName = mod?.name || 'Moderador';
+
+      if (credits > 0) {
+        moderatorTransactionsData.push({
+          id: `mod-credits-${modId}`,
+          user_id: modId,
+          user_name: moderatorName,
+          user_email: mod?.email || '',
+          user_avatar: mod?.avatar_url || null,
+          total_amount: credits * PRICE_PER_CREDIT,
+          credits_purchased: credits,
+          payment_id: '',
+          completed_at: lastDate,
+          transaction_type: 'credits' as const,
+          via_moderator: true,
+          moderator_name: moderatorName,
+        });
+      }
+
+      if (works > 0) {
+        moderatorTransactionsData.push({
+          id: `mod-works-${modId}`,
+          user_id: modId,
+          user_name: moderatorName,
+          user_email: mod?.email || '',
+          user_avatar: mod?.avatar_url || null,
+          total_amount: works * PRICE_PER_REGISTRATION,
+          payment_id: `${works} obras registradas`,
+          completed_at: lastDate,
+          transaction_type: 'moderator' as const,
+          subscription_plan: 'pro',
+          via_moderator: true,
+          moderator_name: moderatorName,
+        });
+      }
     });
 
     // Combinar e ordenar por data
@@ -355,6 +413,7 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
       const dateB = new Date(b.completed_at).getTime();
       return dateB - dateA;
     });
+
 
     return allTransactions;
 
