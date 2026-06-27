@@ -53,11 +53,12 @@ const AdminDashboard: React.FC = () => {
   const [adminConfirmed, setAdminConfirmed] = useState<boolean | null>(null);
   const [adminConfirming, setAdminConfirming] = useState(false);
 
-  const [systemHealth, setSystemHealth] = useState({
-    status: 'healthy',
-    uptime: '99.9%',
-    activeUsers: 0,
-    responseTime: '120ms'
+  const [systemHealth, setSystemHealth] = useState<{
+    activeUsers: number | null;
+    responseTime: number | null;
+  }>({
+    activeUsers: null,
+    responseTime: null,
   });
 
   const { profile } = useProfile();
