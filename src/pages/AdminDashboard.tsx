@@ -65,6 +65,25 @@ const AdminDashboard: React.FC = () => {
     activePro: null,
   });
 
+  const [bizMetrics, setBizMetrics] = useState<{
+    revenue30d: number | null;
+    newToday: number | null;
+    trialConversion: number | null;
+    churn30d: number | null;
+    avgTicket: number | null;
+    worksToday: number | null;
+    judgmentQueue: number | null;
+  }>({
+    revenue30d: null,
+    newToday: null,
+    trialConversion: null,
+    churn30d: null,
+    avgTicket: null,
+    worksToday: null,
+    judgmentQueue: null,
+  });
+
+
 
   const { profile } = useProfile();
 
