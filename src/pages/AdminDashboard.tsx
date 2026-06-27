@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { AdminOverview } from '@/components/admin/AdminOverview';
 import { AdminUsers } from '@/components/admin/AdminUsers';
 import { AdminRoles } from '@/components/admin/AdminRoles';
@@ -43,7 +40,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Shield, Users, BarChart3, AlertTriangle, CheckCircle, Clock, Activity } from 'lucide-react';
+import { Search, Bell, Command } from 'lucide-react';
 import { buildPreviewSafePath } from '@/utils/previewToken';
 
 const AdminDashboard: React.FC = () => {
@@ -64,7 +61,6 @@ const AdminDashboard: React.FC = () => {
 
   const { profile } = useProfile();
 
-  // Se o hook de role ainda não sabe, confirmar server-side antes de redirecionar
   useEffect(() => {
     const shouldConfirm =
       !authLoading &&
@@ -84,7 +80,6 @@ const AdminDashboard: React.FC = () => {
         const { data, error } = await supabase.rpc('check_admin_access');
         if (error) throw error;
         if (cancelled) return;
-
         setAdminConfirmed(!!data);
       } catch (e) {
         console.error('❌ AdminDashboard: Falha ao confirmar acesso admin:', e);
@@ -94,9 +89,7 @@ const AdminDashboard: React.FC = () => {
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [authLoading, roleLoading, isAuthenticated, isAdmin, adminConfirmed, adminConfirming]);
 
   const effectiveIsAdmin = isAdmin || adminConfirmed === true;
@@ -104,9 +97,6 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     if (!gateLoading && effectiveIsAdmin) {
-      console.log('✅ AdminDashboard: Usuário confirmado como admin');
-
-      // Simular dados de saúde do sistema
       setSystemHealth({
         status: 'healthy',
         uptime: '99.9%',
@@ -118,179 +108,138 @@ const AdminDashboard: React.FC = () => {
 
   if (gateLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary mx-auto" />
-          <p className="text-muted-foreground">
-            {authLoading || roleLoading
-              ? 'Verificando sessão e permissões...'
-              : 'Confirmando permissões de administrador...'}
+          <div className="animate-spin rounded-full h-10 w-10 border-t border-white/40 mx-auto" />
+          <p className="text-white/50 text-sm tracking-wide">
+            {authLoading || roleLoading ? 'Verificando sessão…' : 'Confirmando permissões…'}
           </p>
         </div>
       </div>
     );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to={buildPreviewSafePath('/dashboard')} replace />;
-  }
-
-  if (!effectiveIsAdmin) {
-    console.log('❌ AdminDashboard: Usuário não é admin, redirecionando...');
-    return <Navigate to={buildPreviewSafePath('/dashboard')} replace />;
-  }
-
-  // Renderizar layout mobile
-  if (isMobile) {
-    return <MobileAdminDashboard />;
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
-      default:
-        return <Clock className="h-4 w-4 text-red-600" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'warning':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default:
-        return 'bg-red-100 text-red-800 border-red-200';
-    }
-  };
+  if (!isAuthenticated) return <Navigate to={buildPreviewSafePath('/dashboard')} replace />;
+  if (!effectiveIsAdmin) return <Navigate to={buildPreviewSafePath('/dashboard')} replace />;
+  if (isMobile) return <MobileAdminDashboard />;
 
   const renderActiveTab = () => {
     switch (activeTab) {
-      case 'overview':
-        return <AdminOverview />;
-      case 'online-visitors':
-        return <OnlineVisitorsPanel />;
-      case 'users':
-        return <AdminUsers />;
-      case 'registrations':
-        return <AdminRegistrations />;
-      case 'moderators':
-        return <AdminModerators />;
-      case 'roles':
-        return <AdminRoles />;
-      case 'affiliates':
-        return <AdminAffiliates />;
-      case 'affiliate-withdrawals':
-        return <AdminAffiliateWithdrawals />;
-      case 'coupons':
-        return <AdminCoupons />;
-      case 'gamification':
-        return <AdminGamification />;
-      case 'raffle':
-        return <AdminRaffle />;
-      case 'content':
-        return <AdminContent />;
-      case 'tutorials':
-        return <AdminTutorials />;
-      case 'banners':
-        return <AdminBanners />;
-      case 'certificates':
-        return <AdminCertificates />;
-      case 'forms':
-        return <AdminForms />;
-      case 'analytics':
-        return <AdminAnalytics />;
-      case 'offer-analytics':
-        return <AdminOfferAnalytics />;
-      case 'marketing':
-        return <MarketingDashboard />;
-      case 'music-previews':
-        return <AdminMusicPreviews />;
-      case 'portfolio':
-        return <AdminPortfolio />;
-      case 'logs':
-        return <AdminLogs />;
-      case 'menu-functions':
-        return <AdminMenuFunctions />;
-      case 'api-settings':
-        return <AdminApiSettings />;
-      case 'settings':
-        return <AdminSettings />;
-      default:
-        return <AdminOverview />;
+      case 'overview': return <AdminOverview />;
+      case 'online-visitors': return <OnlineVisitorsPanel />;
+      case 'users': return <AdminUsers />;
+      case 'registrations': return <AdminRegistrations />;
+      case 'moderators': return <AdminModerators />;
+      case 'roles': return <AdminRoles />;
+      case 'affiliates': return <AdminAffiliates />;
+      case 'affiliate-withdrawals': return <AdminAffiliateWithdrawals />;
+      case 'coupons': return <AdminCoupons />;
+      case 'gamification': return <AdminGamification />;
+      case 'raffle': return <AdminRaffle />;
+      case 'content': return <AdminContent />;
+      case 'tutorials': return <AdminTutorials />;
+      case 'banners': return <AdminBanners />;
+      case 'certificates': return <AdminCertificates />;
+      case 'forms': return <AdminForms />;
+      case 'analytics': return <AdminAnalytics />;
+      case 'offer-analytics': return <AdminOfferAnalytics />;
+      case 'marketing': return <MarketingDashboard />;
+      case 'music-previews': return <AdminMusicPreviews />;
+      case 'portfolio': return <AdminPortfolio />;
+      case 'logs': return <AdminLogs />;
+      case 'menu-functions': return <AdminMenuFunctions />;
+      case 'api-settings': return <AdminApiSettings />;
+      case 'settings': return <AdminSettings />;
+      default: return <AdminOverview />;
     }
   };
 
+  const now = new Date();
+  const greeting = (() => {
+    const h = now.getHours();
+    if (h < 12) return 'Bom dia';
+    if (h < 18) return 'Boa tarde';
+    return 'Boa noite';
+  })();
+  const dateLabel = now.toLocaleDateString('pt-BR', {
+    weekday: 'long', day: '2-digit', month: 'long'
+  });
+  const firstName = profile?.name?.split(' ')[0] || 'admin';
+
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        {/* Sidebar como drawer/hamburguer no mobile */}
+      <div className="min-h-screen flex w-full bg-[#0a0a0b] text-white relative overflow-hidden">
+        {/* Ambient background — discreet light */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-emerald-500/[0.06] blur-[120px]" />
+          <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] rounded-full bg-white/[0.025] blur-[120px]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(255,255,255,0.04),transparent_60%)]" />
+        </div>
+
         <div className="fixed z-40 md:static md:z-auto">
           <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
-        <SidebarInset className="flex-1">
-          {/* Header + Status do Sistema */}
-          <header className="flex flex-col gap-2 md:gap-0 md:flex-row h-auto md:h-16 shrink-0 items-start md:items-center border-b px-2 md:px-4 bg-background sticky top-0 z-30">
-            <div className="flex items-center space-x-2 flex-1 py-2 md:py-0">
-              <Shield className="h-7 w-7 text-primary" />
-              <div>
-                <h1 className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                  Painel Administrativo
-                </h1>
-                <p className="text-xs text-muted-foreground">Sistema de Gestão Compuse</p>
+
+        <SidebarInset className="flex-1 relative bg-transparent">
+          {/* Premium Header */}
+          <header className="sticky top-0 z-30 backdrop-blur-xl bg-[#0a0a0b]/70 border-b border-white/[0.06]">
+            <div className="flex items-center gap-6 px-8 h-[72px]">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-3">
+                  <h1 className="text-[15px] font-medium text-white tracking-tight">
+                    {greeting}, <span className="text-white/60 font-normal">{firstName}</span>
+                  </h1>
+                  <span className="text-white/25 text-xs">·</span>
+                  <span className="text-xs text-white/40 capitalize tracking-wide">{dateLabel}</span>
+                </div>
+                <p className="text-[11px] text-white/30 mt-0.5 tracking-wide uppercase">
+                  Compuse — Painel Executivo
+                </p>
               </div>
+
+              {/* Global search */}
+              <div className="hidden lg:flex items-center gap-2.5 h-9 px-3.5 rounded-full bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.06] transition-colors cursor-pointer w-[280px]">
+                <Search className="h-3.5 w-3.5 text-white/40" />
+                <span className="text-xs text-white/40 flex-1">Pesquisar…</span>
+                <kbd className="flex items-center gap-0.5 text-[10px] text-white/40 px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/[0.06]">
+                  <Command className="h-2.5 w-2.5" />K
+                </kbd>
+              </div>
+
+              {/* Status pills — discreet */}
+              <div className="hidden xl:flex items-center gap-1.5">
+                <StatusPill dot="bg-emerald-400" label="Online" value={String(systemHealth.activeUsers)} />
+                <StatusPill dot="bg-emerald-400" label="Uptime" value={systemHealth.uptime} />
+                <StatusPill dot="bg-white/40" label="Latência" value={systemHealth.responseTime} />
+              </div>
+
+              <button className="relative h-9 w-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors">
+                <Bell className="h-4 w-4" />
+                <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              </button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger className="outline-none">
+                  <Avatar className="w-9 h-9 cursor-pointer ring-1 ring-white/10 hover:ring-white/20 transition">
+                    <AvatarImage src={profile?.avatar_url} alt={profile?.name} />
+                    <AvatarFallback className="bg-white/[0.06] text-white/70 text-xs">
+                      {profile?.name?.slice(0, 2).toUpperCase() || 'AD'}
+                    </AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-[#141416] border-white/[0.08] text-white/80">
+                  <DropdownMenuItem asChild className="focus:bg-white/[0.06] focus:text-white">
+                    <Link to="/dashboard">Painel Usuário</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            {/* Status do Sistema - topo, sem card */}
-            <div className="flex flex-wrap gap-2 md:gap-4 items-center justify-end w-full md:w-auto py-2 md:py-0">
-              <div className="flex items-center gap-1 px-2 py-1 rounded bg-background/80 border text-blue-700 text-xs font-medium">
-                <BarChart3 className="h-4 w-4 text-blue-600" />
-                <span>Resposta Média:</span>
-                <span className="font-bold text-blue-900">{systemHealth.responseTime}</span>
-              </div>
-              <div className="flex items-center gap-1 px-2 py-1 rounded bg-background/80 border text-green-700 text-xs font-medium">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span>Uptime:</span>
-                <span className="font-bold text-green-900">{systemHealth.uptime}</span>
-              </div>
-              <div className="flex items-center gap-1 px-2 py-1 rounded bg-background/80 border text-purple-700 text-xs font-medium">
-                <Users className="h-4 w-4 text-purple-600" />
-                <span>Usuários Online:</span>
-                <span className="font-bold text-purple-900">{systemHealth.activeUsers}</span>
-              </div>
-              <div className="flex items-center gap-1 px-2 py-1 rounded bg-background/80 border text-orange-700 text-xs font-medium">
-                <Shield className="h-4 w-4 text-orange-600" />
-                <span>Status:</span>
-                <span className="font-bold text-orange-900">Operacional</span>
-              </div>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger>
-                <Avatar className="w-8 h-8 cursor-pointer">
-                  <AvatarImage src={profile?.avatar_url} alt={profile?.name} />
-                  <AvatarFallback>
-                    {profile?.name?.slice(0, 2).toUpperCase() || 'AD'}
-                  </AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link to="/dashboard">Painel Usuário</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </header>
-          {/* Conteúdo Principal */}
-          <main className="flex-1 p-2 md:p-6 bg-gradient-to-br from-background to-secondary/20">
-            <div className="space-y-4 md:space-y-6">
-              {/* Conteúdo da Aba Ativa */}
-              <Card className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <CardContent className="p-2 md:p-6">
-                  {renderActiveTab()}
-                </CardContent>
-              </Card>
+
+          {/* Main */}
+          <main className="relative px-8 py-10">
+            <div className="max-w-[1400px] mx-auto">
+              {renderActiveTab()}
             </div>
           </main>
         </SidebarInset>
@@ -298,5 +247,13 @@ const AdminDashboard: React.FC = () => {
     </SidebarProvider>
   );
 };
+
+const StatusPill: React.FC<{ dot: string; label: string; value: string }> = ({ dot, label, value }) => (
+  <div className="flex items-center gap-2 h-8 px-3 rounded-full bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
+    <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+    <span className="text-[11px] text-white/45 tracking-wide">{label}</span>
+    <span className="text-[11px] text-white/85 font-medium tabular-nums">{value}</span>
+  </div>
+);
 
 export default AdminDashboard;
