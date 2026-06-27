@@ -377,17 +377,17 @@ const SurfaceMetric: React.FC<{
       ? 'bg-[radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.08),transparent_60%)]'
       : 'bg-[radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.05),transparent_60%)]';
   return (
-    <div className="group relative p-4 rounded-2xl overflow-hidden bg-white/[0.025] hover:bg-white/[0.04]
+    <div className="group relative p-2.5 rounded-xl overflow-hidden bg-white/[0.025] hover:bg-white/[0.04]
                     shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_14px_28px_-18px_rgba(0,0,0,0.5)]
                     transition-all duration-200 hover:-translate-y-[1px]">
       <div className={`absolute inset-0 ${tint} opacity-70`} />
       <div className="relative flex items-center justify-between h-full gap-3">
         <div className="flex flex-col">
           <span className="text-[10px] uppercase tracking-[0.16em] text-white/45">{label}</span>
-          <p className="text-2xl font-light tracking-tight text-white tabular-nums mt-1">{value}</p>
-          <p className="text-[10px] text-white/35 mt-0.5">{hint}</p>
+          <p className="text-lg font-light tracking-tight text-white tabular-nums leading-tight mt-0.5">{value}</p>
+          <p className="text-[10px] text-white/35">{hint}</p>
         </div>
-        <div className="h-7 w-7 rounded-full flex items-center justify-center bg-white/[0.04] text-white/55 shrink-0">
+        <div className="h-6 w-6 rounded-full flex items-center justify-center bg-white/[0.04] text-white/55 shrink-0">
           {icon}
         </div>
       </div>
@@ -396,22 +396,23 @@ const SurfaceMetric: React.FC<{
 };
 
 const PanelStat: React.FC<{ title: string; rows: { label: string; value: number | string }[] }> = ({ title, rows }) => (
-  <div className="relative p-5 rounded-2xl overflow-hidden bg-white/[0.025]
+  <div className="relative p-3 rounded-xl overflow-hidden bg-white/[0.025]
                   shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_14px_28px_-18px_rgba(0,0,0,0.5)]">
     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.04),transparent_60%)]" />
     <div className="relative">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-2">
         <span className="h-1.5 w-1.5 rounded-full bg-white/45" />
         <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">{title}</span>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-1.5">
         {rows.map((r) => (
           <div key={r.label} className="flex items-center justify-between">
-            <span className="text-[12px] text-white/55">{r.label}</span>
-            <span className="text-[15px] font-light text-white tabular-nums">{r.value}</span>
+            <span className="text-[11px] text-white/55">{r.label}</span>
+            <span className="text-[13px] font-light text-white tabular-nums">{r.value}</span>
           </div>
         ))}
       </div>
     </div>
   </div>
 );
+
