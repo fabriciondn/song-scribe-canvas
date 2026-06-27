@@ -56,10 +56,15 @@ const AdminDashboard: React.FC = () => {
   const [systemHealth, setSystemHealth] = useState<{
     activeUsers: number | null;
     responseTime: number | null;
+    mrr: number | null;
+    activePro: number | null;
   }>({
     activeUsers: null,
     responseTime: null,
+    mrr: null,
+    activePro: null,
   });
+
 
   const { profile } = useProfile();
 
