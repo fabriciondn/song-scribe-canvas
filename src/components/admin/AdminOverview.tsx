@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { getAdminDashboardStats, getRevenueTransactions, getUsersByPlan } from '@/services/adminService';
 import { RevenueDetailsModal } from './RevenueDetailsModal';
 import { UsersByPlanModal } from './UsersByPlanModal';
