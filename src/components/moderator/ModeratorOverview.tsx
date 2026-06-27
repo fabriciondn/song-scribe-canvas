@@ -346,23 +346,24 @@ const Header: React.FC<{ onRefresh: () => void; isFetching: boolean }> = ({ onRe
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
         <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">Painel do Moderador</span>
       </div>
-      <h2 className="text-2xl font-light tracking-tight text-white mt-1">Visão geral</h2>
-      <p className="text-xs text-white/40 mt-0.5">Usuários e atividades que você gerencia</p>
+      <h2 className="text-lg font-light tracking-tight text-white mt-0.5 leading-tight">Visão geral</h2>
+      <p className="text-[11px] text-white/40">Usuários e atividades que você gerencia</p>
     </div>
     <button
       onClick={onRefresh}
       disabled={isFetching}
-      className="group relative inline-flex items-center gap-2 px-3.5 py-2 rounded-full
+      className="group relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full
                  bg-white/[0.04] hover:bg-white/[0.08] text-white/70 hover:text-white
-                 text-[11px] uppercase tracking-[0.14em]
+                 text-[10px] uppercase tracking-[0.14em]
                  shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset]
                  transition-all duration-200 active:scale-[0.98] disabled:opacity-50"
     >
-      <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+      <RefreshCw className={`h-3 w-3 ${isFetching ? 'animate-spin' : ''}`} />
       {isFetching ? 'Atualizando' : 'Atualizar'}
     </button>
   </div>
 );
+
 
 const SurfaceMetric: React.FC<{
   label: string;
