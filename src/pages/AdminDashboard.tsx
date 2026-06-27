@@ -207,18 +207,17 @@ const AdminDashboard: React.FC = () => {
         <SidebarInset className="flex-1 relative bg-transparent">
           {/* Premium Header */}
           <header className="sticky top-0 z-30 backdrop-blur-xl bg-[#0a0a0b]/70 border-b border-white/[0.06]">
-            <div className="flex items-center gap-6 px-8 h-[72px]">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-3">
-                  <h1 className="text-[15px] font-medium text-white tracking-tight">
-                    {greeting}, <span className="text-white/60 font-normal">{firstName}</span>
-                  </h1>
-                  <span className="text-white/25 text-xs">·</span>
-                  <span className="text-xs text-white/40 capitalize tracking-wide">{dateLabel}</span>
-                </div>
-                <p className="text-[11px] text-white/30 mt-0.5 tracking-wide uppercase">
+            <div className="flex items-center gap-6 px-6 h-[52px]">
+              <div className="flex-1 min-w-0 flex items-center gap-3">
+                <h1 className="text-[13px] font-medium text-white tracking-tight whitespace-nowrap">
+                  {greeting}, <span className="text-white/60 font-normal">{firstName}</span>
+                </h1>
+                <span className="text-white/20 text-xs">·</span>
+                <span className="text-[11px] text-white/40 capitalize tracking-wide whitespace-nowrap">{dateLabel}</span>
+                <span className="text-white/15 text-xs hidden md:inline">·</span>
+                <span className="hidden md:inline text-[10px] text-white/30 tracking-[0.14em] uppercase whitespace-nowrap">
                   Compuse — Painel Executivo
-                </p>
+                </span>
               </div>
 
               {/* Global search */}
