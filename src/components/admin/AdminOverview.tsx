@@ -43,6 +43,22 @@ export const AdminOverview: React.FC = () => {
     enabled: !!selectedPlan,
   });
 
+  // MRR — soma de assinaturas PRO ativas e não vencidas
+  const { data: mrr = 0 } = useQuery({
+    queryKey: ['admin-overview-mrr'],
+    queryFn: async () => {
+      const nowIso = new Date().toISOString();
+      const { data } = await supabase
+        .from('subscriptions')
+        .select('amount, expires_at, status, plan_type')
+        .eq('plan_type', 'pro')
+        .eq('status', 'active')
+        .gt('expires_at', nowIso);
+      return (data || []).reduce((acc, s: any) => acc + Number(s.amount || 0), 0);
+    },
+    refetchInterval: 120_000,
+  });
+
   if (statsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
