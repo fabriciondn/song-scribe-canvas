@@ -276,8 +276,32 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
       };
     });
 
+    // Mapear transações de moderadores
+    const moderatorTransactionsData: RevenueTransaction[] = (modTransactions || []).map(t => {
+      const profile = profilesMap.get(t.user_id);
+      const mod = profilesMap.get(t.moderator_id);
+      return {
+        id: t.id,
+        user_id: t.user_id,
+        user_name: profile?.name || 'Usuário Desconhecido',
+        user_email: profile?.email || '',
+        user_avatar: profile?.avatar_url || null,
+        total_amount: Number(t.amount) || 0,
+        payment_id: '',
+        completed_at: t.created_at || '',
+        transaction_type: 'moderator' as const,
+        subscription_plan: 'pro',
+        via_moderator: true,
+        moderator_name: mod?.name || 'Moderador',
+      };
+    });
+
     // Combinar e ordenar por data
-    const allTransactions = [...creditTransactionsData, ...subscriptionTransactionsData];
+    const allTransactions = [
+      ...creditTransactionsData,
+      ...subscriptionTransactionsData,
+      ...moderatorTransactionsData,
+    ];
     allTransactions.sort((a, b) => {
       const dateA = new Date(a.completed_at).getTime();
       const dateB = new Date(b.completed_at).getTime();
