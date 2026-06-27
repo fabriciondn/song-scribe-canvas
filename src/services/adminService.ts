@@ -266,9 +266,27 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
     // Mapear perfis por ID
     const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
+    // Buscar vínculos moderador -> usuários (para marcar transações via moderador)
+    const { data: moderatorLinks, error: modLinksError } = await supabase
+      .from('moderator_users')
+      .select('user_id, moderator_id');
+    if (modLinksError) console.error('Erro ao buscar vínculos de moderadores:', modLinksError);
+
+    const userToModeratorMap = new Map<string, string>(
+      (moderatorLinks || []).map((m: any) => [m.user_id, m.moderator_id])
+    );
+
+    const resolveModerator = (userId: string) => {
+      const modId = userToModeratorMap.get(userId);
+      if (!modId) return { via: false, name: undefined as string | undefined };
+      const mod = profilesMap.get(modId);
+      return { via: true, name: mod?.name || 'Moderador' };
+    };
+
     // Mapear transações de créditos
     const creditTransactionsData: RevenueTransaction[] = (creditTransactions || []).map(t => {
       const profile = profilesMap.get(t.user_id);
+      const modInfo = resolveModerator(t.user_id);
       return {
         id: t.id,
         user_id: t.user_id,
@@ -281,12 +299,15 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
         payment_id: t.payment_id || '',
         completed_at: t.completed_at || '',
         transaction_type: 'credits' as const,
+        via_moderator: modInfo.via,
+        moderator_name: modInfo.name,
       };
     });
 
     // Mapear transações de assinaturas
     const subscriptionTransactionsData: RevenueTransaction[] = (subscriptions || []).map(s => {
       const profile = profilesMap.get(s.user_id);
+      const modInfo = resolveModerator(s.user_id);
       return {
         id: s.id,
         user_id: s.user_id,
@@ -298,10 +319,12 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
         completed_at: s.started_at || '',
         transaction_type: 'subscription' as const,
         subscription_plan: s.plan_type || 'pro',
+        via_moderator: modInfo.via,
+        moderator_name: modInfo.name,
       };
     });
 
-    // Mapear transações de moderadores
+    // Mapear transações de moderadores (lançamentos manuais / específicos)
     const moderatorTransactionsData: RevenueTransaction[] = (modTransactions || []).map(t => {
       const profile = profilesMap.get(t.user_id);
       const mod = profilesMap.get(t.moderator_id);
@@ -334,6 +357,7 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
     });
 
     return allTransactions;
+
   } catch (error) {
     console.error('Erro ao buscar transações de receita:', error);
     throw error;
