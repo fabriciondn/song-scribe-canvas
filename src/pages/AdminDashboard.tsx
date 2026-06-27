@@ -265,7 +265,20 @@ const AdminDashboard: React.FC = () => {
               <div className="hidden xl:flex items-center gap-1.5">
                 <StatusPill
                   dot="bg-emerald-400"
-                  label="Online agora"
+                  label="MRR"
+                  value={
+                    systemHealth.mrr === null
+                      ? '—'
+                      : systemHealth.mrr.toLocaleString('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                          minimumFractionDigits: 2,
+                        })
+                  }
+                />
+                <StatusPill
+                  dot="bg-emerald-400"
+                  label="Online"
                   value={systemHealth.activeUsers === null ? '—' : String(systemHealth.activeUsers)}
                 />
                 <StatusPill
@@ -282,6 +295,7 @@ const AdminDashboard: React.FC = () => {
                   value={systemHealth.responseTime === null ? 'medindo…' : `${systemHealth.responseTime}ms`}
                 />
               </div>
+
 
               <button className="relative h-8 w-8 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors">
                 <Bell className="h-3.5 w-3.5" />
