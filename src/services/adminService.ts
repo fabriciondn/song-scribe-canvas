@@ -98,8 +98,15 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
     }
     
     const subscriptionRevenue = paidSubscriptions?.reduce((sum, s) => sum + Number(s.amount || 0), 0) || 0;
-    
-    const totalRevenue = creditRevenue + subscriptionRevenue;
+
+    // Faturamento via moderadores (assinaturas pagas direto no MP do moderador)
+    const { data: modTxs, error: modError } = await supabase
+      .from('moderator_transactions')
+      .select('amount');
+    if (modError) console.error('Erro ao buscar transações de moderadores:', modError);
+    const moderatorRevenue = modTxs?.reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
+
+    const totalRevenue = creditRevenue + subscriptionRevenue + moderatorRevenue;
     
     // Buscar contagem de usuários por tipo de assinatura
     const { data: allSubscriptions, error: allSubsError } = await supabase
