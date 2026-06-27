@@ -65,6 +65,25 @@ const AdminDashboard: React.FC = () => {
     activePro: null,
   });
 
+  const [bizMetrics, setBizMetrics] = useState<{
+    revenue30d: number | null;
+    newToday: number | null;
+    trialConversion: number | null;
+    churn30d: number | null;
+    avgTicket: number | null;
+    worksToday: number | null;
+    judgmentQueue: number | null;
+  }>({
+    revenue30d: null,
+    newToday: null,
+    trialConversion: null,
+    churn30d: null,
+    avgTicket: null,
+    worksToday: null,
+    judgmentQueue: null,
+  });
+
+
 
   const { profile } = useProfile();
 
@@ -160,6 +179,67 @@ const AdminDashboard: React.FC = () => {
     const id = window.setInterval(loadMrr, 60000);
     return () => { cancelled = true; window.clearInterval(id); };
   }, [effectiveIsAdmin, gateLoading]);
+
+  // Métricas de negócio — receita 30d, novos hoje, churn, conversão, ticket, obras, fila
+  useEffect(() => {
+    if (gateLoading || !effectiveIsAdmin) return;
+    let cancelled = false;
+    const loadBiz = async () => {
+      const now = new Date();
+      const iso30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+
+      const [
+        rev30Res,
+        newTodayRes,
+        trialExpiredRes,
+        proFromTrialRes,
+        churnRes,
+        avgTicketRes,
+        worksTodayRes,
+        queueRes,
+      ] = await Promise.all([
+        supabase.from('moderator_transactions').select('amount').gte('created_at', iso30),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', todayStart),
+        supabase.from('subscriptions').select('id', { count: 'exact', head: true })
+          .eq('plan_type', 'trial').eq('status', 'expired').gte('updated_at', iso30),
+        supabase.from('subscriptions').select('id', { count: 'exact', head: true })
+          .eq('plan_type', 'pro').gte('created_at', iso30),
+        supabase.from('subscriptions').select('id', { count: 'exact', head: true })
+          .eq('plan_type', 'pro').eq('status', 'expired').gte('expires_at', iso30),
+        supabase.from('moderator_transactions').select('amount').gte('created_at', iso30),
+        supabase.from('author_registrations').select('id', { count: 'exact', head: true }).gte('created_at', todayStart),
+        supabase.from('subscriptions').select('id', { count: 'exact', head: true })
+          .eq('plan_type', 'trial').eq('status', 'trial'),
+      ]);
+
+      if (cancelled) return;
+
+      const rev30 = (rev30Res.data || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0);
+      const trialExpired = trialExpiredRes.count || 0;
+      const proCreated = proFromTrialRes.count || 0;
+      const conversion = trialExpired > 0 ? (proCreated / trialExpired) * 100 : null;
+      const ticketRows = (avgTicketRes.data || []) as Array<{ amount: number | null }>;
+      const avgTicket = ticketRows.length
+        ? ticketRows.reduce((s, r) => s + (Number(r.amount) || 0), 0) / ticketRows.length
+        : null;
+
+      setBizMetrics({
+        revenue30d: rev30,
+        newToday: newTodayRes.count ?? 0,
+        trialConversion: conversion,
+        churn30d: churnRes.count ?? 0,
+        avgTicket,
+        worksToday: worksTodayRes.count ?? 0,
+        judgmentQueue: queueRes.count ?? 0,
+      });
+    };
+    loadBiz();
+    const id = window.setInterval(loadBiz, 120000);
+    return () => { cancelled = true; window.clearInterval(id); };
+  }, [effectiveIsAdmin, gateLoading]);
+
+
 
   if (gateLoading) {
     return (
@@ -320,12 +400,49 @@ const AdminDashboard: React.FC = () => {
             </div>
           </header>
 
+          {/* Métricas de negócio — ticker discreto */}
+          {activeTab === 'overview' && (
+            <div className="border-b border-white/[0.04] bg-[#0a0a0b]/40">
+              <div className="max-w-[1400px] mx-auto px-6 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                <MetricChip
+                  label="Receita 30d"
+                  value={
+                    bizMetrics.revenue30d === null
+                      ? '—'
+                      : bizMetrics.revenue30d.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
+                  }
+                />
+                <MetricChip label="Novos hoje" value={bizMetrics.newToday === null ? '—' : String(bizMetrics.newToday)} />
+                <MetricChip
+                  label="Trial → PRO"
+                  value={bizMetrics.trialConversion === null ? '—' : `${bizMetrics.trialConversion.toFixed(1)}%`}
+                />
+                <MetricChip label="Churn 30d" value={bizMetrics.churn30d === null ? '—' : String(bizMetrics.churn30d)} />
+                <MetricChip
+                  label="Ticket médio"
+                  value={
+                    bizMetrics.avgTicket === null
+                      ? '—'
+                      : bizMetrics.avgTicket.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
+                  }
+                />
+                <MetricChip label="Obras hoje" value={bizMetrics.worksToday === null ? '—' : String(bizMetrics.worksToday)} />
+                <MetricChip
+                  label="Fila de julgamento"
+                  value={bizMetrics.judgmentQueue === null ? '—' : String(bizMetrics.judgmentQueue)}
+                  accent
+                />
+              </div>
+            </div>
+          )}
+
           {/* Main */}
           <main className="relative px-6 py-4">
             <div className="max-w-[1400px] mx-auto">
               {renderActiveTab()}
             </div>
           </main>
+
         </SidebarInset>
       </div>
     </SidebarProvider>
@@ -339,5 +456,13 @@ const StatusPill: React.FC<{ dot: string; label: string; value: string }> = ({ d
     <span className="text-[10px] text-white/85 font-medium tabular-nums">{value}</span>
   </div>
 );
+
+const MetricChip: React.FC<{ label: string; value: string; accent?: boolean }> = ({ label, value, accent }) => (
+  <div className="flex items-center gap-2 h-6 px-2.5 rounded-md bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.04] transition-colors whitespace-nowrap">
+    <span className="text-[10px] uppercase tracking-[0.12em] text-white/40">{label}</span>
+    <span className={`text-[11px] font-medium tabular-nums ${accent ? 'text-amber-300/90' : 'text-white/85'}`}>{value}</span>
+  </div>
+);
+
 
 export default AdminDashboard;
