@@ -56,10 +56,15 @@ const AdminDashboard: React.FC = () => {
   const [systemHealth, setSystemHealth] = useState<{
     activeUsers: number | null;
     responseTime: number | null;
+    mrr: number | null;
+    activePro: number | null;
   }>({
     activeUsers: null,
     responseTime: null,
+    mrr: null,
+    activePro: null,
   });
+
 
   const { profile } = useProfile();
 
@@ -130,10 +135,37 @@ const AdminDashboard: React.FC = () => {
     };
   }, [effectiveIsAdmin, gateLoading]);
 
+  // MRR — soma de assinaturas PRO ativas (não vencidas)
+  useEffect(() => {
+    if (gateLoading || !effectiveIsAdmin) return;
+    let cancelled = false;
+    const loadMrr = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('subscriptions')
+          .select('amount')
+          .eq('status', 'active')
+          .eq('plan_type', 'pro')
+          .gt('expires_at', new Date().toISOString());
+        if (error) throw error;
+        if (cancelled) return;
+        const rows = (data || []) as Array<{ amount: number | null }>;
+        const total = rows.reduce((s, r) => s + (Number(r.amount) || 29.9), 0);
+        setSystemHealth((prev) => ({ ...prev, mrr: total, activePro: rows.length }));
+      } catch {
+        if (!cancelled) setSystemHealth((prev) => ({ ...prev, mrr: null }));
+      }
+    };
+    loadMrr();
+    const id = window.setInterval(loadMrr, 60000);
+    return () => { cancelled = true; window.clearInterval(id); };
+  }, [effectiveIsAdmin, gateLoading]);
+
   if (gateLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
         <div className="text-center space-y-4">
+
           <div className="animate-spin rounded-full h-10 w-10 border-t border-white/40 mx-auto" />
           <p className="text-white/50 text-sm tracking-wide">
             {authLoading || roleLoading ? 'Verificando sessão…' : 'Confirmando permissões…'}
@@ -233,7 +265,20 @@ const AdminDashboard: React.FC = () => {
               <div className="hidden xl:flex items-center gap-1.5">
                 <StatusPill
                   dot="bg-emerald-400"
-                  label="Online agora"
+                  label="MRR"
+                  value={
+                    systemHealth.mrr === null
+                      ? '—'
+                      : systemHealth.mrr.toLocaleString('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                          minimumFractionDigits: 2,
+                        })
+                  }
+                />
+                <StatusPill
+                  dot="bg-emerald-400"
+                  label="Online"
                   value={systemHealth.activeUsers === null ? '—' : String(systemHealth.activeUsers)}
                 />
                 <StatusPill
@@ -250,6 +295,7 @@ const AdminDashboard: React.FC = () => {
                   value={systemHealth.responseTime === null ? 'medindo…' : `${systemHealth.responseTime}ms`}
                 />
               </div>
+
 
               <button className="relative h-8 w-8 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors">
                 <Bell className="h-3.5 w-3.5" />
