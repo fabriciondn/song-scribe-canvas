@@ -242,11 +242,24 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
       .order('created_at', { ascending: false });
     if (modTxError) console.error('Erro ao buscar transações de moderadores:', modTxError);
 
-    // Coletar todos os user_ids
+    // Buscar vínculos moderador -> usuários (para marcar transações via moderador)
+    const { data: moderatorLinks, error: modLinksError } = await supabase
+      .from('moderator_users')
+      .select('user_id, moderator_id');
+    if (modLinksError) console.error('Erro ao buscar vínculos de moderadores:', modLinksError);
+
+    const userToModeratorMap = new Map<string, string>(
+      (moderatorLinks || []).map((m: any) => [m.user_id, m.moderator_id])
+    );
+
+    // Coletar todos os user_ids (incluindo moderadores para resolver nome/avatar)
     const creditUserIds = creditTransactions?.map(t => t.user_id) || [];
     const subsUserIds = subscriptions?.map(s => s.user_id) || [];
     const modUserIds = modTransactions?.map(t => t.user_id) || [];
-    const modIds = modTransactions?.map(t => t.moderator_id) || [];
+    const modIds = [
+      ...(modTransactions?.map(t => t.moderator_id) || []),
+      ...Array.from(userToModeratorMap.values()),
+    ];
     const allUserIds = [...new Set([...creditUserIds, ...subsUserIds, ...modUserIds, ...modIds])];
 
     if (allUserIds.length === 0) {
@@ -266,22 +279,7 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
     // Mapear perfis por ID
     const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-    // Buscar vínculos moderador -> usuários (para marcar transações via moderador)
-    const { data: moderatorLinks, error: modLinksError } = await supabase
-      .from('moderator_users')
-      .select('user_id, moderator_id');
-    if (modLinksError) console.error('Erro ao buscar vínculos de moderadores:', modLinksError);
 
-    const userToModeratorMap = new Map<string, string>(
-      (moderatorLinks || []).map((m: any) => [m.user_id, m.moderator_id])
-    );
-
-    const resolveModerator = (userId: string) => {
-      const modId = userToModeratorMap.get(userId);
-      if (!modId) return { via: false, name: undefined as string | undefined };
-      const mod = profilesMap.get(modId);
-      return { via: true, name: mod?.name || 'Moderador' };
-    };
 
     // Buscar todos os registros autorais (para agregar por moderador)
     const { data: allRegistrations, error: regsError } = await supabase
