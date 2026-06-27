@@ -232,9 +232,24 @@ const AdminDashboard: React.FC = () => {
 
               {/* Status pills — discreet */}
               <div className="hidden xl:flex items-center gap-1.5">
-                <StatusPill dot="bg-emerald-400" label="Online" value={String(systemHealth.activeUsers)} />
-                <StatusPill dot="bg-emerald-400" label="Uptime" value={systemHealth.uptime} />
-                <StatusPill dot="bg-white/40" label="Latência" value={systemHealth.responseTime} />
+                <StatusPill
+                  dot="bg-emerald-400"
+                  label="Online agora"
+                  value={systemHealth.activeUsers === null ? '—' : String(systemHealth.activeUsers)}
+                />
+                <StatusPill
+                  dot={
+                    systemHealth.responseTime === null
+                      ? 'bg-white/30'
+                      : systemHealth.responseTime < 250
+                      ? 'bg-emerald-400'
+                      : systemHealth.responseTime < 600
+                      ? 'bg-amber-400'
+                      : 'bg-red-400'
+                  }
+                  label="Latência"
+                  value={systemHealth.responseTime === null ? 'medindo…' : `${systemHealth.responseTime}ms`}
+                />
               </div>
 
               <button className="relative h-9 w-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors">
