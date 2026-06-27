@@ -219,7 +219,7 @@ export const ModeratorOverview = () => {
 
 
       {/* Secondary metrics row */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-2">
         <SurfaceMetric
           label="Transações"
           value={transactionCount}
@@ -248,7 +248,7 @@ export const ModeratorOverview = () => {
       </section>
 
       {/* Activity + Credits panels */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <PanelStat
           title="Resumo da atividade"
           rows={[
@@ -268,24 +268,24 @@ export const ModeratorOverview = () => {
       </section>
 
       {/* Chart */}
-      <section className="group relative rounded-2xl overflow-hidden p-5
+      <section className="group relative rounded-xl overflow-hidden p-3
                           bg-gradient-to-br from-white/[0.035] to-white/[0.01]
                           shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_20px_40px_-25px_rgba(0,0,0,0.6)]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.06),transparent_60%)]" />
-        <div className="relative flex items-center justify-between mb-4">
+        <div className="relative flex items-center justify-between mb-2">
           <div>
             <div className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">Desempenho de faturamento</span>
             </div>
-            <p className="text-base font-light text-white/85 mt-1">Evolução no período</p>
+            <p className="text-[13px] font-light text-white/85 mt-0.5">Evolução no período</p>
           </div>
-          <div className="flex gap-1 p-1 rounded-full bg-white/[0.03]">
+          <div className="flex gap-1 p-0.5 rounded-full bg-white/[0.03]">
             {(['day', 'week', 'month', 'year'] as PeriodFilter[]).map((period) => (
               <button
                 key={period}
                 onClick={() => setPeriodFilter(period)}
-                className={`px-3 py-1 text-[11px] rounded-full transition-all duration-150
+                className={`px-2.5 py-0.5 text-[11px] rounded-full transition-all duration-150
                             ${periodFilter === period
                               ? 'bg-white/[0.08] text-white shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset]'
                               : 'text-white/50 hover:text-white/80'}`}
@@ -295,9 +295,9 @@ export const ModeratorOverview = () => {
             ))}
           </div>
         </div>
-        <div className="relative h-[280px] w-full">
+        <div className="relative h-[150px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 12, left: -10, bottom: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 6, right: 8, left: -14, bottom: 0 }}>
               <defs>
                 <linearGradient id="moderatorRevenueArea" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="rgb(16,185,129)" stopOpacity={0.35} />
@@ -305,8 +305,8 @@ export const ModeratorOverview = () => {
                 </linearGradient>
               </defs>
               <CartesianGrid stroke="rgba(255,255,255,0.04)" vertical={false} />
-              <XAxis dataKey="name" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
-              <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${v}`} />
+              <XAxis dataKey="name" stroke="rgba(255,255,255,0.35)" fontSize={10} tickLine={false} axisLine={false} />
+              <YAxis stroke="rgba(255,255,255,0.35)" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${v}`} />
               <Tooltip
                 cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }}
                 contentStyle={{
@@ -335,6 +335,7 @@ export const ModeratorOverview = () => {
     </div>
   );
 };
+
 
 /* ---------- presentation primitives (mirror AdminOverview) ---------- */
 
