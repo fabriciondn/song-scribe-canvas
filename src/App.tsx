@@ -92,7 +92,8 @@ const AppContent = () => {
       
       <div style={{
         paddingTop: isMobile ? '0px' : 'var(--impersonation-banner-height, 0px)'
-      }} className={isMobile ? 'flex-1' : 'flex-1 py-[4px]'}>
+      }} className={isMobile ? 'flex-1' : (typeof window !== 'undefined' && /^\/(admin|moderator|affiliate)(\/|$)/.test(window.location.pathname) ? 'flex-1' : 'flex-1 py-[4px]')}>
+
         <RoleRedirect />
         <PageFunctionStatusWrapper>
           <Routes>
