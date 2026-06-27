@@ -18,7 +18,17 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
-export const AdminOverview: React.FC = () => {
+type BizMetrics = {
+  revenue30d: number | null;
+  newToday: number | null;
+  trialConversion: number | null;
+  churn30d: number | null;
+  avgTicket: number | null;
+  worksToday: number | null;
+  judgmentQueue: number | null;
+};
+
+export const AdminOverview: React.FC<{ bizMetrics?: BizMetrics }> = ({ bizMetrics }) => {
   const isMobile = useIsMobile();
   const [showRevenueModal, setShowRevenueModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'pro' | 'trial' | 'free' | 'inactive' | null>(null);
