@@ -97,15 +97,37 @@ const AdminDashboard: React.FC = () => {
   const effectiveIsAdmin = isAdmin || adminConfirmed === true;
   const gateLoading = authLoading || roleLoading || (isAuthenticated && !isAdmin && adminConfirmed === null);
 
+  // Visitantes online — presença em tempo real
   useEffect(() => {
-    if (!gateLoading && effectiveIsAdmin) {
-      setSystemHealth({
-        status: 'healthy',
-        uptime: '99.9%',
-        activeUsers: Math.floor(Math.random() * 50) + 10,
-        responseTime: Math.floor(Math.random() * 50) + 100 + 'ms'
-      });
-    }
+    if (gateLoading || !effectiveIsAdmin) return;
+    const channel = subscribeToOnlineVisitors((visitors) => {
+      setSystemHealth((prev) => ({ ...prev, activeUsers: visitors.length }));
+    });
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [effectiveIsAdmin, gateLoading]);
+
+  // Latência real — ping leve ao Supabase a cada 15s
+  useEffect(() => {
+    if (gateLoading || !effectiveIsAdmin) return;
+    let cancelled = false;
+    const measure = async () => {
+      const start = performance.now();
+      try {
+        await supabase.from('profiles').select('id', { head: true, count: 'exact' }).limit(1);
+        const elapsed = Math.round(performance.now() - start);
+        if (!cancelled) setSystemHealth((prev) => ({ ...prev, responseTime: elapsed }));
+      } catch {
+        if (!cancelled) setSystemHealth((prev) => ({ ...prev, responseTime: null }));
+      }
+    };
+    measure();
+    const id = window.setInterval(measure, 15000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
   }, [effectiveIsAdmin, gateLoading]);
 
   if (gateLoading) {
