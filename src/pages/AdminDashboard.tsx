@@ -251,16 +251,16 @@ const AdminDashboard: React.FC = () => {
                 />
               </div>
 
-              <button className="relative h-9 w-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors">
-                <Bell className="h-4 w-4" />
-                <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <button className="relative h-8 w-8 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors">
+                <Bell className="h-3.5 w-3.5" />
+                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400" />
               </button>
 
               <DropdownMenu>
                 <DropdownMenuTrigger className="outline-none">
-                  <Avatar className="w-9 h-9 cursor-pointer ring-1 ring-white/10 hover:ring-white/20 transition">
+                  <Avatar className="w-8 h-8 cursor-pointer ring-1 ring-white/10 hover:ring-white/20 transition">
                     <AvatarImage src={profile?.avatar_url} alt={profile?.name} />
-                    <AvatarFallback className="bg-white/[0.06] text-white/70 text-xs">
+                    <AvatarFallback className="bg-white/[0.06] text-white/70 text-[10px]">
                       {profile?.name?.slice(0, 2).toUpperCase() || 'AD'}
                     </AvatarFallback>
                   </Avatar>
