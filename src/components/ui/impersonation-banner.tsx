@@ -15,14 +15,18 @@ export const ImpersonationBanner = () => {
 
   // Definir altura do banner via CSS custom property - SEMPRE executar os hooks
   const bannerHeight = '60px';
-  
+  const showBanner = isImpersonating && impersonatedUser && originalUser;
+
   React.useEffect(() => {
-    document.documentElement.style.setProperty('--impersonation-banner-height', bannerHeight);
-    
+    if (showBanner) {
+      document.documentElement.style.setProperty('--impersonation-banner-height', bannerHeight);
+    } else {
+      document.documentElement.style.removeProperty('--impersonation-banner-height');
+    }
     return () => {
       document.documentElement.style.removeProperty('--impersonation-banner-height');
     };
-  }, [bannerHeight]);
+  }, [bannerHeight, showBanner]);
 
   // Early return APÓS todos os hooks
   if (!isImpersonating || !impersonatedUser || !originalUser) {
