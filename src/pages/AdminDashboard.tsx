@@ -42,6 +42,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Search, Bell, Command } from 'lucide-react';
 import { buildPreviewSafePath } from '@/utils/previewToken';
+import { subscribeToOnlineVisitors } from '@/services/realtimePresenceService';
 
 const AdminDashboard: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -52,11 +53,12 @@ const AdminDashboard: React.FC = () => {
   const [adminConfirmed, setAdminConfirmed] = useState<boolean | null>(null);
   const [adminConfirming, setAdminConfirming] = useState(false);
 
-  const [systemHealth, setSystemHealth] = useState({
-    status: 'healthy',
-    uptime: '99.9%',
-    activeUsers: 0,
-    responseTime: '120ms'
+  const [systemHealth, setSystemHealth] = useState<{
+    activeUsers: number | null;
+    responseTime: number | null;
+  }>({
+    activeUsers: null,
+    responseTime: null,
   });
 
   const { profile } = useProfile();
@@ -95,15 +97,37 @@ const AdminDashboard: React.FC = () => {
   const effectiveIsAdmin = isAdmin || adminConfirmed === true;
   const gateLoading = authLoading || roleLoading || (isAuthenticated && !isAdmin && adminConfirmed === null);
 
+  // Visitantes online — presença em tempo real
   useEffect(() => {
-    if (!gateLoading && effectiveIsAdmin) {
-      setSystemHealth({
-        status: 'healthy',
-        uptime: '99.9%',
-        activeUsers: Math.floor(Math.random() * 50) + 10,
-        responseTime: Math.floor(Math.random() * 50) + 100 + 'ms'
-      });
-    }
+    if (gateLoading || !effectiveIsAdmin) return;
+    const channel = subscribeToOnlineVisitors((visitors) => {
+      setSystemHealth((prev) => ({ ...prev, activeUsers: visitors.length }));
+    });
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [effectiveIsAdmin, gateLoading]);
+
+  // Latência real — ping leve ao Supabase a cada 15s
+  useEffect(() => {
+    if (gateLoading || !effectiveIsAdmin) return;
+    let cancelled = false;
+    const measure = async () => {
+      const start = performance.now();
+      try {
+        await supabase.from('profiles').select('id', { head: true, count: 'exact' }).limit(1);
+        const elapsed = Math.round(performance.now() - start);
+        if (!cancelled) setSystemHealth((prev) => ({ ...prev, responseTime: elapsed }));
+      } catch {
+        if (!cancelled) setSystemHealth((prev) => ({ ...prev, responseTime: null }));
+      }
+    };
+    measure();
+    const id = window.setInterval(measure, 15000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
   }, [effectiveIsAdmin, gateLoading]);
 
   if (gateLoading) {
@@ -208,9 +232,24 @@ const AdminDashboard: React.FC = () => {
 
               {/* Status pills — discreet */}
               <div className="hidden xl:flex items-center gap-1.5">
-                <StatusPill dot="bg-emerald-400" label="Online" value={String(systemHealth.activeUsers)} />
-                <StatusPill dot="bg-emerald-400" label="Uptime" value={systemHealth.uptime} />
-                <StatusPill dot="bg-white/40" label="Latência" value={systemHealth.responseTime} />
+                <StatusPill
+                  dot="bg-emerald-400"
+                  label="Online agora"
+                  value={systemHealth.activeUsers === null ? '—' : String(systemHealth.activeUsers)}
+                />
+                <StatusPill
+                  dot={
+                    systemHealth.responseTime === null
+                      ? 'bg-white/30'
+                      : systemHealth.responseTime < 250
+                      ? 'bg-emerald-400'
+                      : systemHealth.responseTime < 600
+                      ? 'bg-amber-400'
+                      : 'bg-red-400'
+                  }
+                  label="Latência"
+                  value={systemHealth.responseTime === null ? 'medindo…' : `${systemHealth.responseTime}ms`}
+                />
               </div>
 
               <button className="relative h-9 w-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors">
