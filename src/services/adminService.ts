@@ -29,8 +29,10 @@ export interface RevenueTransaction {
   bonus_credits?: number;
   payment_id: string;
   completed_at: string;
-  transaction_type: 'credits' | 'subscription';
+  transaction_type: 'credits' | 'subscription' | 'moderator';
   subscription_plan?: string;
+  via_moderator?: boolean;
+  moderator_name?: string;
 }
 
 export interface UserByPlan {
