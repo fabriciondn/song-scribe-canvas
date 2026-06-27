@@ -457,4 +457,12 @@ const StatusPill: React.FC<{ dot: string; label: string; value: string }> = ({ d
   </div>
 );
 
+const MetricChip: React.FC<{ label: string; value: string; accent?: boolean }> = ({ label, value, accent }) => (
+  <div className="flex items-center gap-2 h-6 px-2.5 rounded-md bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.04] transition-colors whitespace-nowrap">
+    <span className="text-[10px] uppercase tracking-[0.12em] text-white/40">{label}</span>
+    <span className={`text-[11px] font-medium tabular-nums ${accent ? 'text-amber-300/90' : 'text-white/85'}`}>{value}</span>
+  </div>
+);
+
+
 export default AdminDashboard;
