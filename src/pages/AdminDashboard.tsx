@@ -275,7 +275,7 @@ const AdminDashboard: React.FC = () => {
           </header>
 
           {/* Main */}
-          <main className="relative px-8 py-10">
+          <main className="relative px-6 py-4">
             <div className="max-w-[1400px] mx-auto">
               {renderActiveTab()}
             </div>
