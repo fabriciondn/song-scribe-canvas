@@ -261,7 +261,7 @@ const AdminDashboard: React.FC = () => {
 
   const renderActiveTab = () => {
     switch (activeTab) {
-      case 'overview': return <AdminOverview />;
+      case 'overview': return <AdminOverview bizMetrics={bizMetrics} />;
       case 'online-visitors': return <OnlineVisitorsPanel />;
       case 'users': return <AdminUsers />;
       case 'registrations': return <AdminRegistrations />;
@@ -400,41 +400,6 @@ const AdminDashboard: React.FC = () => {
             </div>
           </header>
 
-          {/* Métricas de negócio — ticker discreto */}
-          {activeTab === 'overview' && (
-            <div className="border-b border-white/[0.04] bg-[#0a0a0b]/40">
-              <div className="max-w-[1400px] mx-auto px-6 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-                <MetricChip
-                  label="Receita 30d"
-                  value={
-                    bizMetrics.revenue30d === null
-                      ? '—'
-                      : bizMetrics.revenue30d.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
-                  }
-                />
-                <MetricChip label="Novos hoje" value={bizMetrics.newToday === null ? '—' : String(bizMetrics.newToday)} />
-                <MetricChip
-                  label="Trial → PRO"
-                  value={bizMetrics.trialConversion === null ? '—' : `${bizMetrics.trialConversion.toFixed(1)}%`}
-                />
-                <MetricChip label="Churn 30d" value={bizMetrics.churn30d === null ? '—' : String(bizMetrics.churn30d)} />
-                <MetricChip
-                  label="Ticket médio"
-                  value={
-                    bizMetrics.avgTicket === null
-                      ? '—'
-                      : bizMetrics.avgTicket.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
-                  }
-                />
-                <MetricChip label="Obras hoje" value={bizMetrics.worksToday === null ? '—' : String(bizMetrics.worksToday)} />
-                <MetricChip
-                  label="Fila de julgamento"
-                  value={bizMetrics.judgmentQueue === null ? '—' : String(bizMetrics.judgmentQueue)}
-                  accent
-                />
-              </div>
-            </div>
-          )}
 
           {/* Main */}
           <main className="relative px-6 py-4">

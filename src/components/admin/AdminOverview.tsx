@@ -18,7 +18,17 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
-export const AdminOverview: React.FC = () => {
+type BizMetrics = {
+  revenue30d: number | null;
+  newToday: number | null;
+  trialConversion: number | null;
+  churn30d: number | null;
+  avgTicket: number | null;
+  worksToday: number | null;
+  judgmentQueue: number | null;
+};
+
+export const AdminOverview: React.FC<{ bizMetrics?: BizMetrics }> = ({ bizMetrics }) => {
   const isMobile = useIsMobile();
   const [showRevenueModal, setShowRevenueModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'pro' | 'trial' | 'free' | 'inactive' | null>(null);
@@ -184,7 +194,39 @@ export const AdminOverview: React.FC = () => {
             <UserOriginReport />
           </div>
         </section>
+
+        {/* Extra metrics row */}
+        {bizMetrics && (
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <SurfaceMetric
+              label="Novos hoje"
+              value={bizMetrics.newToday ?? '—'}
+              hint="Cadastros nas últimas 24h"
+              icon={<Users className="h-3.5 w-3.5" />}
+            />
+            <SurfaceMetric
+              label="Obras hoje"
+              value={bizMetrics.worksToday ?? '—'}
+              hint="Registros enviados hoje"
+              icon={<Shield className="h-3.5 w-3.5" />}
+            />
+            <SurfaceMetric
+              label="Ticket médio"
+              value={bizMetrics.avgTicket === null || bizMetrics.avgTicket === undefined ? '—' : fmtBRL(bizMetrics.avgTicket)}
+              hint="Média 30d"
+              icon={<CreditCard className="h-3.5 w-3.5" />}
+              accent="emerald"
+            />
+            <SurfaceMetric
+              label="Churn 30d"
+              value={bizMetrics.churn30d ?? '—'}
+              hint="Cancelamentos no período"
+              icon={<UserX className="h-3.5 w-3.5" />}
+            />
+          </section>
+        )}
       </div>
+
 
       <RevenueDetailsModal
         open={showRevenueModal}
