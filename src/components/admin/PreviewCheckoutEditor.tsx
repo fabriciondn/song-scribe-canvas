@@ -625,6 +625,9 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
                       onChange={(e) => setCfg({ coverBumpText: e.target.value })} />
                   </div>
                 )}
+              </section>
+
+
 
               {/* Blocos customizados */}
               <section className="space-y-2">
