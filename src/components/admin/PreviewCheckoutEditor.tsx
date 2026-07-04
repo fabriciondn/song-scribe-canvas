@@ -260,23 +260,23 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
   // slots visuais fake para o preview (sem lógica real de compra)
   const previewSlots = {
     tracks: (
-      <Card className="p-4 space-y-3 text-foreground bg-black/40 border-white/10">
+      <Card className="p-4 space-y-3 bg-slate-50 border-slate-200 text-slate-900">
         <div className="text-sm opacity-80">Selecione as faixas que deseja liberar para download</div>
         <div className="space-y-2">
           {['Faixa 1', 'Faixa 2'].map((n) => (
-            <div key={n} className="flex items-center gap-2 p-2 rounded border border-white/10">
-              <div className="h-4 w-4 rounded border border-white/30" />
+            <div key={n} className="flex items-center gap-2 p-2 rounded border border-slate-200 bg-white">
+              <div className="h-4 w-4 rounded border border-slate-300" />
               <span className="text-sm">{n}</span>
             </div>
           ))}
         </div>
         <div className="text-center text-sm opacity-70">
-          Total: <span className="font-bold text-base" style={{ color: merged.primary }}>R$ 49,99</span>
+          Total: <span className="font-bold text-base" style={{ color: merged.primary ?? '#22c55e' }}>R$ 49,99</span>
         </div>
         <button
           type="button"
           className="w-full h-10 rounded-md font-semibold text-white"
-          style={{ backgroundColor: merged.primary }}
+          style={{ backgroundColor: merged.primary ?? '#22c55e' }}
         >
           {merged.ctaLabel}
         </button>
