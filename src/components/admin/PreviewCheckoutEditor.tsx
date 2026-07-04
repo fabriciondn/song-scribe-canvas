@@ -214,6 +214,36 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
 
   const clearBanner = () => setBannerUrl(null);
 
+  const handleCoverFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!/^image\//.test(file.type)) {
+      toast.error('Envie uma imagem');
+      return;
+    }
+    setUploadingCover(true);
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const key = isGlobal ? 'global' : previewId;
+      const path = `${key}/cover-${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('preview-banners')
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage
+        .from('preview-banners').getPublicUrl(path);
+      setCfg({ coverUrl: pub.publicUrl });
+      toast.success('Capa enviada');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro no upload');
+    } finally {
+      setUploadingCover(false);
+      if (coverRef.current) coverRef.current.value = '';
+    }
+  };
+
+  const clearCover = () => setCfg({ coverUrl: undefined });
+
   const resetToTemplate = () => {
     if (isGlobal) return;
     setBannerUrl(null);
