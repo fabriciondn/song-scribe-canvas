@@ -71,6 +71,11 @@ export const AdminMusicPreviews: React.FC = () => {
   const [editTrackPosition, setEditTrackPosition] = useState(0);
   const [savingTrack, setSavingTrack] = useState(false);
 
+  // Editor de checkout
+  const [checkoutEditorOpen, setCheckoutEditorOpen] = useState(false);
+  const [checkoutEditorPreviewId, setCheckoutEditorPreviewId] = useState<string | null>(null);
+
+
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
