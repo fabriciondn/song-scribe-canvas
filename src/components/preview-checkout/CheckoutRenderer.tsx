@@ -25,6 +25,7 @@ export interface CheckoutRendererProps {
   slots: Partial<Record<'tracks' | 'bonus' | 'upsell', React.ReactNode>>;
   footer?: React.ReactNode;
   contentBefore?: React.ReactNode; // ex: player de faixas antes do checkout
+  showCover?: boolean; // controla exibição da capa quadrada (single/slide)
 }
 
 const variantClasses: Record<NonNullable<CustomTextBlock['variant']>, string> = {
