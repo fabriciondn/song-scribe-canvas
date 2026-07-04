@@ -37,6 +37,7 @@ export const DEFAULT_CONFIG: {
   primary?: string;
   bg?: string;
   fg?: string;
+  coverUrl?: string;
   headline: string;
   subheadline: string;
   ctaLabel: string;
@@ -57,6 +58,7 @@ export const DEFAULT_CONFIG: {
   primary: undefined,
   bg: undefined,
   fg: undefined,
+  coverUrl: undefined,
   headline: 'Prévia para {client_name}',
   subheadline: '{project_title}',
   ctaLabel: 'Gerar PIX e liberar download',
