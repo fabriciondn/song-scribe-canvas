@@ -422,26 +422,82 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
                 <p className="text-xs text-muted-foreground">
                   Imagem quadrada exibida acima do título. Ideal: 800x800px.
                 </p>
-                {merged.coverUrl ? (
-                  <div className="relative w-40 h-40 rounded-lg overflow-hidden border">
-                    <img src={merged.coverUrl} className="w-full h-full object-cover" alt="Capa" />
-                    <div className="absolute top-1 right-1 flex gap-1">
-                      <Button size="sm" variant="secondary" onClick={() => coverRef.current?.click()}>
-                        <Upload className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={clearCover}>
-                        <Trash2 className="h-3 w-3" />
+
+                {/* Toggle single/slide */}
+                <div className="inline-flex rounded-md border overflow-hidden">
+                  {(['single', 'slide'] as const).map((t) => {
+                    const active = (merged.coverType ?? 'single') === t;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setCfg({ coverType: t })}
+                        className={`px-3 h-8 text-xs font-medium transition ${
+                          active ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'
+                        }`}
+                      >
+                        {t === 'single' ? 'Imagem única' : 'Slide (várias)'}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {(merged.coverType ?? 'single') === 'single' ? (
+                  merged.coverUrl ? (
+                    <div className="relative w-40 h-40 rounded-lg overflow-hidden border">
+                      <img src={merged.coverUrl} className="w-full h-full object-cover" alt="Capa" />
+                      <div className="absolute top-1 right-1 flex gap-1">
+                        <Button size="sm" variant="secondary" onClick={() => coverRef.current?.click()}>
+                          <Upload className="h-3 w-3" />
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={clearCover}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button variant="outline" className="w-40 h-40 border-dashed flex-col"
+                      onClick={() => coverRef.current?.click()} disabled={uploadingCover}>
+                      {uploadingCover ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      <span className="text-xs mt-1">Enviar capa 1:1</span>
+                    </Button>
+                  )
+                ) : (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      {(merged.coverUrls || []).map((url) => (
+                        <div key={url} className="relative aspect-square rounded-lg overflow-hidden border group">
+                          <img src={url} className="w-full h-full object-cover" alt="Capa" />
+                          <button
+                            type="button"
+                            onClick={() => removeSlideCover(url)}
+                            className="absolute top-1 right-1 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                            title="Remover"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                      <Button variant="outline" className="aspect-square border-dashed h-auto flex-col"
+                        onClick={() => coverRef.current?.click()} disabled={uploadingCover}>
+                        {uploadingCover ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                        <span className="text-[10px] mt-1">Adicionar</span>
                       </Button>
                     </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Você pode selecionar várias imagens de uma vez. Elas serão exibidas em carrossel automático.
+                    </p>
                   </div>
-                ) : (
-                  <Button variant="outline" className="w-40 h-40 border-dashed flex-col"
-                    onClick={() => coverRef.current?.click()} disabled={uploadingCover}>
-                    {uploadingCover ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    <span className="text-xs mt-1">Enviar capa 1:1</span>
-                  </Button>
                 )}
-                <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
+
+                <input
+                  ref={coverRef}
+                  type="file"
+                  accept="image/*"
+                  multiple={(merged.coverType ?? 'single') === 'slide'}
+                  className="hidden"
+                  onChange={handleCoverFile}
+                />
               </section>
 
               {/* Cores */}
