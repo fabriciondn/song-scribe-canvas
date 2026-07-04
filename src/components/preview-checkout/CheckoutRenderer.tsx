@@ -25,6 +25,7 @@ export interface CheckoutRendererProps {
   slots: Partial<Record<'tracks' | 'bonus' | 'upsell', React.ReactNode>>;
   footer?: React.ReactNode;
   contentBefore?: React.ReactNode; // ex: player de faixas antes do checkout
+  showCover?: boolean; // controla exibição da capa quadrada (single/slide)
 }
 
 const variantClasses: Record<NonNullable<CustomTextBlock['variant']>, string> = {
@@ -54,6 +55,7 @@ export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
   slots,
   footer,
   contentBefore,
+  showCover = true,
 }) => {
   const cfg = { ...DEFAULT_CONFIG, ...config } as typeof DEFAULT_CONFIG;
   const order = ensureOrderIntegrity(cfg.order || [], cfg.customBlocks || []);
@@ -109,7 +111,7 @@ export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
           </div>
         ) : null}
 
-        {(() => {
+        {showCover && (() => {
           const isSlide = cfg.coverType === 'slide';
           const slideImgs = (cfg.coverUrls || []).filter(Boolean);
           if (isSlide && slideImgs.length > 0) {
