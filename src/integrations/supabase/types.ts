@@ -1593,6 +1593,8 @@ export type Database = {
       music_previews: {
         Row: {
           admin_user_id: string
+          banner_url: string | null
+          checkout_config: Json | null
           client_comment: string | null
           client_name: string
           created_at: string
@@ -1607,6 +1609,8 @@ export type Database = {
         }
         Insert: {
           admin_user_id: string
+          banner_url?: string | null
+          checkout_config?: Json | null
           client_comment?: string | null
           client_name: string
           created_at?: string
@@ -1621,6 +1625,8 @@ export type Database = {
         }
         Update: {
           admin_user_id?: string
+          banner_url?: string | null
+          checkout_config?: Json | null
           client_comment?: string | null
           client_name?: string
           created_at?: string
@@ -2013,6 +2019,36 @@ export type Database = {
           is_active?: boolean
           style?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      preview_checkout_template: {
+        Row: {
+          banner_url: string | null
+          config: Json
+          created_at: string
+          id: string
+          scope: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          banner_url?: string | null
+          config?: Json
+          created_at?: string
+          id?: string
+          scope?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          banner_url?: string | null
+          config?: Json
+          created_at?: string
+          id?: string
+          scope?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -2940,6 +2976,7 @@ export type Database = {
         }[]
       }
       get_online_users_count: { Args: never; Returns: number }
+      get_preview_checkout_template: { Args: never; Returns: Json }
       get_public_composer_profile: { Args: { p_slug: string }; Returns: Json }
       get_public_composers: {
         Args: { p_limit?: number }

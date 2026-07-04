@@ -11,9 +11,10 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
-  Music, Plus, Copy, Trash2, Upload, ExternalLink, Loader2, CheckCircle2, XCircle, Clock, MapPin, Headphones, Pencil, RefreshCw,
+  Music, Plus, Copy, Trash2, Upload, ExternalLink, Loader2, CheckCircle2, XCircle, Clock, MapPin, Headphones, Pencil, RefreshCw, Sparkles,
 } from 'lucide-react';
 import { generateUniquePreviewSlug } from '@/lib/previewSlug';
+import { PreviewCheckoutEditor } from '@/components/admin/PreviewCheckoutEditor';
 
 interface Preview {
   id: string;
@@ -69,6 +70,11 @@ export const AdminMusicPreviews: React.FC = () => {
   const [editTrackSeconds, setEditTrackSeconds] = useState(30);
   const [editTrackPosition, setEditTrackPosition] = useState(0);
   const [savingTrack, setSavingTrack] = useState(false);
+
+  // Editor de checkout
+  const [checkoutEditorOpen, setCheckoutEditorOpen] = useState(false);
+  const [checkoutEditorPreviewId, setCheckoutEditorPreviewId] = useState<string | null>(null);
+
 
   const load = async () => {
     setLoading(true);
@@ -389,6 +395,10 @@ export const AdminMusicPreviews: React.FC = () => {
             Envie prévias de produção musical com tempo limitado de reprodução. Sem download.
           </p>
         </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => { setCheckoutEditorPreviewId(null); setCheckoutEditorOpen(true); }}>
+            <Sparkles className="h-4 w-4" />Editar Checkout (Global)
+          </Button>
         <Dialog open={newDialog} onOpenChange={setNewDialog}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4" />Nova Prévia</Button>
@@ -413,6 +423,7 @@ export const AdminMusicPreviews: React.FC = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -460,6 +471,9 @@ export const AdminMusicPreviews: React.FC = () => {
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="outline" onClick={openEditPreview}>
                       <Pencil className="h-4 w-4" />Editar
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => { setCheckoutEditorPreviewId(selectedPreview.id); setCheckoutEditorOpen(true); }}>
+                      <Sparkles className="h-4 w-4" />Personalizar checkout
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => copyLink(selectedPreview)}>
                       <Copy className="h-4 w-4" />Copiar link
@@ -708,6 +722,23 @@ export const AdminMusicPreviews: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PreviewCheckoutEditor
+        open={checkoutEditorOpen}
+        onClose={() => setCheckoutEditorOpen(false)}
+        previewId={checkoutEditorPreviewId}
+        clientName={
+          checkoutEditorPreviewId
+            ? (previews.find((p) => p.id === checkoutEditorPreviewId)?.client_name || 'Cliente')
+            : 'Cliente'
+        }
+        projectTitle={
+          checkoutEditorPreviewId
+            ? previews.find((p) => p.id === checkoutEditorPreviewId)?.project_title || null
+            : null
+        }
+        onSaved={load}
+      />
     </div>
   );
 };
