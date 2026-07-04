@@ -815,7 +815,13 @@ const PurchaseFlowInternal: React.FC<{
         </div>
         <div className="text-center text-sm opacity-80">
           Total: <span className="font-bold text-lg" style={{ color: cfg.primary }}>R$ {total.toFixed(2).replace('.', ',')}</span>
-          {includeReg && <span className="block text-xs">Faixas R$ 49,99 + Registro R$ 19,99</span>}
+          {(includeReg || coverEffectivelyIncluded) && (
+            <span className="block text-xs">
+              Faixas R$ 49,99
+              {includeReg && ' + Registro R$ 19,99'}
+              {coverEffectivelyIncluded && ' + Capa R$ 4,99'}
+            </span>
+          )}
         </div>
         <Button className="w-full text-white" onClick={startOrder} disabled={creatingOrder || selected.length === 0}
           style={{ backgroundColor: cfg.primary }}
