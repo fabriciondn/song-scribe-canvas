@@ -32,13 +32,30 @@ export interface CheckoutConfig {
   order?: BlockId[];       // ordem dos blocos exibidos na etapa de checkout
 }
 
-export const DEFAULT_CONFIG: Required<Omit<CheckoutConfig, 'customBlocks' | 'order'>> & {
+export const DEFAULT_CONFIG: {
+  primary?: string;
+  bg?: string;
+  fg?: string;
+  headline: string;
+  subheadline: string;
+  ctaLabel: string;
+  bonusEnabled: boolean;
+  bonusTitle: string;
+  bonusText: string;
+  upsellEnabled: boolean;
+  upsellTitle: string;
+  upsellText: string;
+  upsellBadge: string;
+  upsellPriceLabel: string;
+  upsellOldPriceLabel: string;
   customBlocks: CustomTextBlock[];
   order: BlockId[];
 } = {
-  primary: '#22c55e',
-  bg: '#0a0a0a',
-  fg: '#fafafa',
+  // Cores em undefined por padrão: o checkout preserva o tema original
+  // (bg-background, text-foreground, primary do design system).
+  primary: undefined,
+  bg: undefined,
+  fg: undefined,
   headline: 'Prévia para {client_name}',
   subheadline: '{project_title}',
   ctaLabel: 'Gerar PIX e liberar download',
