@@ -56,7 +56,10 @@ export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
 }) => {
   const cfg = { ...DEFAULT_CONFIG, ...config } as typeof DEFAULT_CONFIG;
   const order = ensureOrderIntegrity(cfg.order || [], cfg.customBlocks || []);
-  const headline = interpolate(cfg.headline || '', { clientName, projectTitle } as any);
+  const headline = interpolate(cfg.headline || '', {
+    client_name: clientName,
+    project_title: projectTitle ?? '',
+  });
   const subheadline = interpolate(cfg.subheadline || '', {
     client_name: clientName,
     project_title: projectTitle ?? '',
