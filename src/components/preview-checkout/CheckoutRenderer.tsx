@@ -54,13 +54,6 @@ export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
   config,
   slots,
   footer,
-export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
-  clientName,
-  projectTitle,
-  bannerUrl,
-  config,
-  slots,
-  footer,
   contentBefore,
   showCover = true,
 }) => {
