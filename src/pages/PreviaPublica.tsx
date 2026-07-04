@@ -493,6 +493,96 @@ const PreviaPublica: React.FC = () => {
       </label>
     ) : null;
 
+    // Order-bump: Capa personalizada (+R$ 4,99)
+    const availableCovers: string[] = (() => {
+      if (cfg.coverType === 'slide') {
+        return (cfg.coverUrls || []).filter(Boolean);
+      }
+      return cfg.coverUrl ? [cfg.coverUrl] : [];
+    })();
+
+    const coverBumpBlock =
+      cfg.coverBumpEnabled && availableCovers.length > 0 ? (
+        <div
+          className="p-4 rounded-xl border-2 transition"
+          style={{
+            borderColor: includeCover ? cfg.primary : `${cfg.primary}66`,
+            backgroundColor: includeCover ? `${cfg.primary}1a` : `${cfg.primary}0d`,
+            borderStyle: includeCover ? 'solid' : 'dashed',
+          }}
+        >
+          <label className="flex items-start gap-3 cursor-pointer">
+            <Checkbox
+              checked={includeCover}
+              onCheckedChange={(v) => {
+                const on = !!v;
+                setIncludeCover(on);
+                if (on && !selectedCoverUrl && availableCovers[0]) {
+                  setSelectedCoverUrl(availableCovers[0]);
+                }
+              }}
+              className="mt-1"
+            />
+            <div className="flex-1 space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span
+                  className="text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded text-white"
+                  style={{ backgroundColor: cfg.primary }}
+                >
+                  {cfg.coverBumpBadge}
+                </span>
+                <span className="text-base font-bold" style={{ color: cfg.primary }}>
+                  + {cfg.coverBumpPriceLabel}
+                </span>
+              </div>
+              <div className="font-semibold text-sm">{cfg.coverBumpTitle}</div>
+              <div className="text-sm opacity-90">{cfg.coverBumpText}</div>
+            </div>
+          </label>
+
+          {includeCover && (
+            <div className="mt-3">
+              <div className="text-xs font-semibold mb-2 opacity-80">
+                Escolha a capa que você quer:
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {availableCovers.map((url) => {
+                  const active = selectedCoverUrl === url;
+                  return (
+                    <button
+                      type="button"
+                      key={url}
+                      onClick={() => setSelectedCoverUrl(url)}
+                      className="relative rounded-lg overflow-hidden border-2 transition aspect-square"
+                      style={{
+                        borderColor: active ? cfg.primary : 'transparent',
+                        boxShadow: active ? `0 0 0 2px ${cfg.primary}55` : undefined,
+                      }}
+                    >
+                      <img
+                        src={url}
+                        alt="Opção de capa"
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                        onContextMenu={(e) => e.preventDefault()}
+                      />
+                      {active && (
+                        <span
+                          className="absolute top-1 right-1 h-5 w-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                          style={{ backgroundColor: cfg.primary }}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : null;
+
     return (
       <CheckoutRenderer
         clientName={data.client_name}
@@ -508,10 +598,17 @@ const PreviaPublica: React.FC = () => {
               token={token}
               cfg={cfg}
               includeReg={includeReg}
+              includeCover={includeCover}
+              selectedCoverUrl={selectedCoverUrl}
             />
           ),
           bonus: bonusBlock,
-          upsell: upsellBlock,
+          upsell: (
+            <>
+              {upsellBlock}
+              {coverBumpBlock}
+            </>
+          ),
         }}
       />
     );
