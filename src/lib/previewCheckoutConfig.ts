@@ -13,7 +13,9 @@ export interface CheckoutConfig {
   primary?: string;        // cor primária (hex)
   bg?: string;             // cor de fundo (hex)
   fg?: string;             // cor do texto (hex)
-  coverUrl?: string;       // capa quadrada 1x1 da música
+  coverUrl?: string;       // capa quadrada 1x1 da música (modo single)
+  coverType?: 'single' | 'slide'; // tipo da capa
+  coverUrls?: string[];    // capas quadradas 1x1 (modo slide/carrossel)
   headline?: string;       // {client_name} e {project_title} são substituídos
   subheadline?: string;
   ctaLabel?: string;
