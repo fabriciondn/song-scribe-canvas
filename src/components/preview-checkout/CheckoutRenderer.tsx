@@ -88,10 +88,10 @@ export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
     return null;
   };
 
-  // Se o admin não configurou cores, usa o tema semântico original
+  // Se o admin não configurou cores, usa fundo claro fixo (independente do tema do app)
   const baseClass = cfg.bg
     ? 'min-h-full py-6 px-4 select-none'
-    : 'min-h-full py-6 px-4 select-none bg-gradient-to-br from-background via-background to-secondary/20 text-foreground';
+    : 'min-h-full py-6 px-4 select-none bg-white text-slate-900';
 
   return (
     <div className={baseClass} style={cssVars}>
