@@ -54,7 +54,15 @@ export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
   config,
   slots,
   footer,
+export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
+  clientName,
+  projectTitle,
+  bannerUrl,
+  config,
+  slots,
+  footer,
   contentBefore,
+  showCover = true,
 }) => {
   const cfg = { ...DEFAULT_CONFIG, ...config } as typeof DEFAULT_CONFIG;
   const order = ensureOrderIntegrity(cfg.order || [], cfg.customBlocks || []);
