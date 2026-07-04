@@ -31,6 +31,13 @@ export interface CheckoutConfig {
   upsellPriceLabel?: string;      // ex: "R$ 19,99"
   upsellOldPriceLabel?: string;   // ex: "R$ 40,00"
 
+  // Order-bump: Capa personalizada (+R$ 4,99)
+  coverBumpEnabled?: boolean;
+  coverBumpTitle?: string;
+  coverBumpText?: string;
+  coverBumpBadge?: string;
+  coverBumpPriceLabel?: string;   // ex: "R$ 4,99"
+
   customBlocks?: CustomTextBlock[];
   order?: BlockId[];       // ordem dos blocos exibidos na etapa de checkout
 }
@@ -54,6 +61,11 @@ export const DEFAULT_CONFIG: {
   upsellBadge: string;
   upsellPriceLabel: string;
   upsellOldPriceLabel: string;
+  coverBumpEnabled: boolean;
+  coverBumpTitle: string;
+  coverBumpText: string;
+  coverBumpBadge: string;
+  coverBumpPriceLabel: string;
   customBlocks: CustomTextBlock[];
   order: BlockId[];
 } = {
@@ -77,6 +89,12 @@ export const DEFAULT_CONFIG: {
   upsellBadge: 'Oferta exclusiva',
   upsellPriceLabel: 'R$ 19,99',
   upsellOldPriceLabel: 'R$ 40,00',
+  coverBumpEnabled: true,
+  coverBumpTitle: '🎨 Capa personalizada para sua música',
+  coverBumpText:
+    'Adicione uma capa exclusiva no formato certo para publicar nas plataformas de streaming. Escolha abaixo qual capa você quer levar.',
+  coverBumpBadge: 'Bump exclusivo',
+  coverBumpPriceLabel: 'R$ 4,99',
   customBlocks: [],
   order: ['tracks', 'bonus', 'upsell'],
 };

@@ -170,6 +170,9 @@ interface OrderState {
   pix_br_code?: string;
   payment_url?: string;
   selected_track_ids: string[];
+  includes_registration?: boolean;
+  includes_cover?: boolean;
+  selected_cover_url?: string | null;
   tracks: { id: string; track_name: string; storage_path: string }[];
 }
 
@@ -334,6 +337,8 @@ const PreviaPublica: React.FC = () => {
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [includeReg, setIncludeReg] = useState(false);
+  const [includeCover, setIncludeCover] = useState(false);
+  const [selectedCoverUrl, setSelectedCoverUrl] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -491,6 +496,96 @@ const PreviaPublica: React.FC = () => {
       </label>
     ) : null;
 
+    // Order-bump: Capa personalizada (+R$ 4,99)
+    const availableCovers: string[] = (() => {
+      if (cfg.coverType === 'slide') {
+        return (cfg.coverUrls || []).filter(Boolean);
+      }
+      return cfg.coverUrl ? [cfg.coverUrl] : [];
+    })();
+
+    const coverBumpBlock =
+      cfg.coverBumpEnabled && availableCovers.length > 0 ? (
+        <div
+          className="p-4 rounded-xl border-2 transition"
+          style={{
+            borderColor: includeCover ? cfg.primary : `${cfg.primary}66`,
+            backgroundColor: includeCover ? `${cfg.primary}1a` : `${cfg.primary}0d`,
+            borderStyle: includeCover ? 'solid' : 'dashed',
+          }}
+        >
+          <label className="flex items-start gap-3 cursor-pointer">
+            <Checkbox
+              checked={includeCover}
+              onCheckedChange={(v) => {
+                const on = !!v;
+                setIncludeCover(on);
+                if (on && !selectedCoverUrl && availableCovers[0]) {
+                  setSelectedCoverUrl(availableCovers[0]);
+                }
+              }}
+              className="mt-1"
+            />
+            <div className="flex-1 space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span
+                  className="text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded text-white"
+                  style={{ backgroundColor: cfg.primary }}
+                >
+                  {cfg.coverBumpBadge}
+                </span>
+                <span className="text-base font-bold" style={{ color: cfg.primary }}>
+                  + {cfg.coverBumpPriceLabel}
+                </span>
+              </div>
+              <div className="font-semibold text-sm">{cfg.coverBumpTitle}</div>
+              <div className="text-sm opacity-90">{cfg.coverBumpText}</div>
+            </div>
+          </label>
+
+          {includeCover && (
+            <div className="mt-3">
+              <div className="text-xs font-semibold mb-2 opacity-80">
+                Escolha a capa que você quer:
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {availableCovers.map((url) => {
+                  const active = selectedCoverUrl === url;
+                  return (
+                    <button
+                      type="button"
+                      key={url}
+                      onClick={() => setSelectedCoverUrl(url)}
+                      className="relative rounded-lg overflow-hidden border-2 transition aspect-square"
+                      style={{
+                        borderColor: active ? cfg.primary : 'transparent',
+                        boxShadow: active ? `0 0 0 2px ${cfg.primary}55` : undefined,
+                      }}
+                    >
+                      <img
+                        src={url}
+                        alt="Opção de capa"
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                        onContextMenu={(e) => e.preventDefault()}
+                      />
+                      {active && (
+                        <span
+                          className="absolute top-1 right-1 h-5 w-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                          style={{ backgroundColor: cfg.primary }}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : null;
+
     return (
       <CheckoutRenderer
         clientName={data.client_name}
@@ -506,10 +601,17 @@ const PreviaPublica: React.FC = () => {
               token={token}
               cfg={cfg}
               includeReg={includeReg}
+              includeCover={includeCover}
+              selectedCoverUrl={selectedCoverUrl}
             />
           ),
           bonus: bonusBlock,
-          upsell: upsellBlock,
+          upsell: (
+            <>
+              {upsellBlock}
+              {coverBumpBlock}
+            </>
+          ),
         }}
       />
     );
@@ -536,8 +638,19 @@ const PurchaseFlowController: React.FC<{
   token: string;
   cfg: typeof DEFAULT_CONFIG;
   includeReg: boolean;
-}> = ({ preview, token, cfg, includeReg }) => {
-  return <PurchaseFlowInternal preview={preview} token={token} cfg={cfg} includeReg={includeReg} />;
+  includeCover: boolean;
+  selectedCoverUrl: string | null;
+}> = ({ preview, token, cfg, includeReg, includeCover, selectedCoverUrl }) => {
+  return (
+    <PurchaseFlowInternal
+      preview={preview}
+      token={token}
+      cfg={cfg}
+      includeReg={includeReg}
+      includeCover={includeCover}
+      selectedCoverUrl={selectedCoverUrl}
+    />
+  );
 };
 
 const PurchaseFlowInternal: React.FC<{
@@ -545,7 +658,9 @@ const PurchaseFlowInternal: React.FC<{
   token: string;
   cfg: typeof DEFAULT_CONFIG;
   includeReg: boolean;
-}> = ({ preview, token, cfg, includeReg }) => {
+  includeCover: boolean;
+  selectedCoverUrl: string | null;
+}> = ({ preview, token, cfg, includeReg, includeCover, selectedCoverUrl }) => {
   const [selected, setSelected] = useState<string[]>(preview.tracks.map(t => t.id));
   const [order, setOrder] = useState<OrderState | null>(null);
   const [creatingOrder, setCreatingOrder] = useState(false);
@@ -554,11 +669,17 @@ const PurchaseFlowInternal: React.FC<{
   const toggle = (id: string) =>
     setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
 
-  const total = 49.99 + (includeReg ? 19.99 : 0);
+  const coverEffectivelyIncluded = includeCover && !!selectedCoverUrl;
+  const total =
+    49.99 + (includeReg ? 19.99 : 0) + (coverEffectivelyIncluded ? 4.99 : 0);
 
   const startOrder = async () => {
     if (selected.length === 0) {
       toast.error('Selecione ao menos uma faixa');
+      return;
+    }
+    if (includeCover && !selectedCoverUrl) {
+      toast.error('Escolha uma capa para adicionar ao pedido');
       return;
     }
     setCreatingOrder(true);
@@ -566,6 +687,8 @@ const PurchaseFlowInternal: React.FC<{
       p_token: token,
       p_track_ids: selected,
       p_includes_registration: includeReg,
+      p_includes_cover: coverEffectivelyIncluded,
+      p_selected_cover_url: coverEffectivelyIncluded ? selectedCoverUrl : null,
     });
     if (error || !(res as any)?.success) {
       setCreatingOrder(false);
@@ -638,6 +761,19 @@ const PurchaseFlowInternal: React.FC<{
     return (
       <Card className="bg-white/5 border-white/10 text-foreground">
         <CardContent className="p-4 space-y-3 text-center">
+          {order.includes_cover && order.selected_cover_url && (
+            <div className="flex justify-center">
+              <div className="w-40 h-40 rounded-2xl overflow-hidden border border-white/10 shadow-lg">
+                <img
+                  src={order.selected_cover_url}
+                  alt="Capa escolhida"
+                  className="w-full h-full object-cover"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                />
+              </div>
+            </div>
+          )}
           <div className="font-semibold flex items-center justify-center gap-2">
             <QrCode className="h-5 w-5" /> Pague R$ {Number(order.amount).toFixed(2).replace('.', ',')} via PIX
           </div>
@@ -679,7 +815,13 @@ const PurchaseFlowInternal: React.FC<{
         </div>
         <div className="text-center text-sm opacity-80">
           Total: <span className="font-bold text-lg" style={{ color: cfg.primary }}>R$ {total.toFixed(2).replace('.', ',')}</span>
-          {includeReg && <span className="block text-xs">Faixas R$ 49,99 + Registro R$ 19,99</span>}
+          {(includeReg || coverEffectivelyIncluded) && (
+            <span className="block text-xs">
+              Faixas R$ 49,99
+              {includeReg && ' + Registro R$ 19,99'}
+              {coverEffectivelyIncluded && ' + Capa R$ 4,99'}
+            </span>
+          )}
         </div>
         <Button className="w-full text-white" onClick={startOrder} disabled={creatingOrder || selected.length === 0}
           style={{ backgroundColor: cfg.primary }}
