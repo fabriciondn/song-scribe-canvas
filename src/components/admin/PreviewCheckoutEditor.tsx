@@ -200,9 +200,10 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
         .from('preview-banners')
         .upload(path, file, { contentType: file.type, upsert: false });
       if (upErr) throw upErr;
-      const { data: pub } = supabase.storage
-        .from('preview-banners').getPublicUrl(path);
-      setBannerUrl(pub.publicUrl);
+      const { data: signed, error: sErr } = await supabase.storage
+        .from('preview-banners').createSignedUrl(path, 60 * 60 * 24 * 365 * 10); // 10 anos
+      if (sErr) throw sErr;
+      setBannerUrl(signed.signedUrl);
       toast.success('Imagem enviada');
     } catch (err: any) {
       toast.error(err.message || 'Erro no upload');
