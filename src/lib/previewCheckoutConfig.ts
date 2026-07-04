@@ -76,8 +76,8 @@ export function interpolate(
   vars: { client_name?: string; project_title?: string | null },
 ): string {
   return (str || '')
-    .replaceAll('{client_name}', vars.client_name || '')
-    .replaceAll('{project_title}', vars.project_title || '');
+    .split('{client_name}').join(vars.client_name || '')
+    .split('{project_title}').join(vars.project_title || '');
 }
 
 export function ensureOrderIntegrity(
