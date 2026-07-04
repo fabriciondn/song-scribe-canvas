@@ -374,9 +374,9 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { key: 'primary', label: 'Primária' },
-                    { key: 'bg', label: 'Fundo' },
-                    { key: 'fg', label: 'Texto' },
+                    { key: 'primary', label: 'Primária', fallback: '#22c55e' },
+                    { key: 'bg', label: 'Fundo', fallback: '#ffffff' },
+                    { key: 'fg', label: 'Texto', fallback: '#0a0a0a' },
                   ].map((c) => (
                     <div key={c.key}>
                       <Label className="text-xs">{c.label}</Label>
@@ -384,15 +384,16 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
                         <input
                           type="color"
                           className="h-9 w-10 rounded border cursor-pointer bg-transparent"
-                          value={(config as any)[c.key] ?? (templateData.config as any)[c.key] ?? (DEFAULT_CONFIG as any)[c.key]}
+                          value={(config as any)[c.key] ?? (templateData.config as any)[c.key] ?? c.fallback}
                           onChange={(e) => setCfg({ [c.key]: e.target.value } as any)}
                         />
                         <Input
                           className="h-9 flex-1 text-xs font-mono"
                           value={(config as any)[c.key] ?? ''}
                           onChange={(e) => setCfg({ [c.key]: e.target.value } as any)}
-                          placeholder={(templateData.config as any)[c.key] ?? (DEFAULT_CONFIG as any)[c.key]}
+                          placeholder={(templateData.config as any)[c.key] ?? 'padrão do tema'}
                         />
+
                       </div>
                     </div>
                   ))}

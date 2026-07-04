@@ -27,7 +27,7 @@ export interface CheckoutRendererProps {
 }
 
 const variantClasses: Record<NonNullable<CustomTextBlock['variant']>, string> = {
-  default: 'border-white/10 bg-white/5',
+  default: 'border-border bg-card',
   highlight: 'border-primary/40 bg-primary/10',
   success: 'border-green-500/40 bg-green-500/10',
   warning: 'border-yellow-500/40 bg-yellow-500/10',
@@ -56,19 +56,25 @@ export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
 }) => {
   const cfg = { ...DEFAULT_CONFIG, ...config } as typeof DEFAULT_CONFIG;
   const order = ensureOrderIntegrity(cfg.order || [], cfg.customBlocks || []);
-  const headline = interpolate(cfg.headline || '', { clientName, projectTitle } as any);
+  const headline = interpolate(cfg.headline || '', {
+    client_name: clientName,
+    project_title: projectTitle ?? '',
+  });
   const subheadline = interpolate(cfg.subheadline || '', {
     client_name: clientName,
     project_title: projectTitle ?? '',
   });
 
-  const cssVars: React.CSSProperties = {
-    ['--pcx-primary' as any]: cfg.primary,
-    ['--pcx-bg' as any]: cfg.bg,
-    ['--pcx-fg' as any]: cfg.fg,
-    backgroundColor: cfg.bg,
-    color: cfg.fg,
-  };
+  const cssVars: React.CSSProperties = {};
+  if (cfg.primary) (cssVars as any)['--pcx-primary'] = cfg.primary;
+  if (cfg.bg) {
+    (cssVars as any)['--pcx-bg'] = cfg.bg;
+    cssVars.backgroundColor = cfg.bg;
+  }
+  if (cfg.fg) {
+    (cssVars as any)['--pcx-fg'] = cfg.fg;
+    cssVars.color = cfg.fg;
+  }
 
   const renderBlock = (id: BlockId) => {
     if (id === 'tracks') return slots.tracks ?? null;
@@ -82,14 +88,16 @@ export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
     return null;
   };
 
+  // Se o admin não configurou cores, usa o tema semântico original
+  const baseClass = cfg.bg
+    ? 'min-h-full py-6 px-4 select-none'
+    : 'min-h-full py-6 px-4 select-none bg-gradient-to-br from-background via-background to-secondary/20 text-foreground';
+
   return (
-    <div
-      className="min-h-full py-6 px-4 select-none"
-      style={cssVars}
-    >
+    <div className={baseClass} style={cssVars}>
       <div className="max-w-2xl mx-auto space-y-5">
         {bannerUrl ? (
-          <div className="rounded-2xl overflow-hidden border border-white/10">
+          <div className="rounded-2xl overflow-hidden border border-border">
             <img
               src={bannerUrl}
               alt="Banner"
@@ -101,8 +109,8 @@ export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
         ) : (
           <div className="flex justify-center">
             <div
-              className="inline-flex items-center justify-center h-14 w-14 rounded-2xl"
-              style={{ background: `${cfg.primary}22`, color: cfg.primary }}
+              className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/10 text-primary"
+              style={cfg.primary ? { background: `${cfg.primary}22`, color: cfg.primary } : undefined}
             >
               <Music className="h-7 w-7" />
             </div>
