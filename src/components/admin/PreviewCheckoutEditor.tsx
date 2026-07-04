@@ -92,6 +92,8 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
   const [config, setConfig] = useState<CheckoutConfig>({});
   const [templateData, setTemplateData] = useState<LoadedData>({ banner_url: null, config: {} });
   const fileRef = useRef<HTMLInputElement>(null);
+  const coverRef = useRef<HTMLInputElement>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -211,6 +213,36 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
   };
 
   const clearBanner = () => setBannerUrl(null);
+
+  const handleCoverFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!/^image\//.test(file.type)) {
+      toast.error('Envie uma imagem');
+      return;
+    }
+    setUploadingCover(true);
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const key = isGlobal ? 'global' : previewId;
+      const path = `${key}/cover-${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('preview-banners')
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage
+        .from('preview-banners').getPublicUrl(path);
+      setCfg({ coverUrl: pub.publicUrl });
+      toast.success('Capa enviada');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro no upload');
+    } finally {
+      setUploadingCover(false);
+      if (coverRef.current) coverRef.current.value = '';
+    }
+  };
+
+  const clearCover = () => setCfg({ coverUrl: undefined });
 
   const resetToTemplate = () => {
     if (isGlobal) return;
@@ -361,10 +393,40 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
                   <Button variant="outline" className="w-full h-24 border-dashed"
                     onClick={() => fileRef.current?.click()} disabled={uploading}>
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    Enviar imagem de capa
+                    Enviar imagem de banner (retangular)
                   </Button>
                 )}
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+              </section>
+
+              {/* Capa quadrada 1x1 */}
+              <section className="space-y-2">
+                <div className="text-sm font-semibold flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />Capa da música (quadrada 1:1)
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Imagem quadrada exibida acima do título. Ideal: 800x800px.
+                </p>
+                {merged.coverUrl ? (
+                  <div className="relative w-40 h-40 rounded-lg overflow-hidden border">
+                    <img src={merged.coverUrl} className="w-full h-full object-cover" alt="Capa" />
+                    <div className="absolute top-1 right-1 flex gap-1">
+                      <Button size="sm" variant="secondary" onClick={() => coverRef.current?.click()}>
+                        <Upload className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={clearCover}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button variant="outline" className="w-40 h-40 border-dashed flex-col"
+                    onClick={() => coverRef.current?.click()} disabled={uploadingCover}>
+                    {uploadingCover ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    <span className="text-xs mt-1">Enviar capa 1:1</span>
+                  </Button>
+                )}
+                <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
               </section>
 
               {/* Cores */}

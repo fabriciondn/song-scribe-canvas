@@ -13,6 +13,7 @@ export interface CheckoutConfig {
   primary?: string;        // cor primária (hex)
   bg?: string;             // cor de fundo (hex)
   fg?: string;             // cor do texto (hex)
+  coverUrl?: string;       // capa quadrada 1x1 da música
   headline?: string;       // {client_name} e {project_title} são substituídos
   subheadline?: string;
   ctaLabel?: string;
@@ -36,6 +37,7 @@ export const DEFAULT_CONFIG: {
   primary?: string;
   bg?: string;
   fg?: string;
+  coverUrl?: string;
   headline: string;
   subheadline: string;
   ctaLabel: string;
@@ -56,6 +58,7 @@ export const DEFAULT_CONFIG: {
   primary: undefined,
   bg: undefined,
   fg: undefined,
+  coverUrl: undefined,
   headline: 'Prévia para {client_name}',
   subheadline: '{project_title}',
   ctaLabel: 'Gerar PIX e liberar download',

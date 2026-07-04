@@ -106,7 +106,21 @@ export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
               onContextMenu={(e) => e.preventDefault()}
             />
           </div>
-        ) : (
+        ) : null}
+
+        {cfg.coverUrl ? (
+          <div className="flex justify-center">
+            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-2xl overflow-hidden border border-border shadow-lg">
+              <img
+                src={cfg.coverUrl}
+                alt="Capa da música"
+                className="w-full h-full object-cover"
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            </div>
+          </div>
+        ) : !bannerUrl ? (
           <div className="flex justify-center">
             <div
               className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/10 text-primary"
@@ -115,7 +129,7 @@ export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
               <Music className="h-7 w-7" />
             </div>
           </div>
-        )}
+        ) : null}
 
         <header className="text-center space-y-1">
           {headline && (
