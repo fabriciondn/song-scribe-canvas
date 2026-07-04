@@ -37,6 +37,31 @@ interface Track {
   position: number;
 }
 
+const MAX_MUSIC_PREVIEW_FILE_SIZE = 50 * 1024 * 1024;
+const ALLOWED_AUDIO_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'ogg'];
+const ALLOWED_AUDIO_MIME_TYPES = [
+  'audio/mpeg',
+  'audio/mp3',
+  'audio/wav',
+  'audio/x-wav',
+  'audio/mp4',
+  'audio/aac',
+  'audio/ogg',
+];
+
+const formatFileSize = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} MB`;
+
+const inferAudioContentType = (file: File) => {
+  if (ALLOWED_AUDIO_MIME_TYPES.includes(file.type)) return file.type;
+
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  if (ext === 'wav') return 'audio/wav';
+  if (ext === 'm4a') return 'audio/mp4';
+  if (ext === 'aac') return 'audio/aac';
+  if (ext === 'ogg') return 'audio/ogg';
+  return 'audio/mpeg';
+};
+
 export const AdminMusicPreviews: React.FC = () => {
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +73,7 @@ export const AdminMusicPreviews: React.FC = () => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [tracksLoading, setTracksLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
   const [newTrackName, setNewTrackName] = useState('');
   const [newTrackSeconds, setNewTrackSeconds] = useState(30);
   const [listens, setListens] = useState<any[]>([]);
@@ -324,6 +350,7 @@ export const AdminMusicPreviews: React.FC = () => {
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !selectedPreview) return;
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'mp3';
     if (!newTrackName.trim()) {
       toast.error('Informe o nome da faixa antes de selecionar o arquivo');
       e.target.value = '';
@@ -331,17 +358,29 @@ export const AdminMusicPreviews: React.FC = () => {
     }
     if (newTrackSeconds <= 0) {
       toast.error('Tempo de prévia inválido');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > MAX_MUSIC_PREVIEW_FILE_SIZE) {
+      toast.error(`Arquivo muito grande: ${formatFileSize(file.size)}. O limite é 50 MB.`);
+      e.target.value = '';
+      return;
+    }
+    if (!ALLOWED_AUDIO_EXTENSIONS.includes(ext) && !ALLOWED_AUDIO_MIME_TYPES.includes(file.type)) {
+      toast.error('Formato inválido. Envie MP3, WAV, M4A, AAC ou OGG.');
+      e.target.value = '';
       return;
     }
     setUploading(true);
+    setUploadStatus(`Enviando ${formatFileSize(file.size)}...`);
     try {
-      const ext = file.name.split('.').pop() || 'mp3';
       const path = `${selectedPreview.id}/${crypto.randomUUID()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from('music-previews')
-        .upload(path, file, { contentType: file.type, upsert: false });
+        .upload(path, file, { contentType: inferAudioContentType(file), upsert: false });
       if (upErr) throw upErr;
 
+      setUploadStatus('Salvando faixa...');
       const { error: insErr } = await supabase.from('music_preview_tracks').insert({
         preview_id: selectedPreview.id,
         track_name: newTrackName.trim(),
@@ -360,6 +399,7 @@ export const AdminMusicPreviews: React.FC = () => {
       toast.error(err.message || 'Erro no upload');
     } finally {
       setUploading(false);
+      setUploadStatus('');
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -560,6 +600,9 @@ export const AdminMusicPreviews: React.FC = () => {
                   <Button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="w-full">
                     {uploading ? <><Loader2 className="h-4 w-4 animate-spin" />Enviando...</> : <><Upload className="h-4 w-4" />Selecionar áudio MP3</>}
                   </Button>
+                  <p className="text-[11px] text-muted-foreground">
+                    {uploadStatus || 'Formatos aceitos: MP3, WAV, M4A, AAC ou OGG até 50 MB.'}
+                  </p>
                 </div>
 
                 <div className="space-y-2">
