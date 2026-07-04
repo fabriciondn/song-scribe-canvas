@@ -472,6 +472,9 @@ export const AdminMusicPreviews: React.FC = () => {
                     <Button size="sm" variant="outline" onClick={openEditPreview}>
                       <Pencil className="h-4 w-4" />Editar
                     </Button>
+                    <Button size="sm" variant="outline" onClick={() => { setCheckoutEditorPreviewId(selectedPreview.id); setCheckoutEditorOpen(true); }}>
+                      <Sparkles className="h-4 w-4" />Personalizar checkout
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => copyLink(selectedPreview)}>
                       <Copy className="h-4 w-4" />Copiar link
                     </Button>
