@@ -504,6 +504,8 @@ const PreviaPublica: React.FC = () => {
       return cfg.coverUrl ? [cfg.coverUrl] : [];
     })();
 
+    const previewCoverUrl = selectedCoverUrl || availableCovers[0] || null;
+
     const coverBumpBlock =
       cfg.coverBumpEnabled && availableCovers.length > 0 ? (
         <div
@@ -514,6 +516,24 @@ const PreviaPublica: React.FC = () => {
             borderStyle: includeCover ? 'solid' : 'dashed',
           }}
         >
+          {/* Preview grande da capa — aparece sempre para dar impulso visual */}
+          {previewCoverUrl && (
+            <div className="flex justify-center mb-4">
+              <div
+                className="w-56 h-56 sm:w-64 sm:h-64 rounded-xl overflow-hidden border shadow-lg"
+                style={{ borderColor: `${cfg.primary}55` }}
+              >
+                <img
+                  src={previewCoverUrl}
+                  alt="Prévia da capa personalizada"
+                  className="w-full h-full object-cover"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                />
+              </div>
+            </div>
+          )}
+
           <label className="flex items-start gap-3 cursor-pointer">
             <Checkbox
               checked={includeCover}
@@ -543,12 +563,12 @@ const PreviaPublica: React.FC = () => {
             </div>
           </label>
 
-          {includeCover && (
-            <div className="mt-3">
+          {includeCover && availableCovers.length > 1 && (
+            <div className="mt-4">
               <div className="text-xs font-semibold mb-2 opacity-80">
                 Escolha a capa que você quer:
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {availableCovers.map((url) => {
                   const active = selectedCoverUrl === url;
                   return (
@@ -559,7 +579,7 @@ const PreviaPublica: React.FC = () => {
                       className="relative rounded-lg overflow-hidden border-2 transition aspect-square"
                       style={{
                         borderColor: active ? cfg.primary : 'transparent',
-                        boxShadow: active ? `0 0 0 2px ${cfg.primary}55` : undefined,
+                        boxShadow: active ? `0 0 0 3px ${cfg.primary}55` : undefined,
                       }}
                     >
                       <img
@@ -571,7 +591,7 @@ const PreviaPublica: React.FC = () => {
                       />
                       {active && (
                         <span
-                          className="absolute top-1 right-1 h-5 w-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                          className="absolute top-1 right-1 h-6 w-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
                           style={{ backgroundColor: cfg.primary }}
                         >
                           ✓
@@ -585,6 +605,7 @@ const PreviaPublica: React.FC = () => {
           )}
         </div>
       ) : null;
+
 
     return (
       <CheckoutRenderer
