@@ -395,6 +395,10 @@ export const AdminMusicPreviews: React.FC = () => {
             Envie prévias de produção musical com tempo limitado de reprodução. Sem download.
           </p>
         </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => { setCheckoutEditorPreviewId(null); setCheckoutEditorOpen(true); }}>
+            <Sparkles className="h-4 w-4" />Editar Checkout (Global)
+          </Button>
         <Dialog open={newDialog} onOpenChange={setNewDialog}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4" />Nova Prévia</Button>
