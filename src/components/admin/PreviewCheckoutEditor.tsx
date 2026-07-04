@@ -393,10 +393,40 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
                   <Button variant="outline" className="w-full h-24 border-dashed"
                     onClick={() => fileRef.current?.click()} disabled={uploading}>
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    Enviar imagem de capa
+                    Enviar imagem de banner (retangular)
                   </Button>
                 )}
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+              </section>
+
+              {/* Capa quadrada 1x1 */}
+              <section className="space-y-2">
+                <div className="text-sm font-semibold flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />Capa da música (quadrada 1:1)
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Imagem quadrada exibida acima do título. Ideal: 800x800px.
+                </p>
+                {merged.coverUrl ? (
+                  <div className="relative w-40 h-40 rounded-lg overflow-hidden border">
+                    <img src={merged.coverUrl} className="w-full h-full object-cover" alt="Capa" />
+                    <div className="absolute top-1 right-1 flex gap-1">
+                      <Button size="sm" variant="secondary" onClick={() => coverRef.current?.click()}>
+                        <Upload className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={clearCover}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button variant="outline" className="w-40 h-40 border-dashed flex-col"
+                    onClick={() => coverRef.current?.click()} disabled={uploadingCover}>
+                    {uploadingCover ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    <span className="text-xs mt-1">Enviar capa 1:1</span>
+                  </Button>
+                )}
+                <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
               </section>
 
               {/* Cores */}
