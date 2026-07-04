@@ -722,6 +722,23 @@ export const AdminMusicPreviews: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PreviewCheckoutEditor
+        open={checkoutEditorOpen}
+        onClose={() => setCheckoutEditorOpen(false)}
+        previewId={checkoutEditorPreviewId}
+        clientName={
+          checkoutEditorPreviewId
+            ? (previews.find((p) => p.id === checkoutEditorPreviewId)?.client_name || 'Cliente')
+            : 'Cliente'
+        }
+        projectTitle={
+          checkoutEditorPreviewId
+            ? previews.find((p) => p.id === checkoutEditorPreviewId)?.project_title || null
+            : null
+        }
+        onSaved={load}
+      />
     </div>
   );
 };
