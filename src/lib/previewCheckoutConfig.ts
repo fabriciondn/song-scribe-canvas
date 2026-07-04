@@ -40,6 +40,8 @@ export const DEFAULT_CONFIG: {
   bg?: string;
   fg?: string;
   coverUrl?: string;
+  coverType?: 'single' | 'slide';
+  coverUrls?: string[];
   headline: string;
   subheadline: string;
   ctaLabel: string;
