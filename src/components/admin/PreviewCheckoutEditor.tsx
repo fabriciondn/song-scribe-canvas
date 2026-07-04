@@ -603,6 +603,29 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
                 )}
               </section>
 
+              {/* Order-bump: Capa personalizada */}
+              <section className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-semibold">Bump: Capa personalizada (+R$ 4,99)</div>
+                  <Switch
+                    checked={merged.coverBumpEnabled}
+                    onCheckedChange={(v) => setCfg({ coverBumpEnabled: v })}
+                  />
+                </div>
+                {merged.coverBumpEnabled && (
+                  <div className="space-y-2 pl-2 border-l-2 border-primary/30">
+                    <p className="text-xs text-muted-foreground">
+                      Aparece no checkout como opção adicional. O cliente escolhe uma das capas cadastradas acima (single ou slideshow) e paga R$ 4,99 a mais.
+                    </p>
+                    <Input value={config.coverBumpBadge ?? ''} placeholder={merged.coverBumpBadge}
+                      onChange={(e) => setCfg({ coverBumpBadge: e.target.value })} />
+                    <Input value={config.coverBumpTitle ?? ''} placeholder={merged.coverBumpTitle}
+                      onChange={(e) => setCfg({ coverBumpTitle: e.target.value })} />
+                    <Textarea rows={2} value={config.coverBumpText ?? ''} placeholder={merged.coverBumpText}
+                      onChange={(e) => setCfg({ coverBumpText: e.target.value })} />
+                  </div>
+                )}
+
               {/* Blocos customizados */}
               <section className="space-y-2">
                 <div className="flex items-center justify-between">
