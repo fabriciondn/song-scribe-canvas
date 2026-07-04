@@ -170,6 +170,9 @@ interface OrderState {
   pix_br_code?: string;
   payment_url?: string;
   selected_track_ids: string[];
+  includes_registration?: boolean;
+  includes_cover?: boolean;
+  selected_cover_url?: string | null;
   tracks: { id: string; track_name: string; storage_path: string }[];
 }
 
