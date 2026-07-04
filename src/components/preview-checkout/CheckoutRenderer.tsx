@@ -27,7 +27,7 @@ export interface CheckoutRendererProps {
 }
 
 const variantClasses: Record<NonNullable<CustomTextBlock['variant']>, string> = {
-  default: 'border-white/10 bg-white/5',
+  default: 'border-border bg-card',
   highlight: 'border-primary/40 bg-primary/10',
   success: 'border-green-500/40 bg-green-500/10',
   warning: 'border-yellow-500/40 bg-yellow-500/10',
