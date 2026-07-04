@@ -92,6 +92,8 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
   const [config, setConfig] = useState<CheckoutConfig>({});
   const [templateData, setTemplateData] = useState<LoadedData>({ banner_url: null, config: {} });
   const fileRef = useRef<HTMLInputElement>(null);
+  const coverRef = useRef<HTMLInputElement>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
