@@ -498,6 +498,7 @@ const PreviaPublica: React.FC = () => {
         bannerUrl={bannerUrl}
         config={cfg}
         contentBefore={tracksSection}
+        showCover={false}
         slots={{
           tracks: (
             <PurchaseFlowController
