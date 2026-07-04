@@ -1501,6 +1501,7 @@ export type Database = {
           amount: number
           created_at: string
           id: string
+          includes_cover: boolean
           includes_registration: boolean
           paid_at: string | null
           payment_id: string | null
@@ -1508,6 +1509,7 @@ export type Database = {
           pix_br_code: string | null
           pix_qr_code: string | null
           preview_id: string
+          selected_cover_url: string | null
           selected_track_ids: string[]
           status: string
           updated_at: string
@@ -1516,6 +1518,7 @@ export type Database = {
           amount?: number
           created_at?: string
           id?: string
+          includes_cover?: boolean
           includes_registration?: boolean
           paid_at?: string | null
           payment_id?: string | null
@@ -1523,6 +1526,7 @@ export type Database = {
           pix_br_code?: string | null
           pix_qr_code?: string | null
           preview_id: string
+          selected_cover_url?: string | null
           selected_track_ids?: string[]
           status?: string
           updated_at?: string
@@ -1531,6 +1535,7 @@ export type Database = {
           amount?: number
           created_at?: string
           id?: string
+          includes_cover?: boolean
           includes_registration?: boolean
           paid_at?: string | null
           payment_id?: string | null
@@ -1538,6 +1543,7 @@ export type Database = {
           pix_br_code?: string | null
           pix_qr_code?: string | null
           preview_id?: string
+          selected_cover_url?: string | null
           selected_track_ids?: string[]
           status?: string
           updated_at?: string
@@ -2877,7 +2883,9 @@ export type Database = {
       }
       create_music_preview_order: {
         Args: {
+          p_includes_cover?: boolean
           p_includes_registration?: boolean
+          p_selected_cover_url?: string
           p_token: string
           p_track_ids: string[]
         }

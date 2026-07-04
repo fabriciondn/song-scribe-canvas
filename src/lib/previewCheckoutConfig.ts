@@ -31,6 +31,13 @@ export interface CheckoutConfig {
   upsellPriceLabel?: string;      // ex: "R$ 19,99"
   upsellOldPriceLabel?: string;   // ex: "R$ 40,00"
 
+  // Order-bump: Capa personalizada (+R$ 4,99)
+  coverBumpEnabled?: boolean;
+  coverBumpTitle?: string;
+  coverBumpText?: string;
+  coverBumpBadge?: string;
+  coverBumpPriceLabel?: string;   // ex: "R$ 4,99"
+
   customBlocks?: CustomTextBlock[];
   order?: BlockId[];       // ordem dos blocos exibidos na etapa de checkout
 }
