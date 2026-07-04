@@ -214,26 +214,37 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
 
   const clearBanner = () => setBannerUrl(null);
 
+  const uploadCoverFile = async (file: File): Promise<string> => {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const key = isGlobal ? 'global' : previewId;
+    const path = `${key}/cover-${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from('preview-banners')
+      .upload(path, file, { contentType: file.type, upsert: false });
+    if (upErr) throw upErr;
+    const { data: pub } = supabase.storage
+      .from('preview-banners').getPublicUrl(path);
+    return pub.publicUrl;
+  };
+
   const handleCoverFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!/^image\//.test(file.type)) {
-      toast.error('Envie uma imagem');
-      return;
-    }
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    const invalid = files.find((f) => !/^image\//.test(f.type));
+    if (invalid) { toast.error('Envie apenas imagens'); return; }
     setUploadingCover(true);
     try {
-      const ext = file.name.split('.').pop() || 'jpg';
-      const key = isGlobal ? 'global' : previewId;
-      const path = `${key}/cover-${crypto.randomUUID()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from('preview-banners')
-        .upload(path, file, { contentType: file.type, upsert: false });
-      if (upErr) throw upErr;
-      const { data: pub } = supabase.storage
-        .from('preview-banners').getPublicUrl(path);
-      setCfg({ coverUrl: pub.publicUrl });
-      toast.success('Capa enviada');
+      const urls: string[] = [];
+      for (const f of files) urls.push(await uploadCoverFile(f));
+      const coverType = (config.coverType ?? templateData.config.coverType ?? 'single') as 'single' | 'slide';
+      if (coverType === 'slide') {
+        const existing = (config.coverUrls ?? templateData.config.coverUrls ?? []) as string[];
+        setCfg({ coverUrls: [...existing, ...urls] });
+      } else {
+        // single: usa a primeira
+        setCfg({ coverUrl: urls[0] });
+      }
+      toast.success(files.length > 1 ? `${files.length} capas enviadas` : 'Capa enviada');
     } catch (err: any) {
       toast.error(err.message || 'Erro no upload');
     } finally {
@@ -243,6 +254,10 @@ export const PreviewCheckoutEditor: React.FC<PreviewCheckoutEditorProps> = ({
   };
 
   const clearCover = () => setCfg({ coverUrl: undefined });
+  const removeSlideCover = (url: string) => {
+    const existing = (config.coverUrls ?? templateData.config.coverUrls ?? []) as string[];
+    setCfg({ coverUrls: existing.filter((u) => u !== url) });
+  };
 
   const resetToTemplate = () => {
     if (isGlobal) return;
