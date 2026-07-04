@@ -111,7 +111,7 @@ export const CheckoutRenderer: React.FC<CheckoutRendererProps> = ({
           </div>
         ) : null}
 
-        {(() => {
+        {showCover && (() => {
           const isSlide = cfg.coverType === 'slide';
           const slideImgs = (cfg.coverUrls || []).filter(Boolean);
           if (isSlide && slideImgs.length > 0) {
