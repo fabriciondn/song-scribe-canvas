@@ -11,9 +11,10 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
-  Music, Plus, Copy, Trash2, Upload, ExternalLink, Loader2, CheckCircle2, XCircle, Clock, MapPin, Headphones, Pencil, RefreshCw,
+  Music, Plus, Copy, Trash2, Upload, ExternalLink, Loader2, CheckCircle2, XCircle, Clock, MapPin, Headphones, Pencil, RefreshCw, Sparkles,
 } from 'lucide-react';
 import { generateUniquePreviewSlug } from '@/lib/previewSlug';
+import { PreviewCheckoutEditor } from '@/components/admin/PreviewCheckoutEditor';
 
 interface Preview {
   id: string;
