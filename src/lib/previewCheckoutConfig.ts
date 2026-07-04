@@ -13,6 +13,7 @@ export interface CheckoutConfig {
   primary?: string;        // cor primária (hex)
   bg?: string;             // cor de fundo (hex)
   fg?: string;             // cor do texto (hex)
+  coverUrl?: string;       // capa quadrada 1x1 da música
   headline?: string;       // {client_name} e {project_title} são substituídos
   subheadline?: string;
   ctaLabel?: string;
