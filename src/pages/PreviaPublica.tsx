@@ -334,6 +334,8 @@ const PreviaPublica: React.FC = () => {
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [includeReg, setIncludeReg] = useState(false);
+  const [includeCover, setIncludeCover] = useState(false);
+  const [selectedCoverUrl, setSelectedCoverUrl] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
