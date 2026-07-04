@@ -8,6 +8,7 @@ import {
   interpolate,
   ensureOrderIntegrity,
 } from '@/lib/previewCheckoutConfig';
+import { CoverSlideshow } from './CoverSlideshow';
 
 /**
  * Renderer visual do checkout de prévia. Recebe uma config já mesclada
