@@ -758,6 +758,19 @@ const PurchaseFlowInternal: React.FC<{
     return (
       <Card className="bg-white/5 border-white/10 text-foreground">
         <CardContent className="p-4 space-y-3 text-center">
+          {order.includes_cover && order.selected_cover_url && (
+            <div className="flex justify-center">
+              <div className="w-40 h-40 rounded-2xl overflow-hidden border border-white/10 shadow-lg">
+                <img
+                  src={order.selected_cover_url}
+                  alt="Capa escolhida"
+                  className="w-full h-full object-cover"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                />
+              </div>
+            </div>
+          )}
           <div className="font-semibold flex items-center justify-center gap-2">
             <QrCode className="h-5 w-5" /> Pague R$ {Number(order.amount).toFixed(2).replace('.', ',')} via PIX
           </div>
