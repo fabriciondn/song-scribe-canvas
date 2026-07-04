@@ -635,8 +635,19 @@ const PurchaseFlowController: React.FC<{
   token: string;
   cfg: typeof DEFAULT_CONFIG;
   includeReg: boolean;
-}> = ({ preview, token, cfg, includeReg }) => {
-  return <PurchaseFlowInternal preview={preview} token={token} cfg={cfg} includeReg={includeReg} />;
+  includeCover: boolean;
+  selectedCoverUrl: string | null;
+}> = ({ preview, token, cfg, includeReg, includeCover, selectedCoverUrl }) => {
+  return (
+    <PurchaseFlowInternal
+      preview={preview}
+      token={token}
+      cfg={cfg}
+      includeReg={includeReg}
+      includeCover={includeCover}
+      selectedCoverUrl={selectedCoverUrl}
+    />
+  );
 };
 
 const PurchaseFlowInternal: React.FC<{
@@ -644,7 +655,9 @@ const PurchaseFlowInternal: React.FC<{
   token: string;
   cfg: typeof DEFAULT_CONFIG;
   includeReg: boolean;
-}> = ({ preview, token, cfg, includeReg }) => {
+  includeCover: boolean;
+  selectedCoverUrl: string | null;
+}> = ({ preview, token, cfg, includeReg, includeCover, selectedCoverUrl }) => {
   const [selected, setSelected] = useState<string[]>(preview.tracks.map(t => t.id));
   const [order, setOrder] = useState<OrderState | null>(null);
   const [creatingOrder, setCreatingOrder] = useState(false);
@@ -653,11 +666,17 @@ const PurchaseFlowInternal: React.FC<{
   const toggle = (id: string) =>
     setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
 
-  const total = 49.99 + (includeReg ? 19.99 : 0);
+  const coverEffectivelyIncluded = includeCover && !!selectedCoverUrl;
+  const total =
+    49.99 + (includeReg ? 19.99 : 0) + (coverEffectivelyIncluded ? 4.99 : 0);
 
   const startOrder = async () => {
     if (selected.length === 0) {
       toast.error('Selecione ao menos uma faixa');
+      return;
+    }
+    if (includeCover && !selectedCoverUrl) {
+      toast.error('Escolha uma capa para adicionar ao pedido');
       return;
     }
     setCreatingOrder(true);
@@ -665,6 +684,8 @@ const PurchaseFlowInternal: React.FC<{
       p_token: token,
       p_track_ids: selected,
       p_includes_registration: includeReg,
+      p_includes_cover: coverEffectivelyIncluded,
+      p_selected_cover_url: coverEffectivelyIncluded ? selectedCoverUrl : null,
     });
     if (error || !(res as any)?.success) {
       setCreatingOrder(false);
