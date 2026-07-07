@@ -142,7 +142,10 @@ export const ModeratorUsers = () => {
   const hasActiveFilters = searchName || searchEmail || creditFilter !== 'all';
 
   const createUserMutation = useMutation({
-    mutationFn: createUserForModerator,
+    mutationFn: (data: typeof newUserData) => createUserForModerator({
+      ...data,
+      moderator_id: currentUser?.id
+    }),
     onSuccess: () => {
       toast.success('Usuário criado com sucesso');
       setIsCreateModalOpen(false);
