@@ -174,6 +174,24 @@ export const getManagedUsers = async (moderatorIdOverride?: string): Promise<Man
 
     console.log('🔑 Moderator ID for query:', moderatorId);
 
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session?.access_token) {
+      const { data, error } = await supabase.functions.invoke('get-managed-users-by-moderator', {
+        body: { moderator_id: moderatorId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (!error && !data?.error && Array.isArray(data?.users)) {
+        console.log('✅ Managed users fetched via edge function:', data.users.length);
+        return data.users as ManagedUserData[];
+      }
+
+      console.warn('⚠️ Edge function fallback for managed users:', error || data?.error);
+    }
+
     const { data: moderatorUsers, error: moderatorError } = await supabase
       .from('moderator_users')
       .select('user_id, created_at')
@@ -259,6 +277,7 @@ export const createUserForModerator = async (userData: {
   email: string;
   password: string;
   artistic_name?: string;
+  moderator_id?: string;
 }): Promise<{ userId: string }> => {
   console.log('🔧 Criando usuário via edge function:', userData.email);
   

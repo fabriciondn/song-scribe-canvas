@@ -57,18 +57,21 @@ Deno.serve(async (req) => {
 
     console.log('✅ Usuário autenticado:', user.id);
 
-    // Verificar se o usuário é um moderador
-    const { data: moderatorCheck, error: moderatorError } = await supabaseAdmin
+    // Verificar se o usuário é moderador ou admin
+    const { data: roleData, error: roleError } = await supabaseAdmin
       .from('admin_users')
       .select('role')
       .eq('user_id', user.id)
-      .eq('role', 'moderator')
-      .single();
+      .maybeSingle();
 
-    if (moderatorError || !moderatorCheck) {
-      console.error('❌ Erro ao verificar moderador:', moderatorError?.message || 'Usuário não é moderador');
+    const callerRole = roleData?.role;
+    const isModerator = callerRole === 'moderator';
+    const isAdmin = callerRole === 'admin' || callerRole === 'super_admin';
+
+    if (roleError || (!isModerator && !isAdmin)) {
+      console.error('❌ Erro ao verificar permissão:', roleError?.message || 'Usuário não é moderador/admin');
       return new Response(
-        JSON.stringify({ error: 'Acesso negado. Privilégios de moderador necessários.' }),
+        JSON.stringify({ error: 'Acesso negado. Privilégios de moderador ou admin necessários.' }),
         { 
           status: 403, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -76,11 +79,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('✅ Usuário confirmado como moderador');
+    console.log('✅ Usuário autorizado:', callerRole);
 
     // Obter dados do body da requisição
     const requestBody = await req.json();
-    const { name, email, password, artistic_name } = requestBody;
+    const { name, email, password, artistic_name, moderator_id, target_moderator_id } = requestBody;
 
     if (!name || !email || !password) {
       console.error('❌ Dados obrigatórios ausentes');
@@ -91,6 +94,37 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
+    }
+
+    let targetModeratorId = isModerator ? user.id : (target_moderator_id || moderator_id);
+
+    if (isAdmin) {
+      if (!targetModeratorId) {
+        return new Response(
+          JSON.stringify({ error: 'Selecione um moderador para registrar este usuário.' }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      const { data: targetModerator, error: targetModeratorError } = await supabaseAdmin
+        .from('admin_users')
+        .select('user_id')
+        .eq('user_id', targetModeratorId)
+        .eq('role', 'moderator')
+        .maybeSingle();
+
+      if (targetModeratorError || !targetModerator) {
+        return new Response(
+          JSON.stringify({ error: 'Moderador selecionado inválido.' }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
     }
 
     console.log('🔧 Criando usuário:', { name, email });
@@ -205,7 +239,7 @@ Deno.serve(async (req) => {
     const { error: moderatorUserError } = await supabaseAdmin
       .from('moderator_users')
       .insert({
-        moderator_id: user.id,
+        moderator_id: targetModeratorId,
         user_id: authData.user.id,
       });
 
@@ -226,7 +260,9 @@ Deno.serve(async (req) => {
           user_id: authData.user.id,
           action: 'user_created_by_moderator',
           metadata: {
-            moderator_id: user.id,
+            moderator_id: targetModeratorId,
+            performed_by: user.id,
+            is_admin_operation: isAdmin,
             moderator_email: user.email,
             created_at: new Date().toISOString()
           }
@@ -240,6 +276,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         userId: authData.user.id,
+        moderatorId: targetModeratorId,
         message: 'Usuário criado com sucesso'
       }),
       {
