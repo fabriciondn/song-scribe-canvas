@@ -192,6 +192,7 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
     }
 
     setIsRegistering(true);
+    navigate('/dashboard');
 
     try {
       // Gerar hash da letra
@@ -269,9 +270,6 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
 
       // Simular análise
       startAnalysisSimulation(registrationData.id);
-
-      // Redirecionar imediatamente
-      navigate('/dashboard');
 
       onConfirm();
     } catch (error) {

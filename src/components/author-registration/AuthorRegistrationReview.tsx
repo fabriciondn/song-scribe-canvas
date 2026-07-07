@@ -240,6 +240,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
     }
 
     setIsRegistering(true);
+    navigate('/dashboard');
 
     try {
       // Gerar hash da letra
@@ -377,9 +378,6 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
 
       // Simular análise inteligente em segundo plano
       startAnalysisSimulation(registrationData.id, data.title);
-
-      // Redirecionar imediatamente para o dashboard
-      navigate('/dashboard');
 
       onRegister();
     } catch (error) {
