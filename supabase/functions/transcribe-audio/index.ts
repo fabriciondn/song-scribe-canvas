@@ -66,10 +66,32 @@ serve(async (req) => {
     }
 
     const result = await response.json();
+
+    // Filtragem anti-alucinação: remove segmentos com alta prob. de silêncio
+    // ou baixa confiança (avg_logprob), e colapsa repetições consecutivas.
+    let finalText: string = result.text || "";
+    if (Array.isArray(result.segments)) {
+      const kept: string[] = [];
+      let lastNorm = "";
+      for (const seg of result.segments) {
+        const noSpeech = typeof seg.no_speech_prob === "number" ? seg.no_speech_prob : 0;
+        const logprob = typeof seg.avg_logprob === "number" ? seg.avg_logprob : 0;
+        if (noSpeech > 0.6) continue;
+        if (logprob < -1.0) continue;
+        const text = (seg.text || "").trim();
+        if (!text) continue;
+        const norm = text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+        if (norm && norm === lastNorm) continue; // repetição imediata
+        kept.push(text);
+        lastNorm = norm;
+      }
+      if (kept.length) finalText = kept.join(" ");
+    }
+
     console.log("Transcrição concluída com sucesso");
 
     return new Response(
-      JSON.stringify({ text: result.text }),
+      JSON.stringify({ text: finalText }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
