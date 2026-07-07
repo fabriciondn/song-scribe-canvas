@@ -270,10 +270,8 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
       // Simular análise
       startAnalysisSimulation(registrationData.id);
 
-      // Redirecionar
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
+      // Redirecionar imediatamente
+      navigate('/dashboard');
 
       onConfirm();
     } catch (error) {
