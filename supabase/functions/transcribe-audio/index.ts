@@ -34,12 +34,19 @@ serve(async (req) => {
     const filename = "audio.mp3"; // Groq needs a filename with extension
 
     // Prepare request to Groq Whisper API
+    // Prompt em português para enviesar vocabulário para letras de música brasileiras
+    // (sertanejo, gospel, MPB, forró, samba). Melhora acentuação, pontuação e gírias.
+    const bibleVocab = "Deus, Jesus, Senhor, Espírito Santo, aleluia, glória, oração, fé, coração, amor, saudade, sertão, viola, moda de viola, forró, samba, sertanejo, gospel";
+    const lyricsPrompt = `Transcrição de letra de música em português do Brasil. Mantenha acentuação, pontuação e quebras de linha corretas. Vocabulário comum: ${bibleVocab}.`;
+
     const groqFormData = new FormData();
     const blob = new Blob([audioData], { type: contentType });
     groqFormData.append("file", blob, filename);
     groqFormData.append("model", "whisper-large-v3");
     groqFormData.append("language", "pt");
     groqFormData.append("response_format", "json");
+    groqFormData.append("temperature", "0");
+    groqFormData.append("prompt", lyricsPrompt);
 
     const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
       method: "POST",
