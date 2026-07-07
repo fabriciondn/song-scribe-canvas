@@ -14,6 +14,7 @@ import { getManagedUsers, createUserForModerator, updateManagedUserCredits } fro
 import { supabase } from '@/integrations/supabase/client';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export const ModeratorUsers = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
