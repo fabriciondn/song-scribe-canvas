@@ -14,6 +14,7 @@ import { getManagedUsers, createUserForModerator, updateManagedUserCredits } fro
 import { supabase } from '@/integrations/supabase/client';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export const ModeratorUsers = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -45,9 +46,11 @@ export const ModeratorUsers = () => {
 
   const queryClient = useQueryClient();
 
+  const currentUser = useCurrentUser();
   const { data: users, isLoading, refetch } = useQuery({
-    queryKey: ['managed-users'],
-    queryFn: getManagedUsers,
+    queryKey: ['managed-users', currentUser?.id],
+    queryFn: () => getManagedUsers(currentUser?.id),
+    enabled: !!currentUser?.id,
   });
 
   // Buscar contagem de obras registradas por usuário
