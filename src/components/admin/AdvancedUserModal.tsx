@@ -736,28 +736,42 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={user.avatar_url} alt={user.name} />
-              <AvatarFallback>{user.name?.[0] || user.email?.[0] || 'U'}</AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="font-semibold">{user.name || 'Sem nome'}</div>
-              <div className="text-sm text-muted-foreground">{user.email}</div>
-            </div>
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden border-white/[0.06] bg-[#0c0c0e] flex flex-col">
+        {/* Premium header */}
+        <div className="relative px-5 py-4 border-b border-white/[0.05] overflow-hidden shrink-0">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.08),transparent_55%)] pointer-events-none" />
+          <DialogHeader className="relative">
+            <DialogTitle className="flex items-center gap-3">
+              <Avatar className="w-11 h-11 ring-1 ring-white/[0.08]">
+                <AvatarImage src={user.avatar_url} alt={user.name} />
+                <AvatarFallback className="bg-white/[0.04] text-white/60">
+                  {user.name?.[0] || user.email?.[0] || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">Perfil do usuário</span>
+                </div>
+                <div className="text-white text-lg font-light tracking-tight mt-0.5 truncate">
+                  {user.name || 'Sem nome'}
+                </div>
+                <div className="text-[11px] text-white/45 truncate">{user.email}</div>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+        </div>
 
+        <div className="flex-1 overflow-y-auto px-5 py-4">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="subscription">Assinatura</TabsTrigger>
-            <TabsTrigger value="content">Conteúdo</TabsTrigger>
-            <TabsTrigger value="activity">Atividade</TabsTrigger>
-            <TabsTrigger value="management">Gerenciar</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5 bg-white/[0.03] border border-white/[0.06] h-9 rounded-lg p-1">
+            <TabsTrigger value="overview" className="text-[11px] data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-white/55">Visão Geral</TabsTrigger>
+            <TabsTrigger value="subscription" className="text-[11px] data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-white/55">Assinatura</TabsTrigger>
+            <TabsTrigger value="content" className="text-[11px] data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-white/55">Conteúdo</TabsTrigger>
+            <TabsTrigger value="activity" className="text-[11px] data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-white/55">Atividade</TabsTrigger>
+            <TabsTrigger value="management" className="text-[11px] data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-white/55">Gerenciar</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="overview" className="space-y-4">
             {/* Cards de estatísticas */}
