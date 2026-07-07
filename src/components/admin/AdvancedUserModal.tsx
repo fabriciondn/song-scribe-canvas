@@ -1663,7 +1663,9 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
             </Card>
           </TabsContent>
         </Tabs>
+        </div>
       </DialogContent>
+
 
       {/* Modal de Edição de Registro */}
       <Dialog open={!!editingRegistration} onOpenChange={(open) => !open && setEditingRegistration(null)}>
