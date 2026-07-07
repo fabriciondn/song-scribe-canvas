@@ -62,6 +62,7 @@ const RegisteredWorks: React.FC = () => {
   };
 
 
+  const queryClient = useQueryClient();
   const { data: works, isLoading, error } = useQuery({
     queryKey: ['registered-works', currentUser?.id],
     queryFn: async (): Promise<RegisteredWork[]> => {
@@ -79,6 +80,24 @@ const RegisteredWorks: React.FC = () => {
     },
     enabled: !!currentUser?.id,
   });
+
+  // Realtime: atualizar lista instantaneamente quando um registro mudar
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const channel = supabase
+      .channel(`registered-works-${currentUser.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'author_registrations', filter: `user_id=eq.${currentUser.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['registered-works', currentUser.id] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUser?.id, queryClient]);
 
   const handleViewDetails = (work: RegisteredWork) => {
     setSelectedWork(work);
