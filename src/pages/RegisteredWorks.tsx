@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FileText, Download, Loader2, Link2, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -62,6 +62,7 @@ const RegisteredWorks: React.FC = () => {
   };
 
 
+  const queryClient = useQueryClient();
   const { data: works, isLoading, error } = useQuery({
     queryKey: ['registered-works', currentUser?.id],
     queryFn: async (): Promise<RegisteredWork[]> => {
@@ -79,6 +80,24 @@ const RegisteredWorks: React.FC = () => {
     },
     enabled: !!currentUser?.id,
   });
+
+  // Realtime: atualizar lista instantaneamente quando um registro mudar
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const channel = supabase
+      .channel(`registered-works-${currentUser.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'author_registrations', filter: `user_id=eq.${currentUser.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['registered-works', currentUser.id] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUser?.id, queryClient]);
 
   const handleViewDetails = (work: RegisteredWork) => {
     setSelectedWork(work);

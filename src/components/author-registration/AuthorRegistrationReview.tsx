@@ -378,10 +378,8 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       // Simular análise inteligente em segundo plano
       startAnalysisSimulation(registrationData.id, data.title);
 
-      // Redirecionar para dashboard após 3 segundos
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 3000);
+      // Redirecionar imediatamente para o dashboard
+      navigate('/dashboard');
 
       onRegister();
     } catch (error) {

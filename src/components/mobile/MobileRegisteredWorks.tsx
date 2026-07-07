@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useTheme } from '@/hooks/useTheme';
@@ -81,6 +81,7 @@ export const MobileRegisteredWorks: React.FC = () => {
   
   const totalRegistrations = stats?.registeredWorks?.total || 0;
 
+  const queryClient = useQueryClient();
   const { data: works, isLoading } = useQuery({
     queryKey: ['registered-works-mobile', currentUser?.id],
     queryFn: async (): Promise<RegisteredWork[]> => {
@@ -97,6 +98,24 @@ export const MobileRegisteredWorks: React.FC = () => {
     },
     enabled: !!currentUser?.id && !workId,
   });
+
+  // Realtime updates
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const channel = supabase
+      .channel(`registered-works-mobile-${currentUser.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'author_registrations', filter: `user_id=eq.${currentUser.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['registered-works-mobile', currentUser.id] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUser?.id, queryClient]);
 
   const filteredWorks = useMemo(() => {
     if (!works) return [];
