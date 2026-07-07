@@ -455,75 +455,133 @@ export const AdminUsers = () => {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6 px-1 md:px-0">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="h-6 w-6" />
-            Gestão de Usuários
-          </h2>
-          <p className="text-muted-foreground">
-            Visualize e gerencie todos os usuários da plataforma
-          </p>
+    <div className="space-y-4">
+      {/* Header — premium */}
+      <div className="relative rounded-2xl overflow-hidden p-4 bg-white/[0.025]
+                      shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_18px_36px_-25px_rgba(0,0,0,0.6)]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.08),transparent_55%)] pointer-events-none" />
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">Gestão</span>
+            </div>
+            <h2 className="text-xl font-light tracking-tight text-white mt-1 flex items-center gap-2">
+              <Users className="h-4 w-4 text-white/60" />
+              Usuários
+            </h2>
+            <p className="text-[11px] text-white/40 mt-0.5">
+              Visualize e gerencie todos os usuários da plataforma
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="relative w-full md:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-3.5 w-3.5" />
+              <Input
+                placeholder="Buscar usuários…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 h-9 bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/35 text-[12px]"
+              />
+            </div>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] text-[11px] text-white/70 transition-colors">
+                  <Filter className="h-3.5 w-3.5" />
+                  Filtros
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 bg-[#141416] border-white/[0.08] text-white/80" align="end">
+                <div className="space-y-4">
+                  <h4 className="text-[11px] uppercase tracking-[0.14em] text-white/45">Filtros de pesquisa</h4>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] text-white/60">Data inicial</label>
+                    <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+                           className="bg-white/[0.03] border-white/[0.06] text-white text-[12px]" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] text-white/60">Data final</label>
+                    <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+                           className="bg-white/[0.03] border-white/[0.06] text-white text-[12px]" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] text-white/60">Origem</label>
+                    <Select value={originFilter} onValueChange={(value: any) => setOriginFilter(value)}>
+                      <SelectTrigger className="bg-white/[0.03] border-white/[0.06] text-white text-[12px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="affiliate">Afiliado</SelectItem>
+                        <SelectItem value="moderator">Moderador</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <button
+                    className="w-full h-8 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-[11px] text-white/70 transition-colors"
+                    onClick={() => { setStartDate(''); setEndDate(''); setOriginFilter('all'); }}
+                  >
+                    Limpar filtros
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <button
+              onClick={handleExportToExcel}
+              disabled={filteredUsers.length === 0}
+              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-emerald-400/10 hover:bg-emerald-400/15 ring-1 ring-emerald-400/20 text-[11px] text-emerald-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Exportar
+            </button>
+          </div>
         </div>
-        
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto">
-          <div className="relative flex-1 md:w-80">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Buscar usuários..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          
-          <div className="flex gap-2">
-            <Button 
-              variant={originFilter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => {
-                setOriginFilter('all');
-                setSpecificAffiliateId('');
-                setSpecificModeratorId('');
-              }}
-              className="gap-2"
-            >
-              <Users className="h-4 w-4" />
-              Todos ({(users?.length || 0)})
-            </Button>
-            <Button 
-              variant={originFilter === 'affiliate' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => {
-                setOriginFilter('affiliate');
-                setSpecificModeratorId('');
-              }}
-              className="gap-2"
-            >
-              <Target className="h-4 w-4" />
-              Afiliados ({affiliateCount})
-            </Button>
-            <Button 
-              variant={originFilter === 'moderator' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => {
-                setOriginFilter('moderator');
-                setSpecificAffiliateId('');
-              }}
-              className="gap-2"
-            >
-              <UserPlus className="h-4 w-4" />
-              Moderadores ({moderatorCount})
-            </Button>
-          </div>
-          
-          {/* Filtro específico de afiliado */}
-          {originFilter === 'affiliate' && affiliatesList && affiliatesList.length > 0 && (
-            <div className="w-full md:w-60">
+
+        {/* Origin pill row */}
+        <div className="relative mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+          <OriginPill
+            active={originFilter === 'all'}
+            label="Todos"
+            count={users?.length || 0}
+            dot="bg-white/60"
+            icon={<Users className="h-3 w-3" />}
+            onClick={() => { setOriginFilter('all'); setSpecificAffiliateId(''); setSpecificModeratorId(''); }}
+          />
+          <OriginPill
+            active={originFilter === 'affiliate'}
+            label="Afiliados"
+            count={affiliateCount}
+            dot="bg-emerald-400"
+            icon={<Target className="h-3 w-3" />}
+            onClick={() => { setOriginFilter('affiliate'); setSpecificModeratorId(''); }}
+          />
+          <OriginPill
+            active={originFilter === 'moderator'}
+            label="Moderadores"
+            count={moderatorCount}
+            dot="bg-sky-400"
+            icon={<UserPlus className="h-3 w-3" />}
+            onClick={() => { setOriginFilter('moderator'); setSpecificAffiliateId(''); }}
+          />
+          <OriginPill
+            active={false}
+            label="Diretos"
+            count={directCount}
+            dot="bg-white/40"
+            icon={<Shield className="h-3 w-3" />}
+          />
+        </div>
+
+        {/* Specific affiliate/moderator select */}
+        {(originFilter === 'affiliate' || originFilter === 'moderator') && (
+          <div className="relative mt-3">
+            {originFilter === 'affiliate' && affiliatesList && affiliatesList.length > 0 && (
               <Select value={specificAffiliateId || 'all'} onValueChange={(value) => setSpecificAffiliateId(value === 'all' ? '' : value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por afiliado..." />
+                <SelectTrigger className="bg-white/[0.03] border-white/[0.06] text-white text-[12px] h-9 md:w-72">
+                  <SelectValue placeholder="Filtrar por afiliado…" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os afiliados</SelectItem>
@@ -534,15 +592,11 @@ export const AdminUsers = () => {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          )}
-          
-          {/* Filtro específico de moderador */}
-          {originFilter === 'moderator' && moderatorsList && moderatorsList.length > 0 && (
-            <div className="w-full md:w-60">
+            )}
+            {originFilter === 'moderator' && moderatorsList && moderatorsList.length > 0 && (
               <Select value={specificModeratorId || 'all'} onValueChange={(value) => setSpecificModeratorId(value === 'all' ? '' : value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por moderador..." />
+                <SelectTrigger className="bg-white/[0.03] border-white/[0.06] text-white text-[12px] h-9 md:w-72">
+                  <SelectValue placeholder="Filtrar por moderador…" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os moderadores</SelectItem>
@@ -553,298 +607,259 @@ export const AdminUsers = () => {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          )}
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Filter className="h-4 w-4" />
-                Mais Filtros
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80" align="end">
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium mb-3">Filtros de Pesquisa</h4>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Data Inicial</label>
-                  <Input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    placeholder="Data inicial"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Data Final</label>
-                  <Input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    placeholder="Data final"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Origem do Cadastro</label>
-                  <Select value={originFilter} onValueChange={(value: any) => setOriginFilter(value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a origem" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="affiliate">Afiliado</SelectItem>
-                      <SelectItem value="moderator">Moderador</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={() => {
-                    setStartDate('');
-                    setEndDate('');
-                    setOriginFilter('all');
-                  }}
-                >
-                  Limpar Filtros
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Button 
-            onClick={handleExportToExcel}
-            className="gap-2"
-            disabled={filteredUsers.length === 0}
-          >
-            <Download className="h-4 w-4" />
-            Exportar Excel
-          </Button>
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       <AdvancedUserModal
         user={selectedUser}
         isOpen={isAdvancedModalOpen}
-        onClose={() => {
-          setIsAdvancedModalOpen(false);
-          setSelectedUser(null);
-        }}
+        onClose={() => { setIsAdvancedModalOpen(false); setSelectedUser(null); }}
         onUserUpdate={refetch}
       />
 
-      {/* Lista de usuários */}
-      <div className="mt-4 md:mt-8">
-        <div className="mb-4 flex items-center gap-2">
-          <Badge variant="secondary">
-            {filteredUsers.length} usuário{filteredUsers.length !== 1 ? 's' : ''} encontrado{filteredUsers.length !== 1 ? 's' : ''}
-          </Badge>
-        </div>
-
-        {isLoading ? (
-          <div className="text-muted-foreground">Carregando usuários...</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table className="min-w-[350px] text-xs md:text-base">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Foto</TableHead>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Última Atividade</TableHead>
-                  <TableHead>Créditos</TableHead>
-                  <TableHead className="text-center">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user: any) => {
-                  const getSubscriptionStatus = () => {
-                    const sub = user.subscription;
-                    if (!sub) return { label: 'Gratuito', variant: 'outline' as const, icon: null };
-                    
-                    const now = new Date();
-                    const expiresAt = sub.expires_at ? new Date(sub.expires_at) : null;
-                    
-                    if (sub.status === 'active' && sub.plan_type === 'pro') {
-                      return { label: 'Pro Ativo', variant: 'default' as const, icon: <Crown className="h-3 w-3" /> };
-                    }
-                    if (sub.status === 'trial') {
-                      if (expiresAt && now <= expiresAt) {
-                        const daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                        return { label: `Trial (${daysLeft}d)`, variant: 'secondary' as const, icon: <Clock className="h-3 w-3" /> };
-                      }
-                      return { label: 'Trial Expirado', variant: 'destructive' as const, icon: <Clock className="h-3 w-3" /> };
-                    }
-                    if (sub.status === 'expired') {
-                      if (sub.plan_type === 'trial') {
-                        const daysSince = expiresAt ? Math.floor((now.getTime() - expiresAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-                        return { label: `Expirou há ${daysSince}d`, variant: 'destructive' as const, icon: null };
-                      }
-                      return { label: 'Expirado', variant: 'destructive' as const, icon: null };
-                    }
-                    return { label: 'Gratuito', variant: 'outline' as const, icon: null };
-                  };
-
-                  const getActivityStatus = () => {
-                    if (!user.last_activity) return { label: 'Nunca', variant: 'outline' as const, color: 'text-muted-foreground' };
-                    
-                    const now = new Date();
-                    const lastActivity = new Date(user.last_activity);
-                    const diffMinutes = Math.floor((now.getTime() - lastActivity.getTime()) / (1000 * 60));
-                    const diffHours = Math.floor(diffMinutes / 60);
-                    const diffDays = Math.floor(diffHours / 24);
-                    
-                    if (diffMinutes < 5) {
-                      return { label: 'Online', variant: 'default' as const, color: 'text-green-500' };
-                    } else if (diffHours < 24) {
-                      return { label: `${diffHours}h atrás`, variant: 'secondary' as const, color: 'text-yellow-500' };
-                    } else if (diffDays < 7) {
-                      return { label: `${diffDays}d atrás`, variant: 'outline' as const, color: 'text-orange-500' };
-                    } else {
-                      return { label: `${diffDays}d atrás`, variant: 'outline' as const, color: 'text-red-500' };
-                    }
-                  };
-
-                  const subscriptionStatus = getSubscriptionStatus();
-                  const activityStatus = getActivityStatus();
-
-                  return (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={user.avatar_url} alt={user.name} />
-                        <AvatarFallback>{user.name?.[0] || user.email?.[0] || 'U'}</AvatarFallback>
-                      </Avatar>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span>{user.name || '-'}</span>
-                        {user.hasIncompleteProfile && (
-                          <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
-                            <AlertTriangle className="h-3 w-3 mr-1" />
-                            Perfil Incompleto
-                          </Badge>
-                        )}
-                        {user.origin === 'affiliate' && (
-                          <div 
-                            className="flex items-center" 
-                            title={`Afiliado: ${
-                              affiliatesList?.find((a: any) => a.id === user.affiliate_id)?.profile?.name || 
-                              affiliatesList?.find((a: any) => a.id === user.affiliate_id)?.affiliate_code || 
-                              'Desconhecido'
-                            }`}
-                          >
-                            <Target className="h-4 w-4 text-green-500" />
-                          </div>
-                        )}
-                        {user.origin === 'moderator' && (
-                          <div 
-                            className="flex items-center" 
-                            title={`Moderador: ${
-                              moderatorsList?.find((m: any) => m.user_id === user.moderator_id)?.profile?.name || 
-                              moderatorsList?.find((m: any) => m.user_id === user.moderator_id)?.profile?.email || 
-                              'Desconhecido'
-                            }`}
-                          >
-                            <Shield className="h-4 w-4 text-blue-500" />
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate">{user.email || '-'}</TableCell>
-                    <TableCell>
-                      <Badge variant={subscriptionStatus.variant} className="gap-1">
-                        {subscriptionStatus.icon}
-                        {subscriptionStatus.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <CircleDot className={`h-3 w-3 ${activityStatus.color}`} />
-                        <span className="text-xs">{activityStatus.label}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{user.credits || 0}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 justify-center">
-                        {!user.hasIncompleteProfile ? (
-                          <ImpersonateButton
-                            targetUser={{
-                              id: user.id,
-                              name: user.name,
-                              email: user.email,
-                              artistic_name: user.artistic_name
-                            }}
-                            targetRole="user"
-                            size="sm"
-                            variant="outline"
-                          />
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled
-                            title="Usuário com perfil incompleto não pode ser impersonado"
-                          >
-                            <Users className="h-4 w-4" />
-                          </Button>
-                        )}
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewUser(user)}
-                          disabled={user.hasIncompleteProfile}
-                          title={user.hasIncompleteProfile ? 'Usuário com perfil incompleto não pode ser editado' : 'Editar usuário'}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle className="flex items-center gap-2">
-                                <AlertTriangle className="h-5 w-5 text-destructive" />
-                                Excluir Usuário
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Tem certeza que deseja excluir o usuário <strong>{user.name || user.email}</strong>?
-                                Esta ação marcará o usuário como excluído e ele não aparecerá mais na lista de usuários.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDeleteUser(user.id, user.name)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Excluir
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+      {/* List — premium table */}
+      <div className="relative rounded-2xl overflow-hidden bg-white/[0.025]
+                      shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_18px_36px_-25px_rgba(0,0,0,0.6)]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.04),transparent_60%)] pointer-events-none" />
+        <div className="relative">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.05]">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] uppercase tracking-[0.16em] text-white/45">Resultados</span>
+              <span className="text-[11px] text-white/70 tabular-nums">
+                {filteredUsers.length} {filteredUsers.length === 1 ? 'usuário' : 'usuários'}
+              </span>
+            </div>
           </div>
-        )}
+
+          {isLoading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="animate-spin rounded-full h-7 w-7 border-t border-white/40" />
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-white/40">
+              <Users className="h-10 w-10 mb-2 opacity-50" />
+              <p className="text-[12px]">Nenhum usuário encontrado</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table className="min-w-[720px]">
+                <TableHeader>
+                  <TableRow className="border-white/[0.05] hover:bg-transparent">
+                    <TableHead className="text-[10px] uppercase tracking-[0.14em] text-white/45 h-9">Usuário</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-[0.14em] text-white/45 h-9">Email</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-[0.14em] text-white/45 h-9">Status</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-[0.14em] text-white/45 h-9">Atividade</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-[0.14em] text-white/45 h-9">Créditos</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-[0.14em] text-white/45 h-9 text-center">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((user: any) => {
+                    const getSubscriptionStatus = () => {
+                      const sub = user.subscription;
+                      if (!sub) return { label: 'Gratuito', tone: 'neutral' as const, icon: null };
+                      const now = new Date();
+                      const expiresAt = sub.expires_at ? new Date(sub.expires_at) : null;
+                      if (sub.status === 'active' && sub.plan_type === 'pro') {
+                        return { label: 'Pro Ativo', tone: 'emerald' as const, icon: <Crown className="h-2.5 w-2.5" /> };
+                      }
+                      if (sub.status === 'trial') {
+                        if (expiresAt && now <= expiresAt) {
+                          const daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                          return { label: `Trial (${daysLeft}d)`, tone: 'amber' as const, icon: <Clock className="h-2.5 w-2.5" /> };
+                        }
+                        return { label: 'Trial Expirado', tone: 'red' as const, icon: <Clock className="h-2.5 w-2.5" /> };
+                      }
+                      if (sub.status === 'expired') {
+                        if (sub.plan_type === 'trial') {
+                          const daysSince = expiresAt ? Math.floor((now.getTime() - expiresAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+                          return { label: `Expirou há ${daysSince}d`, tone: 'red' as const, icon: null };
+                        }
+                        return { label: 'Expirado', tone: 'red' as const, icon: null };
+                      }
+                      return { label: 'Gratuito', tone: 'neutral' as const, icon: null };
+                    };
+
+                    const getActivityStatus = () => {
+                      if (!user.last_activity) return { label: 'Nunca', color: 'text-white/35' };
+                      const now = new Date();
+                      const lastActivity = new Date(user.last_activity);
+                      const diffMinutes = Math.floor((now.getTime() - lastActivity.getTime()) / (1000 * 60));
+                      const diffHours = Math.floor(diffMinutes / 60);
+                      const diffDays = Math.floor(diffHours / 24);
+                      if (diffMinutes < 5) return { label: 'Online', color: 'text-emerald-400' };
+                      if (diffHours < 24) return { label: `${diffHours}h atrás`, color: 'text-amber-400' };
+                      if (diffDays < 7) return { label: `${diffDays}d atrás`, color: 'text-orange-400' };
+                      return { label: `${diffDays}d atrás`, color: 'text-red-400' };
+                    };
+
+                    const subscriptionStatus = getSubscriptionStatus();
+                    const activityStatus = getActivityStatus();
+                    const toneClass = {
+                      emerald: 'bg-emerald-400/10 text-emerald-300 ring-emerald-400/20',
+                      amber: 'bg-amber-400/10 text-amber-300 ring-amber-400/20',
+                      red: 'bg-red-400/10 text-red-300 ring-red-400/20',
+                      neutral: 'bg-white/[0.05] text-white/60 ring-white/10',
+                    }[subscriptionStatus.tone];
+
+                    return (
+                      <TableRow key={user.id} className="border-white/[0.04] hover:bg-white/[0.02]">
+                        <TableCell className="py-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar className="w-7 h-7 ring-1 ring-white/[0.06]">
+                              <AvatarImage src={user.avatar_url} alt={user.name} />
+                              <AvatarFallback className="bg-white/[0.04] text-white/60 text-[10px]">
+                                {user.name?.[0] || user.email?.[0] || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[12px] text-white truncate">{user.name || '-'}</span>
+                                {user.hasIncompleteProfile && (
+                                  <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-full bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/20">
+                                    <AlertTriangle className="h-2.5 w-2.5" />
+                                    Incompleto
+                                  </span>
+                                )}
+                                {user.origin === 'affiliate' && (
+                                  <span title="Origem: Afiliado">
+                                    <Target className="h-3 w-3 text-emerald-400" />
+                                  </span>
+                                )}
+                                {user.origin === 'moderator' && (
+                                  <span title="Origem: Moderador">
+                                    <Shield className="h-3 w-3 text-sky-400" />
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-2.5 text-[11px] text-white/60 max-w-[220px] truncate">
+                          {user.email || '-'}
+                        </TableCell>
+                        <TableCell className="py-2.5">
+                          <span className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-full ring-1 ${toneClass}`}>
+                            {subscriptionStatus.icon}
+                            {subscriptionStatus.label}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-2.5">
+                          <div className="flex items-center gap-1.5">
+                            <CircleDot className={`h-2.5 w-2.5 ${activityStatus.color}`} />
+                            <span className="text-[11px] text-white/60">{activityStatus.label}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-2.5 text-[12px] text-white/75 tabular-nums">
+                          {user.credits || 0}
+                        </TableCell>
+                        <TableCell className="py-2.5">
+                          <div className="flex items-center gap-1.5 justify-center">
+                            {!user.hasIncompleteProfile ? (
+                              <ImpersonateButton
+                                targetUser={{
+                                  id: user.id,
+                                  name: user.name,
+                                  email: user.email,
+                                  artistic_name: user.artistic_name,
+                                }}
+                                targetRole="user"
+                                size="sm"
+                                variant="outline"
+                              />
+                            ) : (
+                              <Button variant="outline" size="sm" disabled title="Perfil incompleto">
+                                <Users className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+
+                            <button
+                              onClick={() => handleViewUser(user)}
+                              disabled={user.hasIncompleteProfile}
+                              title={user.hasIncompleteProfile ? 'Perfil incompleto' : 'Editar usuário'}
+                              className="h-7 w-7 rounded-md flex items-center justify-center bg-white/[0.03] hover:bg-white/[0.06] text-white/60 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              <Edit className="h-3.5 w-3.5" />
+                            </button>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <button className="h-7 w-7 rounded-md flex items-center justify-center bg-white/[0.03] hover:bg-red-400/10 text-white/60 hover:text-red-300 transition-colors">
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-[#141416] border-white/[0.08]">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="flex items-center gap-2 text-white">
+                                    <AlertTriangle className="h-5 w-5 text-red-400" />
+                                    Excluir usuário
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription className="text-white/60">
+                                    Tem certeza que deseja excluir <strong className="text-white/90">{user.name || user.email}</strong>?
+                                    Esta ação marcará o usuário como excluído e ele não aparecerá mais na lista.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteUser(user.id, user.name)}
+                                    className="bg-red-500/90 text-white hover:bg-red-500"
+                                  >
+                                    Excluir
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
+
+/* ---------- presentation primitives ---------- */
+
+const OriginPill: React.FC<{
+  active: boolean;
+  label: string;
+  count: number;
+  dot: string;
+  icon: React.ReactNode;
+  onClick?: () => void;
+}> = ({ active, label, count, dot, icon, onClick }) => {
+  const Tag: any = onClick ? 'button' : 'div';
+  return (
+    <Tag
+      onClick={onClick}
+      className={`group relative text-left rounded-xl overflow-hidden p-2.5
+                  bg-white/[0.025] hover:bg-white/[0.045]
+                  shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset]
+                  transition-all duration-200
+                  ${active ? 'ring-1 ring-white/15 bg-white/[0.055]' : ''}`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+          <span className="text-[10px] uppercase tracking-[0.14em] text-white/45 truncate">{label}</span>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-[13px] font-light text-white tabular-nums">{count}</span>
+          <span className="h-5 w-5 rounded-full flex items-center justify-center bg-white/[0.04] text-white/55">
+            {icon}
+          </span>
+        </div>
+      </div>
+    </Tag>
+  );
+};
+
