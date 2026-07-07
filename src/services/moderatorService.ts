@@ -158,31 +158,31 @@ export const getModeratorDashboardStatsForUser = async (moderatorId?: string): P
 };
 
 // Buscar usuários gerenciados pelo moderador (filtrar usuários excluídos)
-export const getManagedUsers = async (): Promise<ManagedUserData[]> => {
+export const getManagedUsers = async (moderatorIdOverride?: string): Promise<ManagedUserData[]> => {
   try {
     console.log('👥 Fetching managed users...');
-    
-    // Obter o ID do usuário autenticado
-    const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !currentUser) {
-      console.error('❌ Error getting authenticated user:', authError);
-      return [];
+
+    let moderatorId = moderatorIdOverride;
+    if (!moderatorId) {
+      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !currentUser) {
+        console.error('❌ Error getting authenticated user:', authError);
+        return [];
+      }
+      moderatorId = currentUser.id;
     }
-    
-    console.log('🔑 Authenticated moderator ID:', currentUser.id);
-    
-    // Fazemos duas consultas separadas para evitar problemas de join
-    // CRÍTICO: Filtrar apenas pelos usuários deste moderador específico
+
+    console.log('🔑 Moderator ID for query:', moderatorId);
+
     const { data: moderatorUsers, error: moderatorError } = await supabase
       .from('moderator_users')
       .select('user_id, created_at')
-      .eq('moderator_id', currentUser.id)
+      .eq('moderator_id', moderatorId)
       .order('created_at', { ascending: false });
 
     if (moderatorError) {
       console.error('❌ Error fetching moderator users:', moderatorError);
-      return []; // Return empty array instead of throwing
+      return [];
     }
 
     if (!moderatorUsers || moderatorUsers.length === 0) {
