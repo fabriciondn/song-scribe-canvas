@@ -46,9 +46,11 @@ export const ModeratorUsers = () => {
 
   const queryClient = useQueryClient();
 
+  const currentUser = useCurrentUser();
   const { data: users, isLoading, refetch } = useQuery({
-    queryKey: ['managed-users'],
-    queryFn: getManagedUsers,
+    queryKey: ['managed-users', currentUser?.id],
+    queryFn: () => getManagedUsers(currentUser?.id),
+    enabled: !!currentUser?.id,
   });
 
   // Buscar contagem de obras registradas por usuário
