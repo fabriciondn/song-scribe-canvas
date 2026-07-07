@@ -260,8 +260,7 @@ Deno.serve(async (req) => {
           user_id: authData.user.id,
           action: 'user_created_by_moderator',
           metadata: {
-            moderator_id: user.id,
-            target_moderator_id: targetModeratorId,
+            moderator_id: targetModeratorId,
             performed_by: user.id,
             is_admin_operation: isAdmin,
             moderator_email: user.email,
