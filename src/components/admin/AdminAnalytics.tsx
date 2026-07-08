@@ -158,11 +158,26 @@ export const AdminAnalytics: React.FC = () => {
     queryFn: async () => {
       const { data: registrations } = await supabase.from('author_registrations').select('genre');
       const genreCounts = (registrations || []).reduce((acc, reg) => {
-        const genre = reg.genre || 'Não informado';
+        const raw = (reg.genre || 'Não informado').trim();
+        // Normaliza casing: primeira letra maiúscula
+        const genre = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
         acc[genre] = (acc[genre] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
-      return Object.entries(genreCounts).map(([genre, count]) => ({ name: genre, value: count }));
+
+      const sorted = Object.entries(genreCounts)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value);
+
+      // Top 7 + agrega o restante em "Outros"
+      const TOP = 7;
+      const top = sorted.slice(0, TOP);
+      const rest = sorted.slice(TOP);
+      if (rest.length > 0) {
+        const others = rest.reduce((s, r) => s + r.value, 0);
+        top.push({ name: `Outros (${rest.length})`, value: others });
+      }
+      return top;
     },
     refetchInterval: 300000,
   });
