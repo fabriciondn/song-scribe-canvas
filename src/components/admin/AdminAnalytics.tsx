@@ -1,12 +1,115 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+} from 'recharts';
 import { getAdminDashboardStats } from '@/services/adminService';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  TrendingUp,
+  Music,
+  Users,
+  Activity,
+  FileText,
+  Handshake,
+  Award,
+  FolderOpen,
+} from 'lucide-react';
 
-// Cores para os gráficos
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff00ff'];
+/* Premium palette for charts */
+const CHART_COLORS = ['#34d399', '#60a5fa', '#f59e0b', '#a78bfa', '#f472b6', '#22d3ee'];
+
+/* ---------- Premium primitives ---------- */
+
+const Panel: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+  tint?: string;
+}> = ({ children, className = '', tint }) => (
+  <div
+    className={`relative overflow-hidden rounded-2xl bg-white/[0.025] border border-white/[0.05]
+                shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_18px_36px_-25px_rgba(0,0,0,0.6)]
+                ${className}`}
+  >
+    {tint && <div className={`absolute inset-0 pointer-events-none ${tint}`} />}
+    <div className="relative">{children}</div>
+  </div>
+);
+
+const PanelHeader: React.FC<{
+  kicker: string;
+  title: string;
+  description?: string;
+  dot: string;
+  icon: React.ElementType;
+}> = ({ kicker, title, description, dot, icon: Icon }) => (
+  <div className="px-5 pt-4 pb-3 border-b border-white/[0.05]">
+    <div className="flex items-center justify-between gap-3">
+      <div>
+        <div className="flex items-center gap-2">
+          <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+          <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">{kicker}</span>
+        </div>
+        <h3 className="mt-1 text-white text-[15px] font-light tracking-tight">{title}</h3>
+        {description && <p className="mt-0.5 text-[11px] text-white/40">{description}</p>}
+      </div>
+      <Icon className="h-4 w-4 text-white/35" strokeWidth={1.5} />
+    </div>
+  </div>
+);
+
+const StatTile: React.FC<{
+  kicker: string;
+  value: React.ReactNode;
+  hint?: string;
+  icon: React.ElementType;
+  tint: string;
+  dot: string;
+}> = ({ kicker, value, hint, icon: Icon, tint, dot }) => (
+  <div
+    className="relative overflow-hidden rounded-2xl p-4 bg-white/[0.025]
+               shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_14px_28px_-22px_rgba(0,0,0,0.55)]"
+  >
+    <div className={`absolute inset-0 pointer-events-none ${tint}`} />
+    <div className="relative flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+          <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">{kicker}</span>
+        </div>
+        <p className="mt-2 text-[26px] leading-none font-light tracking-tight text-white tabular-nums">
+          {value}
+        </p>
+        {hint && <p className="mt-1.5 text-[11px] text-white/45">{hint}</p>}
+      </div>
+      <Icon className="h-7 w-7 text-white/40" strokeWidth={1.4} />
+    </div>
+  </div>
+);
+
+const chartTooltipStyle = {
+  contentStyle: {
+    background: '#0c0c0e',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 12,
+    fontSize: 12,
+    color: '#fff',
+    boxShadow: '0 18px 36px -18px rgba(0,0,0,0.7)',
+  },
+  labelStyle: { color: 'rgba(255,255,255,0.55)', fontSize: 11 },
+  itemStyle: { color: '#fff' },
+} as const;
 
 export const AdminAnalytics: React.FC = () => {
   const { data: stats } = useQuery({
@@ -15,7 +118,6 @@ export const AdminAnalytics: React.FC = () => {
     refetchInterval: 30000,
   });
 
-  // Dados para gráfico de crescimento (últimos 7 dias)
   const { data: growthData } = useQuery({
     queryKey: ['admin-growth-data'],
     queryFn: async () => {
@@ -31,7 +133,7 @@ export const AdminAnalytics: React.FC = () => {
             .from('profiles')
             .select('id')
             .lte('created_at', `${date}T23:59:59`);
-          
+
           const { data: songs } = await supabase
             .from('songs')
             .select('id')
@@ -41,39 +143,30 @@ export const AdminAnalytics: React.FC = () => {
           return {
             date: new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
             usuarios: users?.length || 0,
-            musicas: songs?.length || 0
+            musicas: songs?.length || 0,
           };
-        })
+        }),
       );
 
       return results;
     },
-    refetchInterval: 300000, // 5 minutos
+    refetchInterval: 300000,
   });
 
-  // Dados para distribuição por gêneros
   const { data: genreData } = useQuery({
     queryKey: ['admin-genre-data'],
     queryFn: async () => {
-      const { data: registrations } = await supabase
-        .from('author_registrations')
-        .select('genre');
-
+      const { data: registrations } = await supabase.from('author_registrations').select('genre');
       const genreCounts = (registrations || []).reduce((acc, reg) => {
         const genre = reg.genre || 'Não informado';
         acc[genre] = (acc[genre] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
-
-      return Object.entries(genreCounts).map(([genre, count]) => ({
-        name: genre,
-        value: count
-      }));
+      return Object.entries(genreCounts).map(([genre, count]) => ({ name: genre, value: count }));
     },
     refetchInterval: 300000,
   });
 
-  // Dados de atividade por dia da semana
   const { data: activityData } = useQuery({
     queryKey: ['admin-activity-data'],
     queryFn: async () => {
@@ -81,132 +174,165 @@ export const AdminAnalytics: React.FC = () => {
         .from('user_activity_logs')
         .select('timestamp')
         .gte('timestamp', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
-
       const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
       const dayCounts = Array(7).fill(0);
-
-      (activities || []).forEach(activity => {
+      (activities || []).forEach((activity) => {
         const dayOfWeek = new Date(activity.timestamp).getDay();
         dayCounts[dayOfWeek]++;
       });
-
-      return dayNames.map((day, index) => ({
-        dia: day,
-        atividades: dayCounts[index]
-      }));
+      return dayNames.map((day, index) => ({ dia: day, atividades: dayCounts[index] }));
     },
-    refetchInterval: 60000, // 1 minuto
+    refetchInterval: 60000,
   });
 
   return (
-    <div className="space-y-6">
-      {/* Gráfico de Crescimento */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Crescimento da Plataforma</CardTitle>
-          <CardDescription>Usuários e músicas registrados nos últimos 7 dias</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={growthData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Area type="monotone" dataKey="usuarios" stackId="1" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-              <Area type="monotone" dataKey="musicas" stackId="1" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
+    <div className="space-y-5">
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+          <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">Insights</span>
+        </div>
+        <h2 className="mt-1.5 text-white text-2xl font-light tracking-tight">Analytics</h2>
+        <p className="mt-1 text-[12px] text-white/45">
+          Evolução da plataforma, distribuição por gêneros e atividade dos usuários.
+        </p>
+      </div>
+
+      {/* Growth chart */}
+      <Panel tint="bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.06),transparent_55%)]">
+        <PanelHeader
+          kicker="Crescimento"
+          title="Crescimento da plataforma"
+          description="Usuários e músicas registrados nos últimos 7 dias"
+          dot="bg-sky-400"
+          icon={TrendingUp}
+        />
+        <div className="p-4">
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={growthData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="gUsers" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#60a5fa" stopOpacity={0.5} />
+                  <stop offset="100%" stopColor="#60a5fa" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gSongs" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#34d399" stopOpacity={0.5} />
+                  <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="date" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+              <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+              <Tooltip {...chartTooltipStyle} />
+              <Area type="monotone" dataKey="usuarios" stroke="#60a5fa" strokeWidth={1.5} fill="url(#gUsers)" />
+              <Area type="monotone" dataKey="musicas" stroke="#34d399" strokeWidth={1.5} fill="url(#gSongs)" />
             </AreaChart>
           </ResponsiveContainer>
-        </CardContent>
-      </Card>
+        </div>
+      </Panel>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Distribuição por Gêneros */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribuição por Gêneros</CardTitle>
-            <CardDescription>Gêneros musicais mais populares</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Genre pie */}
+        <Panel tint="bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.06),transparent_55%)]">
+          <PanelHeader
+            kicker="Repertório"
+            title="Distribuição por gêneros"
+            description="Gêneros musicais mais registrados"
+            dot="bg-violet-400"
+            icon={Music}
+          />
+          <div className="p-4">
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
                   data={genreData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
+                  label={({ name, percent }) =>
+                    `${name} ${((percent as number) * 100).toFixed(0)}%`
+                  }
+                  outerRadius={90}
+                  innerRadius={45}
+                  paddingAngle={2}
                   dataKey="value"
+                  stroke="rgba(12,12,14,0.9)"
+                  strokeWidth={2}
                 >
-                  {genreData?.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {genreData?.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip {...chartTooltipStyle} />
               </PieChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </Panel>
 
-        {/* Atividade por Dia da Semana */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Atividade Semanal</CardTitle>
-            <CardDescription>Atividades dos usuários por dia da semana</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={activityData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="dia" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="atividades" fill="#8884d8" />
+        {/* Weekly activity */}
+        <Panel tint="bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.06),transparent_55%)]">
+          <PanelHeader
+            kicker="Engajamento"
+            title="Atividade semanal"
+            description="Atividades por dia da semana (últimos 7 dias)"
+            dot="bg-amber-400"
+            icon={Activity}
+          />
+          <div className="p-4">
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={activityData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gBar" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.3} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="dia" stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="rgba(255,255,255,0.35)" fontSize={11} tickLine={false} axisLine={false} />
+                <Tooltip {...chartTooltipStyle} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Bar dataKey="atividades" fill="url(#gBar)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </Panel>
       </div>
 
-      {/* Métricas Detalhadas */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats?.totalDrafts || 0}</p>
-              <p className="text-sm text-muted-foreground">Rascunhos Ativos</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">{stats?.totalPartnerships || 0}</p>
-              <p className="text-sm text-muted-foreground">Parcerias Criadas</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-purple-600">{stats?.totalRegisteredWorks || 0}</p>
-              <p className="text-sm text-muted-foreground">Obras Registradas</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-orange-600">{stats?.totalFolders || 0}</p>
-              <p className="text-sm text-muted-foreground">Pastas Organizadas</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Detailed metrics */}
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+        <StatTile
+          kicker="Rascunhos"
+          value={stats?.totalDrafts || 0}
+          hint="Ativos na plataforma"
+          icon={FileText}
+          tint="bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.08),transparent_55%)]"
+          dot="bg-sky-400"
+        />
+        <StatTile
+          kicker="Parcerias"
+          value={stats?.totalPartnerships || 0}
+          hint="Criadas entre compositores"
+          icon={Handshake}
+          tint="bg-[radial-gradient(circle_at_top_right,rgba(52,211,153,0.08),transparent_55%)]"
+          dot="bg-emerald-400"
+        />
+        <StatTile
+          kicker="Obras"
+          value={stats?.totalRegisteredWorks || 0}
+          hint="Registros concluídos"
+          icon={Award}
+          tint="bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.08),transparent_55%)]"
+          dot="bg-violet-400"
+        />
+        <StatTile
+          kicker="Pastas"
+          value={stats?.totalFolders || 0}
+          hint="Organizadas por usuários"
+          icon={FolderOpen}
+          tint="bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.08),transparent_55%)]"
+          dot="bg-amber-400"
+        />
       </div>
     </div>
   );
