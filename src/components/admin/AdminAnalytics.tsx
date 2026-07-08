@@ -258,30 +258,72 @@ export const AdminAnalytics: React.FC = () => {
             icon={Music}
           />
           <div className="p-4">
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={genreData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name} ${((percent as number) * 100).toFixed(0)}%`
-                  }
-                  outerRadius={90}
-                  innerRadius={45}
-                  paddingAngle={2}
-                  dataKey="value"
-                  stroke="rgba(12,12,14,0.9)"
-                  strokeWidth={2}
-                >
-                  {genreData?.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip {...chartTooltipStyle} />
-              </PieChart>
-            </ResponsiveContainer>
+            {(() => {
+              const total = (genreData || []).reduce((s, g) => s + g.value, 0);
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                  <div className="h-[240px] relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={genreData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={62}
+                          outerRadius={95}
+                          paddingAngle={2}
+                          dataKey="value"
+                          stroke="rgba(12,12,14,0.9)"
+                          strokeWidth={2}
+                        >
+                          {genreData?.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          {...chartTooltipStyle}
+                          formatter={(v: any, n: any) => [`${v} (${((Number(v) / total) * 100).toFixed(1)}%)`, n]}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-white/40">Total</p>
+                      <p className="text-2xl font-light text-white tabular-nums">{total}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 max-h-[240px] overflow-y-auto pr-1">
+                    {(genreData || []).map((g, i) => {
+                      const pct = total > 0 ? (g.value / total) * 100 : 0;
+                      const color = CHART_COLORS[i % CHART_COLORS.length];
+                      return (
+                        <div key={g.name} className="group">
+                          <div className="flex items-center justify-between gap-2 text-[12px]">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="h-2 w-2 rounded-full shrink-0" style={{ background: color }} />
+                              <span className="text-white/80 truncate">{g.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-white/60 tabular-nums shrink-0">
+                              <span className="text-white/45 text-[11px]">{pct.toFixed(1)}%</span>
+                              <span className="text-white">{g.value}</span>
+                            </div>
+                          </div>
+                          <div className="mt-1 h-1 rounded-full bg-white/[0.04] overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{ width: `${pct}%`, background: color, opacity: 0.75 }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {(!genreData || genreData.length === 0) && (
+                      <p className="text-[12px] text-white/40 text-center py-6">Sem dados de gêneros</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </Panel>
 
