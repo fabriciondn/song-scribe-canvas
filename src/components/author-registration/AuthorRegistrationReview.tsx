@@ -356,7 +356,7 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         console.log('💰 Processando comissão de afiliado no registro autoral...');
         const { data: commissionData, error: commissionError } = await supabase.rpc('process_affiliate_first_purchase', {
           p_user_id: targetUserId,
-          p_payment_amount: 19.99,
+          p_payment_amount: 29.90,
           p_payment_id: registrationData.id
         });
         

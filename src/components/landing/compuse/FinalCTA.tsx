@@ -32,7 +32,7 @@ export const FinalCTA: React.FC<Props> = ({ onCTA }) => {
             </button>
           </div>
           <p className="mt-4 text-xs" style={{ color: 'var(--c-text-soft)' }}>
-            Certificado digital em minutos · Suporte via WhatsApp · A partir de R$ 19,99
+            Certificado digital em minutos · Suporte via WhatsApp · A partir de R$ 29,90
           </p>
         </Reveal>
 

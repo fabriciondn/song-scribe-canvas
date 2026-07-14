@@ -460,14 +460,14 @@ export async function trackAffiliateClick(affiliateCode: string, utmParams?: Rec
 // Processar conversão
 // Valores atualizados da plataforma
 const PLATFORM_PRICES = {
-  AUTHOR_REGISTRATION: 19.99, // Novo preço do registro autoral
+  AUTHOR_REGISTRATION: 29.90, // Novo preço do registro autoral
   SUBSCRIPTION_MONTHLY: 15.00, // Preço da assinatura mensal
-  CREDIT_UNIT: 19.99 // Preço do crédito
+  CREDIT_UNIT: 29.90 // Preço do crédito
 };
 
 // Taxas de comissão por nível
-// Até 5 registros: 25% de R$ 19,99 = R$ 4,9975
-// Após 5 registros: 50% de R$ 19,99 = R$ 9,995
+// Até 5 registros: 25% de R$ 29,90 = R$ 4,9975
+// Após 5 registros: 50% de R$ 29,90 = R$ 9,995
 const COMMISSION_RATES = {
   BRONZE_REGISTRATION_FIRST_5: 0.25, // 25% sobre registro até 5 (R$ 4,9975)
   SILVER_REGISTRATION_AFTER_5: 0.50, // 50% sobre registro após 5 (R$ 9,995)

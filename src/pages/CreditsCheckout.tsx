@@ -194,18 +194,18 @@ export default function CreditsCheckout() {
   };
 
   const pricing = useMemo(() => {
-    let unitPrice = 19.99;
+    let unitPrice = 29.90;
     let bonusCredits = 0;
     let savings = 0;
-    let originalPrice = 19.99 * credits;
+    let originalPrice = 29.90 * credits;
 
     // Super Oferta de 10 créditos + 2 grátis
     if (credits === 10) {
       unitPrice = 17.99;
       bonusCredits = 2;
-      // Preço original seria 12 créditos x 19,99 = 239,88
+      // Preço original seria 12 créditos x 29,90 = 239,88
       // Preço com oferta: 10 créditos x 17,99 = 179,90
-      originalPrice = 19.99 * 12; // 239,88
+      originalPrice = 29.90 * 12; // 239,88
       savings = originalPrice - 10 * unitPrice; // 239,88 - 179,90 = 59,98
     }
     let totalAmount = credits * unitPrice;

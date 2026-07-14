@@ -28,7 +28,7 @@ export interface CheckoutConfig {
   upsellTitle?: string;
   upsellText?: string;
   upsellBadge?: string;
-  upsellPriceLabel?: string;      // ex: "R$ 19,99"
+  upsellPriceLabel?: string;      // ex: "R$ 29,90"
   upsellOldPriceLabel?: string;   // ex: "R$ 40,00"
 
   // Order-bump: Capa personalizada (+R$ 4,99)
@@ -85,9 +85,9 @@ export const DEFAULT_CONFIG: {
   upsellEnabled: true,
   upsellTitle: '🎉 Uau, sua música ficou incrível!',
   upsellText:
-    'Aproveite e proteja sua música com nosso Registro Autoral com validade jurídica — só nesta página por R$ 19,99 (de R$ 40,00).',
+    'Aproveite e proteja sua música com nosso Registro Autoral com validade jurídica — só nesta página por R$ 29,90 (de R$ 40,00).',
   upsellBadge: 'Oferta exclusiva',
-  upsellPriceLabel: 'R$ 19,99',
+  upsellPriceLabel: 'R$ 29,90',
   upsellOldPriceLabel: 'R$ 40,00',
   coverBumpEnabled: true,
   coverBumpTitle: '🎨 Capa personalizada para sua música',

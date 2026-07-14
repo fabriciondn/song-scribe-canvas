@@ -190,7 +190,7 @@ const PurchaseFlow: React.FC<{
   const toggle = (id: string) =>
     setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
 
-  const total = 49.99 + (includeReg ? 19.99 : 0);
+  const total = 49.99 + (includeReg ? 29.90 : 0);
 
   const startOrder = async () => {
     if (selected.length === 0) {
@@ -316,7 +316,7 @@ const PurchaseFlow: React.FC<{
 
         <div className="text-center text-sm opacity-80">
           Total: <span className="font-bold text-lg" style={{ color: cfg.primary }}>R$ {total.toFixed(2).replace('.', ',')}</span>
-          {includeReg && <span className="block text-xs">Faixas R$ 49,99 + Registro R$ 19,99</span>}
+          {includeReg && <span className="block text-xs">Faixas R$ 49,99 + Registro R$ 29,90</span>}
         </div>
         <Button className="w-full text-white" onClick={startOrder} disabled={creatingOrder || selected.length === 0}
           style={{ backgroundColor: cfg.primary }}
@@ -692,7 +692,7 @@ const PurchaseFlowInternal: React.FC<{
 
   const coverEffectivelyIncluded = includeCover && !!selectedCoverUrl;
   const total =
-    49.99 + (includeReg ? 19.99 : 0) + (coverEffectivelyIncluded ? 4.99 : 0);
+    49.99 + (includeReg ? 29.90 : 0) + (coverEffectivelyIncluded ? 4.99 : 0);
 
   const startOrder = async () => {
     if (selected.length === 0) {
@@ -839,7 +839,7 @@ const PurchaseFlowInternal: React.FC<{
           {(includeReg || coverEffectivelyIncluded) && (
             <span className="block text-xs">
               Faixas R$ 49,99
-              {includeReg && ' + Registro R$ 19,99'}
+              {includeReg && ' + Registro R$ 29,90'}
               {coverEffectivelyIncluded && ' + Capa R$ 4,99'}
             </span>
           )}
