@@ -587,3 +587,7 @@
 @media (prefers-reduced-motion: reduce) {
   .compuse-scope * { animation: none !important; transition-duration: 0.01ms !important; }
 }
+
+#lovable-badge {
+  display: none !important;
+}
