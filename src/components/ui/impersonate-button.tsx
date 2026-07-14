@@ -74,7 +74,7 @@ export const ImpersonateButton = ({
       case 'admin':
         return 'Operar como Admin';
       case 'moderator':
-        return 'Operar como Moderador';
+        return 'Operar como Parceiro';
       case 'user':
       default:
         return 'Operar como';

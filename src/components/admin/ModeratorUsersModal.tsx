@@ -153,7 +153,7 @@ export const ModeratorUsersModal: React.FC<ModeratorUsersModalProps> = ({
               </div>
             ) : filteredUsers.length === 0 ? (
               <div className="text-muted-foreground text-center py-8">
-                {searchTerm ? 'Nenhum usuário encontrado' : 'Este moderador ainda não gerencia nenhum usuário'}
+                {searchTerm ? 'Nenhum usuário encontrado' : 'Este parceiro ainda não gerencia nenhum usuário'}
               </div>
             ) : (
               <div className="overflow-x-auto">

@@ -299,7 +299,7 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
             >
               <MaterialIcon name={userRole?.role === 'admin' ? 'admin_panel_settings' : 'shield_person'} className="text-xl" />
               <span className="font-medium">
-                {userRole?.role === 'admin' ? 'Painel Admin' : 'Painel Moderador'}
+                {userRole?.role === 'admin' ? 'Painel Admin' : 'Painel Parceiro'}
               </span>
             </button>
           </>

@@ -1557,7 +1557,7 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                             .delete()
                             .eq('user_id', user.id);
                           if (error) throw error;
-                          toast({ title: 'Sucesso', description: 'Vínculo com moderador removido' });
+                          toast({ title: 'Sucesso', description: 'Vínculo com parceiro removido' });
                           refetchModeratorLink();
                           setSelectedModeratorId('');
                         } catch (err: any) {
