@@ -238,7 +238,7 @@ export const AdminMenuFunctions = () => {
                   <div className="flex items-center justify-between">
                     <Badge variant="outline" className="flex items-center gap-1">
                       <Shield className="h-3 w-3" />
-                      Moderador
+                      Parceiro
                     </Badge>
                     <ImpersonateButton
                       targetUser={{
@@ -263,7 +263,7 @@ export const AdminMenuFunctions = () => {
             <div className="text-center py-8 text-muted-foreground">
               <UserCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Nenhum parceiro encontrado</p>
-              <p className="text-sm">Crie moderadores na seção "Gestão de Parceiros"</p>
+              <p className="text-sm">Crie parceiros na seção "Gestão de Parceiros"</p>
             </div>
           )}
         </CardContent>

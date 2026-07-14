@@ -233,7 +233,7 @@ export const CreateModeratorModal: React.FC<CreateModeratorModalProps> = ({
                 ) : (
                   <>
                     <UserPlus className="h-4 w-4 mr-2" />
-                    Criar Moderador
+                    Criar Parceiro
                   </>
                 )}
               </Button>
@@ -303,7 +303,7 @@ export const CreateModeratorModal: React.FC<CreateModeratorModalProps> = ({
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">
                       <Mail className="h-3 w-3 mr-1" />
-                      Moderador
+                      Parceiro
                     </Badge>
                     <Badge variant="outline">
                       500 créditos iniciais
