@@ -87,7 +87,7 @@ export const AdminModerators = () => {
       await supabase
         .from('profiles')
         .update({ 
-          name: `[USUÁRIO EXCLUÍDO] - ${profile?.name || 'Moderador'}`,
+          name: `[USUÁRIO EXCLUÍDO] - ${profile?.name || 'Parceiro'}`,
           email: `deleted_moderator_${moderatorId}@deleted.com`
         })
         .eq('id', moderatorId);
@@ -103,15 +103,15 @@ export const AdminModerators = () => {
 
       toast({
         title: 'Sucesso',
-        description: 'Moderador excluído com sucesso',
+        description: 'Parceiro excluído com sucesso',
       });
 
       refetch();
     } catch (error: any) {
-      console.error('Erro ao excluir moderador:', error);
+      console.error('Erro ao excluir parceiro:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao excluir moderador',
+        description: error.message || 'Erro ao excluir parceiro',
         variant: 'destructive',
       });
     }
