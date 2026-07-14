@@ -88,11 +88,11 @@ export const CreateModeratorModal: React.FC<CreateModeratorModalProps> = ({
 
       // Ir para tela de credenciais
       setStep('credentials');
-      toast.success('Moderador criado com sucesso!');
+      toast.success('Parceiro criado com sucesso!');
 
     } catch (error: any) {
-      console.error('Erro ao criar moderador:', error);
-      toast.error(error.message || 'Erro ao criar moderador');
+      console.error('Erro ao criar parceiro:', error);
+      toast.error(error.message || 'Erro ao criar parceiro');
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,7 @@ export const CreateModeratorModal: React.FC<CreateModeratorModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
-            {step === 'form' ? 'Criar Novo Moderador' : 'Credenciais do Moderador'}
+            {step === 'form' ? 'Criar Novo Parceiro' : 'Credenciais do Parceiro'}
           </DialogTitle>
         </DialogHeader>
 
@@ -146,7 +146,7 @@ export const CreateModeratorModal: React.FC<CreateModeratorModalProps> = ({
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Nome do moderador"
+                  placeholder="Nome do parceiro"
                   required
                 />
               </div>
@@ -213,9 +213,9 @@ export const CreateModeratorModal: React.FC<CreateModeratorModalProps> = ({
             <div className="bg-muted/50 p-4 rounded-lg">
               <h4 className="font-medium mb-2">Informações Importantes:</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• O moderador terá permissão para criar e gerenciar usuários</li>
+                <li>• O parceiro terá permissão para criar e gerenciar usuários</li>
                 <li>• Ele poderá transferir créditos para os usuários que criar</li>
-                <li>• O moderador receberá {formData.credits || '500'} créditos iniciais</li>
+                <li>• O parceiro receberá {formData.credits || '500'} créditos iniciais</li>
                 <li>• O email será usado para login na plataforma</li>
               </ul>
             </div>
@@ -233,7 +233,7 @@ export const CreateModeratorModal: React.FC<CreateModeratorModalProps> = ({
                 ) : (
                   <>
                     <UserPlus className="h-4 w-4 mr-2" />
-                    Criar Moderador
+                    Criar Parceiro
                   </>
                 )}
               </Button>
@@ -246,12 +246,12 @@ export const CreateModeratorModal: React.FC<CreateModeratorModalProps> = ({
                 <CardHeader>
                   <CardTitle className="text-green-500 flex items-center gap-2">
                     <Check className="h-5 w-5" />
-                    Moderador Criado com Sucesso!
+                    Parceiro Criado com Sucesso!
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-muted-foreground">
-                    O moderador <strong>{credentials.name}</strong> foi criado com sucesso. 
+                    O parceiro <strong>{credentials.name}</strong> foi criado com sucesso. 
                     Abaixo estão as credenciais de acesso:
                   </p>
 
@@ -295,7 +295,7 @@ export const CreateModeratorModal: React.FC<CreateModeratorModalProps> = ({
 
                   <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-lg">
                     <p className="text-sm text-orange-600 dark:text-orange-400">
-                      <strong>Importante:</strong> Copie e envie essas credenciais para o moderador de forma segura. 
+                      <strong>Importante:</strong> Copie e envie essas credenciais para o parceiro de forma segura. 
                       Esta é a única vez que a senha será exibida em texto simples.
                     </p>
                   </div>
@@ -303,7 +303,7 @@ export const CreateModeratorModal: React.FC<CreateModeratorModalProps> = ({
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">
                       <Mail className="h-3 w-3 mr-1" />
-                      Moderador
+                      Parceiro
                     </Badge>
                     <Badge variant="outline">
                       500 créditos iniciais

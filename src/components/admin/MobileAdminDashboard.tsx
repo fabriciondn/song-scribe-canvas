@@ -35,7 +35,7 @@ const menuItems = [
   { key: 'online-visitors', label: 'Visitantes Online', icon: Activity },
   { key: 'users', label: 'Usuários', icon: Users },
   { key: 'registrations', label: 'Registros', icon: FileCheck },
-  { key: 'moderators', label: 'Moderadores', icon: UserCog },
+  { key: 'moderators', label: 'Parceiros', icon: UserCog },
   { key: 'roles', label: 'Papéis', icon: Award },
   { key: 'affiliates', label: 'Afiliados', icon: Users },
   { key: 'affiliate-withdrawals', label: 'Saques Afiliados', icon: TrendingUp },

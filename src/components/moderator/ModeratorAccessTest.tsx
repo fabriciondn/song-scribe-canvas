@@ -57,7 +57,7 @@ export const ModeratorAccessTest = () => {
             <div>Pode impersonar usuário: <Badge variant={impersonation.canImpersonate('user') ? 'default' : 'secondary'}>
               {impersonation.canImpersonate('user') ? 'Sim' : 'Não'}
             </Badge></div>
-            <div>Pode impersonar moderador: <Badge variant={impersonation.canImpersonate('moderator') ? 'default' : 'secondary'}>
+            <div>Pode impersonar parceiro: <Badge variant={impersonation.canImpersonate('moderator') ? 'default' : 'secondary'}>
               {impersonation.canImpersonate('moderator') ? 'Sim' : 'Não'}
             </Badge></div>
           </div>

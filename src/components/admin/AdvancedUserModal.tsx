@@ -1306,7 +1306,7 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                         const labels: Record<string, string> = {
                           'user_login': 'Login realizado',
                           'credits_updated_by_admin': 'Créditos atualizados pelo admin',
-                          'credits_updated_by_moderator': 'Créditos atualizados por moderador',
+                          'credits_updated_by_moderator': 'Créditos atualizados por parceiro',
                           'pro_activated_by_admin': 'Pro ativado pelo admin',
                           'user_deleted_by_admin': 'Usuário excluído',
                           'song_created': 'Música criada',
@@ -1457,7 +1457,7 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                         <SelectItem value="moderator">
                           <div className="flex items-center gap-2">
                             <UserCog className="h-4 w-4" />
-                            Moderador
+                            Parceiro
                           </div>
                         </SelectItem>
                         <SelectItem value="admin">
@@ -1470,7 +1470,7 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                     </Select>
                     <p className="text-xs text-muted-foreground mt-2">
                       {selectedRole === 'user' && 'Usuário comum sem privilégios administrativos'}
-                      {selectedRole === 'moderator' && 'Pode gerenciar créditos e criar usuários (recebe 100 créditos ao se tornar moderador)'}
+                      {selectedRole === 'moderator' && 'Pode gerenciar créditos e criar usuários (recebe 100 créditos ao se tornar parceiro)'}
                       {selectedRole === 'admin' && 'Acesso completo ao sistema administrativo'}
                     </p>
                   </div>
@@ -1526,21 +1526,21 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
               </CardContent>
             </Card>
 
-            {/* Transferir para Moderador */}
+            {/* Transferir para Parceiro */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <ArrowRightLeft className="h-5 w-5" />
-                  Transferir para Moderador
+                  Transferir para Parceiro
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {currentModeratorLink ? (
                   <div className="space-y-3">
                     <div className="p-3 bg-muted rounded-lg">
-                      <p className="text-sm font-medium">Moderador atual:</p>
+                      <p className="text-sm font-medium">Parceiro atual:</p>
                       <p className="text-sm text-muted-foreground">
-                        {moderatorsList?.find((m: any) => m.id === currentModeratorLink.moderator_id)?.name || 'Moderador desconhecido'}
+                        {moderatorsList?.find((m: any) => m.id === currentModeratorLink.moderator_id)?.name || 'Parceiro desconhecido'}
                         {' '}
                         ({moderatorsList?.find((m: any) => m.id === currentModeratorLink.moderator_id)?.email || ''})
                       </p>
@@ -1557,7 +1557,7 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                             .delete()
                             .eq('user_id', user.id);
                           if (error) throw error;
-                          toast({ title: 'Sucesso', description: 'Vínculo com moderador removido' });
+                          toast({ title: 'Sucesso', description: 'Vínculo com parceiro removido' });
                           refetchModeratorLink();
                           setSelectedModeratorId('');
                         } catch (err: any) {
@@ -1573,10 +1573,10 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                 ) : null}
                 <div className="flex gap-4 items-end">
                   <div className="flex-1">
-                    <Label>Moderador</Label>
+                    <Label>Parceiro</Label>
                     <Select value={selectedModeratorId} onValueChange={setSelectedModeratorId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um moderador" />
+                        <SelectTrigger>
+                        <SelectValue placeholder="Selecione um parceiro" />
                       </SelectTrigger>
                       <SelectContent>
                         {moderatorsList?.map((mod: any) => (
@@ -1590,7 +1590,7 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground mt-2">
-                      O usuário será adicionado à lista de clientes do moderador selecionado
+                      O usuário será adicionado à lista de clientes do parceiro selecionado
                     </p>
                   </div>
                   <Button
@@ -1625,7 +1625,7 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                           },
                         });
 
-                        toast({ title: 'Sucesso', description: 'Usuário transferido para o moderador com sucesso' });
+                        toast({ title: 'Sucesso', description: 'Usuário transferido para o parceiro com sucesso' });
                         refetchModeratorLink();
                         setSelectedModeratorId('');
                         onUserUpdate();

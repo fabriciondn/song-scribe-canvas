@@ -64,8 +64,8 @@ export const UserOriginReport: React.FC = () => {
   const rows = [
     {
       key: 'moderator',
-      label: 'Por Moderador',
-      hint: 'Usuários criados manualmente por moderadores',
+      label: 'Por Parceiro',
+      hint: 'Usuários criados manualmente por parceiros',
       value: stats?.byModerator || 0,
       pct: stats?.percentages.moderator || 0,
       icon: <UserPlus className="h-3.5 w-3.5" />,

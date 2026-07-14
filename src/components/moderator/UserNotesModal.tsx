@@ -99,7 +99,7 @@ export const UserNotesModal = ({ isOpen, onClose, user }: UserNotesModalProps) =
         
         <div className="space-y-4">
           <div>
-            <Label htmlFor="notes">Notas do Moderador</Label>
+            <Label htmlFor="notes">Notas do Parceiro</Label>
             <Textarea
               id="notes"
               value={notes}

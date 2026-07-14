@@ -402,7 +402,7 @@ export const AdminUsers = () => {
         return 'Gratuito';
       })();
 
-      const originLabel = user.origin === 'moderator' ? 'Moderador' : 
+      const originLabel = user.origin === 'moderator' ? 'Parceiro' : 
                          user.origin === 'affiliate' ? 'Afiliado' : 
                          'Cadastro Direto';
 
@@ -515,7 +515,7 @@ export const AdminUsers = () => {
                       <SelectContent>
                         <SelectItem value="all">Todos</SelectItem>
                         <SelectItem value="affiliate">Afiliado</SelectItem>
-                        <SelectItem value="moderator">Moderador</SelectItem>
+                        <SelectItem value="moderator">Parceiro</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -560,7 +560,7 @@ export const AdminUsers = () => {
           />
           <OriginPill
             active={originFilter === 'moderator'}
-            label="Moderadores"
+            label="Parceiros"
             count={moderatorCount}
             dot="bg-sky-400"
             icon={<UserPlus className="h-3 w-3" />}
@@ -596,13 +596,13 @@ export const AdminUsers = () => {
             {originFilter === 'moderator' && moderatorsList && moderatorsList.length > 0 && (
               <Select value={specificModeratorId || 'all'} onValueChange={(value) => setSpecificModeratorId(value === 'all' ? '' : value)}>
                 <SelectTrigger className="bg-white/[0.03] border-white/[0.06] text-white text-[12px] h-9 md:w-72">
-                  <SelectValue placeholder="Filtrar por moderador…" />
+                  <SelectValue placeholder="Filtrar por parceiro…" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os moderadores</SelectItem>
+                  <SelectItem value="all">Todos os parceiros</SelectItem>
                   {moderatorsList.map((mod: any) => (
                     <SelectItem key={mod.user_id} value={mod.user_id}>
-                      {mod.profile?.name || mod.profile?.email || 'Moderador'}
+                      {mod.profile?.name || mod.profile?.email || 'Parceiro'}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -729,7 +729,7 @@ export const AdminUsers = () => {
                                   </span>
                                 )}
                                 {user.origin === 'moderator' && (
-                                  <span title="Origem: Moderador">
+                                  <span title="Origem: Parceiro">
                                     <Shield className="h-3 w-3 text-sky-400" />
                                   </span>
                                 )}

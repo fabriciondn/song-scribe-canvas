@@ -102,7 +102,7 @@ export const Header = ({
     if (isModerator) {
       return {
         icon: Shield,
-        text: 'Painel Moderador'
+        text: 'Painel Parceiro'
       };
     }
 

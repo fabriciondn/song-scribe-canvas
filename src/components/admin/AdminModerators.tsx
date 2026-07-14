@@ -63,7 +63,7 @@ export const AdminModerators = () => {
 
   const handleDeleteModerator = async (moderatorId: string) => {
     try {
-      // Buscar perfil do moderador para log
+      // Buscar perfil do parceiro para log
       const { data: profile } = await supabase
         .from('profiles')
         .select('name, email')
@@ -87,7 +87,7 @@ export const AdminModerators = () => {
       await supabase
         .from('profiles')
         .update({ 
-          name: `[USUÁRIO EXCLUÍDO] - ${profile?.name || 'Moderador'}`,
+          name: `[USUÁRIO EXCLUÍDO] - ${profile?.name || 'Parceiro'}`,
           email: `deleted_moderator_${moderatorId}@deleted.com`
         })
         .eq('id', moderatorId);
@@ -103,15 +103,15 @@ export const AdminModerators = () => {
 
       toast({
         title: 'Sucesso',
-        description: 'Moderador excluído com sucesso',
+        description: 'Parceiro excluído com sucesso',
       });
 
       refetch();
     } catch (error: any) {
-      console.error('Erro ao excluir moderador:', error);
+      console.error('Erro ao excluir parceiro:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao excluir moderador',
+        description: error.message || 'Erro ao excluir parceiro',
         variant: 'destructive',
       });
     }
@@ -121,15 +121,15 @@ export const AdminModerators = () => {
     <div className="space-y-4 md:space-y-6 px-1 md:px-0">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Gestão de Moderadores</h2>
+          <h2 className="text-2xl font-bold">Gestão de Parceiros</h2>
           <p className="text-muted-foreground">
-            Crie, edite e gerencie moderadores da plataforma
+            Crie, edite e gerencie parceiros da plataforma
           </p>
         </div>
         <div className="flex gap-3">
           <Button onClick={() => setIsCreateModeratorModalOpen(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
-            Criar Moderador
+            Criar Parceiro
           </Button>
         </div>
       </div>
@@ -160,9 +160,9 @@ export const AdminModerators = () => {
 
       {/* Lista de moderadores */}
       <div className="mt-4 md:mt-8">
-        <h3 className="text-base md:text-lg font-semibold mb-2">Moderadores cadastrados</h3>
+        <h3 className="text-base md:text-lg font-semibold mb-2">Parceiros cadastrados</h3>
         {isLoading ? (
-          <div className="text-muted-foreground">Carregando moderadores...</div>
+          <div className="text-muted-foreground">Carregando parceiros...</div>
         ) : (
           <div className="overflow-x-auto">
             <Table className="min-w-[350px] text-xs md:text-base">
@@ -203,7 +203,7 @@ export const AdminModerators = () => {
                         <ImpersonateButton
                           targetUser={{
                             id: mod.user_id,
-                            name: mod.profile?.name || 'Moderador',
+                            name: mod.profile?.name || 'Parceiro',
                             email: mod.profile?.email || '',
                             artistic_name: null
                           }}
@@ -230,11 +230,11 @@ export const AdminModerators = () => {
                             <AlertDialogHeader>
                               <AlertDialogTitle className="flex items-center gap-2">
                                 <AlertTriangle className="h-5 w-5 text-destructive" />
-                                Excluir Moderador
+                                Excluir Parceiro
                               </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Tem certeza que deseja excluir o moderador <strong>{mod.profile?.name || 'este moderador'}</strong>?
-                                Esta ação não pode ser desfeita. Os usuários criados por este moderador 
+                                Tem certeza que deseja excluir o parceiro <strong>{mod.profile?.name || 'este parceiro'}</strong>?
+                                Esta ação não pode ser desfeita. Os usuários criados por este parceiro 
                                 permanecerão na plataforma.
                               </AlertDialogDescription>
                             </AlertDialogHeader>

@@ -102,7 +102,7 @@ export const RevenueDetailsModal: React.FC<RevenueDetailsModalProps> = ({
               Detalhes do faturamento
             </DialogTitle>
             <DialogDescription className="text-white/45 text-[12px]">
-              Transações via Mercado Pago, OpenPix e moderadores
+              Transações via Mercado Pago, OpenPix e parceiros
             </DialogDescription>
 
             <div className="pt-3 flex items-baseline gap-3">
@@ -121,8 +121,8 @@ export const RevenueDetailsModal: React.FC<RevenueDetailsModalProps> = ({
         <div className="px-5 pt-4 pb-3">
           <div className="grid grid-cols-3 gap-2">
             <FilterPill value="all" label="Todos" value$={totals.all} count={totals.countAll} tone="emerald" />
-            <FilterPill value="without_mod" label="Sem moderadores" value$={totals.withoutMod} count={totals.countWithoutMod} />
-            <FilterPill value="with_mod" label="Com moderadores" value$={totals.withMod} count={totals.countWithMod} tone="amber" />
+            <FilterPill value="without_mod" label="Sem parceiros" value$={totals.withoutMod} count={totals.countWithoutMod} />
+            <FilterPill value="with_mod" label="Com parceiros" value$={totals.withMod} count={totals.countWithMod} tone="amber" />
           </div>
         </div>
 
@@ -175,7 +175,7 @@ export const RevenueDetailsModal: React.FC<RevenueDetailsModalProps> = ({
                             <p className="text-[13px] font-medium text-white truncate">{t.user_name}</p>
                             {isMod && (
                               <span className="text-[9px] uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-full bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/20">
-                                Moderador
+                                Parceiro
                               </span>
                             )}
                             <span className="text-[10px] text-white/35">· {formatDate(t.completed_at)}</span>

@@ -222,10 +222,10 @@ export const MobileAdminOverview: React.FC = () => {
               </div>
             </div>
 
-            {/* Por Moderador */}
+            {/* Por Parceiro */}
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
-                <span className="text-white/60">Por Moderador</span>
+                <span className="text-white/60">Por Parceiro</span>
                 <span className="text-white">{originData?.byModerator || 0} ({originData?.moderatorPercent || 0}%)</span>
               </div>
               <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">

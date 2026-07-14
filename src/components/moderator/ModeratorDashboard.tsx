@@ -162,9 +162,9 @@ export const ModeratorDashboard = ({ activeTab = 'overview' }: ModeratorDashboar
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background">
             <SidebarTrigger />
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-semibold text-foreground">Dashboard do Moderador</h1>
+              <h1 className="text-lg font-semibold text-foreground">Dashboard do Parceiro</h1>
               <Badge variant="secondary" className="text-xs">
-                Sistema de Moderação
+                Sistema de Parceria
               </Badge>
             </div>
             <div className="ml-auto flex items-center space-x-2">

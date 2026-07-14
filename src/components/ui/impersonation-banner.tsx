@@ -49,7 +49,7 @@ export const ImpersonationBanner = () => {
       case 'admin':
         return 'Administrador';
       case 'moderator':
-        return 'Moderador';
+        return 'Parceiro';
       default:
         return 'Usuário';
     }
@@ -95,7 +95,7 @@ export const ImpersonationBanner = () => {
                   </Badge>
                 </div>
                 <div className="text-xs text-warning-foreground/70 truncate">
-                  {originalUser.role === 'admin' ? 'Super Admin' : 'Moderador'}: {originalUser.name || originalUser.email}
+                  {originalUser.role === 'admin' ? 'Super Admin' : 'Parceiro'}: {originalUser.name || originalUser.email}
                 </div>
               </div>
             </div>

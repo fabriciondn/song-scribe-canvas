@@ -38,7 +38,7 @@ export const AdminRoles: React.FC = () => {
 
   const roles = [
     { value: 'admin', label: 'Administrador', color: 'bg-red-100 text-red-800' },
-    { value: 'moderator', label: 'Moderador', color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'moderator', label: 'Parceiro', color: 'bg-yellow-100 text-yellow-800' },
     { value: 'premium', label: 'Premium', color: 'bg-purple-100 text-purple-800' },
     { value: 'user', label: 'Usuário', color: 'bg-blue-100 text-blue-800' },
   ];

@@ -113,7 +113,7 @@ export const ModeratorUpdates = () => {
           Atualizações do Sistema
         </h2>
         <p className="text-muted-foreground">
-          Novidades, melhorias e correções do painel do moderador
+          Novidades, melhorias e correções do painel do parceiro
         </p>
       </div>
 

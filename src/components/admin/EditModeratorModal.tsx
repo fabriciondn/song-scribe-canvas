@@ -81,16 +81,16 @@ export const EditModeratorModal: React.FC<EditModeratorModalProps> = ({
 
       toast({
         title: 'Sucesso',
-        description: 'Moderador atualizado com sucesso',
+        description: 'Parceiro atualizado com sucesso',
       });
 
       onModeratorUpdated();
       onClose();
     } catch (error: any) {
-      console.error('Erro ao atualizar moderador:', error);
+      console.error('Erro ao atualizar parceiro:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao atualizar moderador',
+        description: error.message || 'Erro ao atualizar parceiro',
         variant: 'destructive',
       });
     } finally {
@@ -102,7 +102,7 @@ export const EditModeratorModal: React.FC<EditModeratorModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar Moderador</DialogTitle>
+          <DialogTitle>Editar Parceiro</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -112,7 +112,7 @@ export const EditModeratorModal: React.FC<EditModeratorModalProps> = ({
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Nome do moderador"
+              placeholder="Nome do parceiro"
               required
             />
           </div>

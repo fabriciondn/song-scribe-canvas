@@ -23,7 +23,7 @@ export const moderatorTransactionService = {
 
     if (moderatorError) {
       console.error('Erro ao buscar créditos do moderador:', moderatorError);
-      throw new Error('Erro ao verificar créditos do moderador');
+      throw new Error('Erro ao verificar créditos do parceiro');
     }
 
     if (!moderatorProfile || moderatorProfile.credits < amount) {

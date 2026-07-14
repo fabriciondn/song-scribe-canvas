@@ -282,7 +282,7 @@ export default function ModeratorRecharge() {
             alt="Compuse Logo" 
             className="h-10 mx-auto" 
           />
-          <p className="text-muted-foreground text-sm mt-1">Recarga de Créditos - Moderador</p>
+          <p className="text-muted-foreground text-sm mt-1">Recarga de Créditos - Parceiro</p>
         </div>
 
         <Button variant="ghost" onClick={() => navigate('/moderator')} className="mb-6">
@@ -376,10 +376,10 @@ export default function ModeratorRecharge() {
 
               <div className="bg-green-50 dark:bg-green-950 p-3 rounded-lg border border-green-200 dark:border-green-800">
                 <h3 className="font-semibold text-green-800 dark:text-green-200 text-sm mb-1">
-                  Preço Especial para Moderadores
+                  Preço Especial para Parceiros
                 </h3>
                 <p className="text-xs text-green-700 dark:text-green-300">
-                  Moderadores têm preço diferenciado de R$ 10,00 por crédito
+                  Parceiros têm preço diferenciado de R$ 10,00 por crédito
                 </p>
               </div>
             </CardContent>

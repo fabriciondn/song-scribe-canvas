@@ -363,7 +363,7 @@ export const getRevenueTransactions = async (): Promise<RevenueTransaction[]> =>
       const credits = creditsByModerator.get(modId) || 0;
       const works = worksByModerator.get(modId) || 0;
       const lastDate = lastDateByModerator.get(modId) || new Date().toISOString();
-      const moderatorName = mod?.name || 'Moderador';
+      const moderatorName = mod?.name || 'Parceiro';
 
       if (credits > 0) {
         moderatorTransactionsData.push({
