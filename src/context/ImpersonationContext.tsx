@@ -195,7 +195,7 @@ export const ImpersonationProvider: React.FC<ImpersonationProviderProps> = ({ ch
       
       const displayName = targetUser.name || targetUser.email;
       const roleDisplay = targetUser.role === 'admin' ? 'Administrador' : 
-                         targetUser.role === 'moderator' ? 'Moderador' : 'Usuário';
+                         targetUser.role === 'moderator' ? 'Parceiro' : 'Usuário';
       toast.success(`Operando como ${roleDisplay}: ${displayName}`);
     } catch (error) {
       console.error('Erro ao iniciar impersonação:', error);

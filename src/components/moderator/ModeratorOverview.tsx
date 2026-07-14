@@ -344,7 +344,7 @@ const Header: React.FC<{ onRefresh: () => void; isFetching: boolean }> = ({ onRe
     <div>
       <div className="flex items-center gap-2">
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-        <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">Painel do Moderador</span>
+        <span className="text-[10px] uppercase tracking-[0.18em] text-white/45">Painel do Parceiro</span>
       </div>
       <h2 className="text-lg font-light tracking-tight text-white mt-0.5 leading-tight">Visão geral</h2>
       <p className="text-[11px] text-white/40">Usuários e atividades que você gerencia</p>

@@ -1470,7 +1470,7 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                     </Select>
                     <p className="text-xs text-muted-foreground mt-2">
                       {selectedRole === 'user' && 'Usuário comum sem privilégios administrativos'}
-                      {selectedRole === 'moderator' && 'Pode gerenciar créditos e criar usuários (recebe 100 créditos ao se tornar moderador)'}
+                      {selectedRole === 'moderator' && 'Pode gerenciar créditos e criar usuários (recebe 100 créditos ao se tornar parceiro)'}
                       {selectedRole === 'admin' && 'Acesso completo ao sistema administrativo'}
                     </p>
                   </div>
@@ -1526,12 +1526,12 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
               </CardContent>
             </Card>
 
-            {/* Transferir para Moderador */}
+            {/* Transferir para Parceiro */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <ArrowRightLeft className="h-5 w-5" />
-                  Transferir para Moderador
+                  Transferir para Parceiro
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1573,7 +1573,7 @@ export const AdvancedUserModal: React.FC<AdvancedUserModalProps> = ({
                 ) : null}
                 <div className="flex gap-4 items-end">
                   <div className="flex-1">
-                    <Label>Moderador</Label>
+                    <Label>Parceiro</Label>
                     <Select value={selectedModeratorId} onValueChange={setSelectedModeratorId}>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um moderador" />

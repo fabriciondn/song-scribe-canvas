@@ -113,7 +113,7 @@ export const AdminOverview: React.FC<{ bizMetrics?: BizMetrics }> = ({ bizMetric
                 <div className="flex items-center gap-2 mt-2">
                   <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300/90">
                     <TrendingUp className="h-3 w-3" />
-                    Plataforma + moderadores
+                    Plataforma + parceiros
                   </span>
                   <span className="text-white/20">·</span>
                   <span className="text-[11px] text-white/40">Toque para filtrar</span>

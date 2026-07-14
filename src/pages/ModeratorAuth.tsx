@@ -62,7 +62,7 @@ const ModeratorAuth = () => {
 
         if (!moderatorData) {
           await supabase.auth.signOut();
-          throw new Error('Acesso negado. Esta área é restrita a moderadores e administradores.');
+          throw new Error('Acesso negado. Esta área é restrita a parceiros e administradores.');
         }
 
         toast.success('Login realizado com sucesso!');
@@ -97,8 +97,8 @@ const ModeratorAuth = () => {
               <Shield className="h-8 w-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Acesso de Moderador</CardTitle>
-          <CardDescription>Entre com suas credenciais de moderador</CardDescription>
+          <CardTitle className="text-2xl">Acesso de Parceiro</CardTitle>
+          <CardDescription>Entre com suas credenciais de parceiro</CardDescription>
         </CardHeader>
         <CardContent>
           {error && (

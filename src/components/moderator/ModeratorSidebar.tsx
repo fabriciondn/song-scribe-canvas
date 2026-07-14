@@ -80,7 +80,7 @@ export function ModeratorSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Moderador</SidebarGroupLabel>
+          <SidebarGroupLabel>Parceiro</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {moderatorNavItems.map((item) => (
@@ -126,7 +126,7 @@ export function ModeratorSidebar() {
                       <span className="font-medium truncate max-w-24">
                         {user?.user_metadata?.name || user?.email?.split('@')[0]}
                       </span>
-                      <span className="text-muted-foreground">Moderador</span>
+                      <span className="text-muted-foreground">Parceiro</span>
                     </div>
                   </Button>
                 </DropdownMenuTrigger>

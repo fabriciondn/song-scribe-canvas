@@ -92,7 +92,7 @@ export function ModeratorProfile() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Perfil do Moderador</h2>
+        <h2 className="text-2xl font-bold">Perfil do Parceiro</h2>
         <p className="text-muted-foreground">
           Gerencie suas informações pessoais e configurações de conta
         </p>
@@ -294,7 +294,7 @@ export function ModeratorProfile() {
               <Label htmlFor="role">Função</Label>
               <Input
                 id="role"
-                value="Moderador"
+                value="Parceiro"
                 disabled
                 className="bg-muted"
               />

@@ -45,7 +45,7 @@ const adminMenuItems = [
     id: "registrations",
   },
   {
-    title: "Moderadores",
+    title: "Parceiros",
     icon: UserCheck,
     id: "moderators",
   },

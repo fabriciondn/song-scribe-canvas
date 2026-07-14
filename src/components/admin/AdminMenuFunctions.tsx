@@ -208,7 +208,7 @@ export const AdminMenuFunctions = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserCheck className="h-5 w-5" />
-            Moderadores Ativos
+            Parceiros Ativos
             <Badge variant="secondary">{moderators?.length || 0}</Badge>
           </CardTitle>
         </CardHeader>
@@ -262,8 +262,8 @@ export const AdminMenuFunctions = () => {
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <UserCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhum moderador encontrado</p>
-              <p className="text-sm">Crie moderadores na seção "Gestão de Moderadores"</p>
+              <p>Nenhum parceiro encontrado</p>
+              <p className="text-sm">Crie moderadores na seção "Gestão de Parceiros"</p>
             </div>
           )}
         </CardContent>

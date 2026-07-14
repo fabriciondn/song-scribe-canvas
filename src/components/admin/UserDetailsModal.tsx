@@ -93,7 +93,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
         setUserOrigin({
           type: 'moderator',
-          referrerName: moderatorProfile?.artistic_name || moderatorProfile?.name || 'Moderador',
+          referrerName: moderatorProfile?.artistic_name || moderatorProfile?.name || 'Parceiro',
           referrerId: moderatorUser.moderator_id
         });
         return;
@@ -199,10 +199,10 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 {userOrigin.type === 'moderator' && (
                   <>
                     <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                      Criado por Moderador
+                      Criado por Parceiro
                     </Badge>
                     <span className="text-sm">
-                      Moderador: <span className="font-semibold">{userOrigin.referrerName}</span>
+                      Parceiro: <span className="font-semibold">{userOrigin.referrerName}</span>
                     </span>
                   </>
                 )}
@@ -259,9 +259,9 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
             </div>
           </div>
 
-          {/* Notas do Moderador */}
+          {/* Notas do Parceiro */}
           <div className="space-y-2">
-            <Label htmlFor="moderator-notes">Notas do Moderador</Label>
+            <Label htmlFor="moderator-notes">Notas do Parceiro</Label>
             <Textarea
               id="moderator-notes"
               value={moderatorNotes}
