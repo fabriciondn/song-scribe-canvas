@@ -214,7 +214,7 @@ const Oferta: React.FC = () => {
             <br />
             <span className="text-white">proteja sua música por apenas</span>{' '}
             <span className="bg-gradient-to-r from-primary to-green-300 bg-clip-text text-transparent">
-              R$19,99
+              R$29,90
             </span>
           </h1>
           
@@ -267,7 +267,7 @@ const Oferta: React.FC = () => {
                 Nosso registro de{' '}
                 <span className="line-through text-gray-500">R$30,00</span>{' '}
                 por apenas{' '}
-                <span className="text-2xl font-bold text-primary">R$19,99</span>{' '}
+                <span className="text-2xl font-bold text-primary">R$29,90</span>{' '}
                 cada música
               </p>
               <div className="flex items-center justify-center gap-4 text-sm text-gray-400">
@@ -382,7 +382,7 @@ const Oferta: React.FC = () => {
             Pronto para proteger sua música?
           </h2>
           <p className="text-gray-400 mb-8">
-            Não deixe sua obra desprotegida. Registre agora por apenas R$19,99.
+            Não deixe sua obra desprotegida. Registre agora por apenas R$29,90.
           </p>
           
           <div className="flex justify-center">

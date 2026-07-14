@@ -259,7 +259,7 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
       try {
         await supabase.rpc('process_affiliate_first_purchase', {
           p_user_id: targetUserId,
-          p_payment_amount: 19.99,
+          p_payment_amount: 29.90,
           p_payment_id: registrationData.id
         });
       } catch {

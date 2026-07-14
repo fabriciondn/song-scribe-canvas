@@ -36,7 +36,7 @@ const testimonials: Testimonial[] = [
     role: "Compositor · São Paulo/SP",
   },
   {
-    text: "Eu achava que registrar música era caro e demorado. Paguei R$ 19,99 e recebi o certificado em minutos. Surreal.",
+    text: "Eu achava que registrar música era caro e demorado. Paguei R$ 29,90 e recebi o certificado em minutos. Surreal.",
     image: "https://hnencfkdsyiwtvktdvzy.supabase.co/storage/v1/object/public/avatars/f5fbc9bf-25c1-4757-b672-b4264f36cfa4/f5fbc9bf-25c1-4757-b672-b4264f36cfa4-0.9431225640274293.jpg",
     name: "Jefferson Lima",
     role: "Compositor · Campinas/SP",
