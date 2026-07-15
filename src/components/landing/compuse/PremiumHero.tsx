@@ -113,8 +113,7 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
               className="mt-6 text-base md:text-lg mx-auto"
               style={{ color: 'var(--c-text-muted)', maxWidth: 620 }}
             >
-              Registre sua obra em minutos, receba certificado digital com hash criptográfico
-              e garanta a prova de autoria — com suporte humano no WhatsApp.
+              {"\n"}
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
