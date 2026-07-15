@@ -107,7 +107,7 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
                   display: 'inline-block',
                 }}
               >
-                Registre e receba o certificado de registro autoral na hora
+                Registre sua composição e receba o certificado de registro autoral na hora
               </span>
             </h1>
 
