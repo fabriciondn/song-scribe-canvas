@@ -94,7 +94,7 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
                 textShadow: '0 4px 40px rgba(0,0,0,0.55)',
               }}
             >
-              Proteja sua música sem burocracia,
+              Mostrar sua música sem registrar é arriscar seus direitos
               <br />
               <span
                 style={{
@@ -105,7 +105,7 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
                   backgroundClip: 'text',
                 }}
               >
-                sem advogado e sem complicação.
+                Registre agora e receba o certificado na mesma hora
               </span>
             </h1>
 
