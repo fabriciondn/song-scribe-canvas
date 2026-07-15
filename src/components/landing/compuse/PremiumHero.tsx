@@ -103,6 +103,8 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
+                  fontSize: '0.5em',
+                  display: 'inline-block',
                 }}
               >
                 Registre e receba o certificado de registro autoral na hora
