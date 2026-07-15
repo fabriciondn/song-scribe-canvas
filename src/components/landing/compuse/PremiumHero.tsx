@@ -105,7 +105,7 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
                   backgroundClip: 'text',
                 }}
               >
-                Registre agora e receba o certificado na mesma hora
+                Registre e receba o certificado de registro autoral na hora
               </span>
             </h1>
 
