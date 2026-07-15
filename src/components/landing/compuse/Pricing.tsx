@@ -8,7 +8,7 @@ const plans = [
   {
     name: 'Registro unitário',
     description: 'Ideal para registrar uma música pontual com segurança jurídica e certificado oficial.',
-    price: 19.99,
+    price: 29.90,
     priceHint: '1 registro',
     buttonText: 'Registrar minha música',
     popular: false,

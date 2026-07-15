@@ -435,7 +435,7 @@ export const OrbitSystem: React.FC<Props> = ({ onPrimary, onSecondary }) => {
               </button>
             </div>
             <p className="mt-4 text-xs" style={{ color: 'var(--c-text-soft)' }}>
-              Certificado emitido em minutos · Suporte via WhatsApp · A partir de R$ 19,99
+              Certificado emitido em minutos · Suporte via WhatsApp · A partir de R$ 29,90
             </p>
           </div>
         </div>

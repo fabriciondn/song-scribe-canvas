@@ -4,7 +4,7 @@ import { Reveal } from './Reveal';
 const items = [
   {
     q: 'Mas registro autoral não é muito caro e complicado?',
-    a: 'A maioria das pessoas pensa nisso e desiste antes de tentar. A Compuse foi criada exatamente pra tirar essa barreira — o processo é feito pela nossa plataforma, custa a partir de R$ 19,99 e leva minutos, não meses.',
+    a: 'A maioria das pessoas pensa nisso e desiste antes de tentar. A Compuse foi criada exatamente pra tirar essa barreira — o processo é feito pela nossa plataforma, custa a partir de R$ 29,90 e leva minutos, não meses.',
   },
   {
     q: 'Esse certificado tem validade jurídica?',
