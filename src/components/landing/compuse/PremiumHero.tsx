@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import GradientBars from './GradientBars';
 import { AwardBadge } from '@/components/ui/award-badge';
+import { LogoMarquee } from './LogoMarquee';
 
 interface Props {
   onPrimary?: () => void;
