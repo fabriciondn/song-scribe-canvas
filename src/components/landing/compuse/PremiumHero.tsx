@@ -128,8 +128,8 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
               </button>
             </div>
 
-            <p className="mt-5 text-xs" style={{ color: 'var(--c-text-soft)' }}>
-              Também oferecemos o serviço adicional de lançamento em todas as plataformas
+            <p className="mt-5 text-xs whitespace-pre-line" style={{ color: 'var(--c-text-soft)' }}>
+              {"\n\n"}Também oferecemos o serviço adicional de lançamento em todas as plataformas
             </p>
 
             <div className="mt-8">
