@@ -67,7 +67,7 @@ const thirdColumn = testimonials.slice(6, 9);
 
 export const Testimonials: React.FC = () => {
   return (
-    <section className="py-24 relative overflow-hidden" style={{ background: "var(--c-bg-deep)" }}>
+    <section className="pt-12 pb-24 relative overflow-hidden" style={{ background: "var(--c-bg-deep)" }}>
       <div className="c-container z-10 mx-auto">
         <Reveal>
           <div className="flex flex-col items-center justify-center max-w-2xl mx-auto text-center">

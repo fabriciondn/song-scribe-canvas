@@ -26,7 +26,9 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
       className="relative overflow-hidden"
       style={{
         background: '#000',
-        minHeight: isMobile ? '100svh' : '100vh',
+        minHeight: 'auto',
+        paddingTop: isMobile ? 100 : 120,
+        paddingBottom: isMobile ? 60 : 80,
         display: 'flex',
         alignItems: 'center',
       }}
