@@ -121,7 +121,7 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
               <button onClick={onPrimary} className="c-btn c-btn-primary">
-                Registrar minha música agora <ArrowRight size={16} />
+                Proteger música agora <ArrowRight size={16} />
               </button>
               <button onClick={onSecondary} className="c-btn c-btn-secondary">
                 Como funciona
