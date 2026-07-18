@@ -103,15 +103,6 @@ export const Testimonials: React.FC = () => {
                   />
                 </svg>
               </div>
-              <span
-                className="text-[10px] uppercase tracking-[0.2em]"
-                style={{
-                  color: 'var(--c-primary)',
-                  opacity: 0.8,
-                }}
-              >
-                Role para ver mais
-              </span>
             </div>
 
             <div
