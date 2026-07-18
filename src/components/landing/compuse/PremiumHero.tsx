@@ -100,6 +100,7 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
               Mostrar sua música sem registrar é arriscar seus direitos
               <br />
               <span
+                className="mt-4 md:mt-5"
                 style={{
                   background:
                     'linear-gradient(90deg, var(--c-primary) 0%, #4ade80 50%, var(--c-primary) 100%)',
@@ -110,7 +111,7 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
                   display: 'inline-block',
                 }}
               >
-                {"\n"}Proteja sua composição e receba o certificado de registro autoral na hora
+                Proteja sua composição e receba o certificado de registro autoral na hora
               </span>
             </h1>
 
