@@ -99,9 +99,7 @@ export const Testimonials: React.FC = () => {
                     cy="10"
                     r="3"
                     fill="var(--c-primary)"
-                    style={{
-                      animation: 'scrollWheel 1.6s ease-in-out infinite',
-                    }}
+                    className="animate-scroll-wheel"
                   />
                 </svg>
               </div>
