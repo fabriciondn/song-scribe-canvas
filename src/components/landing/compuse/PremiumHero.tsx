@@ -129,7 +129,7 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
             </div>
 
             <p className="mt-5 text-xs" style={{ color: 'var(--c-text-soft)' }}>
-              Certificado emitido em minutos · Suporte via WhatsApp · A partir de R$ 29,90
+              Também oferecemos o serviço adicional de lançamento em todas as plataformas
             </p>
 
             <div className="mt-8">
