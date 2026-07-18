@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import GradientBars from './GradientBars';
 import { AwardBadge } from '@/components/ui/award-badge';
+import { LogoMarquee } from './LogoMarquee';
 
 interface Props {
   onPrimary?: () => void;
@@ -130,6 +131,10 @@ export const PremiumHero: React.FC<Props> = ({ onPrimary, onSecondary }) => {
             <p className="mt-5 text-xs" style={{ color: 'var(--c-text-soft)' }}>
               Certificado emitido em minutos · Suporte via WhatsApp · A partir de R$ 29,90
             </p>
+
+            <div className="mt-8">
+              <LogoMarquee />
+            </div>
           </div>
         </div>
       </div>
