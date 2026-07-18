@@ -7,8 +7,12 @@ import soundcloud from '@/assets/logos/soundcloud.svg';
 import facebook from '@/assets/logos/facebook.svg';
 import kwai from '@/assets/logos/kwai.svg';
 import tiktok from '@/assets/logos/tiktok.svg';
+import youtube from '@/assets/logos/youtube.svg';
+import spotify from '@/assets/logos/spotify.svg';
 
 const logos = [
+  { src: spotify, alt: 'Spotify' },
+  { src: youtube, alt: 'YouTube' },
   { src: deezer, alt: 'Deezer' },
   { src: amazon, alt: 'Amazon Music' },
   { src: tidal, alt: 'Tidal' },
