@@ -472,12 +472,27 @@
   }
 }
 
+@keyframes scroll-wheel {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 0.5;
+  }
+}
+
 .animate-gradient-shift {
   animation: gradient-shift 20s ease-in-out infinite;
 }
 
 .animate-pulse-slow {
   animation: pulse-slow 8s ease-in-out infinite;
+}
+
+.animate-scroll-wheel {
+  animation: scroll-wheel 1.6s ease-in-out infinite;
 }
 
 /* ============ COMPUSE DESIGN SYSTEM (landing) ============ */

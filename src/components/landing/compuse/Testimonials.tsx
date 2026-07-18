@@ -71,6 +71,49 @@ export const Testimonials: React.FC = () => {
       <div className="c-container z-10 mx-auto">
         <Reveal>
           <div className="flex flex-col items-center justify-center max-w-2xl mx-auto text-center">
+            <div className="mb-5 flex flex-col items-center gap-2">
+              <div
+                className="relative"
+                style={{ width: 24, height: 36 }}
+                aria-label="Role para baixo"
+              >
+                <svg
+                  width="24"
+                  height="36"
+                  viewBox="0 0 24 36"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ display: 'block' }}
+                >
+                  <rect
+                    x="1"
+                    y="1"
+                    width="22"
+                    height="34"
+                    rx="11"
+                    stroke="var(--c-primary)"
+                    strokeWidth="2"
+                  />
+                  <circle
+                    cx="12"
+                    cy="10"
+                    r="3"
+                    fill="var(--c-primary)"
+                    className="animate-scroll-wheel"
+                  />
+                </svg>
+              </div>
+              <span
+                className="text-[10px] uppercase tracking-[0.2em]"
+                style={{
+                  color: 'var(--c-primary)',
+                  opacity: 0.8,
+                }}
+              >
+                Role para ver mais
+              </span>
+            </div>
+
             <div
               className="px-4 py-1.5 rounded-full text-xs font-medium border"
               style={{
