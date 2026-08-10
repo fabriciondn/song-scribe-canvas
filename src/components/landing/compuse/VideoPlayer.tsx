@@ -223,11 +223,13 @@ export const VideoPlayer = React.forwardRef<HTMLDivElement, VideoPlayerProps>(
               <img
                 src={thumbSrc}
                 onError={handleThumbError}
+                onLoad={handleThumbLoad}
                 alt={title}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="absolute inset-0 h-full w-full object-cover scale-[1.02] transition-transform duration-700 group-hover:scale-105"
                 loading="lazy"
               />
             )}
+
             <div className="absolute inset-0 bg-black/25" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div
