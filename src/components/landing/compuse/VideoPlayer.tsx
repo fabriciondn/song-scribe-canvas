@@ -91,13 +91,26 @@ export const VideoPlayer = React.forwardRef<HTMLDivElement, VideoPlayerProps>(
         ? "aspect-[4/3]"
         : "aspect-video";
 
-    const handleThumbError = () => {
+    const nextThumb = () => {
       if (!resolvedId) return;
       if (thumbSrc?.includes("maxresdefault")) {
         setThumbSrc(`https://i.ytimg.com/vi/${resolvedId}/sddefault.jpg`);
       } else if (thumbSrc?.includes("sddefault")) {
         setThumbSrc(`https://i.ytimg.com/vi/${resolvedId}/hqdefault.jpg`);
+      } else if (thumbSrc?.includes("hqdefault")) {
+        setThumbSrc(`https://i.ytimg.com/vi/${resolvedId}/mqdefault.jpg`);
       }
+    };
+
+    // YouTube devolve um placeholder cinza (120x90) quando a resolução não existe
+    const handleThumbLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+      const img = e.currentTarget;
+      if (img.naturalWidth <= 120 || img.naturalHeight <= 90) nextThumb();
+    };
+
+    const handleThumbError = () => {
+      nextThumb();
+
     };
 
     // Cria o player quando o usuário inicia
@@ -210,11 +223,13 @@ export const VideoPlayer = React.forwardRef<HTMLDivElement, VideoPlayerProps>(
               <img
                 src={thumbSrc}
                 onError={handleThumbError}
+                onLoad={handleThumbLoad}
                 alt={title}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="absolute inset-0 h-full w-full object-cover scale-[1.02] transition-transform duration-700 group-hover:scale-105"
                 loading="lazy"
               />
             )}
+
             <div className="absolute inset-0 bg-black/25" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div
