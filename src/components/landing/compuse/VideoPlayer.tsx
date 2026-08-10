@@ -119,7 +119,6 @@ export const VideoPlayer = React.forwardRef<HTMLDivElement, VideoPlayerProps>(
             disablekb: 1,
             fs: 0,
             playsinline: 1,
-inline: 1,
           },
           events: {
             onReady: (e: any) => {
