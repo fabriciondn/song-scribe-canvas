@@ -279,12 +279,30 @@ export const AdminTutorials: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                />
-                <label className="text-sm font-medium">Tutorial ativo</label>
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                  />
+                  <label className="text-sm font-medium">Tutorial ativo</label>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Público-alvo *</label>
+                  <Select 
+                    value={formData.audience_type} 
+                    onValueChange={(value: 'user' | 'staff') => setFormData({ ...formData, audience_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o público" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">Usuários (Dashboard)</SelectItem>
+                      <SelectItem value="staff">Equipe (Painel Admin)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="flex justify-end space-x-2">
