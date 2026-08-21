@@ -95,6 +95,11 @@ const adminMenuItems = [
     id: "tutorials",
   },
   {
+    title: "Tutoriais Equipe",
+    icon: Play,
+    id: "staff-tutorials",
+  },
+  {
     title: "Banners",
     icon: FileText,
     id: "banners",

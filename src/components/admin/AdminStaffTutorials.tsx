@@ -112,7 +112,10 @@ export const AdminStaffTutorials: React.FC = () => {
         .order('order_index', { ascending: true });
 
       if (error) throw error;
-      setTutorials(data || []);
+      setTutorials((data || []).map(t => ({
+        ...t,
+        audience_type: 'staff' as const
+      })));
     } catch (error) {
       console.error('Erro ao buscar tutoriais da equipe:', error);
     } finally {

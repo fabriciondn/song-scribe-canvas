@@ -14,6 +14,7 @@ import { AdminSettings } from '@/components/admin/AdminSettings';
 import { AdminLogs } from '@/components/admin/AdminLogs';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminModerators } from '@/components/admin/AdminModerators';
+import { AdminStaffTutorials } from '@/components/admin/AdminStaffTutorials';
 import { AdminMenuFunctions } from '@/components/admin/AdminMenuFunctions';
 import { AdminForms } from '@/components/admin/AdminForms';
 import { AdminAffiliateWithdrawals } from '@/components/admin/AdminAffiliateWithdrawals';
@@ -274,6 +275,7 @@ const AdminDashboard: React.FC = () => {
       case 'raffle': return <AdminRaffle />;
       case 'content': return <AdminContent />;
       case 'tutorials': return <AdminTutorials />;
+      case 'staff-tutorials': return <AdminStaffTutorials />;
       case 'banners': return <AdminBanners />;
       case 'certificates': return <AdminCertificates />;
       case 'forms': return <AdminForms />;
