@@ -367,6 +367,9 @@ export const AdminTutorials: React.FC = () => {
                           Inativo
                         </Badge>
                       )}
+                      <Badge variant={tutorial.audience_type === 'staff' ? 'destructive' : 'secondary'}>
+                        {tutorial.audience_type === 'staff' ? 'Equipe' : 'Usuário'}
+                      </Badge>
                     </div>
                     {tutorial.description && (
                       <p className="text-sm text-muted-foreground mt-1">
