@@ -62,7 +62,10 @@ export const AdminTutorials: React.FC = () => {
         .order('order_index', { ascending: true });
 
       if (error) throw error;
-      setTutorials(data || []);
+      setTutorials((data || []).map(t => ({
+        ...t,
+        audience_type: (t.audience_type as 'user' | 'staff') || 'user'
+      })));
     } catch (error) {
       console.error('Erro ao buscar tutoriais:', error);
       toast.error('Erro ao carregar tutoriais');
