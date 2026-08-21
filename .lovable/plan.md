@@ -6,28 +6,28 @@ description: Implementação de uma nova seção de tutoriais para membros da eq
 ### Alterações sugeridas
 
 #### Backend (Banco de Dados)
-- Criar tabela `staff_tutorials` (ou adicionar coluna `target_audience` na tabela `tutorials`) para separar tutoriais de usuários e da equipe.
-- Definir políticas de RLS para que apenas administradores possam gerenciar e visualizar esses tutoriais.
+- Adicionar coluna `audience_type` (enum: 'user', 'staff') na tabela `public.tutorials`.
+- Criar migração para adicionar a coluna e atualizar as políticas de RLS.
+- Garantir que `audience_type = 'staff'` seja visível apenas para administradores.
 
 #### Frontend (Componentes Admin)
-- **Novo Componente**: `src/components/admin/AdminStaffTutorials.tsx` para gerenciamento (CRUD).
-- **Nova Página**: `src/pages/AdminStaffTutorials.tsx` (ou integrar no `AdminDashboard.tsx`) com layout "Estilo Netflix":
-    - Carrossel de categorias (Fileiras).
-    - Thumbnails grandes com efeito hover.
-    - Modal de reprodução de vídeo integrado.
-    - Fundo escuro profundo com detalhes em vermelho/branco (estética Compuse/Netflix).
+- **Novo Componente**: `src/components/admin/AdminStaffTutorials.tsx` para visualização dos tutoriais da equipe.
+    - Layout "Estilo Netflix" com fileiras de categorias.
+    - Animações de hover com escala e detalhes.
+    - Player de vídeo integrado.
+- **Componente de Gestão**: Atualizar `src/components/admin/AdminTutorials.tsx` para permitir escolher o público-alvo (Usuários ou Equipe).
 
-#### Navegação
-- **Sidebar Admin**: Adicionar item "Tutoriais Equipe" no `AdminSidebar.tsx`.
-- **Rotas**: Registrar a nova rota no `src/App.tsx`.
+#### Navegação e Rotas
+- **Sidebar Admin**: Adicionar item "Tutoriais Equipe" no `src/components/admin/AdminSidebar.tsx`.
+- **Admin Dashboard**: Adicionar a nova aba e o novo componente no `src/pages/AdminDashboard.tsx`.
 
 ### Detalhes Técnicos
-- Utilizar `framer-motion` para animações suaves de carrossel.
-- Reutilizar a lógica de upload e URL assinada para segurança dos vídeos internos.
-- Manter consistência com o Design System (círculos flutuantes e tema dark).
+- Utilizar `framer-motion` para as animações de fileira/hover estilo streaming.
+- Fundo `bg-[#0a0a0b]` consistente com o novo painel administrativo.
+- Acabamento premium com bordas finas e sombras suaves.
 
 ### Próximos Passos
-1. Criar a migração SQL para a nova tabela.
-2. Desenvolver o componente de visualização estilo Netflix.
-3. Desenvolver o componente de gerenciamento administrativo.
-4. Integrar na navegação e rotas.
+1. Executar migração SQL para adicionar `audience_type`.
+2. Criar o componente `AdminStaffTutorials.tsx` com o design Netflix.
+3. Integrar no sidebar e na lógica de abas do dashboard administrativo.
+4. Atualizar o formulário de criação de tutoriais para suportar a nova classificação.
