@@ -20,6 +20,7 @@ interface Tutorial {
   category: string;
   order_index: number;
   is_active: boolean;
+  audience_type: 'user' | 'staff';
   created_at: string;
 }
 
