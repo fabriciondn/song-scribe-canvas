@@ -134,6 +134,7 @@ export const AdminTutorials: React.FC = () => {
       video_url: tutorial.video_url,
       thumbnail_url: tutorial.thumbnail_url,
       category: tutorial.category,
+      audience_type: tutorial.audience_type || 'user',
       is_active: tutorial.is_active,
     });
     setDialogOpen(true);
