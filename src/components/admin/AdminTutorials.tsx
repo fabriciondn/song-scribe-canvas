@@ -120,6 +120,7 @@ export const AdminTutorials: React.FC = () => {
       video_url: '',
       thumbnail_url: '',
       category: '',
+      audience_type: 'user',
       is_active: true,
     });
     setEditingTutorial(null);
