@@ -29,6 +29,9 @@ const categories = [
   { value: 'collaboration', label: 'Colaboração' },
   { value: 'advanced', label: 'Avançado' },
   { value: 'tips', label: 'Dicas e Truques' },
+  { value: 'staff-onboarding', label: 'Onboarding Equipe' },
+  { value: 'staff-processes', label: 'Processos Internos' },
+  { value: 'staff-security', label: 'Segurança e Risco' },
 ];
 
 export const AdminTutorials: React.FC = () => {
