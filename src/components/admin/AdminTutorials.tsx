@@ -20,6 +20,7 @@ interface Tutorial {
   category: string;
   order_index: number;
   is_active: boolean;
+  audience_type: 'user' | 'staff';
   created_at: string;
 }
 
@@ -29,6 +30,9 @@ const categories = [
   { value: 'collaboration', label: 'Colaboração' },
   { value: 'advanced', label: 'Avançado' },
   { value: 'tips', label: 'Dicas e Truques' },
+  { value: 'staff-onboarding', label: 'Onboarding Equipe' },
+  { value: 'staff-processes', label: 'Processos Internos' },
+  { value: 'staff-security', label: 'Segurança e Risco' },
 ];
 
 export const AdminTutorials: React.FC = () => {
@@ -42,6 +46,7 @@ export const AdminTutorials: React.FC = () => {
     video_url: '',
     thumbnail_url: '',
     category: '',
+    audience_type: 'user' as 'user' | 'staff',
     is_active: true,
   });
 
@@ -57,7 +62,10 @@ export const AdminTutorials: React.FC = () => {
         .order('order_index', { ascending: true });
 
       if (error) throw error;
-      setTutorials(data || []);
+      setTutorials((data || []).map(t => ({
+        ...t,
+        audience_type: (t.audience_type as 'user' | 'staff') || 'user'
+      })));
     } catch (error) {
       console.error('Erro ao buscar tutoriais:', error);
       toast.error('Erro ao carregar tutoriais');
@@ -112,6 +120,7 @@ export const AdminTutorials: React.FC = () => {
       video_url: '',
       thumbnail_url: '',
       category: '',
+      audience_type: 'user',
       is_active: true,
     });
     setEditingTutorial(null);
@@ -125,6 +134,7 @@ export const AdminTutorials: React.FC = () => {
       video_url: tutorial.video_url,
       thumbnail_url: tutorial.thumbnail_url,
       category: tutorial.category,
+      audience_type: tutorial.audience_type || 'user',
       is_active: tutorial.is_active,
     });
     setDialogOpen(true);
@@ -269,12 +279,30 @@ export const AdminTutorials: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                />
-                <label className="text-sm font-medium">Tutorial ativo</label>
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                  />
+                  <label className="text-sm font-medium">Tutorial ativo</label>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Público-alvo *</label>
+                  <Select 
+                    value={formData.audience_type} 
+                    onValueChange={(value: 'user' | 'staff') => setFormData({ ...formData, audience_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o público" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">Usuários (Dashboard)</SelectItem>
+                      <SelectItem value="staff">Equipe (Painel Admin)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="flex justify-end space-x-2">
@@ -339,6 +367,9 @@ export const AdminTutorials: React.FC = () => {
                           Inativo
                         </Badge>
                       )}
+                      <Badge variant={tutorial.audience_type === 'staff' ? 'destructive' : 'secondary'}>
+                        {tutorial.audience_type === 'staff' ? 'Equipe' : 'Usuário'}
+                      </Badge>
                     </div>
                     {tutorial.description && (
                       <p className="text-sm text-muted-foreground mt-1">

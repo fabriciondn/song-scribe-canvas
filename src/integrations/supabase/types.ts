@@ -2619,6 +2619,7 @@ export type Database = {
       }
       tutorials: {
         Row: {
+          audience_type: string | null
           category: string | null
           created_at: string
           created_by: string | null
@@ -2632,6 +2633,7 @@ export type Database = {
           video_url: string
         }
         Insert: {
+          audience_type?: string | null
           category?: string | null
           created_at?: string
           created_by?: string | null
@@ -2645,6 +2647,7 @@ export type Database = {
           video_url: string
         }
         Update: {
+          audience_type?: string | null
           category?: string | null
           created_at?: string
           created_by?: string | null
