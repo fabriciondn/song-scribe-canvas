@@ -46,6 +46,7 @@ export const AdminTutorials: React.FC = () => {
     video_url: '',
     thumbnail_url: '',
     category: '',
+    audience_type: 'user' as 'user' | 'staff',
     is_active: true,
   });
 
