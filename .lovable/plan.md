@@ -1,22 +1,33 @@
-## Ativar PRO para Marcos Ribeiro Antonio
+---
+title: Adicionar Tutoriais da Equipe (Estilo Netflix)
+description: Implementação de uma nova seção de tutoriais para membros da equipe no painel administrativo, com identidade visual premium estilo Netflix.
+---
 
-Pagamento confirmado (R$ 29,99 PIX, 11/06/2026, "Pago" no painel do moderador Ednaldo Nedino).
+### Alterações sugeridas
 
-### Ações
+#### Backend (Banco de Dados)
+- Criar tabela `staff_tutorials` (ou adicionar coluna `target_audience` na tabela `tutorials`) para separar tutoriais de usuários e da equipe.
+- Definir políticas de RLS para que apenas administradores possam gerenciar e visualizar esses tutoriais.
 
-1. **Atualizar `subscriptions`** do user `4d684d02-6177-436f-a1d7-47da2b30a8a6`:
-   - `status` → `active`
-   - `started_at` → `now()`
-   - `expires_at` → `now() + 30 dias`
-   - `last_credit_grant_at` → `now()`
-   - mantém `payment_provider`, `payment_provider_subscription_id`, `plan_type=pro`
+#### Frontend (Componentes Admin)
+- **Novo Componente**: `src/components/admin/AdminStaffTutorials.tsx` para gerenciamento (CRUD).
+- **Nova Página**: `src/pages/AdminStaffTutorials.tsx` (ou integrar no `AdminDashboard.tsx`) com layout "Estilo Netflix":
+    - Carrossel de categorias (Fileiras).
+    - Thumbnails grandes com efeito hover.
+    - Modal de reprodução de vídeo integrado.
+    - Fundo escuro profundo com detalhes em vermelho/branco (estética Compuse/Netflix).
 
-2. **Registrar em `moderator_transactions`** para entrar no relatório do moderador Ednaldo (`a3eaa39e-9e7f-4f69-9494-4cae526b05e8`):
-   - `user_id` = Marcos
-   - `amount` = 29.99
-   - tipo/descrição: "Assinatura Plano PRO - PIX"
-   - `created_at` = now()
+#### Navegação
+- **Sidebar Admin**: Adicionar item "Tutoriais Equipe" no `AdminSidebar.tsx`.
+- **Rotas**: Registrar a nova rota no `src/App.tsx`.
 
-3. **Não mexer** em código nem em webhook — só atualização de dados.
+### Detalhes Técnicos
+- Utilizar `framer-motion` para animações suaves de carrossel.
+- Reutilizar a lógica de upload e URL assinada para segurança dos vídeos internos.
+- Manter consistência com o Design System (círculos flutuantes e tema dark).
 
-Posso executar?
+### Próximos Passos
+1. Criar a migração SQL para a nova tabela.
+2. Desenvolver o componente de visualização estilo Netflix.
+3. Desenvolver o componente de gerenciamento administrativo.
+4. Integrar na navegação e rotas.
