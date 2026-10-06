@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Users, UserPlus, Edit, Trash2, AlertTriangle, Crown, Clock, CircleDot, Download, Filter, Target, Shield } from 'lucide-react';
+import { Search, Users, UserPlus, Edit, Trash2, AlertTriangle, Crown, Clock, CircleDot, Download, Filter, Target, Shield, KeyRound } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -27,6 +28,27 @@ export const AdminUsers = () => {
   const [originFilter, setOriginFilter] = useState<'all' | 'affiliate' | 'moderator'>('all');
   const [specificAffiliateId, setSpecificAffiliateId] = useState<string>('');
   const [specificModeratorId, setSpecificModeratorId] = useState<string>('');
+  const [pwdUser, setPwdUser] = useState<any>(null);
+  const [newPwd, setNewPwd] = useState('');
+  const [savingPwd, setSavingPwd] = useState(false);
+
+  const handleSavePassword = async () => {
+    if (newPwd.length < 6) return;
+    setSavingPwd(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-user-password', {
+        body: { user_id: pwdUser.id, new_password: newPwd },
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message);
+      pwdToast({ title: 'Senha alterada', description: `Nova senha definida para ${pwdUser.name || pwdUser.email}` });
+      setPwdUser(null);
+    } catch (e: any) {
+      pwdToast({ title: 'Erro ao alterar senha', description: e.message, variant: 'destructive' });
+    } finally {
+      setSavingPwd(false);
+    }
+  };
+  const { toast: pwdToast } = useToast();
   const { toast } = useToast();
 
   // Buscar todos os usuários com subscription e última atividade
