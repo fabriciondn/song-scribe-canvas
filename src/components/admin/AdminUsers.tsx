@@ -784,6 +784,14 @@ export const AdminUsers = () => {
                               <Edit className="h-3.5 w-3.5" />
                             </button>
 
+                            <button
+                              onClick={() => { setPwdUser(user); setNewPwd(''); }}
+                              title="Definir nova senha"
+                              className="h-7 w-7 rounded-md flex items-center justify-center bg-white/[0.03] hover:bg-white/[0.06] text-white/60 hover:text-white transition-colors"
+                            >
+                              <KeyRound className="h-3.5 w-3.5" />
+                            </button>
+
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <button className="h-7 w-7 rounded-md flex items-center justify-center bg-white/[0.03] hover:bg-red-400/10 text-white/60 hover:text-red-300 transition-colors">
