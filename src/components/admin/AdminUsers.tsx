@@ -641,6 +641,27 @@ export const AdminUsers = () => {
         onUserUpdate={refetch}
       />
 
+      <Dialog open={!!pwdUser} onOpenChange={(o) => !o && setPwdUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Definir nova senha</DialogTitle>
+            <DialogDescription>{pwdUser?.name || ''} {pwdUser?.email ? `· ${pwdUser.email}` : ''}</DialogDescription>
+          </DialogHeader>
+          <Input
+            type="text"
+            placeholder="Nova senha (mínimo 6 caracteres)"
+            value={newPwd}
+            onChange={(e) => setNewPwd(e.target.value)}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPwdUser(null)}>Cancelar</Button>
+            <Button onClick={handleSavePassword} disabled={savingPwd || newPwd.length < 6}>
+              {savingPwd ? 'Salvando...' : 'Salvar senha'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* List — premium table */}
       <div className="relative rounded-2xl overflow-hidden bg-white/[0.025]
                       shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_18px_36px_-25px_rgba(0,0,0,0.6)]">
