@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Users, UserPlus, Edit, Trash2, AlertTriangle, Crown, Clock, CircleDot, Download, Filter, Target, Shield } from 'lucide-react';
+import { Search, Users, UserPlus, Edit, Trash2, AlertTriangle, Crown, Clock, CircleDot, Download, Filter, Target, Shield, KeyRound } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImpersonateButton } from '@/components/ui/impersonate-button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -27,6 +28,27 @@ export const AdminUsers = () => {
   const [originFilter, setOriginFilter] = useState<'all' | 'affiliate' | 'moderator'>('all');
   const [specificAffiliateId, setSpecificAffiliateId] = useState<string>('');
   const [specificModeratorId, setSpecificModeratorId] = useState<string>('');
+  const [pwdUser, setPwdUser] = useState<any>(null);
+  const [newPwd, setNewPwd] = useState('');
+  const [savingPwd, setSavingPwd] = useState(false);
+
+  const handleSavePassword = async () => {
+    if (newPwd.length < 6) return;
+    setSavingPwd(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-user-password', {
+        body: { user_id: pwdUser.id, new_password: newPwd },
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message);
+      pwdToast({ title: 'Senha alterada', description: `Nova senha definida para ${pwdUser.name || pwdUser.email}` });
+      setPwdUser(null);
+    } catch (e: any) {
+      pwdToast({ title: 'Erro ao alterar senha', description: e.message, variant: 'destructive' });
+    } finally {
+      setSavingPwd(false);
+    }
+  };
+  const { toast: pwdToast } = useToast();
   const { toast } = useToast();
 
   // Buscar todos os usuários com subscription e última atividade
@@ -619,6 +641,27 @@ export const AdminUsers = () => {
         onUserUpdate={refetch}
       />
 
+      <Dialog open={!!pwdUser} onOpenChange={(o) => !o && setPwdUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Definir nova senha</DialogTitle>
+            <DialogDescription>{pwdUser?.name || ''} {pwdUser?.email ? `· ${pwdUser.email}` : ''}</DialogDescription>
+          </DialogHeader>
+          <Input
+            type="text"
+            placeholder="Nova senha (mínimo 6 caracteres)"
+            value={newPwd}
+            onChange={(e) => setNewPwd(e.target.value)}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPwdUser(null)}>Cancelar</Button>
+            <Button onClick={handleSavePassword} disabled={savingPwd || newPwd.length < 6}>
+              {savingPwd ? 'Salvando...' : 'Salvar senha'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* List — premium table */}
       <div className="relative rounded-2xl overflow-hidden bg-white/[0.025]
                       shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_18px_36px_-25px_rgba(0,0,0,0.6)]">
@@ -782,6 +825,14 @@ export const AdminUsers = () => {
                               className="h-7 w-7 rounded-md flex items-center justify-center bg-white/[0.03] hover:bg-white/[0.06] text-white/60 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               <Edit className="h-3.5 w-3.5" />
+                            </button>
+
+                            <button
+                              onClick={() => { setPwdUser(user); setNewPwd(''); }}
+                              title="Definir nova senha"
+                              className="h-7 w-7 rounded-md flex items-center justify-center bg-white/[0.03] hover:bg-white/[0.06] text-white/60 hover:text-white transition-colors"
+                            >
+                              <KeyRound className="h-3.5 w-3.5" />
                             </button>
 
                             <AlertDialog>

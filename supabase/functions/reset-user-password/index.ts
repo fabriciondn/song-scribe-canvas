@@ -86,36 +86,36 @@ serve(async (req) => {
 
     console.log('👤 Usuário autenticado:', currentUser.id);
 
-    // Verificar se o usuário atual é moderador
-    const { data: moderatorCheck, error: moderatorError } = await supabaseAdmin
+    // Verificar papel do usuário atual
+    const { data: roleRow } = await supabaseAdmin
       .from('admin_users')
       .select('role')
       .eq('user_id', currentUser.id)
-      .eq('role', 'moderator')
-      .single();
+      .maybeSingle();
 
-    if (moderatorError || !moderatorCheck) {
-      console.error('❌ Usuário não é moderador:', moderatorError);
-      return new Response(
-        JSON.stringify({ error: 'Access denied. Moderator privileges required.' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const role = roleRow?.role;
+    const isAdmin = role === 'admin' || role === 'super_admin';
 
-    // Verificar se o usuário alvo foi criado por este moderador
-    const { data: managedUser, error: managedUserError } = await supabaseAdmin
-      .from('moderator_users')
-      .select('user_id')
-      .eq('user_id', user_id)
-      .eq('moderator_id', currentUser.id)
-      .single();
+    if (!isAdmin) {
+      if (role !== 'moderator') {
+        return new Response(
+          JSON.stringify({ error: 'Access denied. Moderator privileges required.' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      const { data: managedUser } = await supabaseAdmin
+        .from('moderator_users')
+        .select('user_id')
+        .eq('user_id', user_id)
+        .eq('moderator_id', currentUser.id)
+        .maybeSingle();
 
-    if (managedUserError || !managedUser) {
-      console.error('❌ Usuário não gerenciado por este moderador:', managedUserError);
-      return new Response(
-        JSON.stringify({ error: 'You can only reset passwords for users you have created.' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (!managedUser) {
+        return new Response(
+          JSON.stringify({ error: 'You can only reset passwords for users you have created.' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     console.log('✅ Permissões verificadas. Alterando senha...');
