@@ -57,30 +57,40 @@ serve(async (req) => {
     if (webhookSecret && signature) {
       try {
         const isValid = await verifySignature(rawBody, signature, webhookSecret);
-        if (!isValid) {
-          console.error('❌ Assinatura do webhook inválida');
-          return new Response('Invalid signature', { status: 401 });
-        }
-        console.log('✅ Assinatura validada com sucesso');
+        console.log(isValid ? '✅ Assinatura HMAC válida' : '⚠️ Assinatura HMAC não confere (seguindo com verificação via API)');
       } catch (err) {
         console.error('⚠️ Erro ao validar assinatura:', err.message);
-        // During setup, we log but don't block if crypto fails, unless we're sure about the format.
       }
     }
 
-    const body = JSON.parse(rawBody);
+    let body: any = {};
+    try { body = JSON.parse(rawBody || '{}'); } catch { body = {}; }
     console.log('📦 Payload:', JSON.stringify(body, null, 2));
 
-    if (body.event !== 'OPENPIX:CHARGE_COMPLETED') {
-      return new Response('Evento ignorado', { status: 200 });
+    if (body.event !== 'OPENPIX:CHARGE_COMPLETED' || !body.charge) {
+      return new Response('OK', { status: 200, headers: corsHeaders });
     }
 
-    const charge = body.charge;
-    const correlationID = charge.correlationID;
+    const correlationID = body.charge.correlationID;
 
     if (!correlationID) {
       console.error('❌ correlationID ausente no payload');
-      return new Response('Missing correlationID', { status: 400 });
+      return new Response('OK', { status: 200, headers: corsHeaders });
+    }
+
+    // Segurança: confirma o pagamento direto na API da OpenPix antes de liberar qualquer coisa
+    const openPixAppId = settings?.find(s => s.key === 'OPENPIX_APP_ID')?.value || Deno.env.get('OPENPIX_APP_ID');
+    if (!openPixAppId) {
+      console.error('❌ OPENPIX_APP_ID não configurado');
+      return new Response('Not configured', { status: 500 });
+    }
+    const verifyResp = await fetch(`https://api.openpix.com.br/api/v1/charge/${encodeURIComponent(correlationID)}`, {
+      headers: { 'Authorization': openPixAppId }
+    });
+    const verifyData = verifyResp.ok ? await verifyResp.json() : null;
+    if (verifyData?.charge?.status !== 'COMPLETED') {
+      console.error('❌ Cobrança não confirmada na API OpenPix:', correlationID, verifyData?.charge?.status);
+      return new Response('Charge not completed', { status: 200, headers: corsHeaders });
     }
 
     console.log('🔍 Processando pagamento aprovado:', correlationID);
