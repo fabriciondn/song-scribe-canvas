@@ -132,6 +132,32 @@ serve(async (req) => {
 
       console.log('[CHECK-PAYMENT-STATUS] OpenPix status:', status);
       
+      // Ativação de assinatura como contingência caso o webhook não chegue
+      if (isPaid && paymentIdStr.startsWith('subscription_')) {
+        const { data: sub } = await supabaseService
+          .from('subscriptions')
+          .select('id, user_id')
+          .eq('payment_provider_subscription_id', paymentIdStr)
+          .eq('status', 'pending')
+          .maybeSingle();
+        if (sub) {
+          const expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + 30);
+          await supabaseService
+            .from('subscriptions')
+            .update({
+              status: 'active',
+              started_at: new Date().toISOString(),
+              expires_at: expiresAt.toISOString(),
+              last_credit_grant_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', sub.id);
+          await supabaseService.rpc('grant_monthly_subscription_credits', { p_user_id: sub.user_id });
+          console.log('[CHECK-PAYMENT-STATUS] ✅ Assinatura ativada via verificação:', paymentIdStr);
+        }
+      }
+
       let creditsAdded = 0;
       if (isPaid && transaction?.status === 'pending') {
         // Se a API diz que está pago mas o banco ainda está pendente, processamos aqui
