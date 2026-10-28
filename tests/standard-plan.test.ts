@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test';
 import { PGlite } from '@electric-sql/pglite';
 import { readFileSync } from 'node:fs';
 import { STANDARD_PLAN } from '../src/lib/standardPlan';
+import { subscriptionAmount } from '../supabase/functions/_shared/launch-pricing';
 
 const USER = '00000000-0000-4000-8000-000000000001';
 const OTHER = '00000000-0000-4000-8000-000000000002';
@@ -45,6 +46,13 @@ test('commercial values are R$97 launch, R$127 normal, 50 registrations and 30 d
   expect(STANDARD_PLAN.regularPrice).toBe(127);
   expect(STANDARD_PLAN.registrations).toBe(50);
   expect(STANDARD_PLAN.cycleDays).toBe(30);
+});
+
+test('server ignores tampered, missing or old client subscription amounts and always charges 97', () => {
+  expect(subscriptionAmount(0.01)).toBe(97);
+  expect(subscriptionAmount(29.99)).toBe(97);
+  expect(subscriptionAmount(undefined)).toBe(97);
+  expect(subscriptionAmount(127)).toBe(97);
 });
 
 test('underpaid payment cannot activate the R$97 subscription', async () => {

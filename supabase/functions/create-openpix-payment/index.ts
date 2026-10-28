@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from 'npm:@supabase/supabase-js@2.118.0/cors';
 import { z } from 'npm:zod@3';
 import { authenticatedUser, ensureLaunchPurchaseAllowed, saveLaunchOrder, LAUNCH_AMOUNT, LAUNCH_DESCRIPTION } from '../_shared/launch-subscription.ts';
+import { subscriptionAmount } from '../_shared/launch-pricing.ts';
 
 interface PaymentRequest {
   type: 'credits' | 'subscription';
@@ -45,7 +46,7 @@ serve(async (req) => {
     const user_email = user.email;
     const { data: profile } = await supabaseService.from('profiles').select('name,email,cpf,cellphone').eq('id', user_id).single();
     const user_name = profile?.name || 'Usuário';
-    const totalAmount = type === 'subscription' ? LAUNCH_AMOUNT : body.totalAmount;
+    const totalAmount = type === 'subscription' ? subscriptionAmount(body.totalAmount) : body.totalAmount;
     if (type === 'subscription') {
       await ensureLaunchPurchaseAllowed(supabaseService, user_id);
       if (!profile?.name || !profile?.cpf || !profile?.email || !profile?.cellphone) return new Response(JSON.stringify({error:'Complete nome, CPF, email e telefone no perfil'}), {status:400,headers:corsHeaders});

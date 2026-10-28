@@ -1,7 +1,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 import { z } from 'npm:zod@3';
 
-export const LAUNCH_AMOUNT = 97;
+export { LAUNCH_AMOUNT } from './launch-pricing.ts';
+import { LAUNCH_AMOUNT } from './launch-pricing.ts';
 export const LAUNCH_DESCRIPTION = 'Plano Padrão — Oferta de Lançamento: até 50 registros autorais por 30 dias, sem acúmulo';
 export const paymentIdSchema = z.string().min(1).max(200).regex(/^[a-zA-Z0-9_-]+$/);
 
