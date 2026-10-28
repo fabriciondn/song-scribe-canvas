@@ -1,10 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { ensureLaunchPurchaseAllowed, saveLaunchOrder, LAUNCH_AMOUNT, LAUNCH_DESCRIPTION } from '../_shared/launch-subscription.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -37,7 +35,12 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id });
 
     // Pegar dados do body
-    const { user_data, plan } = await req.json();
+    await req.json();
+    await ensureLaunchPurchaseAllowed(supabaseClient, user.id);
+    const {data: storedProfile, error: profileError} = await supabaseClient.from('profiles').select('name,email,cpf,cellphone').eq('id',user.id).single();
+    if (profileError) throw profileError;
+    const user_data = storedProfile;
+    const plan = {name:'Plano Padrão',price:LAUNCH_AMOUNT,currency:'BRL'};
     if (!user_data?.name || !user_data?.email || !user_data?.cpf) {
       throw new Error("Missing user data");
     }
@@ -45,7 +48,7 @@ serve(async (req) => {
       throw new Error("Missing plan data");
     }
 
-    logStep("Processing subscription", { user_data, plan });
+    
 
     // Integração com Abacate Pay para criar QR Code PIX
     const abacateApiKey = Deno.env.get("ABACATE_API_KEY");
@@ -65,7 +68,7 @@ serve(async (req) => {
       body: JSON.stringify({
         amount: Math.round(plan.price * 100), // Valor em centavos
         expiresIn: 3600, // 1 hora para expirar
-        description: `Assinatura ${plan.name} - Compuse Pro`,
+        description: LAUNCH_DESCRIPTION,
         customer: {
           name: user_data.name,
           cellphone: user_data.cellphone,
@@ -85,7 +88,7 @@ serve(async (req) => {
     }
 
     const abacateData = await abacateResponse.json();
-    logStep("Abacate PIX QR Code created", abacateData);
+    
 
     // Verificar se há erro na resposta da Abacate Pay
     if (abacateData.error) {
@@ -97,41 +100,12 @@ serve(async (req) => {
       throw new Error('Resposta inválida da Abacate Pay - dados não encontrados');
     }
 
-    // Criar subscription no banco
-    const expiresAt = new Date();
-    expiresAt.setMonth(expiresAt.getMonth() + 1);
-
-    const { data: subscription, error: subError } = await supabaseClient
-      .from('subscriptions')
-      .upsert({
-        user_id: user.id,
-        status: 'pending', // Começa como pending até confirmação do pagamento
-        plan_type: 'pro',
-        started_at: new Date().toISOString(),
-        expires_at: expiresAt.toISOString(),
-        auto_renew: true,
-        payment_provider: 'abacate',
-        payment_provider_subscription_id: abacateData.data.id,
-        amount: plan.price,
-        currency: plan.currency || 'BRL'
-      }, { 
-        onConflict: 'user_id',
-        ignoreDuplicates: false 
-      })
-      .select()
-      .single();
-
-    if (subError) {
-      logStep("Database error", subError);
-      throw new Error(`Erro ao salvar subscription: ${subError.message}`);
-    }
-    
-    logStep("Subscription saved to database", subscription);
+    const orderId = await saveLaunchOrder(supabaseClient,user.id,'abacate',abacateData.data.id);
 
     // Retornar dados no formato esperado pelo frontend
     return new Response(JSON.stringify({
       success: true,
-      subscription_id: subscription.id,
+      subscription_id: orderId,
       pix_data: {
         id: abacateData.data.id,
         amount: abacateData.data.amount,

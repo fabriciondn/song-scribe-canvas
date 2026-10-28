@@ -1,10 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { authenticatedUser, ensureLaunchPurchaseAllowed, saveLaunchOrder, LAUNCH_AMOUNT, LAUNCH_DESCRIPTION } from '../_shared/launch-subscription.ts';
 
 interface RequestBody {
   user_id: string;
@@ -35,7 +33,10 @@ serve(async (req) => {
     );
 
     // Parse do body
-    const { user_id, user_email, user_name }: RequestBody = await req.json();
+    const user = await authenticatedUser(req);
+    await req.json();
+    const user_id=user.id, user_email=user.email, user_name=user.user_metadata?.name || 'Usuário';
+    await ensureLaunchPurchaseAllowed(supabaseClient,user.id);
     
     if (!user_id || !user_email) {
       throw new Error('user_id e user_email são obrigatórios');
@@ -49,10 +50,10 @@ serve(async (req) => {
       methods: ['PIX'],
       products: [{
         externalId: `pro_subscription_${user_id}_${Date.now()}`,
-        name: 'Assinatura Plano Pro - 30 dias',
-        description: 'Acesso completo aos recursos Pro por 30 dias',
+        name: 'Plano Padrão — Oferta de Lançamento',
+        description: LAUNCH_DESCRIPTION,
         quantity: 1,
-        price: 2999 // Valor em centavos (29,99 reais)
+        price: LAUNCH_AMOUNT * 100
       }],
       returnUrl: `${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/subscription-checkout`,
       completionUrl: `${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/dashboard`
@@ -78,42 +79,15 @@ serve(async (req) => {
     const abacateData = await abacateResponse.json();
     console.log('✅ Pagamento criado no Abacate:', abacateData);
 
-    // Salvar subscription como pendente no Supabase (será ativada no webhook)
-    const subscriptionData = {
-      user_id,
-      status: 'pending',
-      plan_type: 'pro',
-      amount: 29.99,
-      currency: 'BRL',
-      payment_provider: 'abacate',
-      payment_provider_subscription_id: abacateData.id,
-      auto_renew: false, // Renovação manual (novo pagamento a cada mês)
-      started_at: new Date().toISOString(),
-      // expires_at será definido no webhook quando o pagamento for confirmado
-    };
-
-    console.log('💾 Salvando subscription pendente no Supabase:', subscriptionData);
-
-    const { error: subscriptionError } = await supabaseClient
-      .from('subscriptions')
-      .upsert(subscriptionData, { 
-        onConflict: 'user_id',
-        ignoreDuplicates: false 
-      });
-
-    if (subscriptionError) {
-      console.error('❌ Erro ao salvar subscription:', subscriptionError);
-      throw subscriptionError;
-    }
-
-    console.log('✅ Subscription salva com sucesso');
+    const billing = abacateData.data || abacateData;
+    await saveLaunchOrder(supabaseClient,user_id,'abacate',billing.id);
 
     // Retornar URL de pagamento (PIX QR code)
     return new Response(JSON.stringify({
       success: true,
-      payment_url: abacateData.url, // URL do checkout com QR code
-      subscription_id: abacateData.id,
-      amount: 29.99,
+      payment_url: billing.url, // URL do checkout com QR code
+      subscription_id: billing.id,
+      amount: LAUNCH_AMOUNT,
       currency: 'BRL'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
