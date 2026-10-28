@@ -1,3 +1,4 @@
+import { STANDARD_PLAN, STANDARD_ALLOWANCE_DESCRIPTION, STANDARD_ALLOWANCE_TERMS } from '@/lib/standardPlan';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -43,9 +44,9 @@ const PendriveUpgradeModal = ({ open, onOpenChange }: PendriveUpgradeModalProps)
     },
     {
       id: 'pro',
-      name: 'Completo',
-      price: 14.99,
-      originalPrice: 49.99,
+      name: STANDARD_PLAN.name,
+      price: STANDARD_PLAN.price,
+      originalPrice: STANDARD_PLAN.regularPrice,
       description: 'Todas as funcionalidades da plataforma',
       icon: Crown,
       color: 'text-yellow-500',
@@ -59,11 +60,11 @@ const PendriveUpgradeModal = ({ open, onOpenChange }: PendriveUpgradeModalProps)
         'Cifrador profissional',
         'Rascunhos ilimitados',
         'Sistema de parcerias',
-        'Registro de obras autorais',
+        STANDARD_ALLOWANCE_DESCRIPTION,
         'Tutoriais exclusivos',
         'Suporte prioritário',
       ],
-      buttonText: 'Assinar Completo',
+      buttonText: 'Assinar Plano Padrão',
       route: '/dashboard/subscription-checkout',
     },
   ];

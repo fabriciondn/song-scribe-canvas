@@ -1,3 +1,4 @@
+import { STANDARD_PLAN, STANDARD_ALLOWANCE_DESCRIPTION, STANDARD_ALLOWANCE_TERMS } from '@/lib/standardPlan';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -41,14 +42,14 @@ const Plans = () => {
     },
     {
       id: 'pro',
-      name: 'Plano Pro',
-      price: 30,
+      name: 'Plano Padrão',
+      price: STANDARD_PLAN.price,
       description: 'Todos os recursos para profissionais',
       icon: Crown,
       features: [
         'Tudo do plano Gratuito',
-        '2 créditos garantidos por mês',
-        '+1 crédito de bônus mensal',
+        STANDARD_ALLOWANCE_DESCRIPTION,
+        'Franquia mensal sem acúmulo',
         'Acesso total ao Compositor',
         'Biblioteca completa de Bases Musicais',
         'Cifrador avançado',
@@ -58,10 +59,10 @@ const Plans = () => {
         'Tutoriais exclusivos',
         'Suporte prioritário',
       ],
-      highlight: 'Bônus só disponíveis com assinatura em dia. Congelam se inativo e expiram após 2 meses.',
+      highlight: 'A franquia reinicia a cada ciclo pago de 30 dias, sem acúmulo. Créditos avulsos não expiram.',
       buttonText: subscription?.plan_type === 'pro' && subscription?.status === 'active' 
         ? 'Plano Atual' 
-        : 'Assinar Pro',
+        : 'Assinar Plano Padrão',
       isPopular: true,
       current: subscription?.plan_type === 'pro' && subscription?.status === 'active'
     }
@@ -96,7 +97,7 @@ const Plans = () => {
           </p>
           {showProfileWarning && (
             <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 rounded-md px-4 py-3 max-w-xl mx-auto flex flex-col items-center gap-3">
-              <span>Complete seu perfil antes de fazer o upgrade para Pro. Precisamos do seu nome completo, CPF e email.</span>
+              <span>Complete seu perfil antes de fazer o upgrade para o Plano Padrão. Precisamos do seu nome completo, CPF e email.</span>
               <Button onClick={() => navigate('/dashboard/settings')} variant="default">
                 Completar perfil
               </Button>
@@ -105,7 +106,7 @@ const Plans = () => {
           {subscription && (
             <div className="flex justify-center">
               <Badge variant={subscription.status === 'active' ? 'default' : 'secondary'}>
-                Plano Atual: {subscription.plan_type} 
+                Plano Atual: {subscription.plan_type === 'pro' ? 'Plano Padrão' : subscription.plan_type} 
                 {subscription.status === 'active' && subscription.expires_at && 
                   ` - Expira em ${new Date(subscription.expires_at).toLocaleDateString()}`
                 }
@@ -148,19 +149,20 @@ const Plans = () => {
                   <CardDescription>{plan.description}</CardDescription>
                   
                   <div className="space-y-1">
+                    {plan.id === 'pro' && <p className="text-sm text-muted-foreground line-through">R$ 127,00/mês</p>}
                     <div className="text-3xl font-bold">
                       {plan.price === 0 ? (
                         'Grátis'
                       ) : (
                         <>
-                          <span>R$ {plan.price.toFixed(2)}</span>
+                          <span>R$ {plan.price.toFixed(2).replace('.', ',')}</span>
                           <span className="text-sm font-normal text-muted-foreground">/mês</span>
                         </>
                       )}
                     </div>
                     {plan.id === 'pro' && (
                       <p className="text-sm text-green-600 font-semibold">
-                        2 créditos + 1 bônus mensal
+                        Até 50 registros por ciclo de 30 dias
                       </p>
                     )}
                   </div>
@@ -216,7 +218,7 @@ const Plans = () => {
         </div>
 
         <div className="text-center space-y-4 pt-8">
-          <h3 className="text-2xl font-bold">Por que escolher o Pro?</h3>
+          <h3 className="text-2xl font-bold">Por que escolher o Plano Padrão?</h3>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <div className="text-center space-y-2">
               <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
