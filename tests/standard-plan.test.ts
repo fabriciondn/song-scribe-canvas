@@ -26,6 +26,7 @@ async function database() {
   `);
   await db.exec(readFileSync(new URL('../supabase/migrations/20261028214626_9ff139ba-8514-4f38-aef4-aeac00147d4e.sql', import.meta.url), 'utf8'));
   await db.exec(readFileSync(new URL('../supabase/migrations/20261028214653_0f64fd1a-ec4c-4687-b897-ced5cfebe781.sql', import.meta.url), 'utf8'));
+  await db.exec(readFileSync(new URL('../supabase/migrations/20261028215400_ed3c58e2-e2ac-4e16-8598-ae6d206b3983.sql', import.meta.url), 'utf8'));
   return db;
 }
 
@@ -143,5 +144,29 @@ test('allowance cannot exceed 50 and a second payment cannot reset an active cyc
     await expect(db.exec(`UPDATE subscription_registration_allowances SET remaining=51`)).rejects.toThrow('Invalid monthly allowance');
     await order(db,'another_payment'); await expect(activate(db,'another_payment')).rejects.toThrow('has not ended');
     expect(await balances(db)).toEqual({credits:7,remaining:50});
+  } finally { await db.close(); }
+});
+
+test('pending legacy payment cannot be replaced by new launch activation', async () => {
+  const db = await database();
+  try {
+    await db.query(`INSERT INTO subscriptions(user_id,status,plan_type,amount,payment_provider_subscription_id) VALUES($1,'pending','pro',29.99,'old_payment')`,[USER]);
+    await order(db); await expect(activate(db)).rejects.toThrow('reconciliation required');
+    expect((await db.query(`SELECT payment_provider_subscription_id FROM subscriptions WHERE user_id=$1`,[USER])).rows[0].payment_provider_subscription_id).toBe('old_payment');
+    expect((await db.query(`SELECT status FROM subscription_launch_orders`)).rows[0].status).toBe('pending');
+  } finally { await db.close(); }
+});
+
+test('customers can read only their own allowance and cannot write allowance or activate cycles', async () => {
+  const db = await database();
+  try {
+    await order(db); await activate(db);
+    await db.exec(`GRANT USAGE ON SCHEMA auth TO authenticated; SELECT set_config('test.uid','${OTHER}',false); SET ROLE authenticated;`);
+    expect((await db.query(`SELECT * FROM subscription_registration_allowances`)).rows.length).toBe(0);
+    expect((await db.query(`SELECT * FROM subscription_launch_orders`)).rows.length).toBe(0);
+    await expect(db.exec(`UPDATE subscription_registration_allowances SET remaining=50`)).rejects.toThrow('permission denied');
+    await expect(activate(db)).rejects.toThrow('permission denied');
+    await db.exec(`SELECT set_config('test.uid','${USER}',false);`);
+    expect((await db.query(`SELECT remaining FROM subscription_registration_allowances`)).rows[0].remaining).toBe(50);
   } finally { await db.close(); }
 });

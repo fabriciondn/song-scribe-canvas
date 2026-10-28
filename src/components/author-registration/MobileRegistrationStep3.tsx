@@ -86,7 +86,7 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
   authors,
 }) => {
   const navigate = useNavigate();
-  const { credits, refreshCredits } = useUserCredits();
+  const { availableRegistrationCredits: credits, refreshCredits } = useUserCredits();
   const { profile } = useProfile();
   const { theme, toggleTheme } = useTheme();
   const currentUser = useCurrentUser();

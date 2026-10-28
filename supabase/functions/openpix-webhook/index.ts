@@ -52,13 +52,12 @@ serve(async (req) => {
 
     console.log('🔔 Webhook OpenPix recebido');
 
-    if (webhookSecret) {
-      if (!signature) return new Response('Invalid signature', {status:401,headers:corsHeaders});
+    let validSignature = false;
+    if (webhookSecret && signature) {
       try {
-        const isValid = await verifySignature(rawBody, signature, webhookSecret);
-        if (!isValid) return new Response('Invalid signature', {status:401,headers:corsHeaders});
+        validSignature = await verifySignature(rawBody, signature, webhookSecret);
       } catch (err) {
-        return new Response('Invalid signature', {status:401,headers:corsHeaders});
+        validSignature = false;
       }
     }
 
@@ -95,6 +94,7 @@ serve(async (req) => {
     const {data: launchOrder, error: launchError} = await supabaseService.from('subscription_launch_orders').select('id').eq('provider','openpix').eq('payment_id',correlationID).maybeSingle();
     if (launchError) throw launchError;
     if (launchOrder) {
+      if (webhookSecret && !validSignature) return new Response('Invalid signature', {status:401,headers:corsHeaders});
       if (verifyData.charge.correlationID !== correlationID) throw new Error('Payment identity mismatch');
       await activateLaunchPayment(supabaseService, 'openpix', correlationID, verifyData.charge.value / 100, verifyData.charge.paidAt);
       return new Response('OK', {status:200,headers:corsHeaders});
