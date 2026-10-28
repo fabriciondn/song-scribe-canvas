@@ -37,6 +37,7 @@ export default function SubscriptionCheckout() {
   };
 
   const { isChecking } = usePaymentConfirmation({
+    paymentType: 'subscription',
     paymentId: pixData?.payment_id || "",
     isActive: showQR && !!pixData,
     onPaymentConfirmed: handlePaymentConfirmed

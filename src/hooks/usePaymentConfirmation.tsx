@@ -7,12 +7,14 @@ interface UsePaymentConfirmationProps {
   paymentId: string | null;
   isActive: boolean;
   onPaymentConfirmed: (creditsAdded: number) => void;
+  paymentType?: 'credits' | 'subscription';
 }
 
 export function usePaymentConfirmation({ 
   paymentId, 
   isActive, 
-  onPaymentConfirmed 
+  onPaymentConfirmed,
+  paymentType = 'credits'
 }: UsePaymentConfirmationProps) {
   const [isChecking, setIsChecking] = useState(false);
   const [attempts, setAttempts] = useState(0);
@@ -29,7 +31,7 @@ export function usePaymentConfirmation({
       console.log(`🔍 Checking payment status (attempt ${attempts + 1}/${maxAttempts})...`);
       
       const { data, error } = await supabase.functions.invoke('check-payment-status', {
-        body: { paymentId, type: 'credits' }
+        body: { paymentId, type: paymentType }
       });
 
       if (error) {
@@ -41,6 +43,11 @@ export function usePaymentConfirmation({
 
       if (data?.isPaid || data?.paid) {
         console.log('✅ Payment confirmed!');
+        if (paymentType === 'subscription') {
+          window.dispatchEvent(new CustomEvent('credits-updated'));
+          onPaymentConfirmed(0);
+          return;
+        }
         
         // Buscar informações da transação para saber quantos créditos foram adicionados
         const { data: transactionData, error: transactionError } = await supabase
@@ -88,7 +95,7 @@ export function usePaymentConfirmation({
     } finally {
       setIsChecking(false);
     }
-  }, [paymentId, isActive, isChecking, attempts, maxAttempts, onPaymentConfirmed, toast]);
+  }, [paymentId, isActive, isChecking, attempts, maxAttempts, onPaymentConfirmed, toast, paymentType]);
 
   // Polling effect
   useEffect(() => {
@@ -117,7 +124,7 @@ export function usePaymentConfirmation({
   useEffect(() => {
     const handleCreditsIncrease = (event: any) => {
       console.log('💰 Credits increase detected, stopping payment check');
-      if (isActive && paymentId) {
+      if (paymentType === 'credits' && isActive && paymentId) {
         const creditsAdded = event.detail?.creditsAdded || event.detail?.difference || 1;
         onPaymentConfirmed(creditsAdded);
       }
@@ -128,7 +135,7 @@ export function usePaymentConfirmation({
     return () => {
       window.removeEventListener('credits-increased', handleCreditsIncrease);
     };
-  }, [isActive, paymentId, onPaymentConfirmed]);
+  }, [isActive, paymentId, onPaymentConfirmed, paymentType]);
 
   return {
     isChecking,
