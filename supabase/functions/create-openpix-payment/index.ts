@@ -142,9 +142,10 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Erro:', error);
+    const message = error instanceof Error ? error.message : 'Erro interno';
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Erro interno' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: message }),
+      { status: message === 'Unauthorized' ? 401 : 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
