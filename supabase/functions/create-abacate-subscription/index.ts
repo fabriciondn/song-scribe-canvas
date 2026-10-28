@@ -100,6 +100,7 @@ serve(async (req) => {
       throw new Error('Resposta inválida da Abacate Pay - dados não encontrados');
     }
 
+    if (abacateData.data.amount !== LAUNCH_AMOUNT * 100) throw new Error('Payment amount mismatch');
     const orderId = await saveLaunchOrder(supabaseClient,user.id,'abacate',abacateData.data.id);
 
     // Retornar dados no formato esperado pelo frontend

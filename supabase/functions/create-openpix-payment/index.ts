@@ -107,6 +107,7 @@ serve(async (req) => {
     }
 
     const charge = data.charge;
+    if (type === 'subscription' && (charge?.value !== LAUNCH_AMOUNT * 100 || charge?.correlationID !== correlationID)) throw new Error('Payment amount or identity mismatch');
 
     // Registrar no banco de dados
     if (type === 'credits') {
