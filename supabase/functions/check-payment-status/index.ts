@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { authenticatedUser, activateLaunchPayment, paymentIdSchema } from '../_shared/launch-subscription.ts';
+import { verifyAbacatePix } from '../_shared/verify-abacate.ts';
 
 async function processSuccessfulPayment(supabase: any, paymentId: string) {
   console.log(`[CHECK-PAYMENT-STATUS] 🔄 Redundant processing for payment: ${paymentId}`);
@@ -187,6 +188,11 @@ serve(async (req) => {
       );
     }
 
+    if (launchOrder?.provider === 'abacate') {
+      const paid = await verifyAbacatePix(paymentIdStr);
+      if (paid) await activateLaunchPayment(supabaseService,'abacate',paymentIdStr,97,new Date().toISOString());
+      return new Response(JSON.stringify({isPaid:paid,paid,status:paid?'completed':'pending'}),{status:200,headers:corsHeaders});
+    }
     // Fallback/Default
     return new Response(JSON.stringify({ isPaid: false, status: 'pending' }), { status: 200, headers: corsHeaders });
 

@@ -127,7 +127,7 @@ const AuthorRegistration: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const { credits, isLoading: creditsLoading } = useUserCredits();
+  const { availableRegistrationCredits: credits, isLoading: creditsLoading } = useUserCredits();
   const { isMobile } = useMobileDetection();
   const { isComplete: isProfileComplete } = useProfileValidation();
   const { profile } = useProfile();

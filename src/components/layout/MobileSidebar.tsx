@@ -82,7 +82,7 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ onClose }) => {
   const userName = profile?.artistic_name || profile?.name || 'Usuário';
   const userAvatar = profile?.avatar_url;
   const userInitials = userName.substring(0, 2).toUpperCase();
-  const planLabel = subscription?.status === 'active' ? 'Plano Pro' : subscription?.status === 'trial' ? 'Trial' : 'Gratuito';
+  const planLabel = subscription?.status === 'active' ? 'Plano Padrão' : subscription?.status === 'trial' ? 'Trial' : 'Gratuito';
 
   const handleLogout = async () => {
     try {

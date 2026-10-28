@@ -82,7 +82,7 @@ export const StatCards: React.FC<StatCardsProps> = ({ stats, isPro }) => {
           {!isPro && (
             <Badge className="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[10px] z-10 flex items-center gap-1">
               <Sparkles className="h-3 w-3" />
-              PRO
+              Padrão
             </Badge>
           )}
           
@@ -150,7 +150,7 @@ export const StatCards: React.FC<StatCardsProps> = ({ stats, isPro }) => {
           {!isPro && (
             <Badge className="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[10px] z-10 flex items-center gap-1">
               <Sparkles className="h-3 w-3" />
-              PRO
+              Padrão
             </Badge>
           )}
           

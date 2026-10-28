@@ -174,13 +174,9 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
     console.log('🚀 Iniciando processo de registro...');
     
     // Check credits before starting
-    const { data: creditCheck, error: checkError } = await supabase
-      .from('profiles')
-      .select('credits')
-      .eq('id', currentUser?.id)
-      .single();
+    const { data: creditCheck, error: checkError } = await supabase.rpc('get_registration_balance', {p_user_id: data.targetUserId || currentUser?.id || ''});
     
-    if (checkError || !creditCheck || (creditCheck.credits || 0) <= 0) {
+    if (checkError || !creditCheck || (typeof creditCheck === 'object' && creditCheck !== null && 'credits' in creditCheck ? Number(creditCheck.credits) : 0) <= 0) {
       toast({
         title: 'Créditos insuficientes',
         description: 'Você precisa de pelo menos 1 crédito para realizar o registro.',
@@ -267,36 +263,14 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
         }
       }
 
-      // Atualização de créditos (primeiro)
-      console.log('💳 Atualizando créditos do usuário...');
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', targetUserId)
-        .single();
-
-      if (profileError) {
-        console.error('❌ Erro ao buscar perfil:', profileError);
-        throw new Error('Erro ao verificar créditos do usuário');
+      // Launch accounts are charged atomically by the INSERT trigger. Legacy accounts retain their existing path.
+      const isLaunch = typeof creditCheck === 'object' && creditCheck !== null && 'is_launch' in creditCheck && creditCheck.is_launch === true;
+      if (!isLaunch) {
+        const {data: profileData, error: profileError} = await supabase.from('profiles').select('credits').eq('id',targetUserId).single();
+        if (profileError) throw new Error('Erro ao verificar créditos');
+        const {error: creditError} = await supabase.from('profiles').update({credits:Math.max((profileData?.credits || 0)-1,0)}).eq('id',targetUserId);
+        if (creditError) throw creditError;
       }
-
-      if (profileData) {
-        const newCredits = Math.max((profileData.credits || 0) - 1, 0);
-        const { error: creditError } = await supabase
-          .from('profiles')
-          .update({ credits: newCredits })
-          .eq('id', targetUserId);
-        
-        if (creditError) {
-          console.error('❌ Erro ao atualizar créditos:', creditError);
-          throw new Error('Erro ao atualizar créditos');
-        }
-        
-        console.log('✅ Créditos atualizados para:', newCredits);
-      }
-
-      // Refresh dos créditos
-      refreshCredits();
 
       // Inserção no banco de dados
       const analysisStartedAt = new Date().toISOString();
@@ -350,6 +324,9 @@ export const AuthorRegistrationReview: React.FC<AuthorRegistrationReviewProps> =
       }
 
       console.log('✅ Registro criado com sucesso:', registrationData);
+
+      refreshCredits();
+      window.dispatchEvent(new CustomEvent('credits-updated'));
 
       // Processar comissão de afiliado no registro autoral
       try {

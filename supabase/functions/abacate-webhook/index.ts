@@ -1,10 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { activateLaunchPayment, paymentIdSchema } from '../_shared/launch-subscription.ts';
+import { verifyAbacatePix } from '../_shared/verify-abacate.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -31,12 +30,12 @@ serve(async (req) => {
 
     // Pegar dados do webhook
     const webhookData = await req.json();
-    logStep("Webhook data received", webhookData);
+
 
     const { status, metadata } = webhookData;
 
     // Processar pagamento concluído
-    if (status === 'SUCCEEDED' || status === 'paid') {
+    if (status === 'SUCCEEDED' || status === 'paid' || webhookData.event === 'billing.paid') {
       await handlePaymentSucceeded(supabaseClient, webhookData);
     } else {
       logStep("Payment not succeeded", { status });
@@ -64,7 +63,14 @@ serve(async (req) => {
 async function handlePaymentSucceeded(supabaseClient: any, webhookData: any) {
   logStep("Processing payment succeeded", { id: webhookData.id });
 
-  const paymentId = webhookData.id;
+  const paymentId = paymentIdSchema.parse(webhookData.id || webhookData.data?.pixQrCode?.id);
+  const {data: launchOrder, error: launchError} = await supabaseClient.from('subscription_launch_orders').select('id').eq('provider','abacate').eq('payment_id',paymentId).maybeSingle();
+  if (launchError) throw launchError;
+  if (launchOrder) {
+    if (!await verifyAbacatePix(paymentId)) throw new Error('Payment not confirmed');
+    await activateLaunchPayment(supabaseClient,'abacate',paymentId,97,new Date().toISOString());
+    return;
+  }
 
   // Buscar subscription pendente com este payment_id
   const { data: subscriptions, error: subError } = await supabaseClient
