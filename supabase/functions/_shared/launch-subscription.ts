@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 import { z } from 'npm:zod@3';
 
 export const LAUNCH_AMOUNT = 97;

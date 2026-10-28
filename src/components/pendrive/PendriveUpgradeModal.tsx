@@ -127,11 +127,11 @@ const PendriveUpgradeModal = ({ open, onOpenChange }: PendriveUpgradeModalProps)
                   <div className="text-center space-y-1">
                     {plan.originalPrice && (
                       <p className="text-sm text-muted-foreground">
-                        <span className="line-through">R$ {plan.originalPrice.toFixed(2)}</span>
+                        <span className="line-through">R$ {plan.originalPrice.toFixed(2).replace('.', ',')}</span>
                       </p>
                     )}
                     <div className="text-3xl font-bold">
-                      R$ {plan.price.toFixed(2)}
+                      R$ {plan.price.toFixed(2).replace('.', ',')}
                       <span className="text-sm font-normal text-muted-foreground">/mês</span>
                     </div>
                     {plan.originalPrice && (

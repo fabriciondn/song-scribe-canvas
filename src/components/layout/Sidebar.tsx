@@ -198,10 +198,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <item.icon size={isCollapsed ? 28 : 20} className={isCollapsed ? "w-7 h-7 min-w-7" : ""} />
                   {!isCollapsed && (
                     <div className="flex items-center justify-between w-full">
-                      <span>{item.label}</span>
+                      <span>{item.functionKey === 'upgrade' ? 'Plano Padrão' : item.label}</span>
                       <div className="flex items-center gap-2">
                         {showDisabled && !hasAccess && (
-                          <span className="px-2 py-0.5 text-xs rounded bg-orange-600 text-white">Pro</span>
+                          <span className="px-2 py-0.5 text-xs rounded bg-orange-600 text-white">Padrão</span>
                         )}
                         {item.functionKey === 'cifrador-neo' && (
                           <span className="px-2 py-0.5 text-xs rounded bg-green-600 text-white">Beta</span>

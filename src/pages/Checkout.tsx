@@ -76,7 +76,7 @@ const Checkout = () => {
         setIsCheckingPayment(false);
         
         // Mostrar mensagem de sucesso
-        toast.success('🎉 Pagamento confirmado! Bem-vindo ao Pro!');
+        toast.success('🎉 Pagamento confirmado! Bem-vindo ao Plano Padrão!');
         
         // Atualizar subscription
         await refreshSubscription();
@@ -180,7 +180,7 @@ const Checkout = () => {
             <CardContent className="space-y-6">
               <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
                 <Crown className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-2">Você agora é Pro! 🎉</h3>
+                <h3 className="text-xl font-bold mb-2">Seu Plano Padrão está ativo! 🎉</h3>
                 <p className="text-muted-foreground">
                   Todas as funcionalidades premium foram liberadas em sua conta.
                   Você será redirecionado para o dashboard em instantes.
@@ -379,14 +379,14 @@ const Checkout = () => {
               <div className="text-center space-y-2">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">
-                    <span className="line-through">De R$ {planDetails.originalPrice.toFixed(2)}</span>
+                    <span className="line-through">De R$ {planDetails.originalPrice.toFixed(2).replace('.', ',')}</span>
                   </p>
                   <p className="text-4xl font-bold">
-                    R$ {planDetails.price.toFixed(2)}
+                    R$ {planDetails.price.toFixed(2).replace('.', ',')}
                     <span className="text-lg font-normal text-muted-foreground">/mês</span>
                   </p>
                   <Badge variant="secondary" className="text-green-600">
-                    Economize R$ {planDetails.savings.toFixed(2)}/mês
+                    Economize R$ {planDetails.savings.toFixed(2).replace('.', ',')}/mês
                   </Badge>
                 </div>
               </div>
@@ -454,16 +454,16 @@ const Checkout = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Plano Padrão (mensal)</span>
-                    <span className="line-through text-muted-foreground">R$ {planDetails.originalPrice.toFixed(2)}</span>
+                    <span className="line-through text-muted-foreground">R$ {planDetails.originalPrice.toFixed(2).replace('.', ',')}</span>
                   </div>
                   <div className="flex justify-between text-sm text-green-600">
                     <span>Desconto de lançamento</span>
-                    <span>-R$ {planDetails.savings.toFixed(2)}</span>
+                    <span>-R$ {planDetails.savings.toFixed(2).replace('.', ',')}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total mensal:</span>
-                    <span>R$ {planDetails.price.toFixed(2)}</span>
+                    <span>R$ {planDetails.price.toFixed(2).replace('.', ',')}</span>
                   </div>
                 </div>
               </div>
