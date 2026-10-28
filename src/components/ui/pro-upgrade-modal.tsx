@@ -1,3 +1,4 @@
+import { STANDARD_PLAN, STANDARD_ALLOWANCE_DESCRIPTION, STANDARD_ALLOWANCE_TERMS } from '@/lib/standardPlan';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -25,8 +26,8 @@ export const ProUpgradeModal = ({
   const navigate = useNavigate();
 
   const features = [
-    '2 créditos garantidos por mês',
-    '+1 crédito de bônus mensal',
+    STANDARD_ALLOWANCE_DESCRIPTION,
+    'Franquia mensal sem acúmulo',
     'Compositor avançado',
     'Bases musicais completas',
     'Sistema de pastas',
@@ -51,17 +52,18 @@ export const ProUpgradeModal = ({
               <Crown className="h-8 w-8 text-yellow-500" />
             </div>
           </div>
-          <DialogTitle className="text-xl">Recurso Exclusivo Pro</DialogTitle>
+          <DialogTitle className="text-xl">Recurso Exclusivo Plano Padrão</DialogTitle>
           <DialogDescription className="text-base">
-            <span className="font-medium text-foreground">{featureName}</span> está disponível apenas para assinantes Pro
+            <span className="font-medium text-foreground">{featureName}</span> está disponível apenas para assinantes do Plano Padrão
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {/* Price */}
           <div className="text-center space-y-1 p-4 rounded-lg bg-primary/5 border border-primary/10">
+            <p className="text-sm text-muted-foreground line-through">R$ 127,00/mês</p>
             <div className="text-3xl font-bold text-primary">
-              R$ 30,00
+              R$ 97,00
               <span className="text-sm font-normal text-muted-foreground">/mês</span>
             </div>
           </div>

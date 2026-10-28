@@ -2,10 +2,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from 'npm:@supabase/supabase-js@2.118.0/cors';
+import { z } from 'npm:zod@3';
+import { authenticatedUser, ensureLaunchPurchaseAllowed, saveLaunchOrder, LAUNCH_AMOUNT, LAUNCH_DESCRIPTION } from '../_shared/launch-subscription.ts';
+import { subscriptionAmount } from '../_shared/launch-pricing.ts';
 
 interface PaymentRequest {
   type: 'credits' | 'subscription';
@@ -36,8 +36,21 @@ serve(async (req) => {
   );
 
   try {
-    const body: PaymentRequest = await req.json();
-    const { type, totalAmount, user_id, user_email, user_name, customerData } = body;
+    const user = await authenticatedUser(req);
+    const parsed = z.object({ type: z.enum(['credits', 'subscription']), user_id: z.string().uuid().optional() }).passthrough().safeParse(await req.json());
+    if (!parsed.success) return new Response(JSON.stringify({error: 'Dados inválidos'}), {status:400, headers:corsHeaders});
+    const body = parsed.data as unknown as PaymentRequest;
+    if (body.user_id && body.user_id !== user.id) return new Response(JSON.stringify({error:'Access denied'}), {status:403,headers:corsHeaders});
+    const { type, customerData } = body;
+    const user_id = user.id;
+    const user_email = user.email;
+    const { data: profile } = await supabaseService.from('profiles').select('name,email,cpf,cellphone').eq('id', user_id).single();
+    const user_name = profile?.name || 'Usuário';
+    const totalAmount = type === 'subscription' ? subscriptionAmount(body.totalAmount) : body.totalAmount;
+    if (type === 'subscription') {
+      await ensureLaunchPurchaseAllowed(supabaseService, user_id);
+      if (!profile?.name || !profile?.cpf || !profile?.email || !profile?.cellphone) return new Response(JSON.stringify({error:'Complete nome, CPF, email e telefone no perfil'}), {status:400,headers:corsHeaders});
+    }
 
     let openPixAppId = Deno.env.get("OPENPIX_APP_ID");
     
@@ -67,16 +80,16 @@ serve(async (req) => {
     const openPixPayload = {
       correlationID,
       value: Math.round(totalAmount * 100), // Valor em centavos
-      comment: type === 'subscription' ? 'Assinatura Plano Pro - Compuse' : `${body.credits} Créditos - Compuse`,
+      comment: type === 'subscription' ? LAUNCH_DESCRIPTION : `${body.credits} Créditos - Compuse`,
       customer: {
         name: customerData?.name || user_name,
         email: customerData?.email || user_email,
-        taxID: customerData?.cpf?.replace(/\D/g, '') || '',
-        phone: customerData?.phone || ''
+        taxID: (type === 'subscription' ? profile?.cpf : customerData?.cpf)?.replace(/\D/g, '') || '',
+        phone: (type === 'subscription' ? profile?.cellphone : customerData?.phone) || ''
       }
     };
 
-    console.log('📡 Criando cobrança na OpenPix:', openPixPayload);
+    console.log('Criando cobrança OpenPix', { type });
 
     const response = await fetch('https://api.openpix.com.br/api/v1/charge', {
       method: 'POST',
@@ -95,6 +108,7 @@ serve(async (req) => {
     }
 
     const charge = data.charge;
+    if (type === 'subscription' && (charge?.value !== LAUNCH_AMOUNT * 100 || charge?.correlationID !== correlationID)) throw new Error('Payment amount or identity mismatch');
 
     // Registrar no banco de dados
     if (type === 'credits') {
@@ -111,35 +125,7 @@ serve(async (req) => {
           status: 'pending'
         });
     } else if (type === 'subscription') {
-      const { data: existingSub } = await supabaseService
-        .from('subscriptions')
-        .select('id')
-        .eq('user_id', user_id)
-        .maybeSingle();
-
-      if (existingSub) {
-        await supabaseService
-          .from('subscriptions')
-          .update({
-            status: 'pending',
-            plan_type: 'pro',
-            amount: totalAmount,
-            payment_provider: 'openpix',
-            payment_provider_subscription_id: charge.correlationID,
-          })
-          .eq('id', existingSub.id);
-      } else {
-        await supabaseService
-          .from('subscriptions')
-          .insert({
-            user_id,
-            status: 'pending',
-            plan_type: 'pro',
-            amount: totalAmount,
-            payment_provider: 'openpix',
-            payment_provider_subscription_id: charge.correlationID,
-          });
-      }
+      await saveLaunchOrder(supabaseService, user_id, 'openpix', charge.correlationID);
     }
 
     return new Response(
@@ -148,16 +134,18 @@ serve(async (req) => {
         payment_id: charge.correlationID,
         qr_code: charge.brCode,
         qr_code_url: charge.qrCodeImage,
-        correlationID: charge.correlationID
+        correlationID: charge.correlationID,
+        amount: totalAmount
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('❌ Erro:', error);
+    const message = error instanceof Error ? error.message : 'Erro interno';
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: message }),
+      { status: message === 'Unauthorized' ? 401 : 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

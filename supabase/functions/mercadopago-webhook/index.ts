@@ -7,6 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+import { activateLaunchPayment } from '../_shared/launch-subscription.ts';
+
 serve(async (req) => {
   console.log('🔔 Mercado Pago webhook called');
   
@@ -146,6 +148,13 @@ serve(async (req) => {
     }
 
     console.log('✅ Payment approved! Processing...');
+
+    const {data: launchOrder, error: launchError} = await supabaseService.from('subscription_launch_orders').select('id').eq('provider','mercadopago').eq('payment_id',String(paymentData.id)).maybeSingle();
+    if (launchError) throw launchError;
+    if (launchOrder) {
+      await activateLaunchPayment(supabaseService,'mercadopago',String(paymentData.id),paymentData.transaction_amount,paymentData.date_approved);
+      return new Response('OK', {status:200,headers:corsHeaders});
+    }
 
     // Verificar se é pagamento de assinatura ou créditos
     const externalReference = paymentData.external_reference || '';

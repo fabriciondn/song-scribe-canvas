@@ -1,0 +1,2 @@
+ALTER FUNCTION public.get_registration_balance(uuid) SECURITY INVOKER;
+CREATE POLICY allowance_managed_read ON public.subscription_registration_allowances FOR SELECT TO authenticated USING (public.can_moderator_manage_user(user_id));

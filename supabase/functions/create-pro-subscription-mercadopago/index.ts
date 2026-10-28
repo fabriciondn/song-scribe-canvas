@@ -1,10 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from 'npm:@supabase/supabase-js@2.118.0/cors';
+import { authenticatedUser, ensureLaunchPurchaseAllowed, saveLaunchOrder, LAUNCH_AMOUNT, LAUNCH_DESCRIPTION } from '../_shared/launch-subscription.ts';
 
 interface RequestBody {
   user_id: string;
@@ -26,7 +24,10 @@ serve(async (req) => {
   );
 
   try {
-    const { user_id, user_email, user_name }: RequestBody = await req.json();
+    const user = await authenticatedUser(req);
+    await req.json();
+    const user_id=user.id, user_email=user.email, user_name=user.user_metadata?.name || 'Usuário';
+    await ensureLaunchPurchaseAllowed(supabaseService,user.id);
     
     console.log('📝 Dados recebidos:', { user_id, user_email, user_name });
 
@@ -130,8 +131,8 @@ serve(async (req) => {
     
     // Criar pagamento no Mercado Pago
     const paymentPayload = {
-      transaction_amount: 29.99,
-      description: 'Assinatura Plano Pro - 30 dias',
+      transaction_amount: LAUNCH_AMOUNT,
+      description: LAUNCH_DESCRIPTION,
       payment_method_id: 'pix',
       payer: {
         email: user_email,
@@ -171,65 +172,7 @@ serve(async (req) => {
       isModeratorPayment
     });
 
-    let subscriptionData;
-
-    // Se já existe subscription (expirada, trial, etc), fazer UPDATE
-    if (existingSubscription) {
-      console.log('📝 Atualizando subscription existente:', existingSubscription.id);
-      
-      const { data: updatedData, error: updateError } = await supabaseService
-        .from('subscriptions')
-        .update({
-          status: 'pending',
-          plan_type: 'pro',
-          amount: 29.99,
-          currency: 'BRL',
-          payment_provider: 'mercadopago',
-          payment_provider_subscription_id: paymentData.id.toString(),
-          auto_renew: false,
-          started_at: null,
-          expires_at: null
-        })
-        .eq('id', existingSubscription.id)
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error('❌ Erro ao atualizar subscription:', updateError);
-        throw new Error('Erro ao atualizar assinatura');
-      }
-
-      subscriptionData = updatedData;
-      console.log('✅ Subscription atualizada como pending:', subscriptionData.id);
-    } else {
-      // Se não existe subscription, fazer INSERT
-      console.log('📝 Criando nova subscription');
-      
-      const { data: insertedData, error: insertError } = await supabaseService
-        .from('subscriptions')
-        .insert({
-          user_id: user_id,
-          status: 'pending',
-          plan_type: 'pro',
-          amount: 29.99,
-          currency: 'BRL',
-          payment_provider: 'mercadopago',
-          payment_provider_subscription_id: paymentData.id.toString(),
-          auto_renew: false,
-          started_at: null,
-          expires_at: null
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error('❌ Erro ao criar subscription:', insertError);
-        throw new Error('Erro ao criar assinatura');
-      }
-
-      subscriptionData = insertedData;
-      console.log('✅ Subscription criada como pending:', subscriptionData.id);
-    }
+    const orderId = await saveLaunchOrder(supabaseService,user_id,'mercadopago',paymentData.id.toString());
 
     // Log de atividade para rastreamento
     if (isModeratorPayment) {
@@ -241,7 +184,7 @@ serve(async (req) => {
           metadata: {
             moderator_id: moderatorId,
             payment_id: paymentData.id,
-            amount: 29.99
+            amount: LAUNCH_AMOUNT
           }
         });
     }
@@ -252,8 +195,8 @@ serve(async (req) => {
         payment_id: paymentData.id,
         qr_code: paymentData.point_of_interaction?.transaction_data?.qr_code,
         qr_code_base64: paymentData.point_of_interaction?.transaction_data?.qr_code_base64,
-        subscription_id: subscriptionData.id,
-        amount: 29.99,
+        subscription_id: orderId,
+        amount: LAUNCH_AMOUNT,
         currency: 'BRL',
         is_moderator_payment: isModeratorPayment
       }),

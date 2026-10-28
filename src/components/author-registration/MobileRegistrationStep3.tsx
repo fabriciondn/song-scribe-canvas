@@ -86,7 +86,7 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
   authors,
 }) => {
   const navigate = useNavigate();
-  const { credits, refreshCredits } = useUserCredits();
+  const { availableRegistrationCredits: credits, refreshCredits } = useUserCredits();
   const { profile } = useProfile();
   const { theme, toggleTheme } = useTheme();
   const currentUser = useCurrentUser();
@@ -179,13 +179,9 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
     }
 
     // Check credits before starting
-    const { data: creditCheck, error: checkError } = await supabase
-      .from('profiles')
-      .select('credits')
-      .eq('id', targetUserId)
-      .single();
+    const { data: creditCheck, error: checkError } = await supabase.rpc('get_registration_balance', {p_user_id: targetUserId});
     
-    if (checkError || !creditCheck || (creditCheck.credits || 0) <= 0) {
+    if (checkError || !creditCheck || (typeof creditCheck === 'object' && creditCheck !== null && 'credits' in creditCheck ? Number(creditCheck.credits) : 0) <= 0) {
       toast.error('Você precisa de créditos para realizar o registro.');
       navigate('/dashboard/credits-checkout');
       return;
@@ -204,26 +200,14 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
         audioFilePath = await uploadAudioFile(formData.audioFile, targetUserId);
       }
 
-      // Atualizar créditos
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', targetUserId)
-        .single();
-
-      if (profileError) throw new Error('Erro ao verificar créditos');
-
-      if (profileData) {
-        const newCredits = Math.max((profileData.credits || 0) - 1, 0);
-        const { error: creditError } = await supabase
-          .from('profiles')
-          .update({ credits: newCredits })
-          .eq('id', targetUserId);
-
-        if (creditError) throw new Error('Erro ao atualizar créditos');
+      // Launch accounts are charged atomically by the INSERT trigger. Legacy accounts retain their existing path.
+      const isLaunch = typeof creditCheck === 'object' && creditCheck !== null && 'is_launch' in creditCheck && creditCheck.is_launch === true;
+      if (!isLaunch) {
+        const {data: profileData, error: profileError} = await supabase.from('profiles').select('credits').eq('id',targetUserId).single();
+        if (profileError) throw new Error('Erro ao verificar créditos');
+        const {error: creditError} = await supabase.from('profiles').update({credits:Math.max((profileData?.credits || 0)-1,0)}).eq('id',targetUserId);
+        if (creditError) throw creditError;
       }
-
-      refreshCredits();
 
       // Inserir registro
       const analysisStartedAt = new Date().toISOString();
@@ -254,6 +238,9 @@ export const MobileRegistrationStep3: React.FC<MobileRegistrationStep3Props> = (
         .single();
 
       if (insertError) throw new Error(`Erro ao registrar: ${insertError.message}`);
+
+      refreshCredits();
+      window.dispatchEvent(new CustomEvent('credits-updated'));
 
       // Processar comissão de afiliado
       try {

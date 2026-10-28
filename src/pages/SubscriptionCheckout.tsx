@@ -1,3 +1,4 @@
+import { STANDARD_PLAN, STANDARD_ALLOWANCE_DESCRIPTION, STANDARD_ALLOWANCE_TERMS } from '@/lib/standardPlan';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,13 +30,14 @@ export default function SubscriptionCheckout() {
   const [showQR, setShowQR] = useState(false);
 
   const handlePaymentConfirmed = () => {
-    toast.success("Assinatura Pro ativada com sucesso! 🎉");
+    toast.success("Assinatura Plano Padrão ativada com sucesso! 🎉");
     setShowQR(false);
     refreshSubscription();
     setTimeout(() => navigate("/dashboard"), 2000);
   };
 
   const { isChecking } = usePaymentConfirmation({
+    paymentType: 'subscription',
     paymentId: pixData?.payment_id || "",
     isActive: showQR && !!pixData,
     onPaymentConfirmed: handlePaymentConfirmed
@@ -48,7 +50,7 @@ export default function SubscriptionCheckout() {
     }
 
     if (subscription?.status === 'active') {
-      toast.info('Você já é um usuário Pro!');
+      toast.info('Você já é um assinante do Plano Padrão!');
       return;
     }
 
@@ -58,7 +60,6 @@ export default function SubscriptionCheckout() {
       const { data, error } = await supabase.functions.invoke('create-openpix-payment', {
         body: {
           type: 'subscription',
-          totalAmount: 29.99,
           user_id: user.id,
           user_email: user.email,
           user_name: profile?.name || 'Usuário'
@@ -97,8 +98,8 @@ export default function SubscriptionCheckout() {
 
   const proFeatures = [
     'Tudo do plano Gratuito',
-    '2 créditos garantidos por mês',
-    '+1 crédito de bônus mensal',
+    STANDARD_ALLOWANCE_DESCRIPTION,
+    'Franquia mensal sem acúmulo',
     'Compositor avançado',
     'Bases musicais completas',
     'Sistema de pastas',
@@ -119,7 +120,7 @@ export default function SubscriptionCheckout() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Checkout Pro</h1>
+              <h1 className="text-3xl font-bold">Checkout Plano Padrão</h1>
               <p className="text-muted-foreground">
                 Upgrade para desbloquear todos os recursos da plataforma
               </p>
@@ -181,12 +182,12 @@ export default function SubscriptionCheckout() {
               <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
                 <Badge className="bg-primary text-primary-foreground">
                   <Crown className="h-3 w-3 mr-1" />
-                  Recomendado
+                  Oferta de Lançamento
                 </Badge>
               </div>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  Plano Pro
+                  Plano Padrão
                   {subscription?.status === 'active' && (
                     <Badge variant="secondary">Atual</Badge>
                   )}
@@ -194,8 +195,9 @@ export default function SubscriptionCheckout() {
                 <CardDescription>
                   Todos os recursos para profissionais
                 </CardDescription>
+                <p className="text-sm text-muted-foreground line-through">R$ 127,00/mês</p>
                 <div className="text-2xl font-bold">
-                  R$ 29,99
+                  R$ 97,00
                   <span className="text-sm font-normal text-muted-foreground">/mês</span>
                 </div>
               </CardHeader>
@@ -210,7 +212,7 @@ export default function SubscriptionCheckout() {
                 </ul>
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                   <p className="text-xs text-amber-700">
-                    Bônus só disponíveis com assinatura em dia. Congelam se inativo e expiram após 2 meses.
+                    A franquia reinicia a cada ciclo pago de 30 dias, sem acúmulo. Créditos avulsos não expiram.
                   </p>
                 </div>
               </CardContent>
@@ -235,7 +237,7 @@ export default function SubscriptionCheckout() {
                 <Separator />
                 <div className="flex justify-between font-medium">
                   <span>Total mensal:</span>
-                  <span>R$ 29,99</span>
+                  <span>R$ 97,00</span>
                 </div>
               </div>
             </CardContent>
@@ -283,11 +285,11 @@ export default function SubscriptionCheckout() {
                   </div>
                 </div>
                 <div className="text-center space-y-2">
-                  <p className="text-sm font-medium">Valor: R$ 29,99</p>
+                  <p className="text-sm font-medium">Valor: R$ 97,00</p>
                   <p className="text-xs text-muted-foreground">
                     {isChecking 
                       ? "Aguardando confirmação do pagamento..." 
-                      : "Após o pagamento, sua conta será ativada automaticamente com 2 créditos + 1 bônus"}
+                      : "Após o pagamento, serão liberados até 50 registros por 30 dias, sem acúmulo"}
                   </p>
                 </div>
               </CardContent>
@@ -300,10 +302,10 @@ export default function SubscriptionCheckout() {
               <div className="space-y-4">
                 <Badge variant="secondary" className="text-lg px-4 py-2">
                   <Crown className="h-4 w-4 mr-2" />
-                  Você já é Pro!
+                  Você já possui o Plano Padrão!
                 </Badge>
                 <p className="text-muted-foreground">
-                  Você já tem acesso a todos os recursos Pro
+                  Você já tem acesso a todos os recursos do Plano Padrão
                 </p>
                 <Button onClick={() => navigate('/dashboard')}>
                   Voltar ao Dashboard
@@ -330,13 +332,13 @@ export default function SubscriptionCheckout() {
                   size="lg"
                   className="w-full max-w-md"
                   onClick={handleSubscribe}
-                  disabled={isProcessing}
+                  disabled={isProcessing || !profile?.name || !profile?.cpf || !profile?.email || !profile?.cellphone}
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
                   {isProcessing ? 'Processando...' : 'Gerar QR Code PIX'}
                 </Button>
                 <p className="text-xs text-muted-foreground">
-                  Pagamento seguro via PIX. Cancelamento a qualquer momento.
+                  Pagamento seguro via PIX. Renovação por novo pagamento a cada 30 dias.
                 </p>
               </div>
             )}

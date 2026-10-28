@@ -1,0 +1,4 @@
+# Subscription rules
+- Keep `pro` permissions compatible; new paid launch orders and monthly registration allowances are separate from legacy subscriptions and profile credits, to prevent accidental migration or expiry of standalone credits.
+- Route launch payment activation through one service-role-only transactional RPC after provider amount/date verification, to guarantee idempotency across webhooks and polling.
+- New launch registration inserts consume their allowance inside the database transaction; clients must not debit profile credits for these accounts, to avoid double charges and failed-insert losses.

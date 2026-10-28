@@ -1,10 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from 'npm:@supabase/supabase-js@2.118.0/cors';
+import { authenticatedUser, activateLaunchPayment, paymentIdSchema } from '../_shared/launch-subscription.ts';
+import { verifyAbacatePix } from '../_shared/verify-abacate.ts';
 
 async function processSuccessfulPayment(supabase: any, paymentId: string) {
   console.log(`[CHECK-PAYMENT-STATUS] 🔄 Redundant processing for payment: ${paymentId}`);
@@ -61,8 +60,19 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    const user = await authenticatedUser(req);
     const body = await req.json();
-    const { paymentId, simulate } = body;
+    const paymentId = paymentIdSchema.parse(String(body.paymentId ?? ''));
+    const simulate = false;
+    const {data: launchOrder, error: launchError} = await supabaseService.from('subscription_launch_orders').select('user_id,provider,status').eq('payment_id',paymentId).maybeSingle();
+    if (launchError) throw launchError;
+    if (launchOrder && launchOrder.user_id !== user.id) return new Response(JSON.stringify({error:'Access denied'}),{status:403,headers:corsHeaders});
+    if (launchOrder?.status === 'paid') return new Response(JSON.stringify({isPaid:true,paid:true,status:'completed'}),{status:200,headers:corsHeaders});
+    if (!launchOrder) {
+      const {data: ownedCredit} = await supabaseService.from('credit_transactions').select('user_id').eq('payment_id',paymentId).maybeSingle();
+      const {data: ownedSub} = await supabaseService.from('subscriptions').select('user_id').eq('payment_provider_subscription_id',paymentId).maybeSingle();
+      if ((ownedCredit?.user_id || ownedSub?.user_id) !== user.id) return new Response(JSON.stringify({error:'Payment not found'}),{status:404,headers:corsHeaders});
+    }
 
     console.log('[CHECK-PAYMENT-STATUS] 📋 Checking payment:', { paymentId, simulate });
 
@@ -101,7 +111,7 @@ serve(async (req) => {
 
     // 2. Checar API do Provedor
     const paymentIdStr = paymentId.toString();
-    const isOpenPix = paymentIdStr.includes('_');
+    const isOpenPix = launchOrder ? launchOrder.provider === 'openpix' : paymentIdStr.includes('_');
 
     const { data: settings } = await supabaseService
       .from('system_settings')
@@ -116,7 +126,7 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: "OpenPix App ID não configurado", isPaid: false }), { status: 503, headers: corsHeaders });
       }
 
-      const opResp = await fetch(`https://api.openpix.com.br/api/v1/charge/${paymentIdStr}`, {
+      const opResp = await fetch(`https://api.openpix.com.br/api/v1/charge/${encodeURIComponent(paymentIdStr)}`, {
         headers: { 'Authorization': openPixAppId }
       });
 
@@ -133,7 +143,10 @@ serve(async (req) => {
       console.log('[CHECK-PAYMENT-STATUS] OpenPix status:', status);
       
       // Ativação de assinatura como contingência caso o webhook não chegue
-      if (isPaid && paymentIdStr.startsWith('subscription_')) {
+      if (isPaid && launchOrder) {
+        if (opData.charge.correlationID !== paymentIdStr) throw new Error('Payment identity mismatch');
+        await activateLaunchPayment(supabaseService,'openpix',paymentIdStr,opData.charge.value/100,opData.charge.paidAt);
+      } else if (isPaid && paymentIdStr.startsWith('subscription_')) {
         const { data: sub } = await supabaseService
           .from('subscriptions')
           .select('id, user_id')
@@ -175,13 +188,18 @@ serve(async (req) => {
       );
     }
 
+    if (launchOrder?.provider === 'abacate') {
+      const paid = await verifyAbacatePix(paymentIdStr);
+      if (paid) await activateLaunchPayment(supabaseService,'abacate',paymentIdStr,97,new Date().toISOString());
+      return new Response(JSON.stringify({isPaid:paid,paid,status:paid?'completed':'pending'}),{status:200,headers:corsHeaders});
+    }
     // Fallback/Default
     return new Response(JSON.stringify({ isPaid: false, status: 'pending' }), { status: 200, headers: corsHeaders });
 
   } catch (error) {
     console.error('[CHECK-PAYMENT-STATUS] ❌ Error:', error);
     return new Response(
-      JSON.stringify({ error: 'Erro interno', details: error.message }),
+      JSON.stringify({ error: 'Erro interno', details: error instanceof Error ? error.message : 'Erro interno' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

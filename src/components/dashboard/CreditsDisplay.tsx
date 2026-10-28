@@ -8,7 +8,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { cn } from '@/lib/utils';
 
 export const CreditsDisplay: React.FC = () => {
-  const { credits, isLoading: creditsLoading } = useUserCredits();
+  const { credits, monthlyRemaining, isLaunch, cycleEnd, isLoading: creditsLoading } = useUserCredits();
   const { 
     bonusCredits, 
     isFrozen, 
@@ -18,7 +18,7 @@ export const CreditsDisplay: React.FC = () => {
   const { isPro } = useSubscription();
 
   const isLoading = creditsLoading || bonusLoading;
-  const totalCredits = (credits || 0) + (isFrozen ? 0 : bonusCredits);
+  const totalCredits = (credits || 0) + (isFrozen ? 0 : bonusCredits) + monthlyRemaining;
 
   if (isLoading) {
     return (
@@ -41,23 +41,32 @@ export const CreditsDisplay: React.FC = () => {
           {isPro && (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
               <Crown className="h-3 w-3 mr-1" />
-              Pro
+              Plano Padrão
             </Badge>
           )}
         </div>
 
         <div className="space-y-3">
+          {isLaunch && (
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div>
+                <span className="text-sm font-medium">Franquia mensal</span>
+                <p className="text-xs text-muted-foreground">Sem acúmulo{cycleEnd ? ` · até ${new Date(cycleEnd).toLocaleDateString('pt-BR')}` : ''}</p>
+              </div>
+              <span className="text-xl font-bold">{monthlyRemaining}/50</span>
+            </div>
+          )}
           {/* Créditos Regulares */}
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2">
               <Coins className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Créditos</span>
+              <span className="text-sm font-medium">{isLaunch ? 'Créditos avulsos' : 'Créditos'}</span>
             </div>
             <span className="text-xl font-bold">{credits || 0}</span>
           </div>
 
           {/* Créditos Bônus - Só mostra para Pro ou se tem bônus */}
-          {(isPro || bonusCredits > 0) && (
+          {((isPro && !isLaunch) || bonusCredits > 0) && (
             <div className={cn(
               "flex items-center justify-between p-3 rounded-lg",
               isFrozen 
@@ -97,7 +106,7 @@ export const CreditsDisplay: React.FC = () => {
               <span className="text-xs text-amber-700">
                 {daysUntilExpiration === 0 
                   ? 'Bônus expiram hoje!' 
-                  : `Bônus expiram em ${daysUntilExpiration} dias. Renove sua assinatura Pro!`
+                  : `Bônus expiram em ${daysUntilExpiration} dias. Renove sua assinatura Plano Padrão!`
                 }
               </span>
             </div>
@@ -111,7 +120,7 @@ export const CreditsDisplay: React.FC = () => {
             </div>
             {isFrozen && bonusCredits > 0 && (
               <p className="text-xs text-muted-foreground mt-1">
-                +{bonusCredits} bônus liberados ao renovar Pro
+                +{bonusCredits} bônus liberados ao renovar o Plano Padrão
               </p>
             )}
           </div>

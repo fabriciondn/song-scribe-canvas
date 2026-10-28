@@ -15,6 +15,9 @@ export const useUserCredits = () => {
   const impersonatedUser = impersonationContext?.impersonatedUser;
   
   const [credits, setCredits] = useState<number | null>(null);
+  const [monthlyRemaining, setMonthlyRemaining] = useState(0);
+  const [isLaunch, setIsLaunch] = useState(false);
+  const [cycleEnd, setCycleEnd] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -52,6 +55,12 @@ export const useUserCredits = () => {
         setError('Erro ao carregar créditos');
         setCredits(0);
       } else {
+        const {data: balance, error: balanceError} = await supabase.rpc('get_registration_balance',{p_user_id:currentUserId});
+        if (balanceError) throw balanceError;
+        const value = balance && typeof balance === 'object' && !Array.isArray(balance) ? balance : {};
+        setMonthlyRemaining(Number(value.monthly_remaining || 0));
+        setIsLaunch(value.is_launch === true);
+        setCycleEnd(typeof value.cycle_end === 'string' ? value.cycle_end : null);
         const newCredits = data?.credits || 0;
         console.log('✅ Credits found:', newCredits);
         
@@ -190,6 +199,10 @@ export const useUserCredits = () => {
 
   return {
     credits,
+    monthlyRemaining,
+    isLaunch,
+    cycleEnd,
+    availableRegistrationCredits: (credits || 0) + monthlyRemaining,
     isLoading,
     error,
     refreshCredits,

@@ -2455,6 +2455,109 @@ export type Database = {
           },
         ]
       }
+      subscription_launch_orders: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          paid_at: string | null
+          payment_id: string
+          provider: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_id: string
+          provider: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_id?: string
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_launch_orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_launch_orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_registration_allowances: {
+        Row: {
+          created_at: string
+          cycle_end: string
+          cycle_start: string
+          order_id: string
+          remaining: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          cycle_end: string
+          cycle_start: string
+          order_id: string
+          remaining?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          cycle_end?: string
+          cycle_start?: string
+          order_id?: string
+          remaining?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_registration_allowances_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_launch_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_registration_allowances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_registration_allowances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           amount: number | null
@@ -2830,6 +2933,15 @@ export type Database = {
       }
     }
     Functions: {
+      activate_launch_subscription: {
+        Args: {
+          p_amount: number
+          p_paid_at: string
+          p_payment_id: string
+          p_provider: string
+        }
+        Returns: Json
+      }
       admin_update_user_credits: {
         Args: { new_credits: number; target_user_id: string }
         Returns: undefined
@@ -2998,6 +3110,7 @@ export type Database = {
           name: string
         }[]
       }
+      get_registration_balance: { Args: { p_user_id: string }; Returns: Json }
       get_user_acordes_progress: { Args: { p_user_id: string }; Returns: Json }
       get_user_role: { Args: { user_id: string }; Returns: string }
       grant_acordes: {
@@ -3007,6 +3120,10 @@ export type Database = {
           p_reference_id?: string
           p_user_id: string
         }
+        Returns: Json
+      }
+      grant_legacy_monthly_subscription_credits: {
+        Args: { p_user_id: string }
         Returns: Json
       }
       grant_monthly_subscription_credits: {

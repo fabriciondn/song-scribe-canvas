@@ -1,3 +1,4 @@
+import { STANDARD_PLAN, STANDARD_ALLOWANCE_DESCRIPTION, STANDARD_ALLOWANCE_TERMS } from '@/lib/standardPlan';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useProfile } from '@/hooks/useProfile';
@@ -24,10 +25,10 @@ const Checkout = () => {
   const [paymentId, setPaymentId] = useState<string | null>(null);
 
   const planDetails = {
-    name: 'Pro',
-    originalPrice: 49.99,
-    price: 14.99,
-    savings: 35.00,
+    name: STANDARD_PLAN.name,
+    originalPrice: STANDARD_PLAN.regularPrice,
+    price: STANDARD_PLAN.price,
+    savings: 30,
     features: [
       'Acesso total ao Compositor',
       'Biblioteca completa de Bases Musicais',
@@ -35,7 +36,7 @@ const Checkout = () => {
       'Rascunhos ilimitados',
       'Organizador de pastas',
       'Sistema de Parcerias',
-      'Registro de obras autorais',
+      STANDARD_ALLOWANCE_DESCRIPTION,
       'Tutoriais exclusivos',
       'Suporte prioritário',
       'Certificados profissionais',
@@ -75,7 +76,7 @@ const Checkout = () => {
         setIsCheckingPayment(false);
         
         // Mostrar mensagem de sucesso
-        toast.success('🎉 Pagamento confirmado! Bem-vindo ao Pro!');
+        toast.success('🎉 Pagamento confirmado! Bem-vindo ao Plano Padrão!');
         
         // Atualizar subscription
         await refreshSubscription();
@@ -123,7 +124,7 @@ const Checkout = () => {
           <div className="text-center space-y-4">
             <h1 className="text-2xl font-bold">Dados Incompletos</h1>
             <p className="text-muted-foreground">
-              Para prosseguir com a assinatura Pro, você precisa completar suas informações de perfil.
+              Para prosseguir com a assinatura Plano Padrão, você precisa completar suas informações de perfil.
             </p>
             <div className="space-y-2">
               {!profile?.name && <p className="text-sm text-red-500">• Nome completo é obrigatório</p>}
@@ -147,9 +148,9 @@ const Checkout = () => {
         <div className="max-w-2xl mx-auto p-6 space-y-6">
           <div className="text-center space-y-4">
             <Crown className="h-16 w-16 text-yellow-500 mx-auto" />
-            <h1 className="text-2xl font-bold">Você já é Pro!</h1>
+            <h1 className="text-2xl font-bold">Você já possui o Plano Padrão!</h1>
             <p className="text-muted-foreground">
-              Sua assinatura Pro está ativa até {subscription.expires_at ? 
+              Sua assinatura Plano Padrão está ativa até {subscription.expires_at ? 
                 new Date(subscription.expires_at).toLocaleDateString() : 'prazo indeterminado'}.
             </p>
             <Button onClick={() => navigate('/dashboard')}>
@@ -179,7 +180,7 @@ const Checkout = () => {
             <CardContent className="space-y-6">
               <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
                 <Crown className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-2">Você agora é Pro! 🎉</h3>
+                <h3 className="text-xl font-bold mb-2">Seu Plano Padrão está ativo! 🎉</h3>
                 <p className="text-muted-foreground">
                   Todas as funcionalidades premium foram liberadas em sua conta.
                   Você será redirecionado para o dashboard em instantes.
@@ -266,7 +267,7 @@ const Checkout = () => {
             <CardHeader>
               <CardTitle className="text-center">PIX para Pagamento</CardTitle>
               <CardDescription className="text-center">
-                Escaneie o QR Code abaixo para pagar sua assinatura Pro
+                Escaneie o QR Code abaixo para pagar sua assinatura Plano Padrão
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -357,7 +358,7 @@ const Checkout = () => {
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">Finalizar Assinatura</h1>
           <p className="text-muted-foreground">
-            Você está prestes a se tornar um usuário Pro!
+            Você está prestes a se tornar um assinante do Plano Padrão!
           </p>
         </div>
 
@@ -367,7 +368,7 @@ const Checkout = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Crown className="h-5 w-5 text-yellow-500" />
-                Plano Pro
+                Plano Padrão
               </CardTitle>
               <CardDescription>
                 Oferta especial de lançamento por tempo limitado
@@ -378,14 +379,14 @@ const Checkout = () => {
               <div className="text-center space-y-2">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">
-                    <span className="line-through">De R$ {planDetails.originalPrice.toFixed(2)}</span>
+                    <span className="line-through">De R$ {planDetails.originalPrice.toFixed(2).replace('.', ',')}</span>
                   </p>
                   <p className="text-4xl font-bold">
-                    R$ {planDetails.price.toFixed(2)}
+                    R$ {planDetails.price.toFixed(2).replace('.', ',')}
                     <span className="text-lg font-normal text-muted-foreground">/mês</span>
                   </p>
                   <Badge variant="secondary" className="text-green-600">
-                    Economize R$ {planDetails.savings.toFixed(2)}/mês
+                    Economize R$ {planDetails.savings.toFixed(2).replace('.', ',')}/mês
                   </Badge>
                 </div>
               </div>
@@ -452,17 +453,17 @@ const Checkout = () => {
                 <h4 className="font-semibold">Resumo financeiro:</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Plano Pro (mensal)</span>
-                    <span className="line-through text-muted-foreground">R$ {planDetails.originalPrice.toFixed(2)}</span>
+                    <span>Plano Padrão (mensal)</span>
+                    <span className="line-through text-muted-foreground">R$ {planDetails.originalPrice.toFixed(2).replace('.', ',')}</span>
                   </div>
                   <div className="flex justify-between text-sm text-green-600">
                     <span>Desconto de lançamento</span>
-                    <span>-R$ {planDetails.savings.toFixed(2)}</span>
+                    <span>-R$ {planDetails.savings.toFixed(2).replace('.', ',')}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total mensal:</span>
-                    <span>R$ {planDetails.price.toFixed(2)}</span>
+                    <span>R$ {planDetails.price.toFixed(2).replace('.', ',')}</span>
                   </div>
                 </div>
               </div>
@@ -495,7 +496,7 @@ const Checkout = () => {
                     Pagamento processado de forma segura via Abacate Pay
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Cobrança recorrente mensal. Cancele a qualquer momento.
+                    Novo pagamento a cada 30 dias, sem acúmulo da franquia.
                   </p>
                 </div>
               </div>
