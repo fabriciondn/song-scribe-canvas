@@ -26,7 +26,21 @@ serve(async (req) => {
   try {
     const user = await authenticatedUser(req);
     await req.json();
-    const user_id=user.id, user_email=user.email, user_name=user.user_metadata?.name || 'Usuário';
+    const user_id = user.id;
+    const { data: customerProfile, error: customerProfileError } = await supabaseService
+      .from('profiles').select('name, cpf, cellphone, email').eq('id', user_id).single();
+    if (customerProfileError) throw customerProfileError;
+    const user_name = customerProfile?.name?.trim() || '';
+    const user_email = user.email || customerProfile?.email || '';
+    const cleanCpf = (customerProfile?.cpf || '').replace(/\D/g, '');
+    const nameParts = user_name.split(/\s+/).filter(Boolean);
+    if (nameParts.length < 2 || cleanCpf.length !== 11 || !user_email) {
+      return new Response(JSON.stringify({ error: 'Complete nome e sobrenome, CPF válido e e-mail no seu perfil antes de assinar.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ');
     await ensureLaunchPurchaseAllowed(supabaseService,user.id);
     
     console.log('📝 Dados recebidos:', { user_id, user_email, user_name });
@@ -140,14 +154,16 @@ serve(async (req) => {
       payment_method_id: 'pix',
       payer: {
         email: user_email,
-        first_name: user_name || 'Usuário',
+        first_name: firstName.substring(0, 30),
+        last_name: lastName.substring(0, 30),
+        identification: { type: 'CPF', number: cleanCpf },
       },
       external_reference: externalReference,
       notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`
     };
 
     console.log('💳 Criando pagamento PIX no Mercado Pago:', {
-      ...paymentPayload,
+      amount: paymentPayload.transaction_amount,
       isModeratorPayment,
       moderatorId
     });
@@ -165,7 +181,19 @@ serve(async (req) => {
     if (!mpResponse.ok) {
       const errorText = await mpResponse.text();
       console.error('❌ Erro do Mercado Pago:', errorText);
-      throw new Error(`Erro ao criar pagamento: ${mpResponse.status}`);
+      let detail = `HTTP ${mpResponse.status}`;
+      try {
+        const parsed = JSON.parse(errorText);
+        const causes = Array.isArray(parsed.cause)
+          ? parsed.cause.map((cause: { description?: string; code?: string }) => cause.description || cause.code).filter(Boolean).join('; ')
+          : '';
+        detail = [parsed.message, causes].filter(Boolean).join(' — ') || detail;
+      } catch {
+        // Resposta não JSON: não expor detalhes internos.
+      }
+      return new Response(JSON.stringify({ error: `Mercado Pago: ${detail}` }), {
+        status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     const paymentData = await mpResponse.json();
