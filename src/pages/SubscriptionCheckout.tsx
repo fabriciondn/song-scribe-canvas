@@ -57,61 +57,24 @@ export default function SubscriptionCheckout() {
     try {
       setIsProcessing(true);
       
-      // A RPC é a fonte principal. Erros não podem ser interpretados como cliente avulso.
-      let isPartnerCustomer = false;
-      const { data: partnerRpc, error: partnerRpcError } = await supabase.rpc(
-        'check_user_partner_link',
-        { p_user_id: user.id }
-      );
-
-      if (!partnerRpcError && partnerRpc && typeof partnerRpc === 'object' && !Array.isArray(partnerRpc)
-          && typeof (partnerRpc as { is_partner_customer?: unknown }).is_partner_customer === 'boolean') {
-        isPartnerCustomer = (partnerRpc as { is_partner_customer: boolean }).is_partner_customer;
-      } else {
-        console.warn('RPC de parceiro indisponível; verificando vínculo diretamente.', partnerRpcError);
-        const { data: directLink, error: directError } = await supabase
-          .from('moderator_users')
-          .select('moderator_id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (directError) throw new Error('Não foi possível verificar seu vínculo com o parceiro. Tente novamente.');
-        isPartnerCustomer = !!directLink;
-      }
-
-      console.log('💳 Tipo de Checkout:', isPartnerCustomer ? 'Mercado Pago (Parceiro)' : 'OpenPix (Plataforma)');
-
-      const { data, error } = isPartnerCustomer
-        ? await supabase.functions.invoke('create-pro-subscription-mercadopago', {
-            body: {
-              user_id: user.id,
-              user_email: user.email,
-              user_name: profile?.name || 'Usuário',
-              user_cpf: profile?.cpf,
-              user_cellphone: profile?.cellphone
-            }
-          })
-        : await supabase.functions.invoke('create-openpix-payment', {
-            body: {
-              type: 'subscription',
-              user_id: user.id,
-              user_email: user.email,
-              user_name: profile?.name || 'Usuário'
-            }
-          });
+      // O servidor verifica o vínculo com service role e seleciona o gateway.
+      // Nunca assumir OpenPix quando a consulta de vínculo falha.
+      const { data, error } = await supabase.functions.invoke('create-subscription-payment', {
+        body: { type: 'subscription' }
+      });
 
       if (error) throw error;
 
-      if (data?.qr_code && data?.payment_id) {
+      if (data?.qr_code && data?.payment_id && (data?.provider === 'mercadopago' || data?.provider === 'openpix')) {
         setPixData({
           qr_code: data.qr_code,
-          qr_code_url: isPartnerCustomer
+          qr_code_url: data.provider === 'mercadopago'
             ? (data.qr_code_base64 ? `data:image/png;base64,${data.qr_code_base64}` : '')
             : (data.qr_code_url || ''),
           payment_id: String(data.payment_id)
         });
         setShowQR(true);
-        toast.success(isPartnerCustomer
+        toast.success(data.provider === 'mercadopago'
           ? 'QR Code gerado via Mercado Pago do parceiro! Escaneie para pagar.'
           : 'QR Code gerado! Escaneie para pagar via PIX.');
       } else {
