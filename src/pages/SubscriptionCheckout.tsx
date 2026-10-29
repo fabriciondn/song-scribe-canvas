@@ -57,7 +57,21 @@ export default function SubscriptionCheckout() {
     try {
       setIsProcessing(true);
       
-      const { data, error } = await supabase.functions.invoke('create-openpix-payment', {
+      // Roteamento por vínculo com moderador: nunca tratar erro de consulta como cliente direto.
+      const { data: assignment, error: assignmentError } = await supabase
+        .from('moderator_users')
+        .select('moderator_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (assignmentError) throw assignmentError;
+
+      const paymentFunction = assignment
+        ? 'create-pro-subscription-mercadopago'
+        : 'create-openpix-payment';
+
+      const { data, error } = await supabase.functions.invoke(paymentFunction, {
         body: {
           type: 'subscription',
           user_id: user.id,
@@ -66,14 +80,13 @@ export default function SubscriptionCheckout() {
         }
       });
 
-
       if (error) throw error;
 
-      if (data?.qr_code) {
+      if (data?.qr_code && data?.payment_id) {
         setPixData({
           qr_code: data.qr_code,
-          qr_code_url: data.qr_code_url,
-          payment_id: data.payment_id
+          qr_code_url: data.qr_code_url || (data.qr_code_base64 ? `data:image/png;base64,${data.qr_code_base64}` : ''),
+          payment_id: String(data.payment_id)
         });
         setShowQR(true);
         toast.success('QR Code gerado! Escaneie para pagar via PIX.');
