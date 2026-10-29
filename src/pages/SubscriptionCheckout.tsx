@@ -57,16 +57,30 @@ export default function SubscriptionCheckout() {
     try {
       setIsProcessing(true);
       
-      // Não confundir falha de RLS/rede com ausência de vínculo: evita gateway errado.
-      const { data: moderatorLink, error: moderatorError } = await supabase
-        .from('moderator_users')
-        .select('moderator_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // A RPC é a fonte principal. Erros não podem ser interpretados como cliente avulso.
+      let isPartnerCustomer = false;
+      const { data: partnerRpc, error: partnerRpcError } = await supabase.rpc(
+        'check_user_partner_link',
+        { p_user_id: user.id }
+      );
 
-      if (moderatorError) throw moderatorError;
+      if (!partnerRpcError && partnerRpc && typeof partnerRpc === 'object' && !Array.isArray(partnerRpc)
+          && typeof (partnerRpc as { is_partner_customer?: unknown }).is_partner_customer === 'boolean') {
+        isPartnerCustomer = (partnerRpc as { is_partner_customer: boolean }).is_partner_customer;
+      } else {
+        console.warn('RPC de parceiro indisponível; verificando vínculo diretamente.', partnerRpcError);
+        const { data: directLink, error: directError } = await supabase
+          .from('moderator_users')
+          .select('moderator_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-      const isPartnerCustomer = !!moderatorLink;
+        if (directError) throw new Error('Não foi possível verificar seu vínculo com o parceiro. Tente novamente.');
+        isPartnerCustomer = !!directLink;
+      }
+
+      console.log('💳 Tipo de Checkout:', isPartnerCustomer ? 'Mercado Pago (Parceiro)' : 'OpenPix (Plataforma)');
+
       const { data, error } = isPartnerCustomer
         ? await supabase.functions.invoke('create-pro-subscription-mercadopago', {
             body: {
