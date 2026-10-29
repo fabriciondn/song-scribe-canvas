@@ -91,10 +91,18 @@ serve(async (req) => {
     const correlationID = `${type}_${user_id}_${Date.now()}`;
     
     // Preparar payload para OpenPix
+    const sanitizePixComment = (str: string): string => {
+      return str
+        .replace(/[—–]/g, '-')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9\s\-_.,:;]/g, '')
+        .slice(0, 140);
+    };
+
     const openPixPayload = {
       correlationID,
       value: Math.round(totalAmount * 100), // Valor em centavos
-      comment: type === 'subscription' ? LAUNCH_DESCRIPTION : `${body.credits} Créditos - Compuse`,
+      comment: sanitizePixComment(type === 'subscription' ? LAUNCH_DESCRIPTION : `${body.credits} Creditos - Compuse`),
       customer: {
         name: customerData?.name || user_name,
         email: customerData?.email || user_email,
