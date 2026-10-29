@@ -21,20 +21,20 @@ const plans = [
     ],
   },
   {
-    name: 'Pacote 10 + 2',
-    description: 'O melhor custo-benefício para proteger seu catálogo inteiro com 2 registros bônus.',
-    price: 179.99,
-    priceHint: '12 registros · R$ 14,99 por obra',
-    buttonText: 'Quero o pacote',
+    name: 'Plano Padrão',
+    description: 'Oferta especial de lançamento: proteja até 50 músicas por mês com certificado imediato e sem burocracia.',
+    price: 97.00,
+    originalPrice: 127.00,
+    priceHint: 'por mês · Até 50 registros a cada 30 dias',
+    buttonText: 'Assinar Plano Padrão',
     popular: true,
     includes: [
       'Tudo do Registro unitário, mais:',
-      '10 registros de obras',
-      '+2 registros bônus grátis',
-      'Economia de R$ 60',
-      'Certificados digitais em PDF',
-      'Hash criptográfico de cada obra',
-      'Prioridade no suporte WhatsApp',
+      'Até 50 registros autorais por ciclo de 30 dias',
+      'Certificados digitais em PDF com hash criptográfico',
+      'Comprovante de autoria com data e hora oficial',
+      'Sem fidelidade, cancele quando quiser',
+      'Prioridade máxima no suporte WhatsApp',
     ],
   },
 ];
@@ -88,8 +88,7 @@ export const Pricing: React.FC<Props> = ({ onCTA }) => {
             className="mt-5 text-base md:text-lg"
             style={{ color: 'var(--c-text-muted)' }}
           >
-            Registre uma música hoje ou proteja o catálogo inteiro de uma vez —
-            com 2 registros de bônus quando você fecha em pacote.
+            Registre uma música pontual ou assine o Plano Padrão para proteger até 50 composições por mês com o melhor custo-benefício.
           </p>
         </motion.div>
 
@@ -123,7 +122,7 @@ export const Pricing: React.FC<Props> = ({ onCTA }) => {
                   className="absolute -top-3 right-6 text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider"
                   style={{ background: 'var(--c-primary)', color: '#06130B' }}
                 >
-                  Mais escolhido
+                  Oferta de lançamento
                 </div>
               )}
 
@@ -135,13 +134,21 @@ export const Pricing: React.FC<Props> = ({ onCTA }) => {
                 {plan.description}
               </p>
 
-              <div className="mt-6 flex items-baseline gap-2">
+              {'originalPrice' in plan && plan.originalPrice != null && (
+                <p className="mt-6 text-sm" style={{ color: 'var(--c-text-muted)' }}>
+                  De <span className="line-through opacity-50">R$ {formatBRL(plan.originalPrice)}</span> por
+                </p>
+              )}
+              <div className={`${plan.popular ? 'mt-1' : 'mt-6'} flex items-baseline gap-2`}>
                 <span
                   className="font-display font-bold"
                   style={{ fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', color: 'var(--c-text)' }}
                 >
                   R$ {formatBRL(plan.price)}
                 </span>
+                {'originalPrice' in plan && plan.originalPrice != null && (
+                  <span className="text-sm" style={{ color: 'var(--c-text-muted)' }}>/mês</span>
+                )}
               </div>
               <div className="mt-1 text-xs" style={{ color: 'var(--c-text-soft)' }}>
                 {plan.priceHint}
