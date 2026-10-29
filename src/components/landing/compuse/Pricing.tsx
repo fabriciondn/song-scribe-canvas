@@ -22,19 +22,19 @@ const plans = [
   },
   {
     name: 'Plano Padrão',
-    description: 'Oferta de lançamento para compositores que querem proteger até 50 obras todos os meses.',
-    price: 97,
-    priceHint: 'por mês · até 50 registros mensais',
+    description: 'Oferta especial de lançamento: proteja até 50 músicas por mês com certificado imediato e sem burocracia.',
+    price: 97.00,
+    originalPrice: 127.00,
+    priceHint: 'por mês · Até 50 registros a cada 30 dias',
     buttonText: 'Assinar Plano Padrão',
     popular: true,
     includes: [
       'Tudo do Registro unitário, mais:',
-      'Até 50 registros de obras por mês',
-      'Renovação mensal sem acúmulo de registros',
-      'Economia de R$ 30 por mês',
-      'Certificados digitais em PDF',
-      'Hash criptográfico de cada obra',
-      'Prioridade no suporte WhatsApp',
+      'Até 50 registros autorais por ciclo de 30 dias',
+      'Certificados digitais em PDF com hash criptográfico',
+      'Comprovante de autoria com data e hora oficial',
+      'Sem fidelidade, cancele quando quiser',
+      'Prioridade máxima no suporte WhatsApp',
     ],
   },
 ];
@@ -88,8 +88,7 @@ export const Pricing: React.FC<Props> = ({ onCTA }) => {
             className="mt-5 text-base md:text-lg"
             style={{ color: 'var(--c-text-muted)' }}
           >
-            Registre uma música hoje ou proteja o catálogo inteiro de uma vez —
-            com até 50 registros por mês no Plano Padrão.
+            Registre uma música pontual ou assine o Plano Padrão para proteger até 50 composições por mês com o melhor custo-benefício.
           </p>
         </motion.div>
 
@@ -135,9 +134,9 @@ export const Pricing: React.FC<Props> = ({ onCTA }) => {
                 {plan.description}
               </p>
 
-              {plan.popular && (
+              {'originalPrice' in plan && plan.originalPrice != null && (
                 <p className="mt-6 text-sm" style={{ color: 'var(--c-text-muted)' }}>
-                  De <span className="line-through">R$ 127,00</span> por
+                  De <span className="line-through opacity-50">R$ {formatBRL(plan.originalPrice)}</span> por
                 </p>
               )}
               <div className={`${plan.popular ? 'mt-1' : 'mt-6'} flex items-baseline gap-2`}>
@@ -147,6 +146,9 @@ export const Pricing: React.FC<Props> = ({ onCTA }) => {
                 >
                   R$ {formatBRL(plan.price)}
                 </span>
+                {'originalPrice' in plan && plan.originalPrice != null && (
+                  <span className="text-sm" style={{ color: 'var(--c-text-muted)' }}>/mês</span>
+                )}
               </div>
               <div className="mt-1 text-xs" style={{ color: 'var(--c-text-soft)' }}>
                 {plan.priceHint}
