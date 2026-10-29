@@ -188,6 +188,46 @@ serve(async (req) => {
       );
     }
 
+    if (launchOrder?.provider === 'mercadopago') {
+      // Consultar apenas o token do moderador vinculado ao dono da cobrança.
+      const { data: moderatorLink, error: moderatorError } = await supabaseService
+        .from('moderator_users').select('moderator_id')
+        .eq('user_id', launchOrder.user_id).maybeSingle();
+      if (moderatorError) throw moderatorError;
+      if (!moderatorLink) throw new Error('Vínculo com parceiro não encontrado para este pagamento');
+
+      const { data: paymentSettings, error: settingsError } = await supabaseService
+        .from('moderator_payment_settings')
+        .select('mercadopago_access_token')
+        .eq('moderator_id', moderatorLink.moderator_id)
+        .eq('is_active', true).maybeSingle();
+      if (settingsError) throw settingsError;
+      let token = paymentSettings?.mercadopago_access_token;
+      if (!token) {
+        const { data: moderatorProfile, error: profileError } = await supabaseService
+          .from('profiles').select('email').eq('id', moderatorLink.moderator_id).maybeSingle();
+        if (profileError) throw profileError;
+        if (moderatorProfile?.email === 'acordeondeourobrasil@gmail.com') {
+          token = Deno.env.get('MODERATOR_ACORDEON_MP_TOKEN');
+        }
+      }
+      if (!token) return new Response(JSON.stringify({ error: 'Mercado Pago do parceiro não configurado', isPaid: false }), { status: 503, headers: corsHeaders });
+
+      const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(paymentIdStr)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!mpResponse.ok) {
+        return new Response(JSON.stringify({ error: 'Falha ao consultar Mercado Pago do parceiro', isPaid: false }), { status: 502, headers: corsHeaders });
+      }
+      const paymentData = await mpResponse.json();
+      if (String(paymentData.id) !== paymentIdStr) throw new Error('Payment identity mismatch');
+      const isPaid = paymentData.status === 'approved';
+      if (isPaid) {
+        await activateLaunchPayment(supabaseService, 'mercadopago', paymentIdStr, paymentData.transaction_amount, paymentData.date_approved);
+      }
+      return new Response(JSON.stringify({ isPaid, paid: isPaid, status: isPaid ? 'completed' : paymentData.status }), { status: 200, headers: corsHeaders });
+    }
+
     if (launchOrder?.provider === 'abacate') {
       const paid = await verifyAbacatePix(paymentIdStr);
       if (paid) await activateLaunchPayment(supabaseService,'abacate',paymentIdStr,97,new Date().toISOString());

@@ -72,7 +72,9 @@ export default function SubscriptionCheckout() {
             body: {
               user_id: user.id,
               user_email: user.email,
-              user_name: profile?.name || 'Usuário'
+              user_name: profile?.name || 'Usuário',
+              user_cpf: profile?.cpf,
+              user_cellphone: profile?.cellphone
             }
           })
         : await supabase.functions.invoke('create-openpix-payment', {
@@ -103,7 +105,14 @@ export default function SubscriptionCheckout() {
       }
     } catch (error: any) {
       console.error('Erro ao processar assinatura:', error);
-      toast.error('Erro ao processar assinatura. Tente novamente.');
+      let message = error?.details || error?.message || 'Erro ao processar assinatura. Tente novamente.';
+      if (error?.context instanceof Response) {
+        try {
+          const payload = await error.context.clone().json();
+          message = payload?.error || payload?.message || message;
+        } catch { /* response not JSON */ }
+      }
+      toast.error(message);
     } finally {
       setIsProcessing(false);
     }
