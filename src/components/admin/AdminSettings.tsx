@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Settings, Database, Mail, Shield, Users, Bell } from 'lucide-react';
 import { useAdminSettings } from '@/hooks/useAdminSettings';
 import { AdminOfferVideo } from './AdminOfferVideo';
+import { AdminSqlTools } from './AdminSqlTools';
 
 export const AdminSettings: React.FC = () => {
   const {
@@ -199,6 +200,8 @@ export const AdminSettings: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      <AdminSqlTools />
 
       {/* Informações do Sistema */}
       <Card>
