@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Coins, Gift, Check, AlertTriangle, User, Ticket, X, CheckCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Coins, Gift, Check, AlertTriangle, User, Ticket, X, CheckCircle, Loader2, Crown, ArrowRight } from 'lucide-react';
 import { useMobileDetection } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -199,15 +199,6 @@ export default function CreditsCheckout() {
     let savings = 0;
     let originalPrice = 29.90 * credits;
 
-    // Super Oferta de 10 créditos + 2 grátis
-    if (credits === 10) {
-      unitPrice = 17.99;
-      bonusCredits = 2;
-      // Preço original seria 12 créditos x 29,90 = 239,88
-      // Preço com oferta: 10 créditos x 17,99 = 179,90
-      originalPrice = 29.90 * 12; // 239,88
-      savings = originalPrice - 10 * unitPrice; // 239,88 - 179,90 = 59,98
-    }
     let totalAmount = credits * unitPrice;
     
     // Aplicar desconto do cupom
@@ -579,52 +570,31 @@ export default function CreditsCheckout() {
                   </div>
                 </section>
 
-                {/* Oferta Especial */}
-                <div>
-                  <section 
-                    onClick={() => setCredits(10)}
-                    className={`relative rounded-xl p-0 shadow-lg border-2 overflow-hidden cursor-pointer transition-all duration-300 transform hover:scale-[1.01] ${
-                      credits === 10 
-                        ? 'border-green-500 bg-green-500/5' 
-                        : 'border-green-500/50 bg-card'
-                    }`}
+                {/* Card de Oferta Especial Mobile - Plano Padrão */}
+                <div className="p-1">
+                  <section
+                    className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-primary/10 via-background to-background p-4 shadow-[0_0_20px_rgba(34,197,94,0.15)] cursor-pointer"
+                    onClick={() => navigate('/dashboard/subscription-checkout')}
                   >
-                    {/* Badge */}
-                    <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-black px-3 py-1.5 rounded-bl-xl z-20 shadow-md tracking-wider">
-                      OFERTA LIMITADA
-                    </div>
-                    
-                    {/* Glow effect */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-transparent to-transparent opacity-60 pointer-events-none" />
-                    
-                    <div className="p-5 flex items-center gap-4 relative z-10">
-                      <div className="flex-shrink-0 relative">
-                        <div className="absolute inset-0 bg-green-500 blur-xl opacity-40 animate-pulse rounded-full" />
-                        <div className="w-12 h-12 rounded-full bg-background border border-green-500 flex items-center justify-center relative z-10 shadow-[0_0_10px_rgba(34,197,94,0.4)]">
-                          <Gift className="h-6 w-6 text-green-500" />
-                        </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-background border border-primary/40 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Crown className="h-6 w-6 text-primary" />
                       </div>
-                      
-                      <div className="flex-grow min-w-0 pr-2">
-                        <h3 className="text-green-500 font-bold text-[11px] uppercase tracking-widest mb-1">
-                          Aproveite o Desconto
-                        </h3>
-                        <p className="text-foreground text-sm leading-snug font-medium">
-                          Leve <span className="text-green-500 font-black text-base">+2 Registros GRÁTIS</span> agora!
+                      <div className="flex-grow min-w-0">
+                        <span className="text-primary font-bold text-[11px] uppercase tracking-widest block">
+                          Oferta de Lançamento
+                        </span>
+                        <p className="text-foreground text-sm font-semibold leading-tight">
+                          Plano Padrão: até 50 registros/mês
                         </p>
-                        <div className="mt-2 flex items-baseline gap-2">
-                          <span className="text-xs text-muted-foreground line-through decoration-red-500/70 decoration-2">R$ 239,88</span>
-                          <span className="text-lg font-bold text-foreground">R$ 179,90</span>
+                        <div className="mt-1 flex items-baseline gap-2">
+                          <span className="text-xs text-muted-foreground line-through">R$ 127,00</span>
+                          <span className="text-base font-bold text-primary">R$ 97,00/mês</span>
                         </div>
                       </div>
+                      <ArrowRight className="h-5 w-5 text-primary flex-shrink-0" />
                     </div>
                   </section>
-                  
-                  <div className="mt-2 text-center">
-                    <p className="text-[13px] text-muted-foreground font-medium">
-                      12 créditos por R$ 17,99 cada (apenas os 10)
-                    </p>
-                  </div>
                 </div>
 
                 {/* Cupom de Desconto */}
@@ -879,23 +849,37 @@ export default function CreditsCheckout() {
                   </CardContent>
                 </Card>
 
-                {/* Desktop Order Bump */}
+                {/* Desktop Upsell Plano Padrão */}
                 <div className="max-w-2xl mx-auto">
-                  <Card className={`border-2 cursor-pointer transition-all ${credits === 10 ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-green-200 hover:border-green-300'}`} onClick={() => setCredits(10)}>
+                  <Card
+                    className="border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-background to-background hover:border-primary transition-all cursor-pointer shadow-lg"
+                    onClick={() => navigate('/dashboard/subscription-checkout')}
+                  >
                     <CardContent className="p-6">
                       <div className="text-center space-y-3">
-                        <div className="bg-green-100 p-3 rounded-full w-fit mx-auto">
-                          <Gift className="h-6 w-6 text-green-600" />
+                        <div className="bg-primary/20 p-3 rounded-full w-fit mx-auto border border-primary/30">
+                          <Crown className="h-6 w-6 text-primary" />
                         </div>
-                         <div>
-                           <h3 className="font-semibold text-green-800 dark:text-green-200 text-xl">Super Oferta de lançamento</h3>
-                           <p className="text-green-700 dark:text-green-300 font-medium text-lg">10 Créditos + 2 GRÁTIS</p>
-                           <p className="text-sm text-green-600 dark:text-green-400">12 créditos por R$ 17,99 cada (apenas os 10)</p>
-                         </div>
-                         <div className="text-center">
-                           <div className="text-sm text-green-600 dark:text-green-400 line-through">R$ 239,88</div>
-                           <div className="text-2xl font-bold text-green-800 dark:text-green-200">R$ 179,90</div>
+                        <div>
+                          <span className="inline-block px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full bg-primary/20 text-primary mb-2">
+                            Oferta de Lançamento
+                          </span>
+                          <h3 className="font-bold text-foreground text-xl">
+                            Plano Padrão — Até 50 Registros/mês
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Muito mais economia para quem compõe com frequência. Sem limite acumulado.
+                          </p>
                         </div>
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-sm text-muted-foreground line-through">R$ 127,00/mês</span>
+                          <span className="text-2xl font-bold text-primary">R$ 97,00/mês</span>
+                        </div>
+                        <Button className="w-full sm:w-auto mt-2 gap-2" variant="default">
+                          <Crown className="h-4 w-4" />
+                          Assinar Plano Padrão por R$ 97/mês
+                          <ArrowRight className="h-4 w-4 ml-1" />
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
