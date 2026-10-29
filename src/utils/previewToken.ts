@@ -5,7 +5,8 @@ const isBrowser = typeof window !== 'undefined';
 
 const isLovablePreview = () => {
   if (!isBrowser) return false;
-  return window.location.hostname.includes('lovableproject.com');
+  const host = window.location.hostname;
+  return host.includes('lovableproject.com') || host.includes('lovable.app');
 };
 
 const safelyAccessSessionStorage = <T>(callback: (storage: Storage) => T): T | null => {
