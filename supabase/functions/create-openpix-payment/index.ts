@@ -48,6 +48,20 @@ serve(async (req) => {
     const user_name = profile?.name || 'Usuário';
     const totalAmount = type === 'subscription' ? subscriptionAmount(body.totalAmount) : body.totalAmount;
     if (type === 'subscription') {
+      // Não permitir que clientes vinculados a moderador contornem o roteamento pelo frontend.
+      const { data: moderatorAssignment, error: moderatorLookupError } = await supabaseService
+        .from('moderator_users')
+        .select('moderator_id')
+        .eq('user_id', user_id)
+        .limit(1)
+        .maybeSingle();
+      if (moderatorLookupError) throw moderatorLookupError;
+      if (moderatorAssignment) {
+        return new Response(JSON.stringify({ error: 'Esta assinatura deve ser paga pelo parceiro vinculado.' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
       await ensureLaunchPurchaseAllowed(supabaseService, user_id);
       if (!profile?.name || !profile?.cpf || !profile?.email || !profile?.cellphone) return new Response(JSON.stringify({error:'Complete nome, CPF, email e telefone no perfil'}), {status:400,headers:corsHeaders});
     }

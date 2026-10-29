@@ -57,26 +57,47 @@ export default function SubscriptionCheckout() {
     try {
       setIsProcessing(true);
       
-      const { data, error } = await supabase.functions.invoke('create-openpix-payment', {
-        body: {
-          type: 'subscription',
-          user_id: user.id,
-          user_email: user.email,
-          user_name: profile?.name || 'Usuário'
-        }
-      });
+      // Não confundir falha de RLS/rede com ausência de vínculo: evita gateway errado.
+      const { data: moderatorLink, error: moderatorError } = await supabase
+        .from('moderator_users')
+        .select('moderator_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
+      if (moderatorError) throw moderatorError;
+
+      const isPartnerCustomer = !!moderatorLink;
+      const { data, error } = isPartnerCustomer
+        ? await supabase.functions.invoke('create-pro-subscription-mercadopago', {
+            body: {
+              user_id: user.id,
+              user_email: user.email,
+              user_name: profile?.name || 'Usuário'
+            }
+          })
+        : await supabase.functions.invoke('create-openpix-payment', {
+            body: {
+              type: 'subscription',
+              user_id: user.id,
+              user_email: user.email,
+              user_name: profile?.name || 'Usuário'
+            }
+          });
 
       if (error) throw error;
 
-      if (data?.qr_code) {
+      if (data?.qr_code && data?.payment_id) {
         setPixData({
           qr_code: data.qr_code,
-          qr_code_url: data.qr_code_url,
-          payment_id: data.payment_id
+          qr_code_url: isPartnerCustomer
+            ? (data.qr_code_base64 ? `data:image/png;base64,${data.qr_code_base64}` : '')
+            : (data.qr_code_url || ''),
+          payment_id: String(data.payment_id)
         });
         setShowQR(true);
-        toast.success('QR Code gerado! Escaneie para pagar via PIX.');
+        toast.success(isPartnerCustomer
+          ? 'QR Code gerado via Mercado Pago do parceiro! Escaneie para pagar.'
+          : 'QR Code gerado! Escaneie para pagar via PIX.');
       } else {
         toast.error('Erro ao gerar QR Code');
       }
