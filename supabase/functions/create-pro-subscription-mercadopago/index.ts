@@ -32,11 +32,17 @@ serve(async (req) => {
     console.log('📝 Dados recebidos:', { user_id, user_email, user_name });
 
     // Verificar se usuário foi criado por um moderador
-    const { data: moderatorUser } = await supabaseService
+    const { data: moderatorUser, error: moderatorLookupError } = await supabaseService
       .from('moderator_users')
       .select('moderator_id')
       .eq('user_id', user_id)
       .maybeSingle();
+    if (moderatorLookupError) throw moderatorLookupError;
+    if (!moderatorUser) {
+      return new Response(JSON.stringify({ error: 'Usuário sem parceiro vinculado: utilize o checkout OpenPix.' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     let mercadoPagoAccessToken: string | undefined;
     let isModeratorPayment = false;
@@ -77,13 +83,11 @@ serve(async (req) => {
       }
     }
 
-    // Se não é pagamento de moderador, usar token da plataforma
+    // Não redirecionar silenciosamente o pagamento do parceiro para a plataforma.
     if (!mercadoPagoAccessToken) {
-      mercadoPagoAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
-      if (!mercadoPagoAccessToken) {
-        mercadoPagoAccessToken = Deno.env.get("Access Token mercado pago");
-      }
-      console.log('💰 Usando token do Mercado Pago da plataforma');
+      return new Response(JSON.stringify({ error: 'Mercado Pago do parceiro não configurado. Contate o suporte.' }), {
+        status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
     
     if (!mercadoPagoAccessToken) {
