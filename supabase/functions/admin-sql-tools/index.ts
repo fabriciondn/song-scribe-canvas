@@ -28,6 +28,29 @@ serve(async (req) => {
 
     const body = await req.json();
     const action = body?.action;
+    if (action === 'run_sql') {
+      // Somente a consulta de diagnóstico aprovada; não interpretar SQL arbitrário.
+      const sql = typeof body?.sql === 'string' ? body.sql.trim() : '';
+      const normalized = sql.replace(/\s+/g, ' ').replace(/;$/, '').trim();
+      const pattern = /^SELECT p\.name, p\.email, a\.role, a\.permissions FROM public\.profiles p LEFT JOIN public\.admin_users a ON a\.user_id = p\.id WHERE LOWER\(p\.email\) = '([^']+@[^']+)'$/i;
+      const match = normalized.match(pattern);
+      if (!match) return respond({ error: 'Consulta não autorizada. O editor aceita por enquanto a consulta de diagnóstico de perfil e função (profiles + admin_users). Outros SQLs não são executados.' }, 400);
+      const email = match[1].toLowerCase();
+      const service = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
+      const { data: profiles, error: profileError } = await service.from('profiles')
+        .select('id, name, email').ilike('email', email).limit(20);
+      if (profileError) throw profileError;
+      const ids = (profiles || []).map((p) => p.id);
+      if (!ids.length) return respond({ columns: ['name', 'email', 'role', 'permissions'], rows: [], rowCount: 0 });
+      const { data: roles, error: rolesError } = await service.from('admin_users')
+        .select('user_id, role, permissions').in('user_id', ids);
+      if (rolesError) throw rolesError;
+      const rows = (profiles || []).map((p) => {
+        const role = roles?.find((a) => a.user_id === p.id);
+        return { name: p.name, email: p.email, role: role?.role ?? null, permissions: role?.permissions ?? null };
+      });
+      return respond({ columns: ['name', 'email', 'role', 'permissions'], rows, rowCount: rows.length });
+    }
     const clientEmail = typeof body?.clientEmail === 'string' ? body.clientEmail.trim().toLowerCase() : '';
     const partnerEmail = typeof body?.partnerEmail === 'string' ? body.partnerEmail.trim().toLowerCase() : '';
     if (!['check_partner_link', 'assign_partner_link'].includes(action)) return respond({ error: 'Operação não permitida. SQL arbitrário está desativado.' }, 400);
