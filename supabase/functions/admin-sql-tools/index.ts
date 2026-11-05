@@ -14,17 +14,26 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization') || '';
-    if (!authHeader.startsWith('Bearer ')) return respond({ error: 'Não autenticado' }, 401);
+    const token = authHeader.match(/^Bearer\\s+(.+)$/i)?.[1]?.trim();
+    if (!token) return respond({ error: 'Sessão ausente. Faça login novamente como administrador.' }, 401);
+
     const url = Deno.env.get('SUPABASE_URL')!;
-    const anon = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const authClient = createClient(url, anon, {
-      global: { headers: { Authorization: authHeader } },
-      auth: { persistSession: false },
+    const service = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
+      auth: { autoRefreshToken: false, persistSession: false },
     });
-    const { data: { user }, error: authError } = await authClient.auth.getUser(authHeader.slice(7));
-    if (authError || !user) return respond({ error: 'Não autenticado' }, 401);
-    const { data: isAdmin, error: roleError } = await authClient.rpc('check_admin_access');
-    if (roleError || isAdmin !== true) return respond({ error: 'Apenas administradores podem usar esta ferramenta' }, 403);
+    const { data: { user }, error: authError } = await service.auth.getUser(token);
+    if (authError || !user) {
+      console.warn('admin-sql-tools: invalid user session', authError?.message);
+      return respond({ error: 'Sessão inválida ou expirada. Saia e entre novamente no painel administrativo.' }, 401);
+    }
+
+    // Autorização real no servidor, sem depender de RPC/RLS do navegador.
+    const { data: adminRole, error: roleError } = await service.from('admin_users')
+      .select('role').eq('user_id', user.id).maybeSingle();
+    if (roleError) throw roleError;
+    if (!['admin', 'super_admin'].includes(adminRole?.role || '')) {
+      return respond({ error: 'Esta ferramenta é exclusiva para administradores.' }, 403);
+    }
 
     const body = await req.json();
     const action = body?.action;
@@ -36,8 +45,7 @@ serve(async (req) => {
       const match = normalized.match(pattern);
       if (!match) return respond({ error: 'Consulta não autorizada. O editor aceita por enquanto a consulta de diagnóstico de perfil e função (profiles + admin_users). Outros SQLs não são executados.' }, 400);
       const email = match[1].toLowerCase();
-      const service = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
-      const { data: profiles, error: profileError } = await service.from('profiles')
+        const { data: profiles, error: profileError } = await service.from('profiles')
         .select('id, name, email').ilike('email', email).limit(20);
       if (profileError) throw profileError;
       const ids = (profiles || []).map((p) => p.id);
@@ -58,7 +66,6 @@ serve(async (req) => {
       return respond({ error: 'Informe e-mails válidos do cliente e parceiro' }, 400);
     }
 
-    const service = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
     const { data: people, error: peopleError } = await service.from('profiles')
       .select('id, name, email').in('email', [clientEmail, partnerEmail]);
     if (peopleError) throw peopleError;
