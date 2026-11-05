@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
+import { AuthContext } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { toast } from 'sonner';
 import { Database, Search, Link2, AlertTriangle, Play, Copy } from 'lucide-react';
 
 export const AdminSqlTools: React.FC = () => {
+  const { session: contextSession, isAuthenticated } = useContext(AuthContext);
   const exampleSql = "SELECT p.name, p.email, a.role, a.permissions\nFROM public.profiles p\nLEFT JOIN public.admin_users a ON a.user_id = p.id\nWHERE LOWER(p.email) = 'felipenedino88@gmail.com';";
   const [sql, setSql] = useState(exampleSql);
   const [sqlResult, setSqlResult] = useState<{ columns: string[]; rows: Record<string, unknown>[]; rowCount: number } | null>(null);
@@ -20,16 +22,26 @@ export const AdminSqlTools: React.FC = () => {
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
 
   const getAuthHeaders = async () => {
-    let { data: { session }, error } = await supabase.auth.getSession();
-    if (error || !session?.access_token) {
-      const refreshed = await supabase.auth.refreshSession();
-      session = refreshed.data.session;
-      error = refreshed.error;
+    // A mesma sessão usada pelo AdminDashboard é a fonte principal.
+    // getSession() pode retornar null em transições de autenticação/preview.
+    const { data: { session: sdkSession }, error: sessionError } = await supabase.auth.getSession();
+    let token = sdkSession?.access_token || contextSession?.access_token;
+    if (!token) {
+      const { data, error } = await supabase.auth.refreshSession();
+      token = data.session?.access_token;
+      if (error) console.warn('Não foi possível renovar a sessão do SQL:', error.message);
     }
-    if (error || !session?.access_token) {
-      throw new Error('Sessão não encontrada. Faça login novamente no painel administrativo.');
+    if (!token) {
+      console.warn('AdminSqlTools: sessão indisponível', {
+        contextAuthenticated: isAuthenticated,
+        contextHasSession: !!contextSession,
+        sdkSessionError: sessionError?.message,
+      });
+      throw new Error(isAuthenticated
+        ? 'O painel reconhece o login, mas não há token de sessão disponível para o Teste SQL. Abra o painel fora do preview e tente novamente.'
+        : 'Sessão não encontrada. Faça login novamente no painel administrativo.');
     }
-    return { Authorization: `Bearer ${session.access_token}` };
+    return { Authorization: `Bearer ${token}` };
   };
 
   const executeSql = async () => {
