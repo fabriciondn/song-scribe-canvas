@@ -19,13 +19,28 @@ export const AdminSqlTools: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
 
+  const getAuthHeaders = async () => {
+    let { data: { session }, error } = await supabase.auth.getSession();
+    if (error || !session?.access_token) {
+      const refreshed = await supabase.auth.refreshSession();
+      session = refreshed.data.session;
+      error = refreshed.error;
+    }
+    if (error || !session?.access_token) {
+      throw new Error('Sessão não encontrada. Faça login novamente no painel administrativo.');
+    }
+    return { Authorization: `Bearer ${session.access_token}` };
+  };
+
   const executeSql = async () => {
     if (!sql.trim()) return toast.error('Cole uma consulta SQL');
     setBusy(true);
     setSqlError('');
     setSqlResult(null);
     try {
+      const headers = await getAuthHeaders();
       const { data, error } = await supabase.functions.invoke('admin-sql-tools', {
+        headers,
         body: { action: 'run_sql', sql },
       });
       if (error) {
